@@ -1,12 +1,12 @@
-# 1.py – CMDRScript Python Interpreter Test 1
-# Modified 2021-02-13
+# test-1.py – CMDRScript Python Interpreter Test 1
+# Modified 2021-02-16
 
 #region Init
 from os import chdir
 import pprint
 
 DIR = "U:/Documents/C/Workspaces/CMDRScript/python"
-FILE_SCRIPT = "test.cmdr"
+FILE_SCRIPT = "test-1.cmdr"
 
 chdir(DIR)
 
