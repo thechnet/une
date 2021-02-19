@@ -1,0 +1,27 @@
+This file shows that the syntax of a programming language really only consists of code blocks (either with or without conditions), control flow instructions (break), and expressions (either stored into a variable or not):
+
+
+code block:
+
+if X { }
+for X { }
+def X { }
+{ }
+
+
+control flow:
+
+continue;
+return;
+break; // always terminates block
+
+
+expression:
+
+1
+"str"
+func()
+
+
+
+A potential idea to simplify this structure further would be to only have 'if' blocks, where the logic to produce a 'for' loop (increment, continue, break) is done inside the code block.
