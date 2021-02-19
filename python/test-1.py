@@ -13,12 +13,11 @@ chdir(DIR)
 TKPRINT_PRINT_VALUE = False
 PPRINT = False
 
-chars = ""
-f = open(FILE_SCRIPT)
-for _line in f:
-  for _char in _line:
-    chars += _char
-f.close()
+chars = """
+a=1 1"string"1;
+b="string""string";
+if (a == b);
+"""
 #endregion Init
 
 # TKPRINT_PRINT_VALUE = True
