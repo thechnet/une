@@ -1,6 +1,10 @@
 # test-2.py – CMDRScript Python Interpreter Test 2
 # Modified 2021-02-16
 
+# The command is split into a first word and the rest.
+# The first word decides what the command is.
+# This requires any action to be identifiable by the first word, i.e. setting a variable requires a word like "set".
+
 #region Init
 from os import chdir
 import pprint

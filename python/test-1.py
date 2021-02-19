@@ -1,6 +1,9 @@
 # test-1.py – CMDRScript Python Interpreter Test 1
 # Modified 2021-02-16
 
+# The character is identified to be either numeric, alpha, or any of a choice of special characters, and thus a token type is defined.
+# The token type stays as long as the following characters match the same criteria.
+
 #region Init
 from os import chdir
 import pprint
