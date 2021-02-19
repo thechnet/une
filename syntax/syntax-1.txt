@@ -1,0 +1,20 @@
+a: "string";      EXPRESSION
+b=1;              "
+if (a == b);      LOGICAL STATEMENT
+
+a -> name
+= -> variable declaration
+"string" -> expression
+1 -> expression
+if -> name
+( -> function call? if? => seperator
+a -> name
+== -> logical condition -> logical statement?
+b -> name
+) -> end this section => "(a == b)" is logical statement
+
+
+
+NAME |EQUALS| STRING INTEGER INTEGER INTEGER STRING STRING
+
+NAME ( NAME CMPEQU NAME )
