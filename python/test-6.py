@@ -1,11 +1,17 @@
 # test-6.py – CMDRScript Python Interpreter Test 6
-# Modified 2021-02-20
+# Modified 2021-02-21
 
-# This is an expanded rebuild of test-5, focusing less on Python-specific
+# 2021-20-20: This is an expanded rebuild of test-5, focusing less on Python-specific
 # language features and with an eventual C implementation in mind.
 # It also implements variable assigments and references, strings,
 # some string operations, the seperation of commands using ';',
 # and multiline input.
+# 2021-02-21: This implementation now also supports:
+# - if, elif, else statements (including NOT, EQU, NEQ, GTR,
+#   LSS, GEQ, LEQ - still missing is AND, OR)
+# - while loops (including BREAK, CONTINUE)
+# - functions (including context switching, RETURN)
+# As it currently stands, some parts of this code are very bug-prone and not very robust. Before moving on to the C implementation, I want to solve these problems and also find a finalized design for syntax.
 
 from dataclasses import dataclass
 
@@ -26,7 +32,8 @@ STATIC_TOKENS = {
   '/': 'DIV',
   '%': 'MOD',
   '(': 'LPAR',
-  ')': 'RPAR'
+  ')': 'RPAR',
+  ',': 'SEP'
 }
 #endregion Constants
 
@@ -55,10 +62,45 @@ class Node:
       ret = f'\33[92m{self.token.value}\33[97m'
     return ret
 
+@dataclass
+class Context:
+  symboltable: dict
+  parent: any
+  
+  def __repr__(self):
+    return f'{self.symboltable}'
+
 def advance(list, index):
   index += 1
   return (list[index], index) if index < len(list) else (None, -1)
+
+def symboltable_get(ctx, key):
+  while True:
+    if key in ctx.symboltable:
+      return ctx.symboltable[key]
+    if ctx.parent == None:
+      return None
+    ctx = ctx.parent
+    
 #endregion Classes and Functions
+
+#region Built-in Functions
+def builtin_print(value):
+  print(value)
+  
+def builtin_str(value):
+  return str(value)
+
+def builtin_int(value):
+  return int(value)
+
+def builtin_var_set_str(key, value):
+  context.symboltable[key] = value
+  return 1
+
+def builtin_var_get_str(key):
+  return symboltable_get(context, key)
+#endregion Built-in Functions
 
 #region Lexer
 def lex(text):
@@ -115,6 +157,14 @@ def lex(text):
         tokens.append(Token('EQU'))
       else:
         tokens.append(Token('EQ'))
+    elif c == '!':
+      # Not or not equals
+      c, i = advance(text, i)
+      if c == '=':
+        c, i = advance(text, i)
+        tokens.append(Token('NEQ'))
+      else:
+        tokens.append(Token('NOT'))
     elif c == '>':
       # Greater than and greater than or equal to
       c, i = advance(text, i)
@@ -124,7 +174,7 @@ def lex(text):
       else:
         tokens.append(Token('GTR'))
     elif c == '<':
-      # Less than or less than or equal to
+      # Less than and less than or equal to
       c, i = advance(text, i)
       if c == '=':
         c, i = advance(text, i)
@@ -143,7 +193,9 @@ def lex(text):
   return tokens
 #endregion Lexer
 
-#region Parser
+#region Parser 
+
+#region factor
 def factor():
   global tk, i
   this = tk
@@ -159,8 +211,29 @@ def factor():
   if this.type == 'ID':
     tk, i = advance(tokens, i)
     if tk.type == 'LPAR':
-      tk, i = advance(tokens, i)
-      pass
+      tk, i = advance(tokens, i) # (
+      
+      args = []
+  
+      if tk != None and tk.type != 'RPAR':
+        args.append(expression())
+      
+      while tk != None and tk.type != 'RPAR':
+        if tk.type != 'SEP':
+          print('factor: id: Expected SEP.')
+          exit(0)
+        tk, i = advance(tokens, i) # ,
+        args.append(expression())
+      
+      tk, i = advance(tokens, i) # )
+      
+      return Node(
+        'FUNCEXE',
+        this,
+        [
+          args
+        ]
+      )
     else:
       return Node('VARGET', this, None)
   
@@ -183,7 +256,9 @@ def factor():
       exit(0)
     tk, i = advance(tokens, i)
     return expr
+#endregion factor
 
+#region term
 def term():
   global tk, i
   this = tk
@@ -218,7 +293,9 @@ def term():
       exit(0)
   
   return left
+#endregion term
 
+#region expression
 def expression():
   global tk, i
   this = tk
@@ -253,7 +330,230 @@ def expression():
       exit(0)
   
   return left
+#endregion expression
 
+#region logicalexpression
+def logicalexpression():
+  global tk, i
+  this = tk
+  if this.type == 'NOT':
+    tk, i = advance(tokens, i)
+    return Node(this.type, this, [logicalexpression()])
+  
+  left = expression()
+  if left == None:
+    print('logicalexpression: Expected expression.')
+    exit(0)
+  
+  while tk.type in ('EQU', 'NEQ', 'GTR', 'LSS', 'GEQ', 'LEQ'):
+    op = tk
+    tk, i = advance(tokens, i)
+    left = Node(op.type, op, [left, expression()])
+    if left == None:
+      print('logicalexpression: Expected expression.')
+      exit(0)
+  
+  return left
+#endregion logicalexpression
+
+#region codeblock
+def codeblock():
+  global tk, i
+  this = tk
+  
+  if tk.type != 'LBRC':
+    print('statement: if: Expected LBRC.')
+    exit(0)
+  
+  tk, i = advance(tokens, i) # {
+  
+  block = []
+  
+  while tk != None and tk.type != 'RBRC':
+    block.append(statement()) # statement;
+  
+  if tk.type != 'RBRC':
+    print('statement: if: Expected RBRC.')
+    exit(0)
+  
+  tk, i = advance(tokens, i) # }
+  
+  return block
+#endregion codeblock
+
+#region ifstatement
+def ifstatement():
+  global tk, i
+  this = tk
+  
+  logexpr = logicalexpression()
+  
+  trueblock = []
+  falseblock = []
+  
+  trueblock = codeblock()
+  
+  if tk.type == 'ID' and tk.value == 'elif':
+    tk, i = advance(tokens, i) # elif
+    falseblock = [ ifstatement() ]
+  
+  elif tk.type == 'ID' and tk.value == 'else':
+    tk, i = advance(tokens, i) # else
+    falseblock = codeblock()
+  
+  return Node(
+    'IF',
+    Token('IF', None),
+    [
+      logexpr,
+      trueblock,
+      falseblock
+    ]
+  )
+#endregion ifstatement
+
+#region whilestatement
+def whilestatement():
+  global tk, i
+  this = tk
+  
+  logexpr = logicalexpression()
+  
+  trueblock = codeblock()
+  
+  return Node(
+    'WHILE',
+    Token('WHILE', None),
+    [
+      logexpr,
+      trueblock
+    ]
+  )
+#endregion whilestatement
+
+#region functiondef
+def functiondef():
+  global tk, i
+  
+  if tk.type != 'ID':
+    print('functiondef: Expected ID.')
+    exit(0)
+  
+  funcid = tk.value
+  
+  tk, i = advance(tokens, i) # id
+  
+  if tk.type != 'LPAR':
+    print('functiondef: Expected LPAR.')
+    exit(0)
+  
+  tk, i = advance(tokens, i) # (
+  
+  params = []
+  
+  if tk != None and tk.type != 'RPAR':
+    if tk.type != 'ID':
+      print('functiondef: Expected ID.')
+      exit(0)
+    params.append(tk.value)
+    tk, i = advance(tokens, i) # arg
+  
+  while tk != None and tk.type != 'RPAR':
+    if tk.type != 'SEP':
+      print('functiondef: Expected SEP.')
+      exit(0)
+    tk, i = advance(tokens, i) # ,
+    if tk.type != 'ID':
+      print('functiondef: Expected ID.')
+      exit(0)
+    params.append(tk.value)
+    tk, i = advance(tokens, i) # arg
+  
+  tk, i = advance(tokens, i) # )
+  
+  funcblock = codeblock()
+  
+  return Node(
+    'FUNCDEF',
+    Token('FUNCDEF', funcid),
+    [
+      params,
+      funcblock
+    ]
+  )
+#endregion functiondef
+
+#region statement
+def statement():
+  global tk, i
+  this = tk
+    
+  if this.type == 'ID':
+    
+    if this.value == 'if':
+      tk, i = advance(tokens, i)
+      return ifstatement()
+    
+    if this.value == 'while':
+      tk, i = advance(tokens, i)
+      return whilestatement()
+    
+    if this.value == 'def':
+      tk, i = advance(tokens, i)
+      return functiondef()
+    
+    if this.value == 'return':
+      tk, i = advance(tokens, i) # id
+      expr = expression()
+      if tk.type != 'END':
+        print('statement: id: return: Expected end of command.')
+        exit(0)
+      tk, i = advance(tokens, i) # end
+      return Node('RETURN', Token('RETURN', None), [expr])
+    
+    if this.value == 'break':
+      tk, i = advance(tokens, i) # id
+      if tk.type != 'END':
+        print('statement: id: break: Expected end of command.')
+        exit(0)
+      tk, i = advance(tokens, i) # end
+      return Node('BREAK', Token('BREAK', None), [])
+    
+    if this.value == 'continue':
+      tk, i = advance(tokens, i) # id
+      if tk.type != 'END':
+        print('statement: id: continue: Expected end of command.')
+        exit(0)
+      tk, i = advance(tokens, i) # end
+      return Node('CONTINUE', Token('CONTINUE', None), [])
+    
+    _tk, _i = tk, i
+    tk, i = advance(tokens, i)
+    
+    if tk.type == 'EQ':
+      tk, i = advance(tokens, i)
+      expr = expression()
+      if expr == None:
+        print('statement: id: eq: Expected expression.')
+        exit(0)
+      if tk.type != 'END':
+        print('statement: id: eq: Expected end of command.')
+        exit(0)
+      tk, i = advance(tokens, i) # END
+      return Node('VARSET', this, [expr])
+    
+    tk, i = _tk, _i # UGLY
+  
+  # Needs to stay to allow for freestanding function calls.
+  expr = expression()
+  if tk.type != 'END':
+      print('statement: id: eq: Expected end of command.')
+      exit(0)
+  tk, i = advance(tokens, i)
+  return expr
+#endregion statement
+
+#region parse
 def parse(tokens):
   asts = []
   
@@ -261,47 +561,21 @@ def parse(tokens):
   
   while tk.type != 'EOF':
     
-    this = tk
-    
-    if this.type == 'ID':
-      _tk, _i = tk, i
-      
-      tk, i = advance(tokens, i)
-      
-      if tk.type == 'EQ':
-        tk, i = advance(tokens, i)
-        expr = expression()
-        if expr == None:
-          print('parse: id: eq: Expected expression.')
-          exit(0)
-        if tk.type != 'END':
-          print('parse: id: eq: Expected end of command.')
-          exit(0)
-        tk, i = advance(tokens, i)
-        asts.append(Node('VARASSIGN', this, [expr]))
-        continue
-      
-      tk, i = _tk, _i # UGLY
-    
-    # else
-    expr = expression()
-    if tk.type != 'END':
-        print('parse: id: eq: Expected end of command.')
-        exit(0)
-    tk, i = advance(tokens, i)
-    asts.append(expr)
+    asts.append(statement())
   
   return asts
+#endregion parse
+
 #endregion Parser
 
 #region Interpreter
 def interpret(node):
-  global symboltable
+  global context, interpretState
+  
+  if interpretState != '': return # hmmmm
   
   if node.type in ('NUMBER', 'STRING'):
     return node.token.value
-  if node.type == 'POS':
-    return interpret(node.subnodes[0])
   elif node.type == 'NEG':
     return interpret(node.subnodes[0]) * -1
   if node.type == 'ADD':
@@ -326,31 +600,173 @@ def interpret(node):
     return interpret(node.subnodes[0]) * interpret(node.subnodes[1])
   elif node.type == 'STRCAT':
     return interpret(node.subnodes[0]) + str(interpret(node.subnodes[1]))
-  elif node.type == 'VARASSIGN':
-    symboltable[node.token.value] = interpret(node.subnodes[0])
-    return symboltable[node.token.value]
+  elif node.type == 'VARSET':
+    context.symboltable[node.token.value] = interpret(node.subnodes[0])
+    return context.symboltable[node.token.value]
   elif node.type == 'VARGET':
-    if node.token.value in symboltable:
-      return symboltable[node.token.value]
+    value = symboltable_get(context, node.token.value)
+    if value != None:
+      return value
     else:
       print('interpret: varget: Undefined variable.')
       exit(0)
+  elif node.type == 'NOT':
+    return 1 if not interpret(node.subnodes[0]) else 0
+  elif node.type == 'EQU':
+    return 1 if interpret(node.subnodes[0]) == interpret(node.subnodes[1]) else 0
+  elif node.type == 'NEQ':
+    return 1 if interpret(node.subnodes[0]) != interpret(node.subnodes[1]) else 0
+  elif node.type == 'GTR':
+    return 1 if interpret(node.subnodes[0]) > interpret(node.subnodes[1]) else 0
+  elif node.type == 'LSS':
+    return 1 if interpret(node.subnodes[0]) < interpret(node.subnodes[1]) else 0
+  elif node.type == 'GEQ':
+    return 1 if interpret(node.subnodes[0]) >= interpret(node.subnodes[1]) else 0
+  elif node.type == 'LEQ':
+    return 1 if interpret(node.subnodes[0]) <= interpret(node.subnodes[1]) else 0
+  elif node.type == 'IF':
+    if interpret(node.subnodes[0]):
+      returnValue = 1
+      for subnode in node.subnodes[1]:
+        ret = interpret(subnode)
+        if interpretState != '':
+          if interpretState == 'RETURN':
+            returnValue = ret
+          break
+        returnValue = ret
+      return returnValue
+    else:
+      returnValue = 1
+      for subnode in node.subnodes[2]:
+        ret = interpret(subnode)
+        if interpretState != '':
+          if interpretState == 'RETURN':
+            returnValue = ret
+          break
+        returnValue = ret
+      return returnValue
+  elif node.type == 'WHILE':
+    returnValue = 1
+    while interpret(node.subnodes[0]):
+      for subnode in node.subnodes[1]:
+        ret = interpret(subnode)
+        if interpretState != '':
+          if interpretState == 'RETURN':
+            returnValue = ret
+          break
+        returnValue = ret
+        
+      if interpretState != '':
+        if interpretState == 'CONTINUE':
+          interpretState = ''
+          continue
+        if interpretState == 'BREAK':
+          interpretState = ''
+        break
+    return returnValue
+  elif node.type == 'FUNCDEF':
+    context.symboltable[node.token.value] = node.subnodes
+    return 1
+  elif node.type == 'FUNCEXE':
+    func = symboltable_get(context, node.token.value)
+    args = node.subnodes[0]
+    if func == None:
+      if node.token.value == 'print': # BAD!
+        if len(args) != 1:
+          print('Invalid number of arguments provided.')
+          exit(0)
+        builtin_print(interpret(args[0]))
+        return 1
+      if node.token.value == 'str': # BAD!
+        if len(args) != 1:
+          print('Invalid number of arguments provided.')
+          exit(0)
+        return builtin_str(interpret(args[0]))
+      if node.token.value == 'int': # BAD!
+        if len(args) != 1:
+          print('Invalid number of arguments provided.')
+          exit(0)
+        return builtin_int(interpret(args[0]))
+      if node.token.value == 'var_set_str': # BAD!
+        if len(args) != 2:
+          print('Invalid number of arguments provided.')
+          exit(0)
+        return builtin_var_set_str(interpret(args[0]), interpret(args[1]))
+      if node.token.value == 'var_get_str': # BAD!
+        if len(args) != 1:
+          print('Invalid number of arguments provided.')
+          exit(0)
+        return builtin_var_get_str(interpret(args[0]))
+      print('Undefined function.')
+      exit(0)
+    params = func[0]
+    if len(params) != len(args):
+      print('Invalid number of arguments provided.')
+      exit(0)
+    context = Context({}, context)
+    for i, param in enumerate(params):
+      context.symboltable[param] = interpret(args[i])
+    returnValue = 1
+    for subnode in func[1]:
+      ret = interpret(subnode)
+      if interpretState == 'RETURN':
+        interpretState = ''
+        returnValue = ret
+        break
+    context = context.parent
+    return returnValue
+  elif node.type == 'RETURN':
+    if context.parent == None:
+      print("Can't return from root program")
+      exit(0)
+    result = interpret(node.subnodes[0])
+    interpretState = 'RETURN'
+    return result
+  elif node.type == 'BREAK':
+    interpretState = 'BREAK' # HORRIBLE FIXME:
+    return 1
+  elif node.type == 'CONTINUE':
+    interpretState = 'CONTINUE' # HORRIBLE FIXME:
+    return 1
 #endregion
 
-symboltable = {}
+context = Context({}, None)
+interpretState = ''
+
 script = '''
-r="test";
-2*3*r;
+a=1+2*3;
+def iseven(number)
+{
+  if number%2 == 0
+  {
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
+while a>0
+{
+  a=a-1;
+  if !iseven(a)
+  {
+    continue;
+  }
+  print("number " + str(a) + " is even");
+}
 '''
+
 tokens = lex(script)
 tk, i = advance(tokens, -1)
 asts = parse(tokens)
 results = []
+print('\33[35m', end='')
 for ast in asts:
   results.append(interpret(ast))
+print('\33[0m')
 
 #region Print Results
-print("")
 print(
   'Input\n'
   f'\33[97m{script.strip()}\33[0m\n'
@@ -365,7 +781,7 @@ print(
 )
 print(
   'Symboltable Result\n'
-  f'\33[97m{symboltable}\33[0m\n'
+  f'\33[97m{context.symboltable}\33[0m\n'
 )
 print(
   'Interpreter Result\n'
