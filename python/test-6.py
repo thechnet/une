@@ -1,17 +1,27 @@
 # test-6.py – CMDRScript Python Interpreter Test 6
-# Modified 2021-02-21
+# Modified 2021-02-25
 
 # 2021-20-20: This is an expanded rebuild of test-5, focusing less on Python-specific
 # language features and with an eventual C implementation in mind.
 # It also implements variable assigments and references, strings,
 # some string operations, the seperation of commands using ';',
 # and multiline input.
+
 # 2021-02-21: This implementation now also supports:
 # - if, elif, else statements (including NOT, EQU, NEQ, GTR,
 #   LSS, GEQ, LEQ - still missing is AND, OR)
 # - while loops (including BREAK, CONTINUE)
 # - functions (including context switching, RETURN)
-# As it currently stands, some parts of this code are very bug-prone and not very robust. Before moving on to the C implementation, I want to solve these problems and also find a finalized design for syntax.
+# As it currently stands, some parts of this code are very bug-prone
+# and not very robust. Before moving on to the C implementation, I want to solve
+# these problems and also find a finalized design for syntax.
+
+# 2021-02-22: Added C-style inline comments and Python-style line comments.
+
+# 2021-02-25: This implementation now also supports:
+# - AND, OR in logical statements
+# - Power ('^')
+# - For loops
 
 from dataclasses import dataclass
 
@@ -29,11 +39,11 @@ STATIC_TOKENS = {
   '+': 'ADD',
   '-': 'SUB',
   '*': 'MUL',
-  '/': 'DIV',
   '%': 'MOD',
   '(': 'LPAR',
   ')': 'RPAR',
-  ',': 'SEP'
+  ',': 'SEP',
+  '^': 'POW'
 }
 #endregion Constants
 
@@ -181,6 +191,25 @@ def lex(text):
         tokens.append(Token('LEQ'))
       else:
         tokens.append(Token('LSS'))
+    elif c == '/':
+      # Division or inline comment
+      c, i = advance(text, i) # /
+      if c != '*':
+        tokens.append(Token('DIV'))
+      else:
+        while c != None:
+          if c == '*':
+            c, i = advance(text, i) # *
+            if c == '/':
+              c, i = advance(text, i) # /
+              break
+            else:
+              continue
+          c, i = advance(text, i)
+    elif c == '#':
+      # Line comment
+      while c != None and c != '\n':
+        c, i = advance(text, i)
     elif c in STATIC_TOKENS:
       # Static single-character tokens
       tokens.append(Token(STATIC_TOKENS[c]))
@@ -193,10 +222,10 @@ def lex(text):
   return tokens
 #endregion Lexer
 
-#region Parser 
+#region Parser
 
-#region factor
-def factor():
+#region atom
+def atom():
   global tk, i
   this = tk
   
@@ -220,7 +249,7 @@ def factor():
       
       while tk != None and tk.type != 'RPAR':
         if tk.type != 'SEP':
-          print('factor: id: Expected SEP.')
+          print('atom: id: Expected SEP.')
           exit(0)
         tk, i = advance(tokens, i) # ,
         args.append(expression())
@@ -237,25 +266,48 @@ def factor():
     else:
       return Node('VARGET', this, None)
   
-  elif this.type == 'SUB':
+  elif this.type == 'LPAR':
     tk, i = advance(tokens, i)
-    fac = factor()
+    expr = expression()
+    if expr == None:
+      print('atom: lpar: Expected expression.')
+      exit(0)
+    if tk.type != 'RPAR':
+      print('atom: rpar: Expected RPAR.')
+      exit(0)
+    tk, i = advance(tokens, i)
+    return expr
+#endregion atom
+
+#region power
+def power():
+  global tk, i
+  this = tk
+  
+  left = atom()
+  
+  while tk.type == 'POW':
+    op = tk
+    tk, i = advance(tokens, i) # ^
+    left = Node('POW', op, [left, atom()])
+  
+  return left
+#endregion
+
+#region factor
+def factor():
+  global tk, i
+  this = tk
+
+  if this.type == 'SUB':
+    tk, i = advance(tokens, i)
+    fac = power()
     if fac == None or fac.type != 'NUMBER':
       print('factor: sub: Expected number.')
       exit(0)
     return Node('NEG', this, [fac])
   
-  elif this.type == 'LPAR':
-    tk, i = advance(tokens, i)
-    expr = expression()
-    if expr == None:
-      print('factor: lpar: Expected expression.')
-      exit(0)
-    if tk.type != 'RPAR':
-      print('factor: rpar: Expected RPAR.')
-      exit(0)
-    tk, i = advance(tokens, i)
-    return expr
+  return power()
 #endregion factor
 
 #region term
@@ -345,13 +397,29 @@ def logicalexpression():
     print('logicalexpression: Expected expression.')
     exit(0)
   
-  while tk.type in ('EQU', 'NEQ', 'GTR', 'LSS', 'GEQ', 'LEQ'):
+  if tk.type in ('EQU', 'NEQ', 'GTR', 'LSS', 'GEQ', 'LEQ'):
     op = tk
     tk, i = advance(tokens, i)
     left = Node(op.type, op, [left, expression()])
     if left == None:
       print('logicalexpression: Expected expression.')
       exit(0)
+  
+  if tk.type in ('AND', 'OR'):
+    op = tk
+    tk, i = advance(tokens, i)
+    left = Node(op.type, op, [left, logicalexpression()])
+    if left == None:
+      print('logicalexpression: Expected logical expression.')
+      exit(0)
+  
+  # while tk.type in ('EQU', 'NEQ', 'GTR', 'LSS', 'GEQ', 'LEQ'):
+  #   op = tk
+  #   tk, i = advance(tokens, i)
+  #   left = Node(op.type, op, [left, expression()])
+  #   if left == None:
+  #     print('logicalexpression: Expected expression.')
+  #     exit(0)
   
   return left
 #endregion logicalexpression
@@ -431,6 +499,47 @@ def whilestatement():
   )
 #endregion whilestatement
 
+#region forloop
+def forloop():
+  global tk, i
+  this = tk
+  
+  if this.type != 'ID':
+    print('forloop: id: Expected ID.')
+    exit(0)
+  name = this.value
+  tk, i = advance(tokens, i) # ID
+
+  if tk.type == 'ID' and tk.value == 'from':
+    tk, i = advance(tokens, i) # 'from'
+  else:
+    print("forloop: from: Expected 'from'.")
+    exit(0)
+  
+  begin = expression()
+  
+  if tk.type == 'ID' and tk.value == 'to':
+    tk, i = advance(tokens, i) # 'to'
+  else:
+    print("forloop: to: Expected 'to'.")
+    exit(0)
+  
+  end = expression()
+  
+  block = codeblock()
+  
+  return Node(
+    'FOR',
+    Token('FOR', None),
+    [
+      name,
+      begin,
+      end,
+      block
+    ]
+  )
+#endregion forloop
+
 #region functiondef
 def functiondef():
   global tk, i
@@ -497,6 +606,10 @@ def statement():
     if this.value == 'while':
       tk, i = advance(tokens, i)
       return whilestatement()
+    
+    if this.value == 'for':
+      tk, i = advance(tokens, i)
+      return forloop()
     
     if this.value == 'def':
       tk, i = advance(tokens, i)
@@ -624,6 +737,10 @@ def interpret(node):
     return 1 if interpret(node.subnodes[0]) >= interpret(node.subnodes[1]) else 0
   elif node.type == 'LEQ':
     return 1 if interpret(node.subnodes[0]) <= interpret(node.subnodes[1]) else 0
+  elif node.type == 'AND':
+    return 1 if interpret(node.subnodes[0]) and interpret(node.subnodes[1]) else 0
+  elif node.type == 'OR':
+    return 1 if interpret(node.subnodes[0]) or interpret(node.subnodes[1]) else 0
   elif node.type == 'IF':
     if interpret(node.subnodes[0]):
       returnValue = 1
@@ -649,6 +766,33 @@ def interpret(node):
     returnValue = 1
     while interpret(node.subnodes[0]):
       for subnode in node.subnodes[1]:
+        ret = interpret(subnode)
+        if interpretState != '':
+          if interpretState == 'RETURN':
+            returnValue = ret
+          break
+        returnValue = ret
+        
+      if interpretState != '':
+        if interpretState == 'CONTINUE':
+          interpretState = ''
+          continue
+        if interpretState == 'BREAK':
+          interpretState = ''
+        break
+    return returnValue
+  elif node.type == 'FOR':
+    returnValue = 1
+    begin = interpret(node.subnodes[1])
+    end = interpret(node.subnodes[2])
+    if begin > end:
+      op = -1
+    else:
+      op = 1
+    for i in range(begin, end, op):
+      context.symboltable[node.subnodes[0]] = i
+      
+      for subnode in node.subnodes[3]:
         ret = interpret(subnode)
         if interpretState != '':
           if interpretState == 'RETURN':
@@ -728,34 +872,43 @@ def interpret(node):
   elif node.type == 'CONTINUE':
     interpretState = 'CONTINUE' # HORRIBLE FIXME:
     return 1
+  elif node.type == 'POW':
+    return interpret(node.subnodes[0]) ** interpret(node.subnodes[1])
 #endregion
 
 context = Context({}, None)
 interpretState = ''
 
 script = '''
-a=1+2*3;
-def iseven(number)
+for i from 3 to 0
 {
-  if number%2 == 0
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
-}
-while a>0
-{
-  a=a-1;
-  if !iseven(a)
-  {
-    continue;
-  }
-  print("number " + str(a) + " is even");
+  print(i);
 }
 '''
+
+# script = '''
+# a=10^0+2*3; # = 7
+# def/*ine function*/ is_even(number)
+# {
+#   if number%2 == 0
+#   {
+#     return 1;
+#   }
+#   else
+#   {
+#     return 0;
+#   }
+# }
+# while a>0
+# {
+#   a=a-1;
+#   if !is_even(a)
+#   {
+#     continue;
+#   }
+#   print("number " + str(a) + " is even");
+# }
+# '''
 
 tokens = lex(script)
 tk, i = advance(tokens, -1)
