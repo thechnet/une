@@ -23,7 +23,16 @@
 # - Power ('^')
 # - For loops
 
-from dataclasses import dataclass
+# 2021-02-26: Added Position class.
+# The Token class now holds a position object. This position can later be used
+# to show precise error locations. The function 'show_error' shows a line of code,
+# with arrows indicating the location of the error.
+
+# 2021-03-02:
+# - Turned data classes into regular classes to support Python <3.7.
+# - All tokens now include a position object when created.
+# - Illegal Character errors are now handled using the new system.
+# (This test is getting very messy, I should move to a new recode soon.)
 
 #region Constants
 DIGITS = '0123456789'
@@ -48,19 +57,35 @@ STATIC_TOKENS = {
 #endregion Constants
 
 #region Classes and Functions
-@dataclass
+
+class Position:
+  def __init__(self, file: str, text: str, ln_idx: int, ln: int, col: int):
+    self.file = file
+    self.text = text
+    self.ln_idx = ln_idx
+    self.ln = ln
+    self.col = col
+
 class Token:
-  type: str
-  value: any = None
+  def __init__(self, type: str, value: any, pos: Position):
+    self.type = type
+    self.value = value
+    self.pos = pos
   
   def __repr__(self):
     return f'\33[93m{self.type}\33[97m:\33[92m{self.value}\33[97m' if self.value != None else f'\33[93m{self.type}\33[97m'
+  
+  def detail(self):
+    ret = f'\33[90m{self.pos.file}:{self.pos.ln_idx}:{self.pos.ln}:{self.pos.col}:\33[93m{self.type}'
+    if self.value != None:
+      ret += f'\33[97m:\33[92m{self.value}\33[97m'
+    return ret
 
-@dataclass
 class Node:
-  type: str
-  token: Token
-  subnodes: list = None
+  def __init__(self, type: str, token: Token, subnodes: list = None):
+    self.type = type
+    self.token = token
+    self.subnodes = subnodes
   
   def __repr__(self):
     if self.subnodes:
@@ -72,10 +97,10 @@ class Node:
       ret = f'\33[92m{self.token.value}\33[97m'
     return ret
 
-@dataclass
 class Context:
-  symboltable: dict
-  parent: any
+  def __init__(self, symboltable: dict, parent: any):
+    self.symboltable = symboltable
+    self.parent = parent
   
   def __repr__(self):
     return f'{self.symboltable}'
@@ -91,7 +116,14 @@ def symboltable_get(ctx, key):
     if ctx.parent == None:
       return None
     ctx = ctx.parent
-    
+
+def show_error(begin, end, message):
+  print(
+    f'File {begin.file}, Line {begin.ln}:\n  ' +
+    begin.text[begin.ln_idx:].split('\n')[0] +
+    f'\n\33[{begin.col+2}C' + '^'*(end.col-begin.col) +
+    f'\n{message}'
+  )
 #endregion Classes and Functions
 
 #region Built-in Functions
@@ -113,11 +145,19 @@ def builtin_var_get_str(key):
 #endregion Built-in Functions
 
 #region Lexer
-def lex(text):
+def lex(file, text):
+  global error, error_begin, error_end
   tokens = []
+  ln = 0
+  ln_idx = 0
+  col = 0
   c, i = advance(text, -1)
-  while c != None:
+  while c != None and not error:
     if c in WHITESPACE:
+      if c == '\n':
+        ln += 1
+        col = 0
+        ln_idx = i+1
       c, i = advance(text, i)
     elif c in DIGITS:
       # Integer token
@@ -126,7 +166,7 @@ def lex(text):
       while c != None and c in DIGITS:
         buf += c
         c, i = advance(text, i)
-      tokens.append(Token('INT', int(buf)))
+      tokens.append(Token('INT', int(buf), Position(file, text, ln_idx, ln, i-ln_idx)))
     elif c in LETTERS:
       # Identifier token
       buf = c
@@ -134,7 +174,7 @@ def lex(text):
       while c != None and c in LETTERS + DIGITS:
         buf += c
         c, i = advance(text, i)
-      tokens.append(Token('ID', buf))
+      tokens.append(Token('ID', buf, Position(file, text, ln_idx, ln, i-ln_idx)))
     elif c == '"':
       # String token
       buf = ''
@@ -158,44 +198,44 @@ def lex(text):
           break
         buf += c
         c, i = advance(text, i)
-      tokens.append(Token('STR', buf))
+      tokens.append(Token('STR', buf, Position(file, text, ln_idx, ln, i-ln_idx)))
     elif c == '=':
       # Assignment and equality
       c, i = advance(text, i)
       if c == '=':
         c, i = advance(text, i)
-        tokens.append(Token('EQU'))
+        tokens.append(Token('EQU', None, Position(file, text, ln_idx, ln, i-ln_idx)))
       else:
-        tokens.append(Token('EQ'))
+        tokens.append(Token('EQ', None, Position(file, text, ln_idx, ln, i-ln_idx)))
     elif c == '!':
       # Not or not equals
       c, i = advance(text, i)
       if c == '=':
         c, i = advance(text, i)
-        tokens.append(Token('NEQ'))
+        tokens.append(Token('NEQ', None, Position(file, text, ln_idx, ln, i-ln_idx)))
       else:
-        tokens.append(Token('NOT'))
+        tokens.append(Token('NOT', None, Position(file, text, ln_idx, ln, i-ln_idx)))
     elif c == '>':
       # Greater than and greater than or equal to
       c, i = advance(text, i)
       if c == '=':
         c, i = advance(text, i)
-        tokens.append(Token('GEQ'))
+        tokens.append(Token('GEQ', None, Position(file, text, ln_idx, ln, i-ln_idx)))
       else:
-        tokens.append(Token('GTR'))
+        tokens.append(Token('GTR', None, Position(file, text, ln_idx, ln, i-ln_idx)))
     elif c == '<':
       # Less than and less than or equal to
       c, i = advance(text, i)
       if c == '=':
         c, i = advance(text, i)
-        tokens.append(Token('LEQ'))
+        tokens.append(Token('LEQ', None, Position(file, text, ln_idx, ln, i-ln_idx)))
       else:
-        tokens.append(Token('LSS'))
+        tokens.append(Token('LSS', None, Position(file, text, ln_idx, ln, i-ln_idx)))
     elif c == '/':
       # Division or inline comment
       c, i = advance(text, i) # /
       if c != '*':
-        tokens.append(Token('DIV'))
+        tokens.append(Token('DIV', None, Position(file, text, ln_idx, ln, i-ln_idx)))
       else:
         while c != None:
           if c == '*':
@@ -212,13 +252,15 @@ def lex(text):
         c, i = advance(text, i)
     elif c in STATIC_TOKENS:
       # Static single-character tokens
-      tokens.append(Token(STATIC_TOKENS[c]))
+      tokens.append(Token(STATIC_TOKENS[c], None, Position(file, text, ln_idx, ln, i-ln_idx)))
       c, i = advance(text, i)
     else:
       # Unknown character
-      print('Illegal Character: \'' + c + '\'')
-      exit(0)
-  tokens.append(Token('EOF'))
+      error = f"Illegal Character: '{c}'"
+      error_begin = Position(file, text, ln_idx, ln, i-ln_idx)
+      error_end = Position(file, text, ln_idx, ln, i-ln_idx+1)
+  if not error:
+    tokens.append(Token('EOF', None, Position(file, text, ln_idx, ln, i-ln_idx)))
   return tokens
 #endregion Lexer
 
@@ -471,7 +513,7 @@ def ifstatement():
   
   return Node(
     'IF',
-    Token('IF', None),
+    this,
     [
       logexpr,
       trueblock,
@@ -491,7 +533,7 @@ def whilestatement():
   
   return Node(
     'WHILE',
-    Token('WHILE', None),
+    this,
     [
       logexpr,
       trueblock
@@ -530,7 +572,7 @@ def forloop():
   
   return Node(
     'FOR',
-    Token('FOR', None),
+    this,
     [
       name,
       begin,
@@ -543,12 +585,13 @@ def forloop():
 #region functiondef
 def functiondef():
   global tk, i
+  this = tk
   
-  if tk.type != 'ID':
+  if this.type != 'ID':
     print('functiondef: Expected ID.')
     exit(0)
   
-  funcid = tk.value
+  funcid = this.value
   
   tk, i = advance(tokens, i) # id
   
@@ -584,7 +627,7 @@ def functiondef():
   
   return Node(
     'FUNCDEF',
-    Token('FUNCDEF', funcid),
+    this,
     [
       params,
       funcblock
@@ -622,7 +665,7 @@ def statement():
         print('statement: id: return: Expected end of command.')
         exit(0)
       tk, i = advance(tokens, i) # end
-      return Node('RETURN', Token('RETURN', None), [expr])
+      return Node('RETURN', this, [expr])
     
     if this.value == 'break':
       tk, i = advance(tokens, i) # id
@@ -630,7 +673,7 @@ def statement():
         print('statement: id: break: Expected end of command.')
         exit(0)
       tk, i = advance(tokens, i) # end
-      return Node('BREAK', Token('BREAK', None), [])
+      return Node('BREAK', this, [])
     
     if this.value == 'continue':
       tk, i = advance(tokens, i) # id
@@ -638,7 +681,7 @@ def statement():
         print('statement: id: continue: Expected end of command.')
         exit(0)
       tk, i = advance(tokens, i) # end
-      return Node('CONTINUE', Token('CONTINUE', None), [])
+      return Node('CONTINUE', this, [])
     
     _tk, _i = tk, i
     tk, i = advance(tokens, i)
@@ -876,14 +919,15 @@ def interpret(node):
     return interpret(node.subnodes[0]) ** interpret(node.subnodes[1])
 #endregion
 
+error = ''
+error_begin = None
+error_end = None
+
 context = Context({}, None)
 interpretState = ''
 
 script = '''
-for i from 3 to 0
-{
-  print(i);
-}
+$
 '''
 
 # script = '''
@@ -910,7 +954,10 @@ for i from 3 to 0
 # }
 # '''
 
-tokens = lex(script)
+tokens = lex('<hardcoded>', script)
+if error:
+  show_error(error_begin, error_end, error)
+  exit(0)
 tk, i = advance(tokens, -1)
 asts = parse(tokens)
 results = []
@@ -924,10 +971,10 @@ print(
   'Input\n'
   f'\33[97m{script.strip()}\33[0m\n'
 )
-print(
-  'Lexer Result\n'
-  f'\33[97m{tokens}\n\33[0m'
-)
+print('Lexer Result\n')
+# print(f'\33[97m{tokens}')
+for tok in tokens: print(tok.detail())
+print('\33[0m')
 print(
   'Parser Result\n'
   f'\33[97m{asts}\33[0m\n'
