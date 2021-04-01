@@ -1,0 +1,5 @@
+.vscode*
+__pycache__
+notes
+desktop.ini
+c/test.txt
