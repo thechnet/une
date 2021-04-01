@@ -927,7 +927,7 @@ context = Context({}, None)
 interpretState = ''
 
 script = '''
-$
+1a
 '''
 
 # script = '''
@@ -955,6 +955,7 @@ $
 # '''
 
 tokens = lex('<hardcoded>', script)
+print(tokens)
 if error:
   show_error(error_begin, error_end, error)
   exit(0)
