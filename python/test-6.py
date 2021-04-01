@@ -927,7 +927,7 @@ context = Context({}, None)
 interpretState = ''
 
 script = '''
-1a
+$
 '''
 
 # script = '''

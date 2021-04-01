@@ -3,3 +3,5 @@ __pycache__
 notes
 desktop.ini
 c/test.txt
+*.exe
+*.exe.stackdump
