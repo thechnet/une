@@ -12,7 +12,7 @@ cls & gcc test-1.c -o test-1.exe && test-1.exe
 TODO:
 - read tokens directly from file (cs_lex_file)
 - store error in file?
-- negate
+- negate FIXME:
 */
 
 #pragma region #
@@ -23,7 +23,7 @@ TODO:
 #include <wchar.h>
 
 #define CS_PORTABLE_SWPRINTF
-#define CS_WINDOWS
+//#define CS_WINDOWS
 
 #ifdef CS_WINDOWS
   #include <windows.h>
@@ -396,26 +396,6 @@ typedef enum _cs_node_type {
 typedef struct _cs_node {
   cs_node_type type;
   cs_position pos;
-  /*
-  Every operation requires at least one of these operations.
-  - 'primary' holds the second to last thing that comes to mind when thinking
-    about a procedure. This could be...
-    ... the number that is to be powered.
-    ... the true block of an if statement.
-    ... the body of a for loop.
-    ... the parameters or arguments to a function.
-    ... the left operand in an arithmetic operation.
-  - 'secondary' holds the last thing that comes to mind when thinking
-    about a procedure. This could be...
-    ... the number to power by.
-    ... the false block of an if statement.
-    ... the body of a function definition.
-    ... the right operand in an arithmetic operation.
-  - 'head' holds additional data about a procedure. This could be...
-    ... the condition of an if statement, for, or while loop.
-    ... the name of a function definition.
-    ... a pointer to a list of node pointers.
-  */
   union _content {
     cs_datum datum;
     union _branch {
@@ -429,19 +409,24 @@ typedef struct _cs_node {
         struct _cs_node * condition;
         struct _cs_node * body;
       } _while;
+      struct __if {
+        struct _cs_node * condition;
+        struct _cs_node * truebody;
+        struct _cs_node * falsebody;
+      } _if;
+      struct __fndef {
+        struct _cs_node * name;
+        struct _cs_node * params;
+        struct _cs_node * body;
+      } _fndef;
       struct __binop {
         struct _cs_node * left;
         struct _cs_node * right;
       } _binop;
-      // struct __unop {
-      //   struct _cs_node * center;
-      // } _unop;
+      struct __unop {
+        struct _cs_node * center;
+      } _unop;
     } branch;
-    // struct _branches {
-    //   struct _cs_node * primary;
-    //   struct _cs_node * secondary;
-    //   struct _cs_node * head;
-    // } branches;
   } content;
 } cs_node;
 #pragma endregion Struct: Node
@@ -504,17 +489,18 @@ wchar_t * cs_node_to_wcs(cs_node * node)
 {
   // FIXME: NOT DYNAMIC
   #define CS_NODE_DISPLAY_BUFFER_SIZE 32767
+  if(node == NULL) return L"\33[90m-\33[0m";
   wchar_t * buffer = malloc(32767 * sizeof(*buffer));
   buffer[0] = L'\0';
   switch(node->type)
   {
     case CS_NT_BLOCK: {
       cs_node ** list = (cs_node**)node->content.datum.value._p;
-      int i = 0;
-      int offset = 0;
+      int offset = SWPRINTF(buffer, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m%ls", cs_node_to_wcs(list[0]));
+      int i = 1;
       while(list[i]->type != CS_NT_END)
       {
-        offset += SWPRINTF(buffer+offset, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m%ls\n", cs_node_to_wcs(list[i]));
+        offset += SWPRINTF(buffer+offset, CS_NODE_DISPLAY_BUFFER_SIZE, L"\n\33[0m%ls", cs_node_to_wcs(list[i]));
         i++;
       }
       break; }
@@ -546,7 +532,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       }
       SWPRINTF(buffer+offset, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m]");
       break; }
-    
+
     case CS_NT_ADD:
     case CS_NT_SUB:
     case CS_NT_MUL:
@@ -554,11 +540,31 @@ wchar_t * cs_node_to_wcs(cs_node * node)
     case CS_NT_MOD:
     case CS_NT_POW:
     case CS_NT_INDEX:
+    case CS_NT_EQU:
+    case CS_NT_NEQ:
+    case CS_NT_GTR:
+    case CS_NT_GEQ:
+    case CS_NT_LSS:
+    case CS_NT_LEQ:
+    case CS_NT_AND:
+    case CS_NT_OR:
       SWPRINTF(buffer, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m(\33[96m%ls\33[0m %ls\33[0m, %ls\33[0m)", cs_node_type_to_wcs(node->type), cs_node_to_wcs(node->content.branch._binop.left), cs_node_to_wcs(node->content.branch._binop.right));
       break;
     
     case CS_NT_FOR:
       SWPRINTF(buffer, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m(\33[96mFOR\33[0m %ls\33[0m, %ls\33[0m, %ls\33[0m, %ls\33[0m)", cs_node_to_wcs(node->content.branch._for.counter), cs_node_to_wcs(node->content.branch._for.from), cs_node_to_wcs(node->content.branch._for.to), cs_node_to_wcs(node->content.branch._for.body));
+      break;
+    
+    case CS_NT_WHILE:
+      SWPRINTF(buffer, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m(\33[96mWHILE\33[0m %ls\33[0m, %ls\33[0m", cs_node_to_wcs(node->content.branch._while.condition), cs_node_to_wcs(node->content.branch._while.body));
+      break;
+
+    case CS_NT_IF:
+      SWPRINTF(buffer, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m(\33[96mIF\33[0m %ls\33[0m, %ls\33[0m, %ls\33[0m)", cs_node_to_wcs(node->content.branch._if.condition), cs_node_to_wcs(node->content.branch._if.truebody), cs_node_to_wcs(node->content.branch._if.falsebody));
+      break;
+    
+    case CS_NT_FNDEF:
+      SWPRINTF(buffer, CS_NODE_DISPLAY_BUFFER_SIZE, L"\33[0m(\33[96mDEF\33[0m %ls\33[0m, %ls\33[0m, %ls\33[0m)", cs_node_to_wcs(node->content.branch._fndef.name), cs_node_to_wcs(node->content.branch._fndef.params), cs_node_to_wcs(node->content.branch._fndef.body));
       break;
 
     default:
@@ -678,12 +684,13 @@ cs_token * cs_lex_wcs(cs_file file)
   size_t idx = 0;
   while(1)
   {
-    if(tokenCount >= maxTokens) // DEBUG: seems to work...
+    if(tokenCount+1 >= maxTokens) // DEBUG: seems to work...
     {
       maxTokens *= 2;
       cs_token * _tokens = realloc(tokens, maxTokens * sizeof(*_tokens));
       if(_tokens == NULL) WERR(L"realloc");
       tokens = _tokens;
+      //wprintf(L"-> Tokens doubled\n");
     }
     
     #pragma region Number
@@ -822,17 +829,19 @@ cs_token * cs_lex_wcs(cs_file file)
       }
       buffer[bufferIndex] = L'\0';
       cs_token tk = {0};
-           if(!wcscmp(buffer, L"if"))    tk.type = CS_TT_IF;
-      else if(!wcscmp(buffer, L"elif"))  tk.type = CS_TT_ELIF;
-      else if(!wcscmp(buffer, L"else"))  tk.type = CS_TT_ELSE;
-      else if(!wcscmp(buffer, L"for"))   tk.type = CS_TT_FOR;
-      else if(!wcscmp(buffer, L"from"))  tk.type = CS_TT_FROM;
-      else if(!wcscmp(buffer, L"to"))    tk.type = CS_TT_TO;
-      else if(!wcscmp(buffer, L"while")) tk.type = CS_TT_WHILE;
-      else if(!wcscmp(buffer, L"def"))   tk.type = CS_TT_DEF;
-      else if(!wcscmp(buffer, L"return"))  tk.type = CS_TT_RETURN;
+           if(!wcscmp(buffer, L"if"))       tk.type = CS_TT_IF;
+      else if(!wcscmp(buffer, L"elif"))     tk.type = CS_TT_ELIF;
+      else if(!wcscmp(buffer, L"else"))     tk.type = CS_TT_ELSE;
+      else if(!wcscmp(buffer, L"for"))      tk.type = CS_TT_FOR;
+      else if(!wcscmp(buffer, L"from"))     tk.type = CS_TT_FROM;
+      else if(!wcscmp(buffer, L"to"))       tk.type = CS_TT_TO;
+      else if(!wcscmp(buffer, L"while"))    tk.type = CS_TT_WHILE;
+      else if(!wcscmp(buffer, L"def"))      tk.type = CS_TT_DEF;
+      else if(!wcscmp(buffer, L"return"))   tk.type = CS_TT_RETURN;
       else if(!wcscmp(buffer, L"break"))    tk.type = CS_TT_BREAK;
       else if(!wcscmp(buffer, L"continue")) tk.type = CS_TT_CONTINUE;
+      else if(!wcscmp(buffer, L"and"))      tk.type = CS_TT_AND;
+      else if(!wcscmp(buffer, L"or"))       tk.type = CS_TT_OR;
       else
       {
         tk.type = CS_TT_ID;
@@ -1031,19 +1040,21 @@ cs_token * cs_lex_wcs(cs_file file)
 cs_node * cs_parse_block(cs_token * tokens, size_t * token_index);
 cs_node * cs_parse_statements(cs_token * tokens, size_t * token_index, cs_token_type eob_token);
 cs_node * cs_parse_statement(cs_token * tokens, size_t * token_index);
-cs_node * cs_parse_if(cs_token * tokens, size_t * token_index);
+cs_node * cs_parse_if(cs_token * tokens, size_t * token_index, cs_token_type start_token);
 cs_node * cs_parse_for(cs_token * tokens, size_t * token_index);
 cs_node * cs_parse_while(cs_token * tokens, size_t * token_index);
-// cs_node * cs_parse_def(cs_token * tokens, size_t * token_index);
+cs_node * cs_parse_def(cs_token * tokens, size_t * token_index);
 // cs_node * cs_parse_return(cs_token * tokens, size_t * token_index); //?
+cs_node * cs_parse_conditions(cs_token * tokens, size_t * token_index);
 cs_node * cs_parse_condition(cs_token * tokens, size_t * token_index);
 cs_node * cs_parse_expression(cs_token * tokens, size_t * token_index);
 cs_node * cs_parse_term(cs_token * tokens, size_t * token_index);
 cs_node * cs_parse_power(cs_token * tokens, size_t * token_index);
-// cs_node * cs_parse_call(cs_token * tokens, size_t * token_index); // TODO: Unsure about this one...
 cs_node * cs_parse_index(cs_token * tokens, size_t * token_index);
 cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index);
-cs_node * cs_parse_sequence(cs_token * tokens, size_t * token_index, cs_token_type eos_token);
+cs_node * cs_parse_expression_sequence(cs_token * tokens, size_t * token_index, cs_token_type eos_token);
+cs_node * cs_parse_id_sequence(cs_token * tokens, size_t * token_index, cs_token_type eos_token);
+cs_node * cs_parse_id(cs_token * tokens, size_t * token_index);
 
 #pragma region Parse Block
 cs_node * cs_parse_block(cs_token * tokens, size_t * token_index)
@@ -1058,14 +1069,12 @@ cs_node * cs_parse_block(cs_token * tokens, size_t * token_index)
   {
     block = cs_parse_statements(tokens, token_index, CS_TT_NEW);
   }
-  if(block == NULL) return NULL;
+  //if(block == NULL) return NULL; // FIXME: Not needed, right?
   return block;
 }
 #pragma endregion Parse Block
 
 #pragma region Parse Statements
-// Return Node: CS_NT_BLOCK
-// Return Type: Datum
 cs_node * cs_parse_statements(cs_token * tokens, size_t * token_index, cs_token_type eob_token)
 {
   size_t block_size = 4; // FIXME: // amt of cs_node*
@@ -1074,20 +1083,10 @@ cs_node * cs_parse_statements(cs_token * tokens, size_t * token_index, cs_token_
   
   size_t token_index_start = *token_index;
   size_t block_index = 0;
+
   while(1)
   {
-    if(eob_token != CS_TT_EOF && tokens[*token_index].type == CS_TT_EOF) // FIXME: Is there a better solution?
-    {
-      error.type = CS_ET_UNEXPECTED_TOKEN;
-      error.pos = tokens[*token_index].pos;
-      error.info.type = CS_VT_INT;
-      error.info.value._int = (int)CS_TT_EOF;
-      error.__line__ = __LINE__;
-      strcpy(error.__file__, __FILE__);
-      return NULL;
-    }
-    // Skip NEW
-    if(eob_token != CS_TT_NEW && tokens[*token_index].type == CS_TT_NEW) // FIXME: Same here as above.
+    if(tokens[*token_index].type == CS_TT_NEW)
     {
       (*token_index)++;
       continue;
@@ -1102,13 +1101,39 @@ cs_node * cs_parse_statements(cs_token * tokens, size_t * token_index, cs_token_
     }
     if(tokens[*token_index].type == eob_token)
     {
+      wprintf(L"(%d)",eob_token);
       (*token_index)++;
       break;
     }
-    block[block_index] = cs_parse_statement(tokens, token_index);
-    if(block[block_index] == NULL) return NULL;
+    if(tokens[*token_index].type == CS_TT_EOF)
+    {
+      wprintf(L"[%d]",eob_token);
+      break;
+    }
+    if(tokens[*token_index].type == CS_TT_LBRC)
+    {
+      block[block_index] = cs_parse_block(tokens, token_index);
+      if(block[block_index] == NULL) return NULL;
+    }
+    else
+    {
+      block[block_index] = cs_parse_statement(tokens, token_index);
+      if(block[block_index] == NULL) return NULL;
+      if(tokens[*token_index].type != eob_token
+      && tokens[*token_index].type != CS_TT_NEW)
+      {
+        error.type = CS_ET_EXPECTED_TOKEN;
+        error.pos = tokens[*token_index].pos;
+        error.info.type = CS_VT_INT;
+        error.info.value._int = (int)CS_TT_NEW;
+        error.__line__ = __LINE__;
+        strcpy(error.__file__, __FILE__);
+        return NULL;
+      }
+    }
     block_index++;
   }
+
   cs_node * end = malloc(sizeof(*end));
   if(end == NULL) WERR(L"malloc");
   end->type = CS_NT_END;
@@ -1131,6 +1156,9 @@ cs_node * cs_parse_statement(cs_token * tokens, size_t * token_index)
   switch(tokens[*token_index].type)
   {
     case CS_TT_FOR: return cs_parse_for(tokens, token_index);
+    case CS_TT_IF: return cs_parse_if(tokens, token_index, CS_TT_IF);
+    case CS_TT_WHILE: return cs_parse_while(tokens, token_index);
+    case CS_TT_DEF: return cs_parse_def(tokens, token_index);
     
     default: {
       cs_node * expression = cs_parse_expression(tokens, token_index);
@@ -1142,35 +1170,56 @@ cs_node * cs_parse_statement(cs_token * tokens, size_t * token_index)
 #pragma endregion Parse Statement
 
 #pragma region Parse If Statement
-cs_node * cs_parse_if(cs_token * tokens, size_t * token_index)
+cs_node * cs_parse_if(cs_token * tokens, size_t * token_index, cs_token_type start_token)
 {
   size_t pos_start = tokens[*token_index].pos.start;
   
-  // if
-  if(tokens[*token_index].type != CS_TT_IF)
+  // if or elif
+  if(tokens[*token_index].type != start_token)
   {
     error.type = CS_ET_EXPECTED_TOKEN;
-    error.info.value._int = CS_TT_IF;
+    error.info.value._int = (int)start_token;
     error.pos = tokens[*token_index].pos;
     error.__line__ = __LINE__;
     strcpy(error.__file__, __FILE__);
     return NULL;
   }
   (*token_index)++;
-  
+
   // condition
-  cs_node * condition = cs_parse_condition(tokens, token_index);
+  cs_node * condition = cs_parse_conditions(tokens, token_index);
   if(condition == NULL) return NULL;
   
   // { ... }
   cs_node * truebody = cs_parse_block(tokens, token_index);
   if(truebody == NULL) return NULL;
-  
-  // else
+
+  cs_node * ifstatement = malloc(sizeof(*ifstatement));
+  ifstatement->type = CS_NT_IF;
+  ifstatement->pos.start = condition->pos.start; // Is overwritten later.
+  ifstatement->pos.end = truebody->pos.end;
+  ifstatement->content.branch._if.condition = condition;
+  ifstatement->content.branch._if.truebody = truebody;
+  ifstatement->content.branch._if.falsebody = NULL;
+
+  // elif
   if(tokens[*token_index].type == CS_TT_ELIF)
   {
-    (*token_index)++;
+    cs_node * falsebody = cs_parse_if(tokens, token_index, CS_TT_ELIF);
+    if(falsebody == NULL) return NULL;
+    ifstatement->content.branch._if.falsebody = falsebody;
   }
+
+  // else
+  else if(tokens[*token_index].type == CS_TT_ELSE)
+  {
+    (*token_index)++;
+    cs_node * falsebody = cs_parse_block(tokens, token_index);
+    if(falsebody == NULL) return NULL;
+    ifstatement->content.branch._if.falsebody = falsebody;
+  }
+
+  return ifstatement;
 }
 #pragma endregion Parse If Statement
 
@@ -1194,20 +1243,8 @@ cs_node * cs_parse_for(cs_token * tokens, size_t * token_index)
   (*token_index)++;
   
   // i
-  if(tokens[*token_index].type != CS_TT_ID)
-  {
-    error.type = CS_ET_EXPECTED_TOKEN;
-    error.info.value._int = CS_TT_ID;
-    error.pos = tokens[*token_index].pos;
-    error.__line__ = __LINE__;
-    strcpy(error.__file__, __FILE__);
-    return NULL;
-  }
-  cs_node * counter = malloc(sizeof(*counter)); // TODO: move creation of id node into function?
-  counter->type = CS_NT_ID;
-  counter->pos = tokens[*token_index].pos;
-  counter->content.datum.value._wcs = tokens[*token_index].value._wcs;
-  (*token_index)++;
+  cs_node * counter = cs_parse_id(tokens, token_index);
+  if(counter == NULL) return NULL;
   
   // from
   if(tokens[*token_index].type != CS_TT_FROM)
@@ -1293,10 +1330,131 @@ cs_node * cs_parse_while(cs_token * tokens, size_t * token_index)
 }
 #pragma endregion Parse While Loop
 
+#pragma region Parse Function Definition
+// Return Node: CS_NT_FNDEF
+// Return Type: Branches
+cs_node * cs_parse_def(cs_token * tokens, size_t * token_index)
+{
+  size_t pos_start = tokens[*token_index].pos.start;
+
+  // def
+  if(tokens[*token_index].type != CS_TT_DEF)
+  {
+    error.type = CS_ET_EXPECTED_TOKEN;
+    error.pos = tokens[*token_index].pos;
+    error.info.type = CS_VT_INT;
+    error.info.value._int = (int)CS_TT_DEF;
+    error.__line__ = __LINE__;
+    strcpy(error.__file__, __FILE__);
+    return NULL;
+  }
+  (*token_index)++;
+
+  // name
+  cs_node * name = cs_parse_id(tokens, token_index);
+  if(name == NULL) return NULL;
+
+  // (
+  if(tokens[*token_index].type != CS_TT_LPAR)
+  {
+    error.type = CS_ET_EXPECTED_TOKEN;
+    error.pos = tokens[*token_index].pos;
+    error.info.type = CS_VT_INT;
+    error.info.value._int = (int)CS_TT_LPAR;
+    error.__line__ = __LINE__;
+    strcpy(error.__file__, __FILE__);
+    return NULL;
+  }
+  (*token_index)++;
+
+  // parameters)
+  cs_node * params = cs_parse_id_sequence(tokens, token_index, CS_TT_RPAR);
+  if(params == NULL) return NULL;
+
+  // { ... }
+  cs_node * body = cs_parse_block(tokens, token_index);
+  if(body == NULL) return NULL;
+
+  cs_node * fndef = malloc(sizeof(*fndef));
+  if(fndef == NULL) WERR(L"malloc");
+  fndef->type = CS_NT_FNDEF;
+  fndef->pos = (cs_position){pos_start, body->pos.end};
+  fndef->content.branch._fndef.name = name;
+  fndef->content.branch._fndef.params = params;
+  fndef->content.branch._fndef.body = body;
+
+  return fndef;
+}
+#pragma endregion Parse Function Definition
+
+#pragma region Parse Conditions
+cs_node * cs_parse_conditions(cs_token * tokens, size_t * token_index)
+{
+  cs_node * left = cs_parse_condition(tokens, token_index);
+  if(left == NULL) return NULL;
+  
+  while(tokens[*token_index].type == CS_TT_AND
+     || tokens[*token_index].type == CS_TT_OR)
+  {
+    cs_node * new_left = malloc(sizeof(*new_left));
+    new_left->type = tokens[*token_index].type == CS_TT_AND ? CS_NT_AND : CS_NT_OR;
+    new_left->pos.start = left->pos.start;
+    new_left->content.branch._binop.left = left;
+    (*token_index)++;
+
+    cs_node * right = cs_parse_condition(tokens, token_index);
+    if(right == NULL) return NULL;
+    new_left->content.branch._binop.right = right;
+    
+    new_left->pos.end = right->pos.end;
+    
+    left = new_left;
+
+  }
+  
+  return left;
+}
+#pragma endregion Parse Conditions
+
 #pragma region Parse Condition
 cs_node * cs_parse_condition(cs_token * tokens, size_t * token_index)
 {
+  cs_node * left = cs_parse_expression(tokens, token_index);
+  if(left == NULL) return NULL;
   
+  while(tokens[*token_index].type == CS_TT_EQU
+     || tokens[*token_index].type == CS_TT_NEQ
+     || tokens[*token_index].type == CS_TT_GTR
+     || tokens[*token_index].type == CS_TT_GEQ
+     || tokens[*token_index].type == CS_TT_LSS
+     || tokens[*token_index].type == CS_TT_LEQ)
+  {
+    cs_node * new_left = malloc(sizeof(*new_left));
+    switch(tokens[*token_index].type)
+    {
+      case CS_TT_EQU: new_left->type = CS_NT_EQU; break;
+      case CS_TT_NEQ: new_left->type = CS_NT_NEQ; break;
+      case CS_TT_GTR: new_left->type = CS_NT_GTR; break;
+      case CS_TT_GEQ: new_left->type = CS_NT_GEQ; break;
+      case CS_TT_LSS: new_left->type = CS_NT_LSS; break;
+      case CS_TT_LEQ: new_left->type = CS_NT_LEQ; break;
+      default: WERR(L"what?");
+    }
+    new_left->pos.start = left->pos.start;
+    new_left->content.branch._binop.left = left;
+    (*token_index)++;
+
+    cs_node * right = cs_parse_expression(tokens, token_index);
+    if(right == NULL) return NULL;
+    new_left->content.branch._binop.right = right;
+    
+    new_left->pos.end = right->pos.end;
+    
+    left = new_left;
+
+  }
+  
+  return left;
 }
 #pragma endregion Parse Condition
 
@@ -1344,7 +1502,7 @@ cs_node * cs_parse_term(cs_token * tokens, size_t * token_index)
       case CS_TT_MUL: new_left->type = CS_NT_MUL; break;
       case CS_TT_DIV: new_left->type = CS_NT_DIV; break;
       case CS_TT_MOD: new_left->type = CS_NT_MOD; break;
-      //default: return NULL;
+      default: WERR(L"what?!"); // FIXME: Ugly
     }
     new_left->pos.start = left->pos.start;
     new_left->content.branch._binop.left = left;
@@ -1434,6 +1592,16 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index)
 {
   switch(tokens[*token_index].type)
   {
+    case CS_TT_SUB: {
+      cs_node * neg = malloc(sizeof(*neg));
+      neg->type = CS_NT_NEG;
+      neg->pos.start = tokens[*token_index].pos.start;
+      (*token_index)++;
+      cs_node * atom = cs_parse_atom(tokens, token_index);
+      if(atom == NULL) return NULL;
+      neg->content.branch._unop.center = atom;
+      return atom; }
+
     case CS_TT_INT: {
       cs_node * num = malloc(sizeof(*num));
       num->type = CS_NT_INT;
@@ -1470,7 +1638,7 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index)
       (*token_index)++;
       if(tokens[(*token_index)+1].type == CS_TT_LPAR)
       {
-        cs_node * list = cs_parse_sequence(tokens, token_index, CS_TT_RSQB);
+        cs_node * list = cs_parse_expression_sequence(tokens, token_index, CS_TT_RSQB);
         if(list == NULL) return NULL;
         cs_node * fncall = malloc(sizeof(*fncall));
         fncall->type = CS_NT_FNCALL;
@@ -1486,13 +1654,13 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index)
     
     case CS_TT_LSQB: {
       (*token_index)++;
-      cs_node * list = cs_parse_sequence(tokens, token_index, CS_TT_RSQB);
+      cs_node * list = cs_parse_expression_sequence(tokens, token_index, CS_TT_RSQB);
       if(list == NULL) return NULL;
       return list; }
     
     case CS_TT_LPAR:
       (*token_index)++;
-      cs_node * expression = cs_parse_expression(tokens, token_index);
+      cs_node * expression = cs_parse_conditions(tokens, token_index); // FIXME: Magic!
       if(expression == NULL) return NULL;
       if(tokens[*token_index].type != CS_TT_RPAR)
       {
@@ -1519,8 +1687,8 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index)
 }
 #pragma endregion Parse Atom
 
-#pragma region Parse Sequence
-cs_node * cs_parse_sequence(cs_token * tokens, size_t * token_index, cs_token_type eos_token)
+#pragma region Parse Expression Sequence
+cs_node * cs_parse_expression_sequence(cs_token * tokens, size_t * token_index, cs_token_type eos_token)
 {
   size_t sequence_size = 4; // FIXME: // amt of cs_node*
   cs_node ** sequence = malloc(sequence_size * sizeof(*sequence));
@@ -1577,7 +1745,88 @@ cs_node * cs_parse_sequence(cs_token * tokens, size_t * token_index, cs_token_ty
 
   return node;
 }
-#pragma endregion Parse Sequence
+#pragma endregion Parse Expression Sequence
+
+#pragma region Parse Identifier Sequence
+cs_node * cs_parse_id_sequence(cs_token * tokens, size_t * token_index, cs_token_type eos_token)
+{
+  size_t sequence_size = 4; // FIXME: // amt of cs_node*
+  cs_node ** sequence = malloc(sequence_size * sizeof(*sequence));
+  if(sequence == NULL) WERR(L"malloc");
+  
+  size_t token_index_start = *token_index;
+  size_t sequence_index = 0;
+  while(1)
+  {
+    if(tokens[*token_index].type == CS_TT_EOF)
+    {
+      error.type = CS_ET_UNEXPECTED_TOKEN;
+      error.pos = tokens[*token_index].pos;
+      error.info.type = CS_VT_INT;
+      error.info.value._int = (int)CS_TT_EOF;
+      error.__line__ = __LINE__;
+      strcpy(error.__file__, __FILE__);
+      return NULL;
+    }
+    // Skip SEP
+    if(tokens[*token_index].type == CS_TT_SEP)
+    {
+      (*token_index)++;
+      continue;
+    }
+    if(sequence_index >= sequence_size)
+    {
+      sequence_size *= 2;
+      cs_node ** _sequence = realloc(sequence, sequence_size * sizeof(_sequence));
+      if(_sequence == NULL) WERR(L"realloc");
+      sequence = _sequence;
+      wprintf(L"-> Sequence doubled\n"); // DEBUG:
+    }
+    if(tokens[*token_index].type == eos_token)
+    {
+      (*token_index)++;
+      break;
+    }
+    sequence[sequence_index] = cs_parse_id(tokens, token_index);
+    if(sequence[sequence_index] == NULL) return NULL;
+    sequence_index++;
+  }
+  cs_node * end = malloc(sizeof(*end));
+  if(end == NULL) WERR(L"malloc");
+  end->type = CS_NT_END;
+  sequence[sequence_index] = end;
+
+  cs_node * node = malloc(sizeof(*node));
+  if(node == NULL) WERR(L"malloc");
+  node->type = CS_NT_LIST;
+  node->pos.start = tokens[token_index_start].pos.start; // FIXME:! '[' is not going to be included. (Also see cs_parse_statements)
+  node->pos.end = tokens[*token_index].pos.end;
+  node->content.datum.value._p = (void**)sequence;
+
+  return node;
+}
+#pragma endregion Parse Identifier Sequence
+
+#pragma region Parse Identifier
+cs_node * cs_parse_id(cs_token * tokens, size_t * token_index)
+{
+  if(tokens[*token_index].type != CS_TT_ID)
+  {
+    error.type = CS_ET_EXPECTED_TOKEN;
+    error.info.value._int = CS_TT_ID;
+    error.pos = tokens[*token_index].pos;
+    error.__line__ = __LINE__;
+    strcpy(error.__file__, __FILE__);
+    return NULL;
+  }
+  cs_node * id = malloc(sizeof(*id));
+  id->type = CS_NT_ID;
+  id->pos = tokens[*token_index].pos;
+  id->content.datum.value._wcs = tokens[*token_index].value._wcs;
+  (*token_index)++;
+  return id;
+}
+#pragma endregion Parse Identifier
 
 #pragma endregion Parser
 
@@ -1605,6 +1854,7 @@ int main(int argc, char * argv[])
   }
   
   wprintf(cs_node_to_wcs(ast));
+  wprintf(L"\n\n");
   
   // cs_node ** inspect_nodes = (cs_node**)ast->content.datum.value._p;
   // wprintf(L"%d*%.2f [%ls]", inspect_nodes[0]->content.branch._binop.left->content.datum.value._int, inspect_nodes[0]->content.branch._binop.right->content.datum.value._float, cs_node_type_to_wcs(inspect_nodes[0]->content.branch._binop.right->type));
