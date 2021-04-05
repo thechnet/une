@@ -1,4 +1,4 @@
-/*?
+/*
 test-1.c – CMDRScript C Interpreter Test 1
 Modified 2021-04-05
 
