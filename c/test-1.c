@@ -4,34 +4,46 @@ Modified 2021-04-05
 
 macOS
 clear && gcc test-1.c -o test-1 && ./test-1 test.txt
+clear && clang test-1.c -o test-1.exe && ./test-1.exe test-1-nodes.txt
 
 Windows
-cls & gcc test-1.c -o test-1.exe && test-1.exe test.txt
-cls & tcc test-1.c -o test-1.exe && test-1.exe test.txt
+cls & gcc test-1.c -o test-1.exe && test-1.exe test-1-nodes.txt
+cls & tcc test-1.c -o test-1.exe && test-1.exe test-1-nodes.txt
+cls & clang test-1.c -o test-1.exe -Wno-deprecated && test-1.exe test-1-nodes.txt
 
-TODO:
-- Read tokens directly from a file (cs_lex_file).
-- Memory Pool? (test-2?)
-  - Nodes are placed next to each other in a memory pool (node_index).
-  - Branches are just pointers to indices of other nodes.
-- Program Structure
+Visual Studio Code Developer Prompt (Administrator)
+cls & cl test-1.c /Fetest-1.exe /Fo"%temp%\cs.obj"
+
+Planned for test-2:
+- Program Struct
   Stores:
   - tokens, token_index
   - ast (, node_index if using Memory Pool)
   - file(s?)
   - error
-- Free memory after use.
-- No node type ID! -> VARGET
-- VARSET has two datums.
-- No specific branches.
-- test-2: Memory index for nodes to simplify freeing memory.
-- "äöü" in identifiers.
+- Rework node data and branches:
+  - Every node has up to 4 unions of either an int, float, wchar_t*, void**, or cs_node*.
+  - The nodes are given generic names.
+  - When defined, they are defined in the order that they appear in the syntax.
+  - The nodes don't store the types of the individual unions, as those can be derived from the main node type.
+- Memory Pool (test-2?)
+  - Nodes are placed next to each other in a memory pool (node_index).
+  - Branches are just pointers to indices of other nodes.
+  UNSURE: If this extra effort worth it?
+- Memory index for nodes to simplify freeing memory.
+  UNSURE: Freeing memory as we go isn't that bad.
+- Read tokens directly from a file (cs_lex_file).
+  WONT DO: The file contents are needed to display the error.
+  Rereading the file to display the error creates the chance for the file
+  to have changed during the interpretation of the program.
+- "äöü"... in identifiers.
+  WONT DO: Effort/performance-loss to quality gain ratio isn't good enough.
 
 CHECKLIST:
 - Can atom include '(' highest_order_expression() ')'? (currently conditional_operation)
 */
 
-#pragma region #
+#pragma region def
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +54,13 @@ CHECKLIST:
 #if defined(__TINYC__)
   #include <io.h>
   #define CS_USE_OUTDATED_swprintf
+#elif defined(__clang__)
+  #include <io.h>
+  #define R_OK 4
+  #define access _access
+#elif defined(_MSC_VER)
+  #include <io.h>
+  #define R_OK 4
 #else
   #include <unistd.h>
 #endif
@@ -72,8 +91,19 @@ CHECKLIST:
 #define SIZE_MEDIUM 4096
 #define SIZE_BIG 32767
 
+// Output Color Escape Sequences
+#define CS_COLOR_SUCCESS L"\33[92m"
+#define CS_COLOR_FAIL L"\33[31m"
+#define CS_COLOR_NEUTRAL L"\33[0m"
+#define CS_COLOR_HINT L"\33[90m"
+#define CS_COLOR_TOKEN_TYPE L"\33[93m"
+#define CS_COLOR_TOKEN_VALUE L"\33[92m"
+#define CS_COLOR_NODE_BRANCH_TYPE L"\33[96m"
+#define CS_COLOR_NODE_DATUM_TYPE L"\33[95m"
+#define CS_COLOR_NODE_DATUM_VALUE L"\33[35m"
+
 // Temporary Runtime Error Response
-#define WERR(s) { wprintf(L"\33[91mln %d: %ls\33[0m\n", __LINE__, s); exit(1); }
+#define WERR(s) { wprintf(CS_COLOR_FAIL L"ln %d: %ls\33[0m\n", __LINE__, s); exit(1); }
 
 #define CS_DO_READ
 #define CS_DO_LEX
@@ -89,7 +119,7 @@ replacing invalid nodes with a string node.
 #define CREATE_ERROR_NODE \
   cs_node * error_node = cs_node_create(CS_NT_STR);\
   error_node->content.datum.type = CS_VT_WCS;\
-  error_node->content.datum.value._wcs = L"\33[91mERROR HERE";
+  error_node->content.datum.value._wcs = CS_COLOR_FAIL L"ERROR HERE";
 #define CREATE_ERROR_LIST \
   cs_node ** error_list = malloc(2 * sizeof(*error_list));\
   if(error_list == NULL) WERR(L"malloc");\
@@ -98,7 +128,7 @@ replacing invalid nodes with a string node.
   error_list[0] = error_node;\
   error_list[1] = error_end;
 
-#pragma endregion #
+#pragma endregion def
 
 #pragma region wcs_to_int
 int wcs_to_int(wchar_t * str)
@@ -341,30 +371,44 @@ const wchar_t * cs_token_type_to_wcs(cs_token_type type)
 #pragma endregion Token Type to WCS
 
 #pragma region Token to WCS
+/*
+This function is not dynamic and will cause a buffer overflow
+if the returned array is longer than SIZE_MEDIUM. This could
+realistically happen, were this function used in a real-world
+environment, but since it is only used for debugging, I'm
+leaving this vulnerability in here.
+*/
 wchar_t * cs_token_to_wcs(cs_token token)
 {
-  // FIXME: NOT DYNAMIC
   wchar_t * str = malloc(SIZE_MEDIUM * sizeof(*str));
   if(str == NULL) WERR(L"malloc");
-  wcscpy(str, L"\33[93m");
+  wcscpy(str, CS_COLOR_TOKEN_TYPE);
   wcscat(str, cs_token_type_to_wcs(token.type));
-  wcscat(str, L"\33[0m");
+  wcscat(str, CS_COLOR_NEUTRAL);
   switch(token.type)
   {
     case CS_TT_INT:
-      swprintf(str+wcslen(str), SIZE_MEDIUM, L":\33[92m%d\33[0m", token.value._int);
+      swprintf(str+wcslen(str), SIZE_MEDIUM,
+               L":" CS_COLOR_TOKEN_VALUE L"%d" CS_COLOR_NEUTRAL,
+               token.value._int);
       break;
     
     case CS_TT_FLT:
-      swprintf(str+wcslen(str), SIZE_MEDIUM, L":\33[92m%.2f\33[0m", token.value._float);
+      swprintf(str+wcslen(str), SIZE_MEDIUM,
+               L":" CS_COLOR_TOKEN_VALUE L"%.2f" CS_COLOR_NEUTRAL,
+               token.value._float);
       break;
     
     case CS_TT_STR:
-      swprintf(str+wcslen(str), SIZE_MEDIUM, L":\33[92m\"%ls\"\33[0m", token.value._wcs);
+      swprintf(str+wcslen(str), SIZE_MEDIUM,
+               L":" CS_COLOR_TOKEN_VALUE L"\"%ls" CS_COLOR_TOKEN_VALUE L"\"" CS_COLOR_NEUTRAL,
+               token.value._wcs);
       break;
     
     case CS_TT_ID:
-      swprintf(str+wcslen(str), SIZE_MEDIUM, L":\33[92m%ls\33[0m", token.value._wcs);
+      swprintf(str+wcslen(str), SIZE_MEDIUM,
+               L":" CS_COLOR_TOKEN_VALUE L"%ls" CS_COLOR_NEUTRAL,
+               token.value._wcs);
       break;
     
     default:
@@ -618,12 +662,22 @@ const wchar_t * cs_node_type_to_wcs(cs_node_type type)
 #pragma endregion Node Type to WCS
 
 #pragma region Node to WCS
+/*
+This function is not dynamic and will cause a buffer overflow
+if the returned array is longer than SIZE_MEDIUM. This could
+realistically happen, were this function used in a real-world
+environment, but since it is only used for debugging, I'm
+leaving this vulnerability in here.
+*/
 wchar_t * cs_node_to_wcs(cs_node * node)
 {
-  // FIXME: NOT DYNAMIC
-  if(node == NULL) return L"\33[90mNULL\33[0m";
   wchar_t * buffer = malloc(SIZE_BIG * sizeof(*buffer));
   if(buffer == NULL) WERR(L"malloc");
+  if(node == NULL)
+  {
+    wcscpy(buffer, CS_COLOR_HINT L"NULL" CS_COLOR_NEUTRAL);
+    return buffer;
+  }
   buffer[0] = L'\0';
   switch(node->type)
   {
@@ -632,37 +686,45 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       if(list == NULL) WERR(L"undefined statements pointer");
       if(list[0]->type == CS_NT_END)
       {
-        swprintf(buffer, SIZE_BIG, L"\33[0mNO STATEMENTS");
+        swprintf(buffer, SIZE_BIG, CS_COLOR_HINT L"NO STATEMENTS" CS_COLOR_NEUTRAL);
         break;
       }
       wchar_t * node_as_wcs = cs_node_to_wcs(list[0]);
-      int offset = swprintf(buffer, SIZE_BIG, L"\33[0m{\33[0m%ls", node_as_wcs);
+      int offset = swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"{%ls", node_as_wcs);
       free(node_as_wcs);
       int i = 1;
       while(list[i]->type != CS_NT_END)
       {
         node_as_wcs = cs_node_to_wcs(list[i]);
-        offset += swprintf(buffer+offset, SIZE_BIG, L"\n\33[0m%ls", node_as_wcs);
+        offset += swprintf(buffer+offset, SIZE_BIG, CS_COLOR_NEUTRAL L"\n%ls", node_as_wcs);
         free(node_as_wcs);
         i++;
       }
-      swprintf(buffer+offset, SIZE_BIG, L"\33[0m}");
+      swprintf(buffer+offset, SIZE_BIG, CS_COLOR_NEUTRAL L"}");
       break; }
     
     case CS_NT_INT:
-      swprintf(buffer, SIZE_BIG, L"\33[95mINT\33[0m:\33[35m%d\33[0m", node->content.datum.value._int);
+      swprintf(buffer, SIZE_BIG,
+               CS_COLOR_NODE_DATUM_TYPE L"INT" CS_COLOR_NEUTRAL L":" CS_COLOR_NODE_DATUM_VALUE L"%d" CS_COLOR_NEUTRAL,
+               node->content.datum.value._int);
       break;
     
     case CS_NT_FLT:
-      swprintf(buffer, SIZE_BIG, L"\33[95mFLT\33[0m:\33[35m%.2f\33[0m", node->content.datum.value._float);
+      swprintf(buffer, SIZE_BIG,
+               CS_COLOR_NODE_DATUM_TYPE L"FLT" CS_COLOR_NEUTRAL L":" CS_COLOR_NODE_DATUM_VALUE L"%.2f" CS_COLOR_NEUTRAL,
+               node->content.datum.value._float);
       break;
     
     case CS_NT_STR:
-      swprintf(buffer, SIZE_BIG, L"\33[95mSTR\33[0m:\33[35m\"%ls\33[35m\"\33[0m", node->content.datum.value._wcs);
+      swprintf(buffer, SIZE_BIG,
+               CS_COLOR_NODE_DATUM_TYPE L"STR" CS_COLOR_NEUTRAL L":" CS_COLOR_NODE_DATUM_VALUE L"\"%ls" CS_COLOR_NODE_DATUM_VALUE L"\"" CS_COLOR_NEUTRAL,
+               node->content.datum.value._wcs);
       break;
     
     case CS_NT_ID:
-      swprintf(buffer, SIZE_BIG, L"\33[95mID\33[0m:\33[35m%ls\33[0m", node->content.datum.value._wcs);
+      swprintf(buffer, SIZE_BIG,
+               CS_COLOR_NODE_DATUM_TYPE L"ID" CS_COLOR_NEUTRAL L":" CS_COLOR_NODE_DATUM_VALUE L"%ls" CS_COLOR_NEUTRAL,
+               node->content.datum.value._wcs);
       break;
     
     case CS_NT_LIST: {
@@ -670,21 +732,21 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       if(list == NULL) WERR(L"undefined list pointer");
       if(list[0]->type == CS_NT_END)
       {
-        swprintf(buffer, SIZE_BIG, L"\33[0m[]");
+        swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"[]");
         break;
       }
       wchar_t * node_as_wcs = cs_node_to_wcs(list[0]);
-      int offset = swprintf(buffer, SIZE_BIG, L"\33[0m[%ls", node_as_wcs);
+      int offset = swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"[%ls", node_as_wcs);
       free(node_as_wcs);
       int i = 1;
       while(list[i]->type != CS_NT_END)
       {
         node_as_wcs = cs_node_to_wcs(list[i]);
-        offset += swprintf(buffer+offset, SIZE_BIG, L"\33[0m, %ls", node_as_wcs);
+        offset += swprintf(buffer+offset, SIZE_BIG, CS_COLOR_NEUTRAL L", %ls", node_as_wcs);
         free(node_as_wcs);
         i++;
       }
-      swprintf(buffer+offset, SIZE_BIG, L"\33[0m]");
+      swprintf(buffer+offset, SIZE_BIG, CS_COLOR_NEUTRAL L"]");
       break; }
 
     // Binary Operation
@@ -708,7 +770,8 @@ wchar_t * cs_node_to_wcs(cs_node * node)
     case CS_NT_SET: {
       wchar_t * left_branch_as_wcs = cs_node_to_wcs(node->content.branch._binop.left);
       wchar_t * right_branch_as_wcs = cs_node_to_wcs(node->content.branch._binop.right);
-      swprintf(buffer, SIZE_BIG, L"\33[0m(\33[96m%ls\33[0m %ls\33[0m, %ls\33[0m)",
+      swprintf(buffer, SIZE_BIG,
+               CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"%ls" CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
                cs_node_type_to_wcs(node->type), left_branch_as_wcs, right_branch_as_wcs);
       free(left_branch_as_wcs);
       free(right_branch_as_wcs);
@@ -719,7 +782,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
     case CS_NT_NOT:
     case CS_NT_RETURN: {
       wchar_t * center_branch_as_wcs = cs_node_to_wcs(node->content.branch._unop.center);
-      swprintf(buffer, SIZE_BIG, L"\33[0m(\33[96m%ls\33[0m %ls\33[0m)",
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"%ls" CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L")",
                cs_node_type_to_wcs(node->type), center_branch_as_wcs);
       free(center_branch_as_wcs);
       break; }
@@ -727,7 +790,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
     // Without operation
     case CS_NT_BREAK:
     case CS_NT_CONTINUE: {
-      swprintf(buffer, SIZE_BIG, L"\33[96m%ls\33[0m", cs_node_type_to_wcs(node->type));
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NODE_BRANCH_TYPE L"%ls" CS_COLOR_NEUTRAL, cs_node_type_to_wcs(node->type));
       break; }
     
     case CS_NT_FOR: {
@@ -735,7 +798,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       wchar_t * from_branch_as_wcs = cs_node_to_wcs(node->content.branch._for.from);
       wchar_t * to_branch_as_wcs = cs_node_to_wcs(node->content.branch._for.to);
       wchar_t * body_branch_as_wcs = cs_node_to_wcs(node->content.branch._for.body);
-      swprintf(buffer, SIZE_BIG, L"\33[0m(\33[96mFOR\33[0m %ls\33[0m, %ls\33[0m, %ls\33[0m, %ls\33[0m)",
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"FOR" CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
                counter_branch_as_wcs, from_branch_as_wcs, to_branch_as_wcs, body_branch_as_wcs);
       free(counter_branch_as_wcs);
       free(from_branch_as_wcs);
@@ -746,7 +809,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
     case CS_NT_WHILE: {
       wchar_t * condition_branch_as_wcs = cs_node_to_wcs(node->content.branch._while.condition);
       wchar_t * body_branch_as_wcs = cs_node_to_wcs(node->content.branch._while.body);
-      swprintf(buffer, SIZE_BIG, L"\33[0m(\33[96mWHILE\33[0m %ls\33[0m, %ls\33[0m)",
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"WHILE" CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
                condition_branch_as_wcs, body_branch_as_wcs);
       free(condition_branch_as_wcs);
       free(body_branch_as_wcs);
@@ -756,7 +819,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       wchar_t * condition_branch_as_wcs = cs_node_to_wcs(node->content.branch._if.condition);
       wchar_t * truebody_branch_as_wcs = cs_node_to_wcs(node->content.branch._if.truebody);
       wchar_t * falsebody_branch_as_wcs = cs_node_to_wcs(node->content.branch._if.falsebody);
-      swprintf(buffer, SIZE_BIG, L"\33[0m(\33[96mIF\33[0m %ls\33[0m, %ls\33[0m, %ls\33[0m)",
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE "IF" CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
                condition_branch_as_wcs, truebody_branch_as_wcs, falsebody_branch_as_wcs);
       free(condition_branch_as_wcs);
       free(truebody_branch_as_wcs);
@@ -767,7 +830,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       wchar_t * condition_branch_as_wcs = cs_node_to_wcs(node->content.branch._condop.condition);
       wchar_t * trueconditions_branch_as_wcs = cs_node_to_wcs(node->content.branch._condop.trueconditions);
       wchar_t * falseconditions_branch_as_wcs = cs_node_to_wcs(node->content.branch._condop.falseconditions);
-      swprintf(buffer, SIZE_BIG, L"\33[0m(\33[96mCOP\33[0m %ls\33[0m, %ls\33[0m, %ls\33[0m)",
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"COP" CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
                condition_branch_as_wcs, trueconditions_branch_as_wcs, falseconditions_branch_as_wcs);
       free(condition_branch_as_wcs);
       free(trueconditions_branch_as_wcs);
@@ -778,7 +841,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       wchar_t * name_branch_as_wcs = cs_node_to_wcs(node->content.branch._fndef.name);
       wchar_t * params_branch_as_wcs = cs_node_to_wcs(node->content.branch._fndef.params);
       wchar_t * body_branch_as_wcs = cs_node_to_wcs(node->content.branch._fndef.body);
-      swprintf(buffer, SIZE_BIG, L"\33[0m(\33[96mDEF\33[0m %ls\33[0m, %ls\33[0m, %ls\33[0m)",
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"DEF" CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
                name_branch_as_wcs, params_branch_as_wcs, body_branch_as_wcs);
       free(name_branch_as_wcs);
       free(params_branch_as_wcs);
@@ -786,7 +849,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
       break; }
 
     default:
-      swprintf(buffer, SIZE_BIG, L"\33[0m(UNKNOWN NODE TYPE OR MEMORY)");
+      swprintf(buffer, SIZE_BIG, CS_COLOR_NEUTRAL L"(UNKNOWN NODE TYPE OR MEMORY)");
   }
   return buffer;
 }
@@ -980,7 +1043,8 @@ wchar_t * cs_error_info_to_wcs(cs_error_type type, cs_datum info)
       break;
     
     default:
-      return L"Unknown Error";
+      swprintf(wcs, SIZE_MEDIUM, L"Unknown Error!");
+      break;
   }
   return wcs;
 }
@@ -1009,15 +1073,16 @@ void cs_error_display(cs_file file)
       line_begin = i+1;
     }
   }
-  wprintf(L"\33[1m\33[37mFile %hs, Line %d (%hs @ %d):\33[0m\n%.*ls\n",
+  // FIXME: 1m?
+  wprintf(CS_COLOR_NEUTRAL L"\33[1mFile %hs, Line %d (%hs @ %d):\33[0m" CS_COLOR_NEUTRAL L"\n%.*ls\n",
           file.name, line, error.__file__, error.__line__,
           line_end-line_begin,file.text+line_begin);
-  wprintf(L"\33[%dC%ls\33[1m\33[31m",
+  wprintf(L"\33[%dC%ls\33[1m" CS_COLOR_FAIL,
           error.pos.start-line_begin, (error.pos.start-line_begin > 0) ? L"" : L"\33[D");
   if(error.pos.start>error.pos.end) WERR(L"error.pos.start > error.pos.end\n"); // DEBUG: For debugging only.
   for(int i=0; i<error.pos.end-error.pos.start; i++) wprintf(L"~");
   wchar_t * error_info_as_wcs = cs_error_info_to_wcs(error.type, error.info);
-  wprintf(L"\33[1m\33[31m\n%ls\n\n\33[0m\33[90merror.pos.start: %d\nerror.pos.end: %d\nline_begin: %d\nline_end: %d\33[0m\n",
+  wprintf(CS_COLOR_FAIL L"\33[1m\n%ls\n\n\33[0m" CS_COLOR_HINT L"error.pos.start: %d\nerror.pos.end: %d\nline_begin: %d\nline_end: %d\33[0m\n",
           error_info_as_wcs,
           error.pos.start, error.pos.end, line_begin, line_end); // DEBUG: For debugging only.
   free(error_info_as_wcs);
@@ -2830,7 +2895,7 @@ cs_node * cs_parse_return(cs_token * tokens, size_t * token_index)
 int main(int argc, char * argv[])
 {
   // Prints a bar to distinguish new output from old output in the terminal.
-  wprintf(L"\33[92m\33[7m\33[K\33[27m\33[0m\n");
+  wprintf(CS_COLOR_SUCCESS L"\33[7m\33[K\33[27m\33[0m\n");
 
   if(argc < 1 || access(argv[1], R_OK))
   {
@@ -2906,11 +2971,11 @@ int main(int argc, char * argv[])
   #ifdef CS_DEBUG_MALLOC_COUNTER
     if(malloc_counter != 0)
     {
-      wprintf(L"\n\33[1m\33[31m%d memory location(s) not freed.\33[0m", malloc_counter);
+      wprintf(CS_COLOR_FAIL L"\n%d memory location(s) not freed.\33[0m", malloc_counter);
     }
     else
     {
-      wprintf(L"\n\33[92mAll memory locations freed.\33[0m");
+      wprintf(CS_COLOR_SUCCESS L"\nAll memory locations freed.\33[0m");
     }
   #else
     wprintf(L"\n\33[97mMemory freed.\33[0m");
