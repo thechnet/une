@@ -1,6 +1,6 @@
 /*
 test-2.c – CMDRScript C Interpreter Test 2
-Modified 2021-04-06
+Modified 2021-04-07
 
 This test is based on test-1.
 
@@ -16,18 +16,15 @@ cls & clang test-2.c -o test-2.exe -Wno-deprecated && test-2.exe test-2-program.
 Visual Studio Code Developer Prompt (Administrator)
 cls & cl test-2.c /Fetest-2.exe /Fo"%temp%\cs.obj"
 
-THE FIRST 
+Planned for test-3:
+- Rework node data and branches:
+  - Every node has four 'cs_value's.
+  - The content of the values is determined by the node type.
 
 Planned for this test:
-- Program Struct
-  Stores:
-  - tokens, token_index
-  - ast (, node_index if using Memory Pool)
-  - file(s?)
-  - error
-- Rework node data and branches:
-  - Every node has either a value or four branches named a, b, c, and d.
-  - The branches are used in the order in which the nodes appear in the syntax.
+- Finish interpretation.
+
+Backlog:
 - Memory Pool
   - Nodes are placed next to each other in a memory pool (node_index).
   - Branches are just pointers to indices of other nodes.
@@ -40,8 +37,16 @@ CHECKLIST:
 - Is there a way to not always have to duplicate strings for return values?
 - Can atom include '(' highest_order_expression() ')'? (currently conditional_operation)
 - Are we checking for NULL after every malloc or realloc?
+- Do all nodes store correct positions?
+- Allow Conditional Operation for Statements?
+- TODO: Index ranges (0:5)
+- TODO: Better SET and GET parser and interpreter implementations.
 
 FIXME: Shared code between cs_node_to_wcs and cs_return_to_wcs.
+
+Notes:
+- The SET node returns the value the variable was set to. This potentially allows
+  Python-like a = b = 1 statements.
 */
 
 #pragma region Preprocessor
@@ -50,15 +55,21 @@ FIXME: Shared code between cs_node_to_wcs and cs_return_to_wcs.
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <math.h>
 
 // OS and compiler-specific differences
 #if defined(__TINYC__)
   #include <io.h>
   #define CS_USE_OUTDATED_SWPRINTF
 #elif defined(__clang__)
-  #include <io.h>
-  #define R_OK 4
-  #define access _access
+  #ifdef __APPLE__
+    #include <unistd.h>
+    #include <sys/uio.h>
+  #else
+    #include <io.h>
+    #define access _access
+    #define R_OK 4
+  #endif
 #elif defined(_MSC_VER)
   #include <io.h>
   #define R_OK 4
@@ -82,7 +93,7 @@ FIXME: Shared code between cs_node_to_wcs and cs_return_to_wcs.
 
 #define CS_DEBUG_MALLOC_COUNTER
 #ifdef CS_DEBUG_MALLOC_COUNTER
-  size_t malloc_counter = 0;
+  int malloc_counter = 0;
   #define malloc(size) malloc((size)); malloc_counter++;
   #define free(memory) { free((memory)); malloc_counter--; }
 #endif
@@ -227,7 +238,8 @@ typedef enum _cs_return_type {
   CS_RT_INT, // _int
   CS_RT_FLT, // _float
   CS_RT_STR, // _wcs
-  CS_RT_LIST // _vpp
+  CS_RT_LIST, // _vpp
+  CS_RT_ID // _wcs // FIXME: Will hopefully soon become obsolete thanks to new node structure.
 } cs_return_type;
 #pragma endregion Return Value Type
 
@@ -338,11 +350,12 @@ typedef enum _cs_node_type {
   CS_NT_COP,
 
   // Set, Get
+  CS_NT_IDX,
   CS_NT_SET,
+  CS_NT_SET_IDX,
   CS_NT_GET,
   CS_NT_DEF,
   CS_NT_CALL,
-  CS_NT_IDX,
 
   // Control Flow
   CS_NT_FOR,
@@ -380,7 +393,21 @@ typedef enum _cs_error_type {
   CS_ET_UNEXPECTED_TOKEN,
   CS_ET_ILLEGAL_CHARACTER,
   CS_ET_INCOMPLETE_FLOAT,
-  CS_ET_ADD
+  CS_ET_ADD,
+  CS_ET_SUB,
+  CS_ET_MUL,
+  CS_ET_DIV,
+  CS_ET_FDIV,
+  CS_ET_MOD,
+  CS_ET_NEG,
+  CS_ET_POW,
+  CS_ET_ZERO_DIVISION,
+  CS_ET_COMPARISON,
+  CS_ET_NOT_INDEXABLE,
+  CS_ET_NOT_INDEX_TYPE,
+  CS_ET_INDEX_OUT_OF_RANGE,
+  CS_ET_SET,
+  CS_ET_GET
 } cs_error_type;
 #pragma endregion Error Type
 
@@ -388,7 +415,7 @@ typedef enum _cs_error_type {
 typedef struct _cs_error {
   cs_error_type type;
   cs_position pos;
-  cs_value values[2];
+  cs_value values[2]; // If you change this number, don't forget to change it in cs_error_free!
   char __file__[SIZE_MEDIUM]; // Debugging
   size_t __line__;     // ''
 } cs_error;
@@ -397,16 +424,15 @@ typedef struct _cs_error {
 #pragma region Variable Symbol
 typedef struct _cs_variable {
   wchar_t * name;
-  cs_return_type type; // FIXME: Naming
-  cs_value value;
+  cs_return content; // FIXME: Naming
 } cs_variable;
 #pragma endregion Variable Symbol
 
 #pragma region Function Symbol
 typedef struct _cs_function {
   wchar_t * name;
-  cs_node ** params;
-  cs_node ** body;
+  cs_node * params;
+  cs_node * body;
 } cs_function;
 #pragma endregion Function Symbol
 
@@ -420,7 +446,11 @@ typedef struct _cs_context {
   cs_error error;
   struct _cs_context * parent;
   cs_variable * variables;
+  size_t variables_size;
+  size_t variables_count;
   cs_function * functions;
+  size_t functions_size;
+  size_t functions_count;
 } cs_context;
 #pragma endregion Context
 
@@ -516,7 +546,7 @@ wchar_t * cs_token_to_wcs(cs_token token)
     
     case CS_TT_FLT:
       swprintf(str+wcslen(str), SIZE_MEDIUM,
-               L":" CS_COLOR_TOKEN_VALUE L"%.2f" CS_COLOR_NEUTRAL,
+               L":" CS_COLOR_TOKEN_VALUE L"%.3f" CS_COLOR_NEUTRAL,
                token.value._float);
       break;
     
@@ -561,17 +591,16 @@ void cs_tokens_free(cs_token * tokens)
 {
   if(tokens == NULL) return;
   size_t i = 0;
-  while(tokens[i].type != CS_TT_EOF)
+  while(tokens[i-1].type != CS_TT_EOF) // i-1: To also free CS_TT_EOF
   {
-    #ifdef CS_DEBUG_LOG_FREE
-    wprintf(L"token:%ls\n", cs_token_type_to_wcs(tokens[i].type));
-    #endif
-    
     switch(tokens[i].type)
     {
       case CS_TT_ID:
       case CS_TT_STR:
         free(tokens[i].value._wcs);
+        #ifdef CS_DEBUG_LOG_FREE
+          wprintf(L"Token: %ls\n", cs_token_type_to_wcs(tokens[i].type));
+        #endif
         break;
       
       case CS_TT_INT:
@@ -613,10 +642,12 @@ void cs_tokens_free(cs_token * tokens)
       case CS_TT_CONTINUE:
       case CS_TT_BREAK:
       case CS_TT_RETURN:
+        #ifdef CS_DEBUG_LOG_FREE
+          wprintf(L"Token: %ls\n", cs_token_type_to_wcs(tokens[i].type));
+        #endif
         break;
       
       default:
-        wprintf(L"%d:%d\n",i,tokens[i].type);
         WERR(L"Unhandled token type in cs_tokens_free()!\n");
     }
     i++;
@@ -664,11 +695,12 @@ const wchar_t * cs_node_type_to_wcs(cs_node_type type)
     case CS_NT_COP: return L"COP";
 
     // Set, Get
+    case CS_NT_IDX: return L"IDX";
     case CS_NT_SET: return L"SET";
+    case CS_NT_SET_IDX: return L"SET_IDX";
     case CS_NT_GET: return L"GET";
     case CS_NT_DEF: return L"DEF";
     case CS_NT_CALL: return L"CALL";
-    case CS_NT_IDX: return L"IDX";
 
     // Control Flow
     case CS_NT_FOR: return L"FOR";
@@ -742,7 +774,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
     case CS_NT_FLT:
       swprintf(buffer, SIZE_BIG,
                CS_COLOR_NODE_DATUM_TYPE L"%ls" CS_COLOR_NEUTRAL L":"
-               CS_COLOR_NODE_DATUM_VALUE L"%.2f" CS_COLOR_NEUTRAL,
+               CS_COLOR_NODE_DATUM_VALUE L"%.3f" CS_COLOR_NEUTRAL,
                cs_node_type_to_wcs(node->type),
                node->content.value._float);
       break;
@@ -826,6 +858,7 @@ wchar_t * cs_node_to_wcs(cs_node * node)
     // Unary Operation
     case CS_NT_NEG:
     case CS_NT_NOT:
+    case CS_NT_GET:
     case CS_NT_RETURN: {
       wchar_t * center_branch_as_wcs = cs_node_to_wcs(
                                        node->content.branch.a);
@@ -914,12 +947,31 @@ wchar_t * cs_node_to_wcs(cs_node * node)
                CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"COP"
                CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls"
                CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
-               condition_branch_as_wcs,
                trueconditions_branch_as_wcs,
+               condition_branch_as_wcs,
                falseconditions_branch_as_wcs);
       free(trueconditions_branch_as_wcs);
       free(condition_branch_as_wcs);
       free(falseconditions_branch_as_wcs);
+      break; }
+    
+    case CS_NT_SET_IDX: {
+      wchar_t * name_branch_as_wcs = cs_node_to_wcs(
+                                     node->content.branch.a);
+      wchar_t * index_branch_as_wcs = cs_node_to_wcs(
+                                      node->content.branch.b);
+      wchar_t * value_branch_as_wcs = cs_node_to_wcs(
+                                      node->content.branch.c);
+      swprintf(buffer, SIZE_BIG,
+               CS_COLOR_NEUTRAL L"(" CS_COLOR_NODE_BRANCH_TYPE L"SET_IDX"
+               CS_COLOR_NEUTRAL L" %ls" CS_COLOR_NEUTRAL L", %ls"
+               CS_COLOR_NEUTRAL L", %ls" CS_COLOR_NEUTRAL L")",
+               name_branch_as_wcs,
+               index_branch_as_wcs,
+               value_branch_as_wcs);
+      free(name_branch_as_wcs);
+      free(index_branch_as_wcs);
+      free(value_branch_as_wcs);
       break; }
     
     case CS_NT_DEF: {
@@ -959,9 +1011,6 @@ void cs_node_free(cs_node * node)
     #endif
     return;
   }
-  #ifdef CS_DEBUG_LOG_FREE
-  wprintf(L"Node: %ls\n", cs_node_type_to_wcs(node->type));
-  #endif
 
   switch(node->type)
   {
@@ -973,10 +1022,13 @@ void cs_node_free(cs_node * node)
     case CS_NT_VOID:
     case CS_NT_STR:
     case CS_NT_ID:
-      /*
+      /* DOC: Memory Management
       We don't free the WCS pointers because they are pointing at data stored in the tokens,
       which may still be needed after the parse. This memory is freed alongside the tokens.
       */
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Node: %ls\n", cs_node_type_to_wcs(node->type));
+      #endif
       free(node);
       break;
     
@@ -990,11 +1042,14 @@ void cs_node_free(cs_node * node)
         break;
       }
       size_t list_size = list[0]->content.value._int;
-      for(int i=0; i<=list_size; i++)
+      for(size_t i=0; i<=list_size; i++)
       {
         cs_node_free(list[i]);
       }
       free(list);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Node: %ls\n", cs_node_type_to_wcs(node->type));
+      #endif
       free(node);
       break; }
     
@@ -1004,6 +1059,9 @@ void cs_node_free(cs_node * node)
     case CS_NT_GET:
     case CS_NT_RETURN:
       cs_node_free(node->content.branch.a);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Node: %ls\n", cs_node_type_to_wcs(node->type));
+      #endif
       free(node);
       break;
     
@@ -1026,20 +1084,26 @@ void cs_node_free(cs_node * node)
     case CS_NT_SET:
     case CS_NT_CALL:
     case CS_NT_WHILE:
-    case CS_NT_IDX: {
+    case CS_NT_IDX:
       cs_node_free(node->content.branch.a);
       cs_node_free(node->content.branch.b);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Node: %ls\n", cs_node_type_to_wcs(node->type));
+      #endif
       free(node);
       break;
-    }
     
     // Ternary Operation
     case CS_NT_COP:
     case CS_NT_DEF:
     case CS_NT_IF:
+    case CS_NT_SET_IDX:
       cs_node_free(node->content.branch.a);
       cs_node_free(node->content.branch.b);
       cs_node_free(node->content.branch.c);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Node: %ls\n", cs_node_type_to_wcs(node->type));
+      #endif
       free(node);
       break;
     
@@ -1049,6 +1113,9 @@ void cs_node_free(cs_node * node)
       cs_node_free(node->content.branch.b);
       cs_node_free(node->content.branch.c);
       cs_node_free(node->content.branch.d);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Node: %ls\n", cs_node_type_to_wcs(node->type));
+      #endif
       free(node);
       break;
     
@@ -1074,8 +1141,8 @@ cs_node * cs_node_create(cs_node_type type)
 
 /* Return Value */
 
-// FIXME: This function is technically not needed.
 #pragma region Return Value Type to WCS
+// FIXME: This function is technically not needed.
 const wchar_t * cs_return_type_to_wcs(cs_return_type return_type)
 {
   switch(return_type)
@@ -1089,6 +1156,73 @@ const wchar_t * cs_return_type_to_wcs(cs_return_type return_type)
   }
 }
 #pragma endregion Return Value Type to WCS
+
+#pragma region Return Value to Boolean
+int cs_return_to_boolean(cs_return return_value)
+{
+  switch(return_value.type)
+  {
+    case CS_RT_INT: return return_value.value._int == 0 ? 0 : 1;
+    case CS_RT_FLT: return return_value.value._float == 0.0 ? 0 : 1;
+    case CS_RT_STR: return wcslen(return_value.value._wcs) == 0 ? 0 : 1;
+    case CS_RT_LIST: return ((cs_return*)return_value.value._vp)[0].value._int == 0 ? 0 : 1;
+    default: WERR(L"cs_return_to_boolean: Unhandled return value type");
+  }
+}
+#pragma endregion Return Value to Boolean
+
+#pragma region Compare Return Values
+int cs_return_compare(cs_return left, cs_return right)
+{
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return left.value._int == right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return (float)left.value._int == right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return left.value._float == (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return left.value._float == right.value._float;
+  }
+  
+  // STR and STR
+  else if(left.type == CS_RT_STR && right.type == CS_RT_STR)
+  {
+    return !wcscmp(left.value._wcs, right.value._wcs);
+  }
+  
+  // LIST and LIST
+  else if(left.type == CS_RT_LIST && right.type == CS_RT_LIST)
+  {
+    cs_return * left_list = (cs_return*)left.value._vp;
+    cs_return * right_list = (cs_return*)right.value._vp;
+    size_t left_size = left_list[0].value._int;
+    size_t right_size = right_list[0].value._int;
+    if(left_size != right_size)
+    {
+      return 0;
+    }
+    else
+    {
+      for(size_t i=1; i<=left_size; i++)
+      {
+        if(!cs_return_compare(left_list[i], right_list[i])) return 0;
+      }
+    }
+    return 1;
+  }
+  
+  // Illegal Comparison
+  return -1;
+}
+#pragma endregion Compare Return Values
 
 #pragma region Return Value to WCS
 wchar_t * cs_return_to_wcs(cs_return return_value)
@@ -1105,7 +1239,7 @@ wchar_t * cs_return_to_wcs(cs_return return_value)
       break;
     
     case CS_RT_FLT:
-      swprintf(wcs+offset, SIZE_MEDIUM, L"%.2f", return_value.value._float);
+      swprintf(wcs+offset, SIZE_MEDIUM, L"%.3f", return_value.value._float);
       break;
     
     case CS_RT_STR:
@@ -1136,6 +1270,9 @@ wchar_t * cs_return_to_wcs(cs_return return_value)
       }
       swprintf(wcs+offset, SIZE_MEDIUM, CS_COLOR_NEUTRAL L"]");
       break; }
+    
+    case CS_RT_VOID:
+      WERR(L"cs_return_to_wcs: Illegal");
   }
   return wcs;
 }
@@ -1144,23 +1281,84 @@ wchar_t * cs_return_to_wcs(cs_return return_value)
 #pragma region Free Return Value
 void cs_return_free(cs_return return_value)
 {
-  if(return_value.type == CS_RT_STR)
+  switch(return_value.type)
   {
-    free(return_value.value._wcs);
+    case CS_RT_STR:
+    case CS_RT_ID:
+      free(return_value.value._wcs);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Return: %d\n", return_value.type);
+      #endif
+      break;
+    
+    case CS_RT_LIST: {
+      cs_return * list = (cs_return*)return_value.value._vp;
+      size_t list_size = list[0].value._int;
+      // Here we start at 0 because we _do_ want to free the CS_RT_VOID value.
+      for(size_t i=0; i<=list_size; i++)
+      {
+        cs_return_free(list[i]);
+      }
+      free(list);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Return: %d\n", return_value.type);
+      #endif
+      break; }
+    
+    case CS_RT_INT:
+    case CS_RT_FLT:
+    case CS_RT_VOID:
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Return: %d\n", return_value.type);
+      #endif
+      break;
+    
+    default: WERR(L"Unhandled return value type in cs_return_free()\n");
   }
-  else if(return_value.type == CS_RT_LIST)
-  {
-    cs_return * list = (cs_return*)return_value.value._vp;
-    size_t list_size = list[0].value._int;
-    for(size_t i=0; i<=list_size; i++)
-    {
-      cs_return_free(list[i]);
-    }
-    free(list);
-  }
-  // FIXME: Add other cases here.
 }
 #pragma endregion Free Return Value
+
+#pragma region Copy Return Value
+cs_return cs_return_copy(cs_return src)
+{
+  cs_return dest;
+  dest.type = src.type;
+  
+  switch(src.type)
+  {
+    case CS_RT_INT:
+    case CS_RT_VOID: // FIXME:?
+      dest.value._int = src.value._int;
+      break;
+    
+    case CS_RT_FLT:
+      dest.value._float = src.value._float;
+      break;
+    
+    case CS_RT_STR: {
+      wchar_t * string = malloc((wcslen(src.value._wcs+1)*sizeof(*string)));
+      if(string == NULL) WERR(L"Out of memory");
+      wcscpy(string, src.value._wcs);
+      dest.value._wcs = string;
+      break; }
+    
+    case CS_RT_LIST: {
+      cs_return * list = (cs_return*)src.value._vp;
+      size_t list_size = list[0].value._int;
+      cs_return * list_copy = malloc((list_size+1)*sizeof(*list_copy));
+      if(list_copy == NULL) WERR(L"Out of memory");
+      // Here we start at 0 because we _do_ want to copy the CS_RT_VOID value.
+      for(int i=0; i<=list_size; i++)
+      {
+        list_copy[i] = cs_return_copy(list[i]);
+      }
+      dest.value._vp = (void*)list_copy;
+      break; }
+  }
+  
+  return dest;
+}
+#pragma endregion Copy Return Value
 
 /* Error */
 
@@ -1203,6 +1401,80 @@ wchar_t * cs_error_value_to_wcs(cs_error_type type, cs_value * values)
       swprintf(wcs, SIZE_MEDIUM, L"Cannot add %ls to %ls",
                cs_return_type_to_wcs((cs_return_type)values[1]._int),
                cs_return_type_to_wcs((cs_return_type)values[0]._int));
+      break; }
+    
+    case CS_ET_SUB: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot subtract %ls from %ls",
+               cs_return_type_to_wcs((cs_return_type)values[1]._int),
+               cs_return_type_to_wcs((cs_return_type)values[0]._int));
+      break; }
+    
+    case CS_ET_MUL: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot multiply %ls by %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int),
+               cs_return_type_to_wcs((cs_return_type)values[1]._int));
+      break; }
+    
+    case CS_ET_DIV: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot divide %ls by %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int),
+               cs_return_type_to_wcs((cs_return_type)values[1]._int));
+      break; }
+    
+    case CS_ET_FDIV: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot floor divide %ls by %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int),
+               cs_return_type_to_wcs((cs_return_type)values[1]._int));
+      break; }
+    
+    case CS_ET_MOD: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot get modulus of %ls and %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int),
+               cs_return_type_to_wcs((cs_return_type)values[1]._int));
+      break; }
+    
+    case CS_ET_NEG: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot negate %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int));
+      break; }
+    
+    case CS_ET_POW: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot get %ls to the power of %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int),
+               cs_return_type_to_wcs((cs_return_type)values[1]._int));
+      break; }
+    
+    case CS_ET_ZERO_DIVISION:
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot divide by zero");
+      break;
+    
+    case CS_ET_COMPARISON: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot compare %ls and %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int),
+               cs_return_type_to_wcs((cs_return_type)values[1]._int));
+      break; }
+    
+    case CS_ET_NOT_INDEXABLE: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot get index of %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int));
+      break; }
+    
+    case CS_ET_NOT_INDEX_TYPE: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot use %ls as index",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int));
+      break; }
+    
+    case CS_ET_INDEX_OUT_OF_RANGE: {
+      swprintf(wcs, SIZE_MEDIUM, L"Index %d is out of range", values[0]._int);
+      break; }
+    
+    case CS_ET_SET: {
+      swprintf(wcs, SIZE_MEDIUM, L"Cannot assign value to %ls",
+               cs_return_type_to_wcs((cs_return_type)values[0]._int));
+      break; }
+    
+    case CS_ET_GET: {
+      swprintf(wcs, SIZE_MEDIUM, L"Variable '%ls' does not exist", values[0]._wcs);
       break; }
     
     default:
@@ -1256,21 +1528,122 @@ void cs_error_display(cs_context * context)
 }
 #pragma endregion Display Error
 
+#pragma region Free Error
+void cs_error_free(cs_error error)
+{
+  switch(error.type)
+  {
+    case CS_ET_NO_ERROR:
+    case CS_ET_EXPECTED_TOKEN:
+    case CS_ET_UNEXPECTED_TOKEN:
+    case CS_ET_ILLEGAL_CHARACTER:
+    case CS_ET_INCOMPLETE_FLOAT:
+    case CS_ET_ADD:
+    case CS_ET_SUB:
+    case CS_ET_MUL:
+    case CS_ET_DIV:
+    case CS_ET_FDIV:
+    case CS_ET_MOD:
+    case CS_ET_NEG:
+    case CS_ET_POW:
+    case CS_ET_ZERO_DIVISION:
+    case CS_ET_COMPARISON:
+    case CS_ET_NOT_INDEXABLE:
+    case CS_ET_NOT_INDEX_TYPE:
+    case CS_ET_INDEX_OUT_OF_RANGE:
+    case CS_ET_SET:
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Error: %d\n", error.type);
+      #endif
+      break;
+    
+    case CS_ET_GET:
+      free(error.values[0]._wcs);
+      #ifdef CS_DEBUG_LOG_FREE
+        wprintf(L"Error: %d\n", error.type);
+      #endif
+      break;
+    
+    default: WERR(L"Unhandled error type in cs_error_free()!");
+  }
+}
+#pragma endregion Free Error
+
+/* Variable Symbol */
+
+#pragma region Free Variable Symbol
+void cs_variable_free(cs_variable variable)
+{
+  free(variable.name);
+  cs_return_free(variable.content);
+  #ifdef CS_DEBUG_LOG_FREE
+    wprintf(L"Variable: %ls\n", variable.name);
+  #endif
+}
+#pragma endregion Free Variable Symbol
+
+/* Function Symbol */
+
+#pragma region Free Function Symbol
+void cs_function_free(cs_function function)
+{
+  free(function.name);
+  cs_node_free(function.params);
+  cs_node_free(function.body);
+  #ifdef CS_DEBUG_LOG_FREE
+    wprintf(L"Function: %ls\n", function.name);
+  #endif
+}
+#pragma endregion Free Function Symbol
+
 /* Context */
 
 #pragma region Free Context
 // FIXME: Complete?
 void cs_context_free(cs_context * context)
 {
-  #ifdef CS_DEBUG_LOG_FREE
-  wprintf(L"Program\n");
-  #endif
+  // 1)
   free(context->name);
   free(context->text);
-  cs_node_free(context->ast);
-  cs_tokens_free(context->tokens);
-  // Error doesn't need to be freed because it never allocates memory.
+
+  // 2)
+  #ifdef CS_DO_INTERPRET
+    for(size_t i=0; i<context->variables_count; i++)
+    {
+      cs_variable_free(context->variables[i]);
+    }
+    free(context->variables);
+  #endif
+  
+  // 3)
+  #ifdef CS_DO_INTERPRET
+    for(size_t i=0; i<context->functions_count; i++)
+    {
+      cs_function_free(context->functions[i]);
+    }
+    free(context->functions);
+  #endif
+  
+  // 4)
+  #ifdef CS_DO_PARSE
+    cs_node_free(context->ast);
+  #endif
+  
+  // 5)
+  #ifdef CS_DO_LEX
+    cs_tokens_free(context->tokens);
+  #endif
+  
+  // 6)
+  // It's possible for error to contain pointers to allocated memory
+  // that's used to provide details for an error message.
+  // An example of this is the CS_ET_GET (see cs_interpret_get).
+  cs_error_free(context->error);
+  
   free(context);
+  #ifdef CS_DEBUG_LOG_FREE
+    wprintf(L"Context\n");
+  #endif
 }
 #pragma endregion Free Context
 
@@ -1289,25 +1662,15 @@ cs_context * cs_context_create(void)
   context->tokens = NULL;
   context->token_index = 0;
   context->ast = NULL;
+  context->variables = NULL;
+  context->variables_size = 0;
+  context->variables_count = 0;
+  context->functions = NULL;
+  context->functions_size = 0;
+  context->functions_count = 0;
   return context;
 }
 #pragma endregion Create Context
-
-/* Variable Symbol */
-
-#pragma region Free Variable Symbol
-// void cs_variable_free(cs_variable variable)
-// {
-//   if(variable.type == CS_RT_STR)
-//   {
-//     free()
-//   }
-// }
-#pragma endregion Free Variable Symbol
-
-/* Function Symbol */
-
-
 
 //
 
@@ -1440,6 +1803,7 @@ cs_token * cs_lex_wcs(wchar_t * text, cs_error * error)
       }
       string[string_index] = L'\0';
       cs_token tk = {CS_TT_STR, (cs_position){idx_left, idx}};
+      // DOC: Memory Management: This is where strings referenced during tokenization and parsing are constructued.
       tk.value._wcs = string;
       tokens[tokens_index++] = tk;
       continue;
@@ -1978,6 +2342,11 @@ cs_node * cs_parse_statement(cs_token * tokens, size_t * token_index, cs_error *
         #endif
       }
       
+      cs_node * varset = cs_node_create(CS_NT_SET);
+      varset->pos.start = target->pos.start;
+      varset->content.branch.a = target;
+      
+      // Check if SET_IDX - If true, adjust the node type.
       if(tokens[*token_index].type == CS_TT_LSQB)
       {
         (*token_index)++;
@@ -1989,7 +2358,7 @@ cs_node * cs_parse_statement(cs_token * tokens, size_t * token_index, cs_error *
             CREATE_ERROR_NODE;
             position = error_node;
           #else
-            cs_node_free(target);
+            cs_node_free(varset);
             return NULL;
           #endif
         }
@@ -2000,19 +2369,15 @@ cs_node * cs_parse_statement(cs_token * tokens, size_t * token_index, cs_error *
             CREATE_ERROR_NODE;
             return error_node;
           #else
-            cs_node_free(target);
+            cs_node_free(varset);
             cs_node_free(position);
             return NULL;
           #endif
         }
-
-        cs_node * index = cs_node_create(CS_NT_IDX);
-        index->pos.start = target->pos.start;
-        index->pos.end = tokens[*token_index].pos.end;
-        (*token_index)++; // ]
-        index->content.branch.a = target;
-        index->content.branch.b = position;
-        target = index;
+        (*token_index)++;
+        
+        varset->type = CS_NT_SET_IDX;
+        varset->content.branch.b = position;
       }
       
       if(tokens[*token_index].type == CS_TT_SET)
@@ -2026,21 +2391,25 @@ cs_node * cs_parse_statement(cs_token * tokens, size_t * token_index, cs_error *
             CREATE_ERROR_NODE;
             conditional_operation = error_node;
           #else
-            cs_node_free(target);
+            cs_node_free(varset);
             return NULL;
           #endif
         }
         
-        cs_node * varset = cs_node_create(CS_NT_SET);
-        varset->pos.start = target->pos.start;
         varset->pos.end = conditional_operation->pos.end;
-        varset->content.branch.a = target;
-        varset->content.branch.b = conditional_operation;
+        if(varset->type == CS_NT_SET_IDX)
+        {
+          varset->content.branch.c = conditional_operation;
+        }
+        else
+        {
+          varset->content.branch.b = conditional_operation;
+        }
         return varset;
       }
       else
       {
-        cs_node_free(target);
+        cs_node_free(varset);
         *token_index = token_index_before;
         /*
         Notice how there is no break here: If the above code ended here it means
@@ -2094,7 +2463,7 @@ cs_node * cs_parse_if(
   (*token_index)++;
 
   // condition
-  cs_node * condition = cs_parse_conditions(tokens, token_index, error);
+  cs_node * condition = cs_parse_conditional_operation(tokens, token_index, error);
   if(condition == NULL)
   {
     #ifdef CS_DEBUG_SOFT_ERROR
@@ -2226,7 +2595,7 @@ cs_node * cs_parse_for(cs_token * tokens, size_t * token_index, cs_error * error
   (*token_index)++;
   
   // 1
-  cs_node * from = cs_parse_conditions(tokens, token_index, error);
+  cs_node * from = cs_parse_conditional_operation(tokens, token_index, error);
   if(from == NULL)
   {
     #ifdef CS_DEBUG_SOFT_ERROR
@@ -2258,7 +2627,7 @@ cs_node * cs_parse_for(cs_token * tokens, size_t * token_index, cs_error * error
   (*token_index)++;
   
   // 10
-  cs_node * to = cs_parse_conditions(tokens, token_index, error);
+  cs_node * to = cs_parse_conditional_operation(tokens, token_index, error);
   if(to == NULL)
   {
     #ifdef CS_DEBUG_SOFT_ERROR
@@ -2323,7 +2692,7 @@ cs_node * cs_parse_while(cs_token * tokens, size_t * token_index, cs_error * err
   (*token_index)++;
   
   // condition
-  cs_node * condition = cs_parse_condition(tokens, token_index, error);
+  cs_node * condition = cs_parse_conditional_operation(tokens, token_index, error);
   if(condition == NULL)
   {
     #ifdef CS_DEBUG_SOFT_ERROR
@@ -2856,7 +3225,7 @@ cs_node * cs_parse_index(cs_token * tokens, size_t * token_index, cs_error * err
         return NULL;
       #endif
     }
-    new_left->pos.end = right->pos.end;
+    new_left->pos.end = tokens[*token_index].pos.end;
     (*token_index)++;
 
     left = new_left;
@@ -2875,7 +3244,7 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index, cs_error * erro
       cs_node * neg = cs_node_create(CS_NT_NEG);
       neg->pos.start = tokens[*token_index].pos.start;
       (*token_index)++;
-      cs_node * expression = cs_parse_conditions(tokens, token_index, error);
+      cs_node * expression = cs_parse_power(tokens, token_index, error);
       if(expression == NULL)
       {
         #ifdef CS_DEBUG_SOFT_ERROR
@@ -2887,6 +3256,7 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index, cs_error * erro
         #endif
       }
       neg->content.branch.a = expression;
+      neg->pos.end = expression->pos.end;
       return neg; }
 
     case CS_TT_INT: {
@@ -2906,6 +3276,7 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index, cs_error * erro
     case CS_TT_STR: {
       cs_node * str = cs_node_create(CS_NT_STR);
       str->pos = tokens[*token_index].pos;
+      // DOC: Memory Management: This shows that nodes reference tokens' WCS instead of storing their own.
       str->content.value._wcs = tokens[*token_index].value._wcs;
       (*token_index)++;
       return str; }
@@ -2949,6 +3320,15 @@ cs_node * cs_parse_atom(cs_token * tokens, size_t * token_index, cs_error * erro
         fncall->pos.end = params->pos.end;
         fncall->content.branch.b = params;
         node = fncall;
+      }
+      
+      // Get Variable
+      else
+      {
+        cs_node * varget = cs_node_create(CS_NT_GET);
+        varget->pos = node->pos;
+        varget->content.branch.a = node;
+        node = varget;
       }
       
       return node; }
@@ -3057,7 +3437,8 @@ cs_node * cs_parse_id(cs_token * tokens, size_t * token_index, cs_error * error)
 cs_node * cs_parse_return(cs_token * tokens, size_t * token_index, cs_error * error)
 {
   cs_node * returnnode = cs_node_create(CS_NT_RETURN);
-  returnnode->pos.start = tokens[*token_index].pos.start;
+  returnnode->pos = tokens[*token_index].pos; /* If the parser finds a return value after this,
+                                                 pos.end is changed further down */
 
   // return
   if(tokens[*token_index].type != CS_TT_RETURN)
@@ -3081,18 +3462,18 @@ cs_node * cs_parse_return(cs_token * tokens, size_t * token_index, cs_error * er
   if(tokens[*token_index].type != CS_TT_NEW
   && tokens[*token_index].type != CS_TT_EOF) // FIXME: ?
   {
-    value = cs_parse_conditions(tokens, token_index, error);
+    value = cs_parse_conditional_operation(tokens, token_index, error);
+    // DOC: NULL _here_ means an error.
     if(value == NULL) WERR(L"Out of memory");
+    returnnode->pos.end = value->pos.end;
   }
   else
   {
-    // wprintf(L"Warning: Implicit return value of INT:0\n");
-    value = cs_node_create(CS_NT_INT);
-    value->pos = (cs_position){tokens[*token_index].pos.start, tokens[*token_index].pos.start};
-    value->content.value._int = 0;
+    // DOC: NULL _here_ means no return value was specified. This tells the interpreter
+    // not to try to interpret a return value where there is none.
+    value = NULL;
   }
   
-  returnnode->pos.end = value->pos.end;
   returnnode->content.branch.a = value;
   
   return returnnode;
@@ -3107,6 +3488,26 @@ cs_node * cs_parse_return(cs_token * tokens, size_t * token_index, cs_error * er
 cs_return cs_interpret(cs_node * node, cs_context * context);
 cs_return cs_interpret_statements(cs_node * node, cs_context * context);
 cs_return cs_interpret_add(cs_node * node, cs_context * context);
+cs_return cs_interpret_sub(cs_node * node, cs_context * context);
+cs_return cs_interpret_mul(cs_node * node, cs_context * context);
+cs_return cs_interpret_div(cs_node * node, cs_context * context);
+cs_return cs_interpret_fdiv(cs_node * node, cs_context * context);
+cs_return cs_interpret_mod(cs_node * node, cs_context * context);
+cs_return cs_interpret_neg(cs_node * node, cs_context * context);
+cs_return cs_interpret_pow(cs_node * node, cs_context * context);
+cs_return cs_interpret_not(cs_node * node, cs_context * context);
+cs_return cs_interpret_equ(cs_node * node, cs_context * context);
+cs_return cs_interpret_neq(cs_node * node, cs_context * context);
+cs_return cs_interpret_gtr(cs_node * node, cs_context * context);
+cs_return cs_interpret_geq(cs_node * node, cs_context * context);
+cs_return cs_interpret_lss(cs_node * node, cs_context * context);
+cs_return cs_interpret_leq(cs_node * node, cs_context * context);
+cs_return cs_interpret_and(cs_node * node, cs_context * context);
+cs_return cs_interpret_or(cs_node * node, cs_context * context);
+cs_return cs_interpret_cop(cs_node * node, cs_context * context);
+cs_return cs_interpret_idx(cs_node * node, cs_context * context);
+cs_return cs_interpret_set(cs_node * node, cs_context * context);
+cs_return cs_interpret_get(cs_node * node, cs_context * context);
 #pragma endregion (Prototypes)
 
 #pragma region Interpret
@@ -3115,7 +3516,29 @@ cs_return cs_interpret(cs_node * node, cs_context * context)
   switch(node->type)
   {
     case CS_NT_STATEMENTS: return cs_interpret_statements(node, context);
+    
     case CS_NT_ADD: return cs_interpret_add(node, context);
+    case CS_NT_SUB: return cs_interpret_sub(node, context);
+    case CS_NT_MUL: return cs_interpret_mul(node, context);
+    case CS_NT_DIV: return cs_interpret_div(node, context);
+    case CS_NT_FDIV: return cs_interpret_fdiv(node, context);
+    case CS_NT_MOD: return cs_interpret_mod(node, context);
+    case CS_NT_NEG: return cs_interpret_neg(node, context);
+    case CS_NT_POW: return cs_interpret_pow(node, context);
+    case CS_NT_NOT: return cs_interpret_not(node, context);
+    case CS_NT_EQU: return cs_interpret_equ(node, context);
+    case CS_NT_NEQ: return cs_interpret_neq(node, context);
+    case CS_NT_GTR: return cs_interpret_gtr(node, context);
+    case CS_NT_GEQ: return cs_interpret_geq(node, context);
+    case CS_NT_LSS: return cs_interpret_lss(node, context);
+    case CS_NT_LEQ: return cs_interpret_leq(node, context);
+    case CS_NT_AND: return cs_interpret_and(node, context);
+    case CS_NT_OR: return cs_interpret_or(node, context);
+    case CS_NT_COP: return cs_interpret_cop(node, context);
+    case CS_NT_IDX: return cs_interpret_idx(node, context);
+    
+    case CS_NT_SET: return cs_interpret_set(node, context);
+    case CS_NT_GET: return cs_interpret_get(node, context);
     
     case CS_NT_INT: {
       cs_return return_value;
@@ -3130,11 +3553,22 @@ cs_return cs_interpret(cs_node * node, cs_context * context)
       return return_value; }
     
     case CS_NT_STR: {
+      // DOC: Memory Management: Here we can see that return values COPY strings.
       wchar_t * string = malloc((wcslen(node->content.value._wcs)+1)*sizeof(*string));
       if(string == NULL) WERR(L"Out of memory");
       wcscpy(string, node->content.value._wcs);
       cs_return return_value;
       return_value.type = CS_RT_STR;
+      return_value.value._wcs = string;
+      return return_value; }
+    
+    // FIXME: Ugly, but will soon become obsolete with new node structure.
+    case CS_NT_ID: {
+      wchar_t * string = malloc((wcslen(node->content.value._wcs)+1)*sizeof(*string));
+      if(string == NULL) WERR(L"Out of memory");
+      wcscpy(string, node->content.value._wcs);
+      cs_return return_value;
+      return_value.type = CS_RT_ID;
       return_value.value._wcs = string;
       return return_value; }
     
@@ -3154,13 +3588,7 @@ cs_return cs_interpret(cs_node * node, cs_context * context)
       return_value.value._vp = new_list;
       return return_value; }
     
-    default: WERR(L"Node type not implemented");
-    
-    // case CS_NT_ID: { // FIXME: ???
-    //   cs_return return_value;
-    //   return_value.type = CS_RT_ID;
-    //   return_value.value._wcs = node->content.value._wcs;
-    //   return return_value; }
+    default: WERR(L"cs_interpret: Node type not implemented");
   }
 }
 #pragma endregion Interpret
@@ -3172,6 +3600,9 @@ cs_return cs_interpret_statements(cs_node * node, cs_context * context)
   cs_return return_value;
   return_value.type = CS_RT_INT;
   return_value.value._int = 46;
+  // return_value.type = CS_RT_STR;
+  // return_value.value._wcs = malloc(100*sizeof(wchar_t));
+  // wcscpy(return_value.value._wcs, L"test");
   
   cs_node ** nodes = (cs_node**)node->content.value._vpp;
   size_t nodes_size = nodes[0]->content.value._int;
@@ -3185,13 +3616,30 @@ cs_return cs_interpret_statements(cs_node * node, cs_context * context)
     if(nodes[i]->type == CS_NT_BREAK) break;
     if(nodes[i]->type == CS_NT_RETURN)
     {
-      return_value = cs_interpret(nodes[i]->content.branch.a, context);
-      if(return_value.type == CS_RT_VOID) return return_value;
+      // DOC: If this case applies, it means the program defines its own return value,
+      // meaning we should free the default return value.
+      if(nodes[i]->content.branch.a != NULL)
+      {
+        cs_return_free(return_value);
+        return_value = cs_interpret(nodes[i]->content.branch.a, context);
+      }
+      // Since there is a break statement following here no matter what, we don't
+      // need to check whether cs_interpret returned an error or not,
+      // since we are going to return the result right away either way.
       break;
     }
-    return_value = cs_interpret(nodes[i], context); // FIXME: Check this.
-    if(return_value.type == CS_RT_VOID) return return_value;
-    cs_return_free(return_value);
+    cs_return _return_value = cs_interpret(nodes[i], context); // FIXME: Check this.
+    if(_return_value.type == CS_RT_VOID)
+    {
+      // DOC: We only keep _return_value if there was an error. Otherwise, return values of
+      // standalone expressions (or conditional operations, to be exact) are discarded right away.
+      cs_return_free(return_value);
+      return_value = _return_value;
+      break;
+    }
+    // DOC: We need to free _return_value after every iteration because its contents
+    // are not stored anywhere. (See comment above.)
+    cs_return_free(_return_value);
   }
   
   return return_value;
@@ -3201,10 +3649,16 @@ cs_return cs_interpret_statements(cs_node * node, cs_context * context)
 #pragma region Interpret Add Node
 cs_return cs_interpret_add(cs_node * node, cs_context * context)
 {
-  cs_return return_value;
-  
   cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
   cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
   
   // INT and FLT
   if(left.type == CS_RT_INT && right.type == CS_RT_INT)
@@ -3236,9 +3690,7 @@ cs_return cs_interpret_add(cs_node * node, cs_context * context)
     wchar_t * wcs = malloc((left_len+right_len+1)*sizeof(*wcs));
     if(wcs == NULL) WERR("Out of memory");
     wcscpy(wcs, left.value._wcs);
-    free(left.value._wcs);
     wcscpy(wcs+left_len, right.value._wcs);
-    free(right.value._wcs);
     return_value.type = CS_RT_STR;
     return_value.value._wcs = wcs;
   }
@@ -3246,6 +3698,7 @@ cs_return cs_interpret_add(cs_node * node, cs_context * context)
   // LIST and LIST
   else if(left.type == CS_RT_LIST && right.type == CS_RT_LIST)
   {
+    // FIXME: Unsafe, doesn't duplicate strings etc., only pointers.
     cs_return * left_list = (cs_return*)left.value._vp;
     cs_return * right_list = (cs_return*)right.value._vp;
     size_t left_size = left_list[0].value._int;
@@ -3257,11 +3710,9 @@ cs_return cs_interpret_add(cs_node * node, cs_context * context)
     memcpy((void*)(new_list+1),
            (void*)(left_list+1),
            left_size*sizeof(cs_return));
-    free(left_list);
     memcpy((void*)(new_list+1+left_size),
            (void*)(right_list+1),
            right_size*sizeof(cs_return));
-    free(right_list);
     return_value.type = CS_RT_LIST;
     return_value.value._vp = (void*)new_list;
   }
@@ -3275,14 +3726,1115 @@ cs_return cs_interpret_add(cs_node * node, cs_context * context)
     context->error.values[1]._int = (int)right.type;
     context->error.__line__ = __LINE__;
     strcpy(context->error.__file__, __FILE__);
-    cs_return_free(left);
-    cs_return_free(right);
     return_value.type = CS_RT_VOID;
   }
+  
+  cs_return_free(left);
+  cs_return_free(right);
   
   return return_value;
 }
 #pragma endregion Interpret Add Node
+
+#pragma region Interpret Subtract Node
+cs_return cs_interpret_sub(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = left.value._int - right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = (float)left.value._int - right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = left.value._float - (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = left.value._float - right.value._float;
+  }
+
+  // Error
+  else
+  {
+    context->error.type = CS_ET_SUB;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Subtract Node
+
+#pragma region Interpret Multiplication Node
+cs_return cs_interpret_mul(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = left.value._int * right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = (float)left.value._int * right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = left.value._float * (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = left.value._float * right.value._float;
+  }
+  
+  // INT and STR
+  else if((left.type == CS_RT_INT && right.type == CS_RT_STR)
+       || (left.type == CS_RT_STR && right.type == CS_RT_INT))
+  {
+    int count;
+    wchar_t * wcs;
+    if(left.type == CS_RT_INT)
+    {
+      count = left.value._int;
+      wcs = right.value._wcs;
+    }
+    else
+    {
+      count = right.value._int;
+      wcs = left.value._wcs;
+    }
+    size_t wcs_size = wcslen(wcs);
+    wchar_t * string = malloc((wcs_size*count+1)*sizeof(*string));
+    if(string == NULL) WERR("Out of memory");
+    for(int i=0; i<count; i++)
+    {
+      wcscpy(string+i*wcs_size, wcs);
+    }
+    return_value.type = CS_RT_STR;
+    return_value.value._wcs = string;
+  }
+  
+  // INT and LIST
+  else if((left.type == CS_RT_INT && right.type == CS_RT_LIST)
+       || (left.type == CS_RT_LIST && right.type == CS_RT_INT))
+  {
+    int count;
+    cs_return * list;
+    if(left.type == CS_RT_INT)
+    {
+      count = left.value._int;
+      list = (cs_return*)right.value._vp;
+    }
+    size_t list_size = list[0].value._int;
+    cs_return * new_list = malloc(count*list_size*sizeof(*new_list));
+    if(new_list == NULL) WERR("Out of memory");
+    new_list[0].type = CS_RT_VOID;
+    new_list[0].value._int = list_size;
+    for(int i=0; i<count; i++)
+    {
+      memcpy((void*)(new_list+1+i*count),
+             (void*)(list+1),
+             list_size*sizeof(cs_return));
+    }
+    cs_return_free(left);
+    cs_return_free(right);
+    return_value.type = CS_RT_LIST;
+    return_value.value._vp = (void*)new_list;
+  }
+
+  // Error
+  else
+  {
+    context->error.type = CS_ET_MUL;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Multiplication Node
+
+#pragma region Interpret Division Node
+cs_return cs_interpret_div(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  if((right.type == CS_RT_INT && right.value._int == 0)
+  || (right.type == CS_RT_FLT && right.value._float == 0.0))
+  {
+    context->error.type = CS_ET_ZERO_DIVISION;
+    context->error.pos = node->content.branch.b->pos;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  // INT and FLT
+  else if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    if(left.value._int % right.value._int == 0)
+    {
+      return_value.type = CS_RT_INT;
+      return_value.value._int = left.value._int / right.value._int;
+    }
+    else
+    {
+      return_value.type = CS_RT_FLT;
+      return_value.value._float = (float)left.value._int / right.value._int;
+    }
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = (float)left.value._int / right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = left.value._float / (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = left.value._float / right.value._float;
+  }
+
+  // Error
+  else
+  {
+    context->error.type = CS_ET_DIV;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Division Node
+
+#pragma region Interpret Floor Division Node
+cs_return cs_interpret_fdiv(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  if((right.type == CS_RT_INT && right.value._int == 0)
+  || (right.type == CS_RT_FLT && right.value._float == 0.0))
+  {
+    context->error.type = CS_ET_ZERO_DIVISION;
+    context->error.pos = node->content.branch.b->pos;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = left.value._int / right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = floor((float)left.value._int / right.value._float);
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = floor(left.value._float / (float)right.value._int);
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = floor(left.value._float / right.value._float);
+  }
+
+  // Error
+  else
+  {
+    context->error.type = CS_ET_FDIV;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Floor Division Node
+
+#pragma region Interpret Modulus Node
+cs_return cs_interpret_mod(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = left.value._int % right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = fmod((float)left.value._int, right.value._float);
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = fmod(left.value._float, (float)right.value._int);
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = fmod(left.value._float, right.value._float);
+  }
+
+  // Error
+  else
+  {
+    context->error.type = CS_ET_MOD;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Modulus Node
+
+#pragma region Interpret Negate Node
+cs_return cs_interpret_neg(cs_node * node, cs_context * context)
+{
+  cs_return center = cs_interpret(node->content.branch.a, context);
+  
+  cs_return return_value;
+  
+  if(center.type == CS_RT_VOID) return center;
+  
+  if(center.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = -center.value._int;
+  }
+  else if(center.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = -center.value._float;
+  }
+  else
+  {
+    context->error.type = CS_ET_NEG;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)center.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(center);
+  
+  return return_value;
+}
+#pragma endregion Interpret Negate Node
+
+#pragma region Interpret Power Node
+cs_return cs_interpret_pow(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = pow(left.value._int, right.value._int);
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = powf((float)left.value._int, right.value._float);
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = powf(left.value._float, (float)right.value._int);
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.type = CS_RT_FLT;
+    return_value.value._float = powf(left.value._float, right.value._float);
+  }
+  
+  // Error
+  else
+  {
+    context->error.type = CS_ET_POW;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Power Node
+
+#pragma region Interpret Not Node
+cs_return cs_interpret_not(cs_node * node, cs_context * context)
+{
+  cs_return center = cs_interpret(node->content.branch.a, context);
+  if(center.type == CS_RT_VOID) return center;
+  
+  cs_return return_value;
+  
+  return_value.type = CS_RT_INT;
+  return_value.value._int = !cs_return_to_boolean(center);
+  
+  cs_return_free(center);
+  
+  return return_value;
+}
+#pragma endregion Interpret Not Node
+
+#pragma region Interpret Equals Node
+cs_return cs_interpret_equ(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  int result = cs_return_compare(left, right);
+  
+  if(result == -1)
+  {
+    context->error.type = CS_ET_COMPARISON;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  else
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = result;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Equals Node
+
+#pragma region Interpret Not Equals Node
+cs_return cs_interpret_neq(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  int result = cs_return_compare(left, right);
+  
+  if(result == -1)
+  {
+    context->error.type = CS_ET_COMPARISON;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  else
+  {
+    return_value.type = CS_RT_INT;
+    return_value.value._int = !result;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Not Equals Node
+
+#pragma region Interpret Greater Than Node
+cs_return cs_interpret_gtr(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  return_value.type = CS_RT_INT;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._int > right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = (float)left.value._int > right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._float > (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = left.value._float > right.value._float;
+  }
+  
+  // STR and STR
+  else if(left.type == CS_RT_STR && right.type == CS_RT_STR)
+  {
+    return_value.value._int = wcslen(left.value._wcs) > wcslen(right.value._wcs);
+  }
+  
+  // LIST and LIST
+  else if(left.type == CS_RT_LIST && right.type == CS_RT_LIST)
+  {
+    return_value.value._int =
+      ((cs_return*)left.value._vp)[0].value._int > ((cs_return*)right.value._vp)[0].value._int;
+  }
+  
+  // Illegal Comparison
+  else
+  {
+    context->error.type = CS_ET_COMPARISON;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Greater Than Node
+
+#pragma region Interpret Greater Than or Equals Node
+cs_return cs_interpret_geq(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  return_value.type = CS_RT_INT;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._int >= right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = (float)left.value._int >= right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._float >= (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = left.value._float >= right.value._float;
+  }
+  
+  // STR and STR
+  else if(left.type == CS_RT_STR && right.type == CS_RT_STR)
+  {
+    return_value.value._int = wcslen(left.value._wcs) >= wcslen(right.value._wcs);
+  }
+  
+  // LIST and LIST
+  else if(left.type == CS_RT_LIST && right.type == CS_RT_LIST)
+  {
+    return_value.value._int =
+      ((cs_return*)left.value._vp)[0].value._int >= ((cs_return*)right.value._vp)[0].value._int;
+  }
+  
+  // Illegal Comparison
+  else
+  {
+    context->error.type = CS_ET_COMPARISON;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Greater Than or Equals Node
+
+#pragma region Interpret Less Than Node
+cs_return cs_interpret_lss(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  return_value.type = CS_RT_INT;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._int < right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = (float)left.value._int < right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._float < (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = left.value._float < right.value._float;
+  }
+  
+  // STR and STR
+  else if(left.type == CS_RT_STR && right.type == CS_RT_STR)
+  {
+    return_value.value._int = wcslen(left.value._wcs) < wcslen(right.value._wcs);
+  }
+  
+  // LIST and LIST
+  else if(left.type == CS_RT_LIST && right.type == CS_RT_LIST)
+  {
+    return_value.value._int =
+      ((cs_return*)left.value._vp)[0].value._int < ((cs_return*)right.value._vp)[0].value._int;
+  }
+  
+  // Illegal Comparison
+  else
+  {
+    context->error.type = CS_ET_COMPARISON;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Less Than Node
+
+#pragma region Interpret Less Than or Equals Node
+cs_return cs_interpret_leq(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  return_value.type = CS_RT_INT;
+  
+  // INT and FLT
+  if(left.type == CS_RT_INT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._int <= right.value._int;
+  }
+  else if(left.type == CS_RT_INT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = (float)left.value._int <= right.value._float;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_INT)
+  {
+    return_value.value._int = left.value._float <= (float)right.value._int;
+  }
+  else if(left.type == CS_RT_FLT && right.type == CS_RT_FLT)
+  {
+    return_value.value._int = left.value._float <= right.value._float;
+  }
+  
+  // STR and STR
+  else if(left.type == CS_RT_STR && right.type == CS_RT_STR)
+  {
+    return_value.value._int = wcslen(left.value._wcs) <= wcslen(right.value._wcs);
+  }
+  
+  // LIST and LIST
+  else if(left.type == CS_RT_LIST && right.type == CS_RT_LIST)
+  {
+    return_value.value._int =
+      ((cs_return*)left.value._vp)[0].value._int <= ((cs_return*)right.value._vp)[0].value._int;
+  }
+  
+  // Illegal Comparison
+  else
+  {
+    context->error.type = CS_ET_COMPARISON;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)left.type;
+    context->error.values[1]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Less Than or Equals Node
+
+#pragma region Interpret And Node
+cs_return cs_interpret_and(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  return_value.type = CS_RT_INT;
+  return_value.value._int = cs_return_to_boolean(left) && cs_return_to_boolean(right);
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret And Node
+
+#pragma region Interpret Or Node
+cs_return cs_interpret_or(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  return_value.type = CS_RT_INT;
+  return_value.value._int = cs_return_to_boolean(left) || cs_return_to_boolean(right);
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Or Node
+
+#pragma region Interpret Conditional Operation Node
+cs_return cs_interpret_cop(cs_node * node, cs_context * context)
+{
+  cs_return truevalue = cs_interpret(node->content.branch.a, context);
+  if(truevalue.type == CS_RT_VOID) return truevalue;
+  cs_return condition = cs_interpret(node->content.branch.b, context);
+  if(condition.type == CS_RT_VOID)
+  {
+    cs_return_free(truevalue);
+    return condition;
+  }
+  cs_return falsevalue = cs_interpret(node->content.branch.c, context);
+  if(falsevalue.type == CS_RT_VOID)
+  {
+    cs_return_free(truevalue);
+    cs_return_free(condition);
+    return falsevalue;
+  }
+  
+  cs_return return_value;
+  
+  if(cs_return_to_boolean(condition))
+  {
+    return_value = truevalue;
+    cs_return_free(falsevalue);
+  }
+  else
+  {
+    return_value = falsevalue;
+    cs_return_free(truevalue);
+  }
+  
+  cs_return_free(condition);
+  
+  return return_value;
+}
+#pragma endregion Interpret Conditional Operation Node
+
+#pragma region Interpret Index Node
+cs_return cs_interpret_idx(cs_node * node, cs_context * context)
+{
+  cs_return left = cs_interpret(node->content.branch.a, context);
+  if(left.type == CS_RT_VOID) return left;
+  cs_return right = cs_interpret(node->content.branch.b, context);
+  if(right.type == CS_RT_VOID)
+  {
+    cs_return_free(left);
+    return right;
+  }
+  
+  cs_return return_value;
+  
+  if(right.type != CS_RT_INT)
+  {
+    context->error.type = CS_ET_NOT_INDEX_TYPE;
+    context->error.pos = node->content.branch.b->pos;
+    context->error.values[0]._int = (int)right.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+  }
+  else
+  {
+    switch(left.type)
+    {
+      case CS_RT_STR:
+        if(right.value._int >= 0 && right.value._int <= wcslen(left.value._wcs)-1)
+        {
+          wchar_t * string = malloc(2*sizeof(*string));
+          if(string == NULL) WERR("Out of memory");
+          string[0] = left.value._wcs[right.value._int];
+          string[1] = L'\0';
+          return_value.type = CS_RT_STR;
+          return_value.value._wcs = string;
+        }
+        else
+        {
+          context->error.type = CS_ET_INDEX_OUT_OF_RANGE;
+          context->error.pos = node->content.branch.b->pos;
+          context->error.values[0]._int = right.value._int;
+          context->error.__line__ = __LINE__;
+          strcpy(context->error.__file__, __FILE__);
+          return_value.type = CS_RT_VOID;
+        }
+        break;
+      
+      case CS_RT_LIST: {
+        cs_return * list = (cs_return*)left.value._vp;
+        size_t list_size = list[0].value._int;
+        if(right.value._int >= 0 && right.value._int <= list_size-1)
+        {
+          return_value = cs_return_copy(list[right.value._int+1]);
+        }
+        else
+        {
+          context->error.type = CS_ET_INDEX_OUT_OF_RANGE;
+          context->error.pos = node->content.branch.b->pos;
+          context->error.values[0]._int = right.value._int;
+          context->error.__line__ = __LINE__;
+          strcpy(context->error.__file__, __FILE__);
+          return_value.type = CS_RT_VOID;
+        }
+        break; }
+      
+      default:
+        context->error.type = CS_ET_NOT_INDEXABLE;
+        context->error.pos = node->pos;
+        context->error.values[0]._int = (int)left.type;
+        context->error.__line__ = __LINE__;
+        strcpy(context->error.__file__, __FILE__);
+        return_value.type = CS_RT_VOID;
+    }
+  }
+  
+  cs_return_free(left);
+  cs_return_free(right);
+  
+  return return_value;
+}
+#pragma endregion Interpret Index Node
+
+#pragma region Interpret Set Node
+cs_return cs_interpret_set(cs_node * node, cs_context * context)
+{
+  cs_return name = cs_interpret(node->content.branch.a, context);
+  if(name.type == CS_RT_VOID) return name;
+  cs_return value = cs_interpret(node->content.branch.b, context);
+  if(value.type == CS_RT_VOID)
+  {
+    cs_return_free(name);
+    return value;
+  }
+  
+  cs_return return_value;
+  
+  if(name.type != CS_RT_ID)
+  {
+    context->error.type = CS_ET_SET;
+    context->error.pos = node->pos;
+    context->error.values[0]._int = (int)name.type;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+    
+    // Here we are freeing 'value' because we no longer want it.
+    cs_return_free(value);
+  }
+  else
+  {
+    return_value = value;
+    
+    // Check if variable already exists.
+    int exists_at = -1;
+    for(size_t i=0; i<context->variables_count; i++)
+    {
+      if(wcscmp(context->variables[i].name, name.value._wcs) == 0)
+      {
+        exists_at = i;
+        break;
+      }
+    }
+    
+    // Variable does not exist
+    if(exists_at == -1)
+    {
+      cs_variable var;
+      var.name = malloc((wcslen(name.value._wcs)+1)*sizeof(*var.name));
+      if(var.name == NULL) WERR("Out of memory");
+      wcscpy(var.name, name.value._wcs);
+      var.content = cs_return_copy(value);
+      if(context->variables_count >= context->variables_size)
+      {
+        context->variables_size *= 2;
+        cs_variable * _variables = realloc(context->variables, context->variables_size*sizeof(*_variables));
+        if(_variables == NULL) WERR("Out of memory");
+        context->variables = _variables;
+      }
+      context->variables[context->variables_count] = var;
+      context->variables_count++;
+    }
+    
+    // Variable does exist
+    else
+    {
+      cs_return_free(context->variables[exists_at].content);
+      context->variables[exists_at].content = cs_return_copy(value);
+    }
+
+    // Here we are NOT freeing 'value' because we can use it as return value.
+  }
+  
+  cs_return_free(name);
+  
+  return return_value;
+}
+#pragma endregion Interpret Set Node
+
+#pragma region Interpret Get Node
+cs_return cs_interpret_get(cs_node * node, cs_context * context)
+{
+  cs_return name = cs_interpret(node->content.branch.a, context);
+  if(name.type == CS_RT_VOID) return name;
+  
+  // We don't need to check if name.type is CS_RT_ID because the parser
+  // _only_ creates a CS_NT_GET if it finds an CS_TT_ID.
+  
+  cs_return return_value;
+  
+  // Check if variable exists.
+  int exists_at = -1;
+  for(size_t i=0; i<context->variables_count; i++)
+  {
+    if(wcscmp(context->variables[i].name, name.value._wcs) == 0)
+    {
+      exists_at = i;
+      break;
+    }
+  }
+  
+  // Variable exists.
+  if(exists_at > -1)
+  {
+    return_value = cs_return_copy(context->variables[exists_at].content);
+    
+    // Here we free 'name' because we no longer want it.
+    cs_return_free(name);
+  }
+  
+  // Variable does not exist.
+  else
+  {
+    context->error.type = CS_ET_GET;
+    context->error.pos = node->pos;
+    context->error.values[0]._wcs = name.value._wcs;
+    context->error.__line__ = __LINE__;
+    strcpy(context->error.__file__, __FILE__);
+    return_value.type = CS_RT_VOID;
+    
+    // Here we DON'T free 'name' because we can use its WCS in our return value.
+  }
+  
+  return return_value;
+}
+#pragma endregion Interpret Get Node
 
 #pragma endregion --- Interpreter ---
 
@@ -3345,10 +4897,16 @@ int main(int argc, char * argv[])
   #endif
   
   #ifdef CS_DO_INTERPRET
-    wprintf(L"\n");
+    context->variables_size = SIZE_SMALL; // FIXME: SIZE
+    context->variables = malloc(context->variables_size*sizeof(*context->variables))
+    if(context->variables == NULL) WERR("Out of memory");
+    context->functions_size = SIZE_SMALL; // FIXME: SIZE
+    context->functions = malloc(context->functions_size*sizeof(*context->functions))
+    if(context->functions == NULL) WERR("Out of memory");
     cs_return return_value = cs_interpret(context->ast, context);
     if(return_value.type == CS_RT_VOID)
     {
+      wprintf(L"\n");
       cs_error_display(context);
     }
     else
