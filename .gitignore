@@ -1,8 +1,8 @@
 .vscode*
 __pycache__
 notes
+old
 desktop.ini
 c/test.txt
 *.exe
 *.exe.stackdump
-tests

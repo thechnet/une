@@ -6,13 +6,14 @@ Updated 2021-04-17
 #ifndef UNE_PARSER_H
 #define UNE_PARSER_H
 
+#include "primitive.h"
 #include "types/error.h"
 #include "types/token.h"
 #include "types/node.h"
 #include <string.h>
 
 une_node *une_parse_block(une_token *tokens, size_t *token_index, une_error *error);
-une_node ** une_parse_sequence(
+une_node **une_parse_sequence(
   une_token *tokens, size_t *token_index, une_error *error,
   une_node *(*parser)(une_token *tokens, size_t *token_index, une_error *error),
   une_token_type tt_end_of_item,

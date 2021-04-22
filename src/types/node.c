@@ -80,7 +80,7 @@ wchar_t *une_node_to_wcs(une_node *node)
   switch(node->type)
   {
     case UNE_NT_STMTS: {
-      une_node ** list = (une_node**)node->content.value._vpp;
+      une_node **list = (une_node**)node->content.value._vpp;
       if(list == NULL) WERR(L"Undefined stmts pointer");
       size_t list_size = list[0]->content.value._int;
       if(list_size == 0)
@@ -139,7 +139,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       break;
     
     case UNE_NT_LIST: {
-      une_node ** list = (une_node**)node->content.value._vpp;
+      une_node **list = (une_node**)node->content.value._vpp;
       if(list == NULL) WERR(L"Undefined list pointer");
       size_t list_size = list[0]->content.value._int;
       if(list_size == 0)
@@ -377,7 +377,7 @@ void une_node_free(une_node *node)
     // Sequences (Data)
     case UNE_NT_LIST:
     case UNE_NT_STMTS: {
-      une_node ** list = (une_node**)node->content.value._vpp;
+      une_node **list = (une_node**)node->content.value._vpp;
       if(list == NULL)
       {
         // wprintf(L"Warning: Node to be freed has undefined list pointer.\n");

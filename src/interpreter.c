@@ -70,7 +70,7 @@ une_result une_interpret(une_node *node, une_context *context)
       return result; }
     
     case UNE_NT_LIST: {
-      une_node ** list = (une_node**)node->content.value._vpp;
+      une_node **list = (une_node**)node->content.value._vpp;
       size_t list_size = list[0]->content.value._int;
       une_result *new_list = malloc((list_size+1)*sizeof(*new_list));
       if(new_list == NULL) WERR(L"Out of memory.");
@@ -101,7 +101,7 @@ une_result une_interpret_stmts(une_node *node, une_context *context)
   // result.value._wcs = malloc(100*sizeof(wchar_t));
   // wcscpy(result.value._wcs, L"test");
   
-  une_node ** nodes = (une_node**)node->content.value._vpp;
+  une_node **nodes = (une_node**)node->content.value._vpp;
   size_t nodes_size = nodes[0]->content.value._int;
   for(size_t i=1; i<=nodes_size; i++)
   {

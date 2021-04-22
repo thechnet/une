@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     wprintf(L"\n");
     context->ast = une_node_create(UNE_NT_STMTS);
     context->ast->pos.start = context->tokens[context->token_index].pos.start;
-    une_node ** sequence = une_parse_sequence(
+    une_node **sequence = une_parse_sequence(
       context->tokens, &context->token_index, &context->error,
       &une_parse_stmt, UNE_TT_NEW, UNE_TT_EOF
     );

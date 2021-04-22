@@ -6,6 +6,7 @@ Updated 2021-04-17
 #ifndef UNE_CONTEXT_H
 #define UNE_CONTEXT_H
 
+#include "../primitive.h"
 #include "error.h"
 #include "token.h"
 #include "node.h"

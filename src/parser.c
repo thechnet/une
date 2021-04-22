@@ -33,7 +33,7 @@ une_node *une_parse_block(
   block->pos.start = tokens[*token_index].pos.start;
   
   // ...
-  une_node ** sequence = une_parse_sequence(
+  une_node **sequence = une_parse_sequence(
     tokens, token_index, error,
     &une_parse_stmt, UNE_TT_NEW, UNE_TT_RBRC
   );
@@ -101,7 +101,7 @@ Unlike all other une_parse_ functions, this function does NOT return a node.
 Instead it returns a list of nodes (une_node**) to be set to the datum of a
 node by the parent function.
 */
-une_node ** une_parse_sequence(
+une_node **une_parse_sequence(
   une_token *tokens, size_t *token_index, une_error *error,
   une_node *(*parser)(une_token *tokens, size_t *token_index, une_error *error),
   une_token_type tt_end_of_item,
@@ -109,7 +109,7 @@ une_node ** une_parse_sequence(
 )
 {
   size_t sequence_size = UNE_SIZE_MEDIUM; // FIXME:
-  une_node ** sequence = malloc(sequence_size *sizeof(*sequence));
+  une_node **sequence = malloc(sequence_size *sizeof(*sequence));
   if(sequence == NULL) WERR(L"Out of memory.");
   
   size_t pos_start = tokens[*token_index].pos.start;
@@ -129,7 +129,7 @@ une_node ** une_parse_sequence(
     if(sequence_index >= sequence_size)
     {
       sequence_size *= 2;
-      une_node ** _sequence = realloc(sequence, sequence_size *sizeof(_sequence));
+      une_node **_sequence = realloc(sequence, sequence_size *sizeof(_sequence));
       if(_sequence == NULL) WERR(L"Out of memory.");
       sequence = _sequence;
       wprintf(L"Warning: Sequence doubled\n");
@@ -730,7 +730,7 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
   (*token_index)++;
 
   // parameters
-  une_node ** sequence = une_parse_sequence(
+  une_node **sequence = une_parse_sequence(
     tokens, token_index, error,
     &une_parse_id, UNE_TT_SEP, UNE_TT_RPAR
   );
@@ -1243,7 +1243,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
         params->pos.start = tokens[*token_index].pos.start;
         (*token_index)++;
         
-        une_node ** sequence = une_parse_sequence(
+        une_node **sequence = une_parse_sequence(
           tokens, token_index, error,
           &une_parse_conditions, UNE_TT_SEP, UNE_TT_RPAR
         );
@@ -1284,7 +1284,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
       // [
       (*token_index)++;
       // ...
-      une_node ** sequence = une_parse_sequence(
+      une_node **sequence = une_parse_sequence(
         tokens, token_index, error,
         &une_parse_conditions, UNE_TT_SEP, UNE_TT_RSQB
       );

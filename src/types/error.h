@@ -6,6 +6,7 @@ Updated 2021-04-17
 #ifndef UNE_ERROR_H
 #define UNE_ERROR_H
 
+#include "../primitive.h"
 #include "token.h"
 #include "result.h"
 

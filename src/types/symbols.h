@@ -6,8 +6,9 @@ Updated 2021-04-17
 #ifndef UNE_SYMBOLS_H
 #define UNE_SYMBOLS_H
 
-#include "node.h"
+#include "../primitive.h"
 #include "result.h"
+#include "node.h"
 
 #pragma region une_variable
 typedef struct _une_variable {

@@ -6,8 +6,11 @@ Updated 2021-04-17
 #ifndef UNE_INTERPRETER_H
 #define UNE_INTERPRETER_H
 
-#include "types/result.h"
+#include "primitive.h"
+#include "types/error.h"
 #include "types/node.h"
+#include "types/result.h"
+#include "types/symbols.h"
 #include "types/context.h"
 #include <string.h>
 #include <math.h>
