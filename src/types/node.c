@@ -1,15 +1,15 @@
 /*
 node.c - Une
-Updated 2021-04-17
+Updated 2021-04-24
 */
 
+#include "../tools.h"
 #include "node.h"
 
 #pragma region une_node_type_to_wcs
 const wchar_t *une_node_type_to_wcs(une_node_type type)
 {
-  switch(type)
-  {
+  switch (type) {
     // Data Types
     case UNE_NT_INT: return L"INT";
     case UNE_NT_FLT: return L"FLT";
@@ -52,7 +52,7 @@ const wchar_t *une_node_type_to_wcs(une_node_type type)
     case UNE_NT_BREAK: return L"BREAK";
     case UNE_NT_CONTINUE: return L"CONTINUE";
     case UNE_NT_STMTS: return L"STMTS";
-    case UNE_NT_VOID: return L"VOID";
+    case UNE_NT_SIZE: return L"SIZE";
     
     default: return L"?";
   }
@@ -70,21 +70,18 @@ leaving this vulnerability in here.
 wchar_t *une_node_to_wcs(une_node *node)
 {
   wchar_t *buffer = malloc(UNE_SIZE_BIG *sizeof(*buffer));
-  if(buffer == NULL) WERR(L"Out of memory.");
-  if(node == NULL)
-  {
+  if (buffer == NULL) WERR(L"Out of memory.");
+  if (node == NULL) {
     wcscpy(buffer, UNE_COLOR_HINT L"NULL" UNE_COLOR_NEUTRAL);
     return buffer;
   }
   buffer[0] = L'\0';
-  switch(node->type)
-  {
+  switch (node->type) {
     case UNE_NT_STMTS: {
       une_node **list = (une_node**)node->content.value._vpp;
-      if(list == NULL) WERR(L"Undefined stmts pointer");
+      if (list == NULL) WERR(L"Undefined stmts pointer");
       size_t list_size = list[0]->content.value._int;
-      if(list_size == 0)
-      {
+      if (list_size == 0) {
         swprintf(buffer, UNE_SIZE_BIG,
                  UNE_COLOR_HINT L"NO STMTS" UNE_COLOR_NEUTRAL);
         break;
@@ -94,8 +91,7 @@ wchar_t *une_node_to_wcs(une_node *node)
                                UNE_COLOR_NEUTRAL L"{%ls",
                                node_as_wcs);
       free(node_as_wcs);
-      for(size_t i=2; i<=list_size; i++)
-      {
+      for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_BIG,
                            UNE_COLOR_NEUTRAL L"\n%ls",
@@ -106,6 +102,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       break; }
     
     case UNE_NT_INT:
+    case UNE_NT_SIZE:
       swprintf(buffer, UNE_SIZE_BIG,
                UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
                UNE_COLOR_NODE_DATUM_VALUE L"%lld" UNE_COLOR_NEUTRAL,
@@ -140,10 +137,9 @@ wchar_t *une_node_to_wcs(une_node *node)
     
     case UNE_NT_LIST: {
       une_node **list = (une_node**)node->content.value._vpp;
-      if(list == NULL) WERR(L"Undefined list pointer");
+      if (list == NULL) WERR(L"Undefined list pointer");
       size_t list_size = list[0]->content.value._int;
-      if(list_size == 0)
-      {
+      if (list_size == 0) {
         swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"[]");
         break;
       }
@@ -152,8 +148,7 @@ wchar_t *une_node_to_wcs(une_node *node)
                             UNE_COLOR_NEUTRAL L"[%ls",
                             node_as_wcs);
       free(node_as_wcs);
-      for(int i=2; i<=list_size; i++)
-      {
+      for (int i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_BIG,
                            UNE_COLOR_NEUTRAL L", %ls",
@@ -346,22 +341,20 @@ wchar_t *une_node_to_wcs(une_node *node)
 #pragma region une_node_free
 void une_node_free(une_node *node)
 {
-  if(node == NULL)
-  {
+  if (node == NULL) {
     #ifdef UNE_DEBUG_LOG_FREE
       wprintf(L"Node: NULL\n");
     #endif
     return;
   }
 
-  switch(node->type)
-  {
+  switch (node->type) {
     // No Operation (Data)
     case UNE_NT_INT:
     case UNE_NT_FLT:
     case UNE_NT_BREAK:
     case UNE_NT_CONTINUE:
-    case UNE_NT_VOID:
+    case UNE_NT_SIZE:
     case UNE_NT_STR:
     case UNE_NT_ID:
       /* DOC: Memory Management
@@ -378,14 +371,12 @@ void une_node_free(une_node *node)
     case UNE_NT_LIST:
     case UNE_NT_STMTS: {
       une_node **list = (une_node**)node->content.value._vpp;
-      if(list == NULL)
-      {
+      if (list == NULL) {
         // wprintf(L"Warning: Node to be freed has undefined list pointer.\n");
         break;
       }
       size_t list_size = list[0]->content.value._int;
-      for(size_t i=0; i<=list_size; i++)
-      {
+      for (size_t i=0; i<=list_size; i++) {
         une_node_free(list[i]);
       }
       free(list);
@@ -470,7 +461,7 @@ void une_node_free(une_node *node)
 une_node *une_node_create(une_node_type type)
 {
   une_node *node = malloc(sizeof(*node));
-  if(node == NULL) WERR(L"Out of memory.");
+  if (node == NULL) WERR(L"Out of memory.");
   node->type = type;
   node->pos = (une_position){0, 0};
   node->content.branch.a = NULL;
@@ -480,3 +471,45 @@ une_node *une_node_create(une_node_type type)
   return node;
 }
 #pragma endregion une_node_create
+
+#pragma region une_node_copy
+une_node *une_node_copy(une_node *src)
+{
+  if(src == NULL) return NULL;
+  une_node *dest = une_node_create(src->type);
+  dest->pos = src->pos;
+  switch(src->type) {
+    case UNE_NT_INT:
+    case UNE_NT_SIZE: // FIXME: .value = .value?
+      dest->content.value._int = src->content.value._int;
+      break;
+    
+    case UNE_NT_FLT:
+      dest->content.value._flt = src->content.value._flt;
+      break;
+    
+    case UNE_NT_STR:
+    case UNE_NT_ID:
+      dest->content.value._wcs = wcs_dup(src->content.value._wcs);
+      break;
+    
+    case UNE_NT_LIST:
+    case UNE_NT_STMTS: {
+      une_node **list = (une_node**)src->content.value._vpp;
+      size_t size = list[0]->content.value._int;
+      une_node **new_list = malloc(size*sizeof(*new_list));
+      if(new_list == NULL) WERR(L"Out of memory.");
+      for(size_t i=0; i<=size; i++) new_list[i] = une_node_copy(list[i]);
+      dest->content.value._vpp = (void**)new_list;
+      break; }
+
+    default:
+      dest->content.branch.a = une_node_copy(src->content.branch.a);
+      dest->content.branch.b = une_node_copy(src->content.branch.b);
+      dest->content.branch.c = une_node_copy(src->content.branch.c);
+      dest->content.branch.d = une_node_copy(src->content.branch.d);
+      break;
+  }
+  return dest;
+}
+#pragma endregion une_node_copy

@@ -1,22 +1,20 @@
-<img src="banner.png" width=25%>
+<img src="res/banner.png" width=40%>
 
 ---
 
 ```
+# Example
+
 def is_even(number)
 {
-  if number%2==0
-  {
+  if number%2==0 {
     return 1
-  }
-  else
-  {
+  } else {
     return 0
   }
 }
 
-for i from 0 to 1+2*3
-{
+for i from 0 till 1+2*3 {
   if not is_even(i) continue
   print(str(i) + " is even")
 }

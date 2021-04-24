@@ -14,7 +14,7 @@ compiler="clang"
 
 #region Defines
 
-if [ 1==1 ]; then
+if [ $debug==1 ]; then
   UNE_DEBUG=1
 fi
 
@@ -34,6 +34,7 @@ src="main.c "\
 
 >/dev/null pushd src
 $compiler $src -o ../une
+el=$?
 >/dev/null popd
 
-exit
+exit $el

@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-04-17
+Updated 2021-04-24
 */
 
 #include "error.h"
@@ -9,9 +9,8 @@ Updated 2021-04-17
 wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
 {
   wchar_t *wcs = malloc(UNE_SIZE_MEDIUM *sizeof(*wcs));
-  if(wcs == NULL) WERR(L"Out of memory.");
-  switch(type)
-  {
+  if (wcs == NULL) WERR(L"Out of memory.");
+  switch (type) {
     case UNE_ET_NO_ERROR:
       swprintf(wcs, UNE_SIZE_MEDIUM, L"No error defined.");
       break;
@@ -19,8 +18,7 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
     case UNE_ET_EXPECTED_TOKEN: {
       int offset = swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected token: %ls",
                             une_token_type_to_wcs((une_token_type)values[0]._int));
-      if(values[1]._wcs != NULL)
-      {
+      if (values[1]._wcs != NULL) {
         swprintf(wcs+offset, UNE_SIZE_MEDIUM, L" or %ls",
                  une_token_type_to_wcs((une_token_type)values[1]._int));
       }
@@ -31,8 +29,8 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
                une_token_type_to_wcs((une_token_type)values[0]._int));
       break;
     
-    case UNE_ET_ILLEGAL_CHARACTER:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Illegal character: '%lc'",
+    case UNE_ET_UNEXPECTED_CHARACTER:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Unexpected character: '%lc'",
                (wchar_t)values[0]._int);
       break;
     
@@ -133,6 +131,24 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
       swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot continue outside loop");
       break;
     
+    case UNE_ET_UNTERMINATED_STRING:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected string termination");
+      break;
+    
+    case UNE_ET_CANT_ESCAPE_CHAR:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot escape character: '%lc'",
+               (wchar_t)values[0]._int);
+      break;
+    
+    case UNE_ET_UNREAL_NUMBER:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Operation returns unreal number");
+      break;
+    
+    case UNE_ET_SET_NO_ID:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot set index of literal %ls",
+               une_result_type_to_wcs((une_result_type)values[0]._int));
+      break;
+    
     default:
       swprintf(wcs, UNE_SIZE_MEDIUM, L"Unknown error!");
       break;
@@ -150,16 +166,13 @@ void une_error_display(une_error error, wchar_t *text, char *name)
   size_t pos_start = error.pos.start;
   size_t pos_end = error.pos.end;
   bool location_found = false;
-  for(size_t i=0; i<wcslen(text)+1 /* Catch '\0' */ ; i++)
-  {
-    if(i == pos_start) location_found = true;
-    if(location_found && (text[i] == L'\n' || text[i] == L'\0'))
-    {
+  for (size_t i=0; i<wcslen(text)+1 /* Catch '\0' */ ; i++) {
+    if (i == pos_start) location_found = true;
+    if (location_found && (text[i] == L'\n' || text[i] == L'\0')) {
       line_end = i;
       break;
     }
-    if(text[i] == L'\n')
-    {
+    if (text[i] == L'\n') {
       line++;
       line_begin = i+1;
     }
@@ -170,9 +183,8 @@ void une_error_display(une_error error, wchar_t *text, char *name)
           line_end-line_begin, text+line_begin);
   wprintf(L"\33[%dC%ls\33[1m" UNE_COLOR_FAIL,
           pos_start-line_begin, (pos_start-line_begin > 0) ? L"" : L"\33[D");
-  if(pos_start >= pos_end) WERR(L"pos_start >= pos_end\n"); // DEBUG: For debugging only.
-  for(int i=0; i<pos_end-pos_start; i++)
-  {
+  if (pos_start >= pos_end) WERR(L"pos_start >= pos_end\n"); // DEBUG: For debugging only.
+  for (int i=0; i<pos_end-pos_start; i++) {
     wprintf(L"~");
   }
   wchar_t *error_info_as_wcs = une_error_value_to_wcs(error.type, error.values);
@@ -187,12 +199,11 @@ void une_error_display(une_error error, wchar_t *text, char *name)
 #pragma region une_error_free
 void une_error_free(une_error error)
 {
-  switch(error.type)
-  {
+  switch (error.type) {
     case UNE_ET_NO_ERROR:
     case UNE_ET_EXPECTED_TOKEN:
     case UNE_ET_UNEXPECTED_TOKEN:
-    case UNE_ET_ILLEGAL_CHARACTER:
+    case UNE_ET_UNEXPECTED_CHARACTER:
     case UNE_ET_INCOMPLETE_FLOAT:
     case UNE_ET_ADD:
     case UNE_ET_SUB:
@@ -208,6 +219,8 @@ void une_error_free(une_error error)
     case UNE_ET_NOT_INDEX_TYPE:
     case UNE_ET_INDEX_OUT_OF_RANGE:
     case UNE_ET_SET:
+    case UNE_ET_UNREAL_NUMBER:
+    case UNE_ET_SET_NO_ID:
       #ifdef UNE_DEBUG_LOG_FREE
         wprintf(L"Error: %d\n", error.type);
       #endif

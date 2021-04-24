@@ -1,16 +1,17 @@
 /*
 primitive.h - Une
-Updated 2021-04-17
+Updated 2021-04-25
 */
 
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
 
 #define UNE_DEBUG_MALLOC_COUNTER
+// #define UNE_DEBUG_LOG_FREE
 #define UNE_DO_READ
 #define UNE_DO_LEX
 #define UNE_DO_PARSE
-#define UNE_DO_INTERPRET
+// #define UNE_DO_INTERPRET
 
 #include <stdlib.h>
 #include <wchar.h>
@@ -22,7 +23,7 @@ typedef int64_t une_int;
 typedef double une_flt;
 
 // TCC implements a nonportable swprintf.
-#ifdef UNE_USE_NONPORTABLE_SWPRINTF
+#if defined(__TINYC__)
   #define swprintf(dest, size, format, ...) swprintf((dest), (format), ##__VA_ARGS__)
 #endif
 
@@ -49,8 +50,36 @@ typedef double une_flt;
 #define UNE_COLOR_NODE_DATUM_TYPE L"\33[95m"
 #define UNE_COLOR_NODE_DATUM_VALUE L"\33[35m"
 
-// Temporary Internal Error Response
-#define WERR(msg) { wprintf(UNE_COLOR_FAIL L"Line %d: %ls\33[0m\n", __LINE__, msg); exit(1); }
+// Temporary Internal Error Response and Logging Tools
+#define WERR(msg, ...)\
+{\
+  wprintf(\
+    UNE_COLOR_FAIL L"%hs:%d: " msg "\33[0m\n",\
+    __FILE__, __LINE__, ##__VA_ARGS__\
+  );\
+  exit(1);\
+}
+#define LOG(msg, ...)\
+{\
+  wprintf(\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: " msg "\33[0m\n",\
+    __FILE__, __LINE__, ##__VA_ARGS__\
+  );\
+}
+#define LOGD(num)\
+{\
+  wprintf(\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: %lld\33[0m\n",\
+    __FILE__, __LINE__, num\
+  );\
+}
+#define LOGS(str)\
+{\
+  wprintf(\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: '%ls'\33[0m\n",\
+    __FILE__, __LINE__, str\
+  );\
+}
 
 #pragma region une_position
 typedef struct _une_position {

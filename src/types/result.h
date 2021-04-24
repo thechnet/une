@@ -1,12 +1,14 @@
 /*
 result.h - Une
-Updated 2021-04-17
+Updated 2021-04-24
 */
 
 #ifndef UNE_RESULT_H
 #define UNE_RESULT_H
 
 #include "../primitive.h"
+#include "../tools.h"
+#include "node.h"
 
 #pragma region une_result_type
 typedef enum _une_result_type {
@@ -18,7 +20,7 @@ typedef enum _une_result_type {
   UNE_RT_ID,
   UNE_RT_CONTINUE,
   UNE_RT_BREAK,
-  UNE_RT_SIZE
+  UNE_RT_SIZE,
 } une_result_type;
 #pragma endregion une_result_type
 

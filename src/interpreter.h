@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Updated 2021-04-17
+Updated 2021-04-24
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -12,6 +12,7 @@ Updated 2021-04-17
 #include "types/result.h"
 #include "types/symbols.h"
 #include "types/context.h"
+#include "tools.h"
 #include <string.h>
 #include <math.h>
 
@@ -37,7 +38,9 @@ une_result une_interpret_or(une_node *node, une_context *context);
 une_result une_interpret_cop(une_node *node, une_context *context);
 une_result une_interpret_idx(une_node *node, une_context *context);
 une_result une_interpret_set(une_node *node, une_context *context);
+une_result une_interpret_set_idx(une_node *node, une_context *context);
 une_result une_interpret_get(une_node *node, une_context *context);
 une_result une_interpret_for(une_node *node, une_context *context);
+une_result une_interpret_list(une_node *node, une_context *context);
 
 #endif /* !UNE_INTERPRETER_H */

@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Updated 2021-04-17
+Updated 2021-04-24
 */
 
 #ifndef UNE_LEXER_H
@@ -13,5 +13,6 @@ Updated 2021-04-17
 #include "tools.h"
 
 une_token *une_lex_wcs(wchar_t *text, une_error *error);
+une_token *une_lex_file(char *path, une_error *error);
 
 #endif /* !UNE_LEXER_H */

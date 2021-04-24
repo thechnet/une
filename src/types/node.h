@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Updated 2021-04-17
+Updated 2021-04-24
 */
 
 #ifndef UNE_NODE_H
@@ -15,7 +15,7 @@ typedef enum _une_node_type {
   UNE_NT_FLT,
   UNE_NT_STR,
   UNE_NT_ID,
-  UNE_NT_LIST,
+  UNE_NT_LIST, UNE_NT_SIZE,
   // Arithmetic Operations
   UNE_NT_POW,
   UNE_NT_MUL,
@@ -52,7 +52,6 @@ typedef enum _une_node_type {
   UNE_NT_BREAK,
   UNE_NT_CONTINUE,
   UNE_NT_STMTS,
-  UNE_NT_VOID
 } une_node_type;
 #pragma endregion une_node_type
 
@@ -76,5 +75,6 @@ const wchar_t *une_node_type_to_wcs(une_node_type type);
 wchar_t *une_node_to_wcs(une_node *node);
 void une_node_free(une_node *node);
 une_node *une_node_create(une_node_type type);
+une_node *une_node_copy(une_node *src);
 
 #endif /* !UNE_NODE_H */

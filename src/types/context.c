@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Updated 2021-04-17
+Updated 2021-04-24
 */
 
 #include "context.h"
@@ -11,21 +11,18 @@ void une_context_free(une_context *context)
 {
   // 1)
   free(context->name);
-  free(context->text);
+  #ifdef UNE_DO_READ
+    free(context->text);
+  #endif
 
-  // 2)
   #ifdef UNE_DO_INTERPRET
-    for(size_t i=0; i<context->variables_count; i++)
-    {
+    // 2)
+    for (size_t i=0; i<context->variables_count; i++) {
       une_variable_free(context->variables[i]);
     }
     free(context->variables);
-  #endif
-  
-  // 3)
-  #ifdef UNE_DO_INTERPRET
-    for(size_t i=0; i<context->functions_count; i++)
-    {
+    // 3)
+    for (size_t i=0; i<context->functions_count; i++) {
       une_function_free(context->functions[i]);
     }
     free(context->functions);
@@ -58,14 +55,15 @@ void une_context_free(une_context *context)
 une_context *une_context_create(void)
 {
   une_context *context = malloc(sizeof(*context));
-  if(context == NULL) WERR(L"Out of memory.");
+  if (context == NULL) WERR(L"Out of memory.");
   context->name = NULL;
   context->text = NULL;
-  context->error.type = UNE_ET_NO_ERROR;
-  context->error.pos.start = 0;
-  context->error.pos.end = 1;
-  context->error.values[0]._wcs = NULL;
-  context->error.values[1]._wcs = NULL;
+  context->error = (une_error){
+    .type = UNE_ET_NO_ERROR,
+    .pos = (une_position){0, 1},
+    .values[0]._wcs = NULL,
+    .values[1]._wcs = NULL,
+  };
   context->tokens = NULL;
   context->token_index = 0;
   context->ast = NULL;

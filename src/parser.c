@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Updated 2021-04-17
+Updated 2021-04-25
 */
 
 #include "parser.h"
@@ -13,13 +13,9 @@ une_node *une_parse_block(
 )
 {
   // {
-  if(tokens[*token_index].type != UNE_TT_LBRC)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->pos = tokens[*token_index].pos;
-    error->values[0]._int = (int)UNE_TT_LBRC;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_LBRC) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=(int)UNE_TT_LBRC, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       return error_node;
@@ -37,8 +33,7 @@ une_node *une_parse_block(
     tokens, token_index, error,
     &une_parse_stmt, UNE_TT_NEW, UNE_TT_RBRC
   );
-  if(sequence == NULL)
-  {
+  if (sequence == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_LIST;
       sequence = error_list;
@@ -49,15 +44,11 @@ une_node *une_parse_block(
   }
   block->content.value._vpp = (void**)sequence;
   
-  if(sequence[0]->content.value._int == 0)
-  {
+  if (sequence[0]->content.value._int == 0) {
     une_node_free(sequence[0]);
     free(sequence);
-    error->type = UNE_ET_UNEXPECTED_TOKEN;
-    error->pos = tokens[*token_index].pos;
-    error->values[0]._int = (int)UNE_TT_RBRC;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+    *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=(int)UNE_TT_RBRC, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_LIST;
       sequence = error_list;
@@ -69,13 +60,9 @@ une_node *une_parse_block(
 
   // Technically redundant since une_parse_sequence already checks for this...
   // }
-  if(tokens[*token_index].type != UNE_TT_RBRC)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->pos = tokens[*token_index].pos;
-    error->values[0]._int = (int)UNE_TT_RBRC;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_RBRC) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=(int)UNE_TT_RBRC, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -110,39 +97,36 @@ une_node **une_parse_sequence(
 {
   size_t sequence_size = UNE_SIZE_MEDIUM; // FIXME:
   une_node **sequence = malloc(sequence_size *sizeof(*sequence));
-  if(sequence == NULL) WERR(L"Out of memory.");
+  if (sequence == NULL) WERR(L"Out of memory.");
   
   size_t pos_start = tokens[*token_index].pos.start;
 
-  une_node *counter = une_node_create(UNE_NT_VOID);
+  une_node *counter = une_node_create(UNE_NT_SIZE);
   sequence[0] = counter;
   
   size_t sequence_index = 1;
 
-  while(true)
-  {
-    if(tokens[*token_index].type == tt_end_of_item)
-    {
+  while (true) {
+    while (tokens[*token_index].type == tt_end_of_item
+    ||  tokens[*token_index].type == UNE_TT_NEW) {
       (*token_index)++;
     }
 
-    if(sequence_index >= sequence_size)
-    {
+    if (sequence_index >= sequence_size) {
       sequence_size *= 2;
       une_node **_sequence = realloc(sequence, sequence_size *sizeof(_sequence));
-      if(_sequence == NULL) WERR(L"Out of memory.");
+      if (_sequence == NULL) WERR(L"Out of memory.");
       sequence = _sequence;
       wprintf(L"Warning: Sequence doubled\n");
     }
 
     // EXPECTED END OF SEQUENCE
-    if(tokens[*token_index].type == tt_end_of_sequence)
-    {
+    if (tokens[*token_index].type == tt_end_of_sequence) {
       /*
       We don't skip EOF because it may still be needed by
       other functions up the call chain.
       */
-      //if(tt_end_of_sequence != UNE_TT_EOF) (*token_index)++;
+      //if (tt_end_of_sequence != UNE_TT_EOF) (*token_index)++;
       /*
       We don't skip the end of the sequence because:
       - If it is EOF, that may still be needed by other 
@@ -154,18 +138,14 @@ une_node **une_parse_sequence(
     }
 
     // UNEXPECTED END OF SEQUENCE
-    if(tokens[*token_index].type == UNE_TT_EOF)
-    {
+    if (tokens[*token_index].type == UNE_TT_EOF) {
       /*
       This can happen if a block, list, list of parameters, or list of arguments is opened at the end of the file without being closed.
       */
-      for(size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
+      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
       free(sequence);
-      error->type = UNE_ET_UNEXPECTED_TOKEN;
-      error->pos = tokens[*token_index].pos;
-      error->values[0]._int = (int)UNE_TT_EOF;
-      error->__line__ = __LINE__;
-      strcpy(error->__file__, __FILE__);
+      *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, tokens[*token_index].pos,
+          _int=(int)UNE_TT_EOF, _int=0);
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_LIST;
         return error_list;
@@ -176,30 +156,26 @@ une_node **une_parse_sequence(
 
     // Get item.
     sequence[sequence_index] = (*parser)(tokens, token_index, error);
-    if(sequence[sequence_index] == NULL)
-    {
+    if (sequence[sequence_index] == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         sequence[sequence_index] = error_node;
       #else
-        for(size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
+        for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
         free(sequence);
         return NULL;
       #endif
     }
     sequence_index++;
     
-    if(tokens[*token_index].type != tt_end_of_sequence
-    && tokens[*token_index].type != tt_end_of_item)
+    if (tokens[*token_index].type != tt_end_of_sequence
+    && tokens[*token_index].type != tt_end_of_item
+    && tokens[*token_index].type != UNE_TT_NEW)
     {
-      for(size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
+      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
       free(sequence);
-      error->type = UNE_ET_EXPECTED_TOKEN;
-      error->pos = tokens[*token_index].pos;
-      error->values[0]._int = (int)tt_end_of_item;
-      error->values[1]._int = (int)tt_end_of_sequence;
-      error->__line__ = __LINE__;
-      strcpy(error->__file__, __FILE__);
+      *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+          _int=(int)tt_end_of_item, _int=(int)tt_end_of_sequence);
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_LIST;
         return error_list;
@@ -223,10 +199,9 @@ une_node *une_parse_stmt(
   /*bool is_loop_body*/
 )
 {
-  if(tokens[*token_index].type == UNE_TT_NEW) (*token_index)++; // FIXME: Unsure...
+  if (tokens[*token_index].type == UNE_TT_NEW) (*token_index)++; // FIXME: Unsure...
   
-  switch(tokens[*token_index].type)
-  {
+  switch (tokens[*token_index].type) {
     case UNE_TT_FOR: return une_parse_for(tokens, token_index, error);
     case UNE_TT_IF: return une_parse_if(tokens, token_index, error, UNE_TT_IF);
     case UNE_TT_WHILE: return une_parse_while(tokens, token_index, error);
@@ -236,12 +211,8 @@ une_node *une_parse_stmt(
     
     #pragma region Break
     case UNE_TT_BREAK: {
-      // if(!is_loop_body)
-      // {
-      //   error->type = UNE_ET_BREAK_OUTSIDE_LOOP;
-      //   error->pos = tokens[*token_index].pos;
-      //   error->__line__ = __LINE__;
-      //   strcpy(error->__file__, __FILE__);
+      // if (!is_loop_body) {
+      //   *error = UNE_ERROR_SETX(UNE_ET_BREAK_OUTSIDE_LOOP, tokens[*token_index].pos);
       //   #ifdef UNE_DEBUG_SOFT_ERROR
       //     CREATE_ERROR_NODE;
       //     (*token_index)++;
@@ -258,12 +229,8 @@ une_node *une_parse_stmt(
     
     #pragma region Continue
     case UNE_TT_CONTINUE: {
-      // if(!is_loop_body)
-      // {
-      //   error->type = UNE_ET_CONTINUE_OUTSIDE_LOOP;
-      //   error->pos = tokens[*token_index].pos;
-      //   error->__line__ = __LINE__;
-      //   strcpy(error->__file__, __FILE__);
+      // if (!is_loop_body) {
+      //   *error = UNE_ERROR_SETX(UNE_ET_CONTINUE_OUTSIDE_LOOP, tokens[*token_index].pos);
       //   #ifdef UNE_DEBUG_SOFT_ERROR
       //     CREATE_ERROR_NODE;
       //     (*token_index)++;
@@ -283,8 +250,7 @@ une_node *une_parse_stmt(
       size_t token_index_before = *token_index; // Needed to backstep in case this is not a variable definition.
       
       une_node *target = une_parse_id(tokens, token_index, error);
-      if(target == NULL)
-      {
+      if (target == NULL) {
         #ifdef UNE_DEBUG_SOFT_ERROR
           CREATE_ERROR_NODE;
           target = error_node;
@@ -298,13 +264,11 @@ une_node *une_parse_stmt(
       varset->content.branch.a = target;
       
       // Check if SET_IDX - If true, adjust the node type.
-      if(tokens[*token_index].type == UNE_TT_LSQB)
-      {
+      if (tokens[*token_index].type == UNE_TT_LSQB) {
         (*token_index)++;
         
         une_node *position = une_parse_conditional_operation(tokens, token_index, error);
-        if(position == NULL)
-        {
+        if (position == NULL) {
           #ifdef UNE_DEBUG_SOFT_ERROR
             CREATE_ERROR_NODE;
             position = error_node;
@@ -314,8 +278,7 @@ une_node *une_parse_stmt(
           #endif
         }
         
-        if(tokens[*token_index].type != UNE_TT_RSQB)
-        {
+        if (tokens[*token_index].type != UNE_TT_RSQB) {
           #ifdef UNE_DEBUG_SOFT_ERROR
             CREATE_ERROR_NODE;
             return error_node;
@@ -331,13 +294,11 @@ une_node *une_parse_stmt(
         varset->content.branch.b = position;
       }
       
-      if(tokens[*token_index].type == UNE_TT_SET)
-      {
+      if (tokens[*token_index].type == UNE_TT_SET) {
         (*token_index)++;
         
         une_node *conditional_operation = une_parse_conditional_operation(tokens, token_index, error);
-        if(conditional_operation == NULL)
-        {
+        if (conditional_operation == NULL) {
           #ifdef UNE_DEBUG_SOFT_ERROR
             CREATE_ERROR_NODE;
             conditional_operation = error_node;
@@ -348,18 +309,15 @@ une_node *une_parse_stmt(
         }
         
         varset->pos.end = conditional_operation->pos.end;
-        if(varset->type == UNE_NT_SET_IDX)
-        {
+        if (varset->type == UNE_NT_SET_IDX) {
           varset->content.branch.c = conditional_operation;
         }
-        else
-        {
+        else {
           varset->content.branch.b = conditional_operation;
         }
         return varset;
       }
-      else
-      {
+      else {
         une_node_free(varset);
         *token_index = token_index_before;
         /*
@@ -373,8 +331,7 @@ une_node *une_parse_stmt(
     #pragma region Conditional Operation
     default: {
       une_node *expression = une_parse_conditional_operation(tokens, token_index, error);
-      if(expression == NULL)
-      {
+      if (expression == NULL) {
         #ifdef UNE_DEBUG_SOFT_ERROR
           CREATE_ERROR_NODE;
           return error_node;
@@ -396,13 +353,9 @@ une_node *une_parse_if(
   size_t pos_start = tokens[*token_index].pos.start;
   
   // if or elif
-  if(tokens[*token_index].type != start_token)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->values[0]._int = (int)start_token;
-    error->pos = tokens[*token_index].pos;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != start_token) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=(int)start_token, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -415,8 +368,7 @@ une_node *une_parse_if(
 
   // condition
   une_node *condition = une_parse_conditional_operation(tokens, token_index, error);
-  if(condition == NULL)
-  {
+  if (condition == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       condition = error_node;
@@ -427,8 +379,7 @@ une_node *une_parse_if(
   
   // stmt
   une_node *truebody = une_parse_stmt(tokens, token_index, error);
-  if(truebody == NULL)
-  {
+  if (truebody == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       truebody = error_node;
@@ -449,14 +400,12 @@ une_node *une_parse_if(
   creates an entirely new if node where this stmt then removes
   whitespace in front of 'else'.
   */
-  if(tokens[*token_index].type == UNE_TT_NEW) (*token_index)++;
+  if (tokens[*token_index].type == UNE_TT_NEW) (*token_index)++;
 
-  if(tokens[*token_index].type == UNE_TT_ELIF)
-  {
+  if (tokens[*token_index].type == UNE_TT_ELIF) {
     // elif ...
-    une_node *falsebody = une_parse_if(tokens, token_index, error, UNE_TT_ELIF);
-    if(falsebody == NULL)
-    {
+    une_node *falsebody = une_parse_if (tokens, token_index, error, UNE_TT_ELIF);
+    if (falsebody == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         falsebody = error_node;
@@ -467,13 +416,11 @@ une_node *une_parse_if(
     }
     ifstmt->content.branch.c = falsebody;
   }
-  else if(tokens[*token_index].type == UNE_TT_ELSE)
-  {
+  else if (tokens[*token_index].type == UNE_TT_ELSE) {
     // else stmt
     (*token_index)++;
     une_node *falsebody = une_parse_stmt(tokens, token_index, error);
-    if(falsebody == NULL)
-    {
+    if (falsebody == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         falsebody = error_node;
@@ -490,18 +437,13 @@ une_node *une_parse_if(
 #pragma endregion une_parse_if
 
 #pragma region Parse For Loop
-une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error)
-{
+une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error) {
   size_t pos_start = tokens[*token_index].pos.start;
   
   // for
-  if(tokens[*token_index].type != UNE_TT_FOR)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->values[0]._int = UNE_TT_FOR;
-    error->pos = tokens[*token_index].pos;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_FOR) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=UNE_TT_FOR, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -514,8 +456,7 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
   
   // i
   une_node *counter = une_parse_id(tokens, token_index, error);
-  if(counter == NULL)
-  {
+  if (counter == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       counter = error_node;
@@ -525,13 +466,9 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
   }
   
   // from
-  if(tokens[*token_index].type != UNE_TT_FROM)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->values[0]._int = UNE_TT_FROM;
-    error->pos = tokens[*token_index].pos;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_FROM) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=UNE_TT_FROM, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -545,8 +482,7 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
   
   // 1
   une_node *from = une_parse_conditional_operation(tokens, token_index, error);
-  if(from == NULL)
-  {
+  if (from == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       from = error_node;
@@ -558,13 +494,9 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
   }
   
   // to
-  if(tokens[*token_index].type != UNE_TT_TO)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->values[0]._int = UNE_TT_TO;
-    error->pos = tokens[*token_index].pos;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_TILL) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=UNE_TT_TILL, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -577,8 +509,7 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
   
   // 10
   une_node *to = une_parse_conditional_operation(tokens, token_index, error);
-  if(to == NULL)
-  {
+  if (to == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       to = error_node;
@@ -591,8 +522,7 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
   
   // ({) ... (})
   une_node *body = une_parse_stmt(tokens, token_index, error);
-  if(body == NULL)
-  {
+  if (body == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       body = error_node;
@@ -616,18 +546,13 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
 #pragma endregion une_parse_for
 
 #pragma region une_parse_while
-une_node *une_parse_while(une_token *tokens, size_t *token_index, une_error *error)
-{
+une_node *une_parse_while(une_token *tokens, size_t *token_index, une_error *error) {
   size_t pos_start = tokens[*token_index].pos.start;
   
   // while
-  if(tokens[*token_index].type != UNE_TT_WHILE)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->values[0]._int = UNE_TT_WHILE;
-    error->pos = tokens[*token_index].pos;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_WHILE) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=UNE_TT_WHILE, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -640,8 +565,7 @@ une_node *une_parse_while(une_token *tokens, size_t *token_index, une_error *err
   
   // condition
   une_node *condition = une_parse_conditional_operation(tokens, token_index, error);
-  if(condition == NULL)
-  {
+  if (condition == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       condition = error_node;
@@ -652,8 +576,7 @@ une_node *une_parse_while(une_token *tokens, size_t *token_index, une_error *err
   
   // { ... }
   une_node *body = une_parse_stmt(tokens, token_index, error);
-  if(body == NULL)
-  {
+  if (body == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       body = error_node;
@@ -677,13 +600,9 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
   size_t pos_start = tokens[*token_index].pos.start;
 
   // def
-  if(tokens[*token_index].type != UNE_TT_DEF)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->pos = tokens[*token_index].pos;
-    error->values[0]._int = (int)UNE_TT_DEF;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_DEF) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=(int)UNE_TT_DEF, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -696,8 +615,7 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
 
   // name
   une_node *name = une_parse_id(tokens, token_index, error);
-  if(name == NULL)
-  {
+  if (name == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       name = error_node;
@@ -707,13 +625,9 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
   }
 
   // (
-  if(tokens[*token_index].type != UNE_TT_LPAR)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->pos = tokens[*token_index].pos;
-    error->values[0]._int = (int)UNE_TT_LPAR;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_LPAR) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=(int)UNE_TT_LPAR, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -734,8 +648,7 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
     tokens, token_index, error,
     &une_parse_id, UNE_TT_SEP, UNE_TT_RPAR
   );
-  if(sequence == NULL)
-  {
+  if (sequence == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_LIST;
       sequence = error_list;
@@ -755,8 +668,7 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
 
   // { ... }
   une_node *body = une_parse_stmt(tokens, token_index, error);
-  if(body == NULL)
-  {
+  if (body == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       body = error_node;
@@ -781,8 +693,7 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
 une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index, une_error *error)
 {
   une_node *trueconditions = une_parse_conditions(tokens, token_index, error);
-  if(trueconditions == NULL)
-  {
+  if (trueconditions == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       trueconditions = error_node;
@@ -791,13 +702,11 @@ une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index
     #endif
   }
   
-  if(tokens[*token_index].type == UNE_TT_IF)
-  {
+  if (tokens[*token_index].type == UNE_TT_IF) {
     (*token_index)++;
     
     une_node *condition = une_parse_conditions(tokens, token_index, error);
-    if(condition == NULL)
-    {
+    if (condition == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         condition = error_node;
@@ -807,13 +716,9 @@ une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index
       #endif
     }
     
-    if(tokens[*token_index].type != UNE_TT_ELSE)
-    {
-      error->type = UNE_ET_EXPECTED_TOKEN;
-      error->values[0]._int = (int)UNE_TT_ELSE;
-      error->pos = tokens[*token_index].pos;
-      error->__line__ = __LINE__;
-      strcpy(error->__file__, __FILE__);
+    if (tokens[*token_index].type != UNE_TT_ELSE) {
+      *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+          _int=(int)UNE_TT_ELSE, _int=0);
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         return error_node;
@@ -826,8 +731,7 @@ une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index
     (*token_index)++;
     
     une_node *falseconditions = une_parse_conditional_operation(tokens, token_index, error);
-    if(falseconditions == NULL)
-    {
+    if (falseconditions == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         falseconditions = error_node;
@@ -855,8 +759,7 @@ une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index
 une_node *une_parse_conditions(une_token *tokens, size_t *token_index, une_error *error)
 {
   une_node *left = une_parse_condition(tokens, token_index, error);
-  if(left == NULL)
-  {
+  if (left == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       left = error_node;
@@ -865,7 +768,7 @@ une_node *une_parse_conditions(une_token *tokens, size_t *token_index, une_error
     #endif
   }
   
-  while(tokens[*token_index].type == UNE_TT_AND
+  while (tokens[*token_index].type == UNE_TT_AND
      || tokens[*token_index].type == UNE_TT_OR)
   {
     une_node *new_left = une_node_create(
@@ -875,8 +778,7 @@ une_node *une_parse_conditions(une_token *tokens, size_t *token_index, une_error
     (*token_index)++;
 
     une_node *right = une_parse_condition(tokens, token_index, error);
-    if(right == NULL)
-    {
+    if (right == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         right = error_node;
@@ -899,15 +801,13 @@ une_node *une_parse_conditions(une_token *tokens, size_t *token_index, une_error
 #pragma region une_parse_condition
 une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error *error)
 {
-  if(tokens[*token_index].type == UNE_TT_NOT)
-  {
+  if (tokens[*token_index].type == UNE_TT_NOT) {
     une_node *not = une_node_create(UNE_NT_NOT);
     not->pos.start = tokens[*token_index].pos.start;
     (*token_index)++;
     
     une_node *condition = une_parse_condition(tokens, token_index, error);
-    if(condition == NULL)
-    {
+    if (condition == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         condition = error_node;
@@ -924,8 +824,7 @@ une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error 
   }
   
   une_node *left = une_parse_expression(tokens, token_index, error);
-  if(left == NULL)
-  {
+  if (left == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       left = error_node;
@@ -934,7 +833,7 @@ une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error 
     #endif
   }
   
-  while(tokens[*token_index].type == UNE_TT_EQU
+  while (tokens[*token_index].type == UNE_TT_EQU
      || tokens[*token_index].type == UNE_TT_NEQ
      || tokens[*token_index].type == UNE_TT_GTR
      || tokens[*token_index].type == UNE_TT_GEQ
@@ -942,8 +841,7 @@ une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error 
      || tokens[*token_index].type == UNE_TT_LEQ)
   {
     une_node *new_left = une_node_create(UNE_NT_EQU);
-    switch(tokens[*token_index].type)
-    {
+    switch (tokens[*token_index].type) {
       case UNE_TT_EQU: new_left->type = UNE_NT_EQU; break;
       case UNE_TT_NEQ: new_left->type = UNE_NT_NEQ; break;
       case UNE_TT_GTR: new_left->type = UNE_NT_GTR; break;
@@ -957,8 +855,7 @@ une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error 
     (*token_index)++;
 
     une_node *right = une_parse_expression(tokens, token_index, error);
-    if(right == NULL)
-    {
+    if (right == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         right = error_node;
@@ -982,8 +879,7 @@ une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error 
 une_node *une_parse_expression(une_token *tokens, size_t *token_index, une_error *error)
 {
   une_node *left = une_parse_term(tokens, token_index, error);
-  if(left == NULL)
-  {
+  if (left == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       left = error_node;
@@ -992,7 +888,7 @@ une_node *une_parse_expression(une_token *tokens, size_t *token_index, une_error
     #endif
   }
   
-  while(tokens[*token_index].type == UNE_TT_ADD
+  while (tokens[*token_index].type == UNE_TT_ADD
      || tokens[*token_index].type == UNE_TT_SUB)
   {
     une_node *new_left = une_node_create(
@@ -1002,8 +898,7 @@ une_node *une_parse_expression(une_token *tokens, size_t *token_index, une_error
     (*token_index)++;
 
     une_node *right = une_parse_term(tokens, token_index, error);
-    if(right == NULL)
-    {
+    if (right == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         right = error_node;
@@ -1027,8 +922,7 @@ une_node *une_parse_expression(une_token *tokens, size_t *token_index, une_error
 une_node *une_parse_term(une_token *tokens, size_t *token_index, une_error *error)
 {
   une_node *left = une_parse_power(tokens, token_index, error);
-  if(left == NULL)
-  {
+  if (left == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       left = error_node;
@@ -1037,14 +931,13 @@ une_node *une_parse_term(une_token *tokens, size_t *token_index, une_error *erro
     #endif
   }
   
-  while(tokens[*token_index].type == UNE_TT_MUL
+  while (tokens[*token_index].type == UNE_TT_MUL
      || tokens[*token_index].type == UNE_TT_DIV
      || tokens[*token_index].type == UNE_TT_FDIV
      || tokens[*token_index].type == UNE_TT_MOD)
   {
     une_node *new_left = une_node_create(UNE_NT_MUL);
-    switch(tokens[*token_index].type)
-    {
+    switch (tokens[*token_index].type) {
       case UNE_TT_MUL: new_left->type = UNE_NT_MUL; break;
       case UNE_TT_DIV: new_left->type = UNE_NT_DIV; break;
       case UNE_TT_FDIV: new_left->type = UNE_NT_FDIV; break;
@@ -1056,8 +949,7 @@ une_node *une_parse_term(une_token *tokens, size_t *token_index, une_error *erro
     (*token_index)++;
 
     une_node *right = une_parse_power(tokens, token_index, error);
-    if(right == NULL)
-    {
+    if (right == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         right = error_node;
@@ -1081,8 +973,7 @@ une_node *une_parse_term(une_token *tokens, size_t *token_index, une_error *erro
 une_node *une_parse_power(une_token *tokens, size_t *token_index, une_error *error)
 {
   une_node *left = une_parse_index(tokens, token_index, error);
-  if(left == NULL)
-  {
+  if (left == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       left = error_node;
@@ -1091,17 +982,15 @@ une_node *une_parse_power(une_token *tokens, size_t *token_index, une_error *err
     #endif
   }
   
-  while(tokens[*token_index].type == UNE_TT_POW)
-  {
+  while (tokens[*token_index].type == UNE_TT_POW) {
     une_node *new_left = une_node_create(UNE_NT_POW);
     new_left->pos.start = left->pos.start;
     new_left->content.branch.a = left;
     (*token_index)++;
 
-    // FIXME: RECURSIVE WHEN IT DOESNT HAVE TO BE, SEE EXPRESSION
+    // DOC: We parse power and not index because powers are handled right to left.
     une_node *right = une_parse_power(tokens, token_index, error);
-    if(right == NULL)
-    {
+    if (right == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         right = error_node;
@@ -1125,8 +1014,7 @@ une_node *une_parse_power(une_token *tokens, size_t *token_index, une_error *err
 une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *error)
 {
   une_node *left = une_parse_atom(tokens, token_index, error);
-  if(left == NULL)
-  {
+  if (left == NULL) {
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       left = error_node;
@@ -1135,16 +1023,14 @@ une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *err
     #endif
   }
   
-  while(tokens[*token_index].type == UNE_TT_LSQB)
-  {
+  while (tokens[*token_index].type == UNE_TT_LSQB) {
     une_node *new_left = une_node_create(UNE_NT_IDX);
     new_left->pos.start = left->pos.start;
     new_left->content.branch.a = left;
     (*token_index)++;
 
     une_node *right = une_parse_conditions(tokens, token_index, error);
-    if(right == NULL)
-    {
+    if (right == NULL) {
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         right = error_node;
@@ -1155,13 +1041,9 @@ une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *err
     }
     new_left->content.branch.b = right;
     
-    if(tokens[*token_index].type != UNE_TT_RSQB)
-    {
-      error->type = UNE_ET_EXPECTED_TOKEN;
-      error->pos = tokens[*token_index].pos;
-      error->values[0]._int = (int)UNE_TT_RSQB;
-      error->__line__ = __LINE__;
-      strcpy(error->__file__, __FILE__);
+    if (tokens[*token_index].type != UNE_TT_RSQB) {
+      *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+          _int=(int)UNE_TT_RSQB, _int=0);
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         return error_node;
@@ -1183,15 +1065,13 @@ une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *err
 #pragma region une_parse_atom
 une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *error)
 {
-  switch(tokens[*token_index].type)
-  {
+  switch (tokens[*token_index].type) {
     case UNE_TT_SUB: {
       une_node *neg = une_node_create(UNE_NT_NEG);
       neg->pos.start = tokens[*token_index].pos.start;
       (*token_index)++;
       une_node *expression = une_parse_power(tokens, token_index, error);
-      if(expression == NULL)
-      {
+      if (expression == NULL) {
         #ifdef UNE_DEBUG_SOFT_ERROR
           CREATE_ERROR_NODE;
           expression = error_node;
@@ -1233,8 +1113,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
       (*token_index)++;
 
       // Function Call
-      if(tokens[*token_index].type == UNE_TT_LPAR)
-      {
+      if (tokens[*token_index].type == UNE_TT_LPAR) {
         une_node *fncall = une_node_create(UNE_NT_CALL);
         fncall->pos.start = node->pos.start;
         fncall->content.branch.a = node;
@@ -1247,8 +1126,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
           tokens, token_index, error,
           &une_parse_conditions, UNE_TT_SEP, UNE_TT_RPAR
         );
-        if(sequence == NULL)
-        {
+        if (sequence == NULL) {
           #ifdef UNE_DEBUG_SOFT_ERROR
             CREATE_ERROR_LIST;
             sequence = error_list;
@@ -1268,8 +1146,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
       }
       
       // Get Variable
-      else
-      {
+      else {
         une_node *varget = une_node_create(UNE_NT_GET);
         varget->pos = node->pos;
         varget->content.branch.a = node;
@@ -1288,8 +1165,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
         tokens, token_index, error,
         &une_parse_conditions, UNE_TT_SEP, UNE_TT_RSQB
       );
-      if(sequence == NULL)
-      {
+      if (sequence == NULL) {
         #ifdef UNE_DEBUG_SOFT_ERROR
           CREATE_ERROR_LIST;
           sequence = error_list;
@@ -1307,8 +1183,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
     case UNE_TT_LPAR: {
       (*token_index)++;
       une_node *expression = une_parse_conditional_operation(tokens, token_index, error);
-      if(expression == NULL)
-      {
+      if (expression == NULL) {
         #ifdef UNE_DEBUG_SOFT_ERROR
           CREATE_ERROR_NODE;
           expression = error_node;
@@ -1316,14 +1191,10 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
           return NULL;
         #endif
       }
-      if(tokens[*token_index].type != UNE_TT_RPAR)
-      {
+      if (tokens[*token_index].type != UNE_TT_RPAR) {
         une_node_free(expression);
-        error->type = UNE_ET_EXPECTED_TOKEN;
-        error->pos = tokens[*token_index].pos;
-        error->values[0]._int = (int)UNE_TT_RPAR;
-        error->__line__ = __LINE__;
-        strcpy(error->__file__, __FILE__);
+        *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+            _int=(int)UNE_TT_RPAR, _int=0);
         #ifdef UNE_DEBUG_SOFT_ERROR
           CREATE_ERROR_NODE;
           (*token_index)++;
@@ -1336,11 +1207,8 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
       return expression; }
     
     default: {
-      error->type = UNE_ET_UNEXPECTED_TOKEN;
-      error->pos = tokens[*token_index].pos;
-      error->values[0]._int = (int)(tokens[*token_index].type);
-      error->__line__ = __LINE__;
-      strcpy(error->__file__, __FILE__);
+      *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, tokens[*token_index].pos,
+          _int=(int)(tokens[*token_index].type), _int=0);
       #ifdef UNE_DEBUG_SOFT_ERROR
         CREATE_ERROR_NODE;
         return error_node;
@@ -1355,13 +1223,9 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
 #pragma region une_parse_id
 une_node *une_parse_id(une_token *tokens, size_t *token_index, une_error *error)
 {
-  if(tokens[*token_index].type != UNE_TT_ID)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->values[0]._int = UNE_TT_ID;
-    error->pos = tokens[*token_index].pos;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_ID) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=UNE_TT_ID, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       (*token_index)++;
@@ -1386,13 +1250,9 @@ une_node *une_parse_return(une_token *tokens, size_t *token_index, une_error *er
                                                  pos.end is changed further down */
 
   // return
-  if(tokens[*token_index].type != UNE_TT_RETURN)
-  {
-    error->type = UNE_ET_EXPECTED_TOKEN;
-    error->pos = tokens[*token_index].pos;
-    error->values[0]._int = (int)UNE_TT_RETURN;
-    error->__line__ = __LINE__;
-    strcpy(error->__file__, __FILE__);
+  if (tokens[*token_index].type != UNE_TT_RETURN) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
+        _int=(int)UNE_TT_RETURN, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
       CREATE_ERROR_NODE;
       return error_node;
@@ -1404,16 +1264,15 @@ une_node *une_parse_return(une_token *tokens, size_t *token_index, une_error *er
 
   // value?
   une_node *value;
-  if(tokens[*token_index].type != UNE_TT_NEW
+  if (tokens[*token_index].type != UNE_TT_NEW
   && tokens[*token_index].type != UNE_TT_EOF) // FIXME: ?
   {
     value = une_parse_conditional_operation(tokens, token_index, error);
     // DOC: NULL _here_ means an error.
-    if(value == NULL) WERR(L"Out of memory.");
+    if (value == NULL) return value;
     returnnode->pos.end = value->pos.end;
   }
-  else
-  {
+  else {
     // DOC: NULL _here_ means no return value was specified. This tells the interpreter
     // not to try to interpret a return value where there is none.
     value = NULL;
