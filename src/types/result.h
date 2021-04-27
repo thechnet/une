@@ -12,6 +12,7 @@ Updated 2021-04-24
 
 #pragma region une_result_type
 typedef enum _une_result_type {
+  UNE_RT_VOID,
   UNE_RT_ERROR,
   UNE_RT_INT,
   UNE_RT_FLT,

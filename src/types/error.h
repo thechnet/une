@@ -39,6 +39,9 @@ typedef enum _une_error_type {
   UNE_ET_CANT_ESCAPE_CHAR,
   UNE_ET_UNREAL_NUMBER,
   UNE_ET_SET_NO_ID,
+  UNE_ET_DEF,
+  UNE_ET_CALL,
+  UNE_ET_CALL_ARGS,
 } une_error_type;
 #pragma endregion une_error_type
 
@@ -54,8 +57,9 @@ typedef struct _une_error {
 #pragma endregion une_error
 
 wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values);
-void une_error_display(une_error error, wchar_t *text, char *name);
+void une_error_display(une_error error, wchar_t *text, wchar_t *name);
 void une_error_free(une_error error);
+une_error une_error_copy(une_error src);
 
 #define UNE_ERROR_SETX(__type, __pos, __v0, __v1)\
   (une_error){\

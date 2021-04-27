@@ -5,6 +5,7 @@ Updated 2021-04-25
 
 #include "une.h"
 
+int uneerr=0;
 #ifdef UNE_DEBUG_MALLOC_COUNTER
   int malloc_counter = 0;
 #endif
@@ -18,9 +19,9 @@ int main(int argc, char *argv[])
 
   // Run Command Line
   if (argc > 2 && strcmp(argv[1], "do") == 0) {
-    context->name = malloc((strlen("<string>")+1)*sizeof(*context->name));
+    context->name = malloc((wcslen(L"<string>")+1)*sizeof(*context->name));
     if (context->name == NULL) WERR(L"Out of memory.");
-    strcpy(context->name, "<string>");
+    wcscpy(context->name, L"<string>");
     #ifdef UNE_DO_READ
       context->text = str_to_wcs(argv[2]);
     #endif
@@ -28,9 +29,7 @@ int main(int argc, char *argv[])
   // Run File
   else {
     if (argc < 2) WERR("No input file.");
-    context->name = malloc((strlen(argv[1])+1)*sizeof(*context->name));
-    if (context->name == NULL) WERR(L"Out of memory.");
-    strcpy(context->name, argv[1]);
+    context->name = str_to_wcs(argv[1]);
     #ifdef UNE_DO_READ
       context->text = file_read(argv[1]);
     #endif
@@ -60,11 +59,11 @@ int main(int argc, char *argv[])
     );
     if (sequence == NULL) {
       #ifdef UNE_DEBUG_LOG_FREE
-        wprintf(L"\n");
+        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" \n", __FILE__, __FUNCTION__, __LINE__);
       #endif
       une_error_display(context->error, context->text, context->name);
       wprintf(L"\n");
-      une_node_free(context->ast);
+      une_node_free(context->ast, false);
       return 1;
     }
     context->ast->pos.end = context->tokens[context->token_index].pos.end;
@@ -77,7 +76,6 @@ int main(int argc, char *argv[])
   #endif
   
   int final = 0;
-  
   #ifdef UNE_DO_INTERPRET
     context->variables_size = UNE_SIZE_SMALL; // FIXME: SIZE
     context->variables = malloc(context->variables_size*sizeof(*context->variables))
@@ -98,13 +96,13 @@ int main(int argc, char *argv[])
     if (result.type == UNE_RT_INT) final = result.value._int;
     une_result_free(result);
   #endif
-
+  
   #ifdef UNE_DEBUG_LOG_FREE
     wprintf(L"\n");
   #endif
-  
+uneerr=1;
   une_context_free(context);
-  
+
   #ifdef UNE_DEBUG_MALLOC_COUNTER
     if (malloc_counter != 0) {
       wprintf(UNE_COLOR_FAIL L"\n%d memory location(s) not freed.\33[0m", malloc_counter);

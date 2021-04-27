@@ -21,7 +21,7 @@ typedef struct _une_variable {
 #pragma region une_function
 typedef struct _une_function {
   wchar_t *name; /* DOC: Making all these items nodes allows us to know where
-                     functions were defined. */
+                    functions were defined. */
   size_t params_count;
   wchar_t **params;
   une_node *body;
@@ -38,12 +38,11 @@ une_variable *une_variable_create(
   size_t *variables_size,
   wchar_t *name
 );
-// une_function *une_function_create(
-//   une_function **functions,
-//   size_t *functions_count,
-//   une_node *name,
-//   une_node *params,
-//   une_node *body
-// );
+une_function *une_function_create(
+  une_function **functions,
+  size_t *functions_count,
+  size_t *functions_size,
+  wchar_t *name
+);
 
 #endif /* !UNE_SYMBOLS_H */

@@ -21,6 +21,7 @@ const wchar_t *une_result_type_to_wcs(une_result_type result_type)
     case UNE_RT_CONTINUE: return L"CONTINUE";
     case UNE_RT_BREAK:    return L"BREAK";
     case UNE_RT_SIZE:     return L"SIZE";
+    case UNE_RT_VOID:     return L"VOID";
     default: WERR(L"une_result_type_to_wcs: Unhandled result type!");
   }
 }
@@ -94,12 +95,19 @@ Returns a text representation of a une_result.
 */
 wchar_t *une_result_to_wcs(une_result result)
 {
-  wchar_t *wcs = malloc(UNE_SIZE_MEDIUM *sizeof(*wcs));
+  wchar_t *wcs = malloc(UNE_SIZE_MEDIUM * sizeof(*wcs));
   if (wcs == NULL) WERR(L"Out of memory.");
-  size_t offset = swprintf(wcs, UNE_SIZE_MEDIUM,
-                           UNE_COLOR_NEUTRAL L"%ls" UNE_COLOR_HINT L": " UNE_COLOR_SUCCESS,
+  
+  size_t offset = swprintf(wcs, UNE_SIZE_MEDIUM, UNE_COLOR_NEUTRAL L"%ls",
                            une_result_type_to_wcs(result.type));
+  if (result.type != UNE_RT_VOID ) {
+    offset += swprintf(wcs+offset, UNE_SIZE_MEDIUM,
+                     UNE_COLOR_HINT L": " UNE_COLOR_SUCCESS);
+  }
+
   switch (result.type) {
+    case UNE_RT_VOID: break;
+
     case UNE_RT_INT:
       swprintf(wcs+offset, UNE_SIZE_MEDIUM, L"%lld", result.value._int);
       break;
@@ -153,7 +161,7 @@ void une_result_free(une_result result)
     case UNE_RT_ID:
       free(result.value._wcs);
       #ifdef UNE_DEBUG_LOG_FREE
-        wprintf(L"Return: %d\n", result.type);
+        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
       #endif
       break;
     
@@ -166,7 +174,7 @@ void une_result_free(une_result result)
       }
       free(list);
       #ifdef UNE_DEBUG_LOG_FREE
-        wprintf(L"Return: %d\n", result.type);
+        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
       #endif
       break; }
     
@@ -176,12 +184,13 @@ void une_result_free(une_result result)
     case UNE_RT_BREAK:
     case UNE_RT_CONTINUE:
     case UNE_RT_SIZE:
+    case UNE_RT_VOID:
       #ifdef UNE_DEBUG_LOG_FREE
-        wprintf(L"Return: %d\n", result.type);
+        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
       #endif
       break;
     
-    default: WERR(L"Unhandled result type in une_result_free()\n");
+    default: WERR(L"Unhandled result type %lld in une_result_free()\n", result.type);
   }
 }
 #pragma endregion une_result_free
@@ -198,6 +207,7 @@ une_result une_result_copy(une_result src)
   switch (src.type) {
     case UNE_RT_CONTINUE:
     case UNE_RT_BREAK:
+    case UNE_RT_VOID:
       break;
 
     case UNE_RT_INT:
@@ -228,7 +238,7 @@ une_result une_result_copy(une_result src)
       break; }
     
     default:
-      WERR(L"une_result_copy: Unhandled result type");
+      WERR(L"une_result_copy: Unhandled result type %lld", src.type);
   }
   
   return dest;

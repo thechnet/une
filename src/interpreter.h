@@ -41,6 +41,10 @@ une_result une_interpret_set(une_node *node, une_context *context);
 une_result une_interpret_set_idx(une_node *node, une_context *context);
 une_result une_interpret_get(une_node *node, une_context *context);
 une_result une_interpret_for(une_node *node, une_context *context);
+une_result une_interpret_while(une_node *node, une_context *context);
+une_result une_interpret_if(une_node *node, une_context *context);
+une_result une_interpret_def(une_node *node, une_context *context);
+une_result une_interpret_call(une_node *node, une_context *context);
 une_result une_interpret_list(une_node *node, une_context *context);
 
 #endif /* !UNE_INTERPRETER_H */

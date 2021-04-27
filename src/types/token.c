@@ -190,7 +190,7 @@ void une_tokens_free(une_token *tokens)
       case UNE_TT_STR:
         free(tokens[i].value._wcs);
         #ifdef UNE_DEBUG_LOG_FREE
-          wprintf(L"Token: %ls\n", une_token_type_to_wcs(tokens[i].type));
+          wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Token: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_token_type_to_wcs(tokens[i].type));
         #endif
         break;
       
@@ -234,7 +234,7 @@ void une_tokens_free(une_token *tokens)
       case UNE_TT_BREAK:
       case UNE_TT_RETURN:
         #ifdef UNE_DEBUG_LOG_FREE
-          wprintf(L"Token: %ls\n", une_token_type_to_wcs(tokens[i].type));
+          wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Token: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_token_type_to_wcs(tokens[i].type));
         #endif
         break;
       

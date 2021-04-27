@@ -10,9 +10,9 @@ Updated 2021-04-24
 void une_context_free(une_context *context)
 {
   // 1)
-  free(context->name);
+  if (context->name != NULL) free(context->name);
   #ifdef UNE_DO_READ
-    free(context->text);
+    if (context->text != NULL) free(context->text);
   #endif
 
   #ifdef UNE_DO_INTERPRET
@@ -27,26 +27,25 @@ void une_context_free(une_context *context)
     }
     free(context->functions);
   #endif
-  
+
   // 4)
   #ifdef UNE_DO_PARSE
-    une_node_free(context->ast);
+    une_node_free(context->ast, false);
   #endif
-  
   // 5)
   #ifdef UNE_DO_LEX
     une_tokens_free(context->tokens);
   #endif
-  
   // 6)
   // It's possible for une_error to contain pointers to allocated memory
   // that's used to provide details for an error message.
   // An example of this is the UNE_ET_GET (see une_interpret_get).
+  
   une_error_free(context->error);
   
   free(context);
   #ifdef UNE_DEBUG_LOG_FREE
-    wprintf(L"Context\n");
+    wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Context\n", __FILE__, __FUNCTION__, __LINE__);
   #endif
 }
 #pragma endregion une_context_free
@@ -56,6 +55,7 @@ une_context *une_context_create(void)
 {
   une_context *context = malloc(sizeof(*context));
   if (context == NULL) WERR(L"Out of memory.");
+  context->parent = NULL;
   context->name = NULL;
   context->text = NULL;
   context->error = (une_error){
@@ -73,6 +73,7 @@ une_context *une_context_create(void)
   context->functions = NULL;
   context->functions_size = 0;
   context->functions_count = 0;
+  context->should_return = false;
   return context;
 }
 #pragma endregion une_context_create

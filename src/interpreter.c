@@ -33,6 +33,19 @@ une_result une_interpret(une_node *node, une_context *context)
     case UNE_NT_SET_IDX: return une_interpret_set_idx(node, context);
     case UNE_NT_GET: return une_interpret_get(node, context);
     case UNE_NT_FOR: return une_interpret_for(node, context);
+    case UNE_NT_WHILE: return une_interpret_while(node, context);
+    case UNE_NT_IF: return une_interpret_if(node, context);
+    case UNE_NT_DEF: return une_interpret_def(node, context);
+    case UNE_NT_CALL: return une_interpret_call(node, context);
+    case UNE_NT_BREAK: return (une_result){.type = UNE_RT_BREAK};
+    case UNE_NT_CONTINUE: return (une_result){.type = UNE_RT_CONTINUE};
+    case UNE_NT_RETURN:
+      context->should_return = true;
+      if (node->content.branch.a == NULL) {
+        return (une_result){.type = UNE_RT_VOID};
+      } else {
+        return une_interpret(node->content.branch.a, context);
+      }
 
     case UNE_NT_LIST: return une_interpret_list(node, context);
 
@@ -75,42 +88,22 @@ une_result une_interpret(une_node *node, une_context *context)
 une_result une_interpret_stmts(une_node *node, une_context *context)
 {
   // Default Return Value of a Block or Program
-  une_result result;
-  result.type = UNE_RT_INT;
-  result.value._int = 46;
-  // result.type = UNE_RT_STR;
-  // result.value._wcs = malloc(100*sizeof(wchar_t));
-  // wcscpy(result.value._wcs, L"test");
+  une_result result = (une_result){.type = UNE_RT_VOID};
   
   une_node **nodes = (une_node**)node->content.value._vpp;
   size_t nodes_size = nodes[0]->content.value._int;
   for (size_t i=1; i<=nodes_size; i++) {
-    if (nodes[i]->type == UNE_NT_CONTINUE) {
-      une_result_free(result);
-      result.type = UNE_RT_CONTINUE;
-      break;
-    }
-    if (nodes[i]->type == UNE_NT_BREAK) {
-      une_result_free(result);
-      result.type = UNE_RT_BREAK;
-      break;
-    }
-    if (nodes[i]->type == UNE_NT_RETURN) {
-      // DOC: If this case applies, it means the program defines its own result,
-      // meaning we should free the default result.
-      if (nodes[i]->content.branch.a != NULL) {
-        une_result_free(result);
-        result = une_interpret(nodes[i]->content.branch.a, context);
-      }
-      // Since there is a break stmt following here no matter what, we don't
-      // need to check whether une_interpret returned an error or not,
-      // since we are going to return the result right away either way.
-      break;
-    }
     une_result _result = une_interpret(nodes[i], context); // FIXME: Check this.
     if (_result.type == UNE_RT_ERROR) {
       // DOC: We only keep _result if there was an error. Otherwise, results of
       // standalone expressions (or conditional operations, to be exact) are discarded right away.
+      une_result_free(result);
+      result = _result;
+      break;
+    }
+    if (context->should_return
+    ||  _result.type == UNE_RT_CONTINUE
+    ||  _result.type == UNE_RT_BREAK) {
       une_result_free(result);
       result = _result;
       break;
@@ -1091,17 +1084,13 @@ une_result une_interpret_set_idx(une_node *node, une_context *context)
   }
 
 // Set result
-  list[index.value._int+1] = une_result_copy(result); /* DOC: We need to
-                                                       duplicate the result
-                                                       because this function's
-                                                       return value is freed
-                                                       after the call */
+  list[index.value._int+1] = result;
 
 // Cleanup
   une_result_free(result);
   une_result_free(index);
   une_result_free(list[index.value._int+1]);
-  return result;
+  return (une_result){.type = UNE_RT_VOID};
 }
 #pragma endregion une_interpret_set_idx
 
@@ -1127,74 +1116,231 @@ une_result une_interpret_set(une_node *node, une_context *context)
     une_result_free(var->content);
   }
   
-  var->content = une_result_copy(result); /* DOC: We need to duplicate the
-                                             result because this function's
-                                             return value is freed after the
-                                             call */
-  return result;
+  var->content = result;
+
+  return (une_result){.type = UNE_RT_VOID};
 }
 #pragma endregion une_interpret_set
 
 #pragma region une_interpret_for
 une_result une_interpret_for(une_node *node, une_context *context) {
-  une_result id = une_interpret(node->content.branch.a, context);
-  if (id.type == UNE_RT_ERROR) return id; // FIXME: Unnecessary?
-  
-  // We don't need to check if name.type is UNE_RT_ID because the parser
-  // _only_ creates a UNE_NT_GET if it finds an UNE_TT_ID.
-  
+
+  wchar_t *id = node->content.branch.a->content.value._wcs;
+
   une_result from = une_interpret(node->content.branch.b, context);
-  if (from.type == UNE_RT_ERROR) {
-    une_result_free(id);
-    return from;
-  }
+  if (from.type == UNE_RT_ERROR) return from;
   
-  une_result to = une_interpret(node->content.branch.c, context);
-  if (to.type == UNE_RT_ERROR) {
-    une_result_free(id);
+  une_result till = une_interpret(node->content.branch.c, context);
+  if (till.type == UNE_RT_ERROR) {
     une_result_free(from);
-    return to;
+    return till;
   }
   
   une_result result;
   
-  if (from.type == UNE_RT_INT && to.type == UNE_RT_INT) {
+  if (from.type == UNE_RT_INT && till.type == UNE_RT_INT) {
     int step;
-    if (from.value._int < to.value._int) {
+    if (from.value._int < till.value._int) {
       step = 1;
-    }
-    else {
+    } else {
       step = -1;
     }
     
+    une_variable *var = une_variable_find(
+      context->variables, context->variables_count, id);
+    if (from.value._int != till.value._int && var == NULL) {
+      var = une_variable_create(
+        &context->variables, &context->variables_count,
+        &context->variables_size, id);
+    }
+
     une_result _result;
-    for (une_int i=from.value._int; i!=to.value._int; i+=step) {
+    for (une_int i=from.value._int; i!=till.value._int; i+=step) {
+      une_result_free(var->content);
+      var->content.type = UNE_RT_INT;
+      var->content.value._int = i;
       _result = une_interpret(node->content.branch.d, context);
       if (_result.type == UNE_RT_ERROR) {
-        une_result_free(id);
         une_result_free(from);
-        une_result_free(to);
+        une_result_free(till);
         return _result;
       }
       if (_result.type == UNE_RT_BREAK) break;
-      if (i+step != to.value._int) une_result_free(_result);
+      if (i+step != till.value._int) une_result_free(_result);
     }
     
     result = _result;
   }
   else {
     context->error = UNE_ERROR_SETX(UNE_ET_FOR, node->pos,
-      _int=from.type != UNE_RT_INT ? (int)from.type : (int)to.type, _int=0);
+      _int=from.type != UNE_RT_INT ? (int)from.type : (int)till.type, _int=0);
     result.type = UNE_RT_ERROR;
   }
   
-  une_result_free(id);
   une_result_free(from);
-  une_result_free(to);
-  
-  return result;
+  une_result_free(till);
+
+  if (context->should_return) return result;
+
+  une_result_free(result);
+  return (une_result){.type = UNE_RT_VOID};
 }
 #pragma endregion une_interpret_for
+
+#pragma region une_interpret_while
+une_result une_interpret_while(une_node *node, une_context *context)
+{
+  une_result result, condition;
+  result.type = UNE_RT_INT;
+
+  while (true) {
+    condition = une_interpret(node->content.branch.a, context);
+    if (condition.type == UNE_RT_ERROR) {
+      une_result_free(result);
+      return condition;
+    }
+    if (!une_result_is_true(condition)) break;
+    une_result_free(condition);
+    une_result_free(result);
+    result = une_interpret(node->content.branch.b, context);
+    if (result.type == UNE_RT_ERROR) break;
+  }
+
+  une_result_free(condition);
+
+  if (context->should_return) return result;
+
+  une_result_free(result);
+  return (une_result){.type = UNE_RT_VOID};
+}
+#pragma endregion une_interpret_while
+
+#pragma region une_interpret_if
+une_result une_interpret_if(une_node *node, une_context *context)
+{
+  une_result condition = une_interpret(node->content.branch.a, context);
+  if (condition.type == UNE_RT_ERROR) return condition;
+
+  une_result result = (une_result){.type = UNE_RT_VOID};
+
+  if (une_result_is_true(condition)) {
+    result = une_interpret(node->content.branch.b, context);
+  } else if (node->content.branch.c != NULL) {
+    result = une_interpret(node->content.branch.c, context);
+  }
+
+  une_result_free(condition);
+
+  if (context->should_return) return result;
+
+  une_result_free(result);
+  return (une_result){.type = UNE_RT_VOID};
+}
+#pragma endregion une_interpret_if
+
+#pragma region une_interpret_def
+une_result une_interpret_def(une_node *node, une_context *context)
+{
+  wchar_t *name = node->content.branch.a->content.value._wcs;
+  une_function *fn =
+    une_function_find(context->functions, context->functions_count, name);
+  if (fn != NULL) {
+    context->error = UNE_ERROR_SETX(UNE_ET_DEF, node->content.branch.a->pos,
+        _wcs=wcs_dup(name), _int=0);
+    return (une_result){.type = UNE_RT_ERROR};
+  }
+  une_node **params_n = (une_node**)node->content.branch.b->content.value._vpp;
+  size_t params_count = params_n[0]->content.value._int;
+  wchar_t **params = malloc(params_count*sizeof(*params));
+  if(params == NULL) WERR(L"Out of memory.");
+  for(size_t i=0; i<params_count; i++) {
+    params[i] = wcs_dup(params_n[i+1]->content.value._wcs);
+  }
+  une_node *body = une_node_copy(node->content.branch.c);
+  fn = une_function_create(&context->functions, &context->functions_count,
+    &context->functions_size, name);
+  fn->params_count = params_count;
+  fn->params = params;
+  fn->body = body;
+  return (une_result){.type = UNE_RT_VOID};
+}
+#pragma endregion une_interpret_def
+
+#pragma region une_interpret_call
+une_result une_interpret_call(une_node *node, une_context *context)
+{
+  une_result result = (une_result){.type = UNE_RT_ERROR};
+
+// Get function name
+  wchar_t *name = node->content.branch.a->content.value._wcs;
+
+// Check if function already exists
+  une_function *fn = une_function_find(
+    context->functions, context->functions_count, name);
+  if (fn == NULL) {
+    context->error = UNE_ERROR_SETX(UNE_ET_CALL, node->content.branch.a->pos,
+        _wcs=wcs_dup(name), _int=0);
+    return result;
+  }
+
+// Get and verify number of arguments
+  une_node **args_n = (une_node**)node->content.branch.b->content.value._vpp;
+  size_t args_count = args_n[0]->content.value._int;
+  if (args_count != fn->params_count) {
+    context->error = UNE_ERROR_SETX(UNE_ET_CALL_ARGS, node->content.branch.b->pos,
+        _int=fn->params_count, _int=args_count);
+    return result;
+  }
+
+// Interpret arguments
+  une_result *args = malloc(args_count*sizeof(*args));
+  if (args == NULL) WERR(L"Out of memory.");
+  for (size_t i=0; i<args_count; i++) {
+    args[i] = une_interpret(args_n[i+1], context);
+    if (args[i].type == UNE_RT_ERROR) {
+      for (size_t j=0; j<i; j++) {
+        une_result_free(args[j]);
+        free(args);
+        return args[i];
+      }
+    }
+  }
+
+// Create function context
+  une_context *_context = une_context_create();
+  _context->parent = context;
+  context = _context;
+  context->name = wcs_dup(name);
+  context->variables_size = UNE_SIZE_SMALL; // FIXME: SIZE
+  context->variables = malloc(context->variables_size*sizeof(*context->variables))
+  if (context->variables == NULL) WERR(L"Out of memory.");
+  context->functions_size = UNE_SIZE_SMALL; // FIXME: SIZE
+  context->functions = malloc(context->functions_size*sizeof(*context->functions))
+  if (context->functions == NULL) WERR(L"Out of memory.");
+
+// Set parameters to arguments
+  for (size_t i=0; i<fn->params_count; i++) {
+    une_variable *var = une_variable_create(&context->variables, &context->variables_count,
+      &context->variables_size, fn->params[i]);
+    var->content = une_result_copy(args[i]);
+  }
+
+// Interpret body
+  result = une_interpret(fn->body, context);
+  for (size_t i=0; i<args_count; i++) {
+    une_result_free(args[i]);
+  }
+  free(args);
+  if (result.type == UNE_RT_ERROR)
+    context->parent->error = une_error_copy(context->error);
+
+// Return to parent context
+  _context = context->parent;
+  une_context_free(context);
+  context = _context;
+  return result;
+}
+#pragma endregion une_interpret_call
 
 #pragma region une_interpret_list
 une_result une_interpret_list(une_node *node, une_context *context)

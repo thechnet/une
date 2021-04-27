@@ -38,22 +38,22 @@ une_node *une_parse_block(
       CREATE_ERROR_LIST;
       sequence = error_list;
     #else
-      une_node_free(block);
+      une_node_free(block, false);
       return NULL;
     #endif
   }
   block->content.value._vpp = (void**)sequence;
   
   if (sequence[0]->content.value._int == 0) {
-    une_node_free(sequence[0]);
-    free(sequence);
     *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, tokens[*token_index].pos,
         _int=(int)UNE_TT_RBRC, _int=0);
     #ifdef UNE_DEBUG_SOFT_ERROR
+      une_node_free(sequence[0], false);
+      free(sequence);
       CREATE_ERROR_LIST;
       sequence = error_list;
     #else
-      une_node_free(block);
+      une_node_free(block, false);
       return NULL;
     #endif
   }
@@ -68,7 +68,7 @@ une_node *une_parse_block(
       (*token_index)++;
       return error_node;
     #else
-      une_node_free(block);
+      une_node_free(block, false);
       return NULL;
     #endif
   }
@@ -77,7 +77,6 @@ une_node *une_parse_block(
   
   // ... it doesn't advance past it, though.
   (*token_index)++;
-
   return block;
 }
 #pragma endregion une_parse_block
@@ -108,7 +107,7 @@ une_node **une_parse_sequence(
 
   while (true) {
     while (tokens[*token_index].type == tt_end_of_item
-    ||  tokens[*token_index].type == UNE_TT_NEW) {
+       ||  tokens[*token_index].type == UNE_TT_NEW) {
       (*token_index)++;
     }
 
@@ -142,7 +141,7 @@ une_node **une_parse_sequence(
       /*
       This can happen if a block, list, list of parameters, or list of arguments is opened at the end of the file without being closed.
       */
-      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
+      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i], false);
       free(sequence);
       *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, tokens[*token_index].pos,
           _int=(int)UNE_TT_EOF, _int=0);
@@ -161,7 +160,7 @@ une_node **une_parse_sequence(
         CREATE_ERROR_NODE;
         sequence[sequence_index] = error_node;
       #else
-        for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
+        for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i], false);
         free(sequence);
         return NULL;
       #endif
@@ -172,7 +171,7 @@ une_node **une_parse_sequence(
     && tokens[*token_index].type != tt_end_of_item
     && tokens[*token_index].type != UNE_TT_NEW)
     {
-      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i]);
+      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i], false);
       free(sequence);
       *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
           _int=(int)tt_end_of_item, _int=(int)tt_end_of_sequence);
@@ -186,7 +185,7 @@ une_node **une_parse_sequence(
   }
 
   sequence[0]->content.value._int = sequence_index-1;
-
+  
   return sequence;
 }
 #pragma endregion une_parse_sequence
@@ -202,11 +201,12 @@ une_node *une_parse_stmt(
   if (tokens[*token_index].type == UNE_TT_NEW) (*token_index)++; // FIXME: Unsure...
   
   switch (tokens[*token_index].type) {
+    case UNE_TT_LBRC: return une_parse_block(tokens, token_index, error);
+
     case UNE_TT_FOR: return une_parse_for(tokens, token_index, error);
     case UNE_TT_IF: return une_parse_if(tokens, token_index, error, UNE_TT_IF);
     case UNE_TT_WHILE: return une_parse_while(tokens, token_index, error);
     case UNE_TT_DEF: return une_parse_def(tokens, token_index, error);
-    case UNE_TT_LBRC: return une_parse_block(tokens, token_index, error);
     case UNE_TT_RETURN: return une_parse_return(tokens, token_index, error);
     
     #pragma region Break
@@ -273,7 +273,7 @@ une_node *une_parse_stmt(
             CREATE_ERROR_NODE;
             position = error_node;
           #else
-            une_node_free(varset);
+            une_node_free(varset, false);
             return NULL;
           #endif
         }
@@ -283,8 +283,8 @@ une_node *une_parse_stmt(
             CREATE_ERROR_NODE;
             return error_node;
           #else
-            une_node_free(varset);
-            une_node_free(position);
+            une_node_free(varset, false);
+            une_node_free(position, false);
             return NULL;
           #endif
         }
@@ -303,7 +303,7 @@ une_node *une_parse_stmt(
             CREATE_ERROR_NODE;
             conditional_operation = error_node;
           #else
-            une_node_free(varset);
+            une_node_free(varset, false);
             return NULL;
           #endif
         }
@@ -318,7 +318,7 @@ une_node *une_parse_stmt(
         return varset;
       }
       else {
-        une_node_free(varset);
+        une_node_free(varset, false);
         *token_index = token_index_before;
         /*
         Notice how there is no break here: If the above code ended here it means
@@ -384,7 +384,7 @@ une_node *une_parse_if(
       CREATE_ERROR_NODE;
       truebody = error_node;
     #else
-      une_node_free(condition);
+      une_node_free(condition, false);
       return NULL;
     #endif
   }
@@ -400,6 +400,15 @@ une_node *une_parse_if(
   creates an entirely new if node where this stmt then removes
   whitespace in front of 'else'.
   */
+  size_t _token_index = *token_index; /* Here we skip over whitespace expecting
+                                         an elif or else clause. If we don't
+                                         find one, however, we have now skipped
+                                         the whitespace that tells
+                                         une_parse_sequence that a new command
+                                         is starting. Therefore, we need to
+                                         return back to this index in case there
+                                         is no clause following the if clause.
+                                         */
   if (tokens[*token_index].type == UNE_TT_NEW) (*token_index)++;
 
   if (tokens[*token_index].type == UNE_TT_ELIF) {
@@ -410,7 +419,7 @@ une_node *une_parse_if(
         CREATE_ERROR_NODE;
         falsebody = error_node;
       #else
-        une_node_free(ifstmt);
+        une_node_free(ifstmt, false);
         return NULL;
       #endif
     }
@@ -425,18 +434,21 @@ une_node *une_parse_if(
         CREATE_ERROR_NODE;
         falsebody = error_node;
       #else
-        une_node_free(ifstmt);
+        une_node_free(ifstmt, false);
         return NULL;
       #endif
     }
     ifstmt->content.branch.c = falsebody;
+  }
+  else {
+    *token_index = _token_index;
   }
 
   return ifstmt;
 }
 #pragma endregion une_parse_if
 
-#pragma region Parse For Loop
+#pragma region une_parse_for
 une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error) {
   size_t pos_start = tokens[*token_index].pos.start;
   
@@ -474,7 +486,7 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
       (*token_index)++;
       return error_node;
     #else
-      une_node_free(counter);
+      une_node_free(counter, false);
       return NULL;
     #endif
   }
@@ -487,8 +499,8 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
       CREATE_ERROR_NODE;
       from = error_node;
     #else
-      une_node_free(counter);
-      une_node_free(from);
+      une_node_free(counter, false);
+      une_node_free(from, false);
       return NULL;
     #endif
   }
@@ -514,8 +526,8 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
       CREATE_ERROR_NODE;
       to = error_node;
     #else
-      une_node_free(counter);
-      une_node_free(from);
+      une_node_free(counter, false);
+      une_node_free(from, false);
       return NULL;
     #endif
   }
@@ -527,9 +539,9 @@ une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error
       CREATE_ERROR_NODE;
       body = error_node;
     #else
-      une_node_free(counter);
-      une_node_free(from);
-      une_node_free(to);
+      une_node_free(counter, false);
+      une_node_free(from, false);
+      une_node_free(to, false);
       return NULL;
     #endif
   }
@@ -581,7 +593,7 @@ une_node *une_parse_while(une_token *tokens, size_t *token_index, une_error *err
       CREATE_ERROR_NODE;
       body = error_node;
     #else
-      une_node_free(condition);
+      une_node_free(condition, false);
       return NULL;
     #endif
   }
@@ -633,7 +645,7 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
       (*token_index)++;
       return error_node;
     #else
-      une_node_free(name);
+      une_node_free(name, false);
       return NULL;
     #endif
   }
@@ -653,8 +665,8 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
       CREATE_ERROR_LIST;
       sequence = error_list;
     #else
-      une_node_free(name);
-      une_node_free(params);
+      une_node_free(name, false);
+      une_node_free(params, false);
       return NULL;
     #endif
   }
@@ -673,8 +685,8 @@ une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error
       CREATE_ERROR_NODE;
       body = error_node;
     #else
-      une_node_free(name);
-      une_node_free(params);
+      une_node_free(name, false);
+      une_node_free(params, false);
       return NULL;
     #endif
   }
@@ -711,7 +723,7 @@ une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index
         CREATE_ERROR_NODE;
         condition = error_node;
       #else
-        une_node_free(trueconditions);
+        une_node_free(trueconditions, false);
         return NULL;
       #endif
     }
@@ -723,8 +735,8 @@ une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index
         CREATE_ERROR_NODE;
         return error_node;
       #else
-        une_node_free(trueconditions);
-        une_node_free(condition);
+        une_node_free(trueconditions, false);
+        une_node_free(condition, false);
         return NULL;
       #endif
     }
@@ -736,8 +748,8 @@ une_node *une_parse_conditional_operation(une_token *tokens, size_t *token_index
         CREATE_ERROR_NODE;
         falseconditions = error_node;
       #else
-        une_node_free(trueconditions);
-        une_node_free(condition);
+        une_node_free(trueconditions, false);
+        une_node_free(condition, false);
         return NULL;
       #endif
     }
@@ -783,7 +795,7 @@ une_node *une_parse_conditions(une_token *tokens, size_t *token_index, une_error
         CREATE_ERROR_NODE;
         right = error_node;
       #else
-        une_node_free(new_left);
+        une_node_free(new_left, false);
         return NULL;
       #endif
     }
@@ -812,7 +824,7 @@ une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error 
         CREATE_ERROR_NODE;
         condition = error_node;
       #else
-        une_node_free(not);
+        une_node_free(not, false);
         return NULL;
       #endif
     }
@@ -860,7 +872,7 @@ une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error 
         CREATE_ERROR_NODE;
         right = error_node;
       #else
-        une_node_free(new_left);
+        une_node_free(new_left, false);
         return NULL;
       #endif
     }
@@ -903,7 +915,7 @@ une_node *une_parse_expression(une_token *tokens, size_t *token_index, une_error
         CREATE_ERROR_NODE;
         right = error_node;
       #else
-        une_node_free(new_left);
+        une_node_free(new_left, false);
         return NULL;
       #endif
     }
@@ -954,7 +966,7 @@ une_node *une_parse_term(une_token *tokens, size_t *token_index, une_error *erro
         CREATE_ERROR_NODE;
         right = error_node;
       #else
-        une_node_free(new_left);
+        une_node_free(new_left, false);
         return NULL;
       #endif
     }
@@ -995,7 +1007,7 @@ une_node *une_parse_power(une_token *tokens, size_t *token_index, une_error *err
         CREATE_ERROR_NODE;
         right = error_node;
       #else
-        une_node_free(new_left);
+        une_node_free(new_left, false);
         return NULL;
       #endif
     }
@@ -1035,7 +1047,7 @@ une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *err
         CREATE_ERROR_NODE;
         right = error_node;
       #else
-        une_node_free(new_left);
+        une_node_free(new_left, false);
         return NULL;
       #endif
     }
@@ -1048,7 +1060,7 @@ une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *err
         CREATE_ERROR_NODE;
         return error_node;
       #else
-        une_node_free(new_left);
+        une_node_free(new_left, false);
         return NULL;
       #endif
     }
@@ -1076,7 +1088,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
           CREATE_ERROR_NODE;
           expression = error_node;
         #else
-          une_node_free(neg);
+          une_node_free(neg, false);
           return NULL;
         #endif
       }
@@ -1131,8 +1143,8 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
             CREATE_ERROR_LIST;
             sequence = error_list;
           #else
-            une_node_free(fncall);
-            une_node_free(params);
+            une_node_free(fncall, false);
+            une_node_free(params, false);
             return NULL;
           #endif
         }
@@ -1170,7 +1182,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
           CREATE_ERROR_LIST;
           sequence = error_list;
         #else
-          une_node_free(list);
+          une_node_free(list, false);
           return NULL;
         #endif
       }
@@ -1192,7 +1204,7 @@ une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *erro
         #endif
       }
       if (tokens[*token_index].type != UNE_TT_RPAR) {
-        une_node_free(expression);
+        une_node_free(expression, false);
         *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
             _int=(int)UNE_TT_RPAR, _int=0);
         #ifdef UNE_DEBUG_SOFT_ERROR

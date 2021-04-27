@@ -52,7 +52,7 @@ Opens a UTF-8 file at 'path' and returns its text contents as wchar_t string.
 wchar_t *file_read(char *path)
 {
   size_t text_size = UNE_SIZE_MEDIUM;
-  wchar_t *text = malloc(text_size *sizeof(*text));
+  wchar_t *text = malloc(text_size * sizeof(*text));
   if (text == NULL) WERR(L"Out of memory.");
   FILE *f = fopen(path, "r,ccs=UTF-8");
   if (f == NULL) WERR(L"File not found");

@@ -7,6 +7,7 @@ Updated 2021-04-24
 #define UNE_NODE_H
 
 #include "../primitive.h"
+#include "../tools.h"
 
 #pragma region une_node_type
 typedef enum _une_node_type {
@@ -73,7 +74,7 @@ typedef struct _une_node {
 
 const wchar_t *une_node_type_to_wcs(une_node_type type);
 wchar_t *une_node_to_wcs(une_node *node);
-void une_node_free(une_node *node);
+void une_node_free(une_node *node, bool free_wcs);
 une_node *une_node_create(une_node_type type);
 une_node *une_node_copy(une_node *src);
 

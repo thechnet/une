@@ -6,12 +6,13 @@ Updated 2021-04-25
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
 
+extern int uneerr;
 #define UNE_DEBUG_MALLOC_COUNTER
 // #define UNE_DEBUG_LOG_FREE
 #define UNE_DO_READ
 #define UNE_DO_LEX
 #define UNE_DO_PARSE
-// #define UNE_DO_INTERPRET
+#define UNE_DO_INTERPRET
 
 #include <stdlib.h>
 #include <wchar.h>

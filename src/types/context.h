@@ -14,7 +14,7 @@ Updated 2021-04-24
 
 #pragma region une_context
 typedef struct _une_context {
-  char *name;
+  wchar_t *name;
   wchar_t *text;
   une_token *tokens;
   size_t token_index;
@@ -27,6 +27,7 @@ typedef struct _une_context {
   une_function *functions;
   size_t functions_size;
   size_t functions_count;
+  bool should_return;
 } une_context;
 #pragma endregion une_context
 

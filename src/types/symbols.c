@@ -11,7 +11,7 @@ void une_variable_free(une_variable variable)
   free(variable.name);
   une_result_free(variable.content);
   #ifdef UNE_DEBUG_LOG_FREE
-    wprintf(L"Variable: %ls\n", variable.name);
+    wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Variable: %ls\n", __FILE__, __FUNCTION__, __LINE__, variable.name);
   #endif
 }
 #pragma endregion une_variable_free
@@ -22,9 +22,9 @@ void une_function_free(une_function function)
   free(function.name);
   for(size_t i=0; i<function.params_count; i++) free(function.params[i]);
   free(function.params);
-  une_node_free(function.body);
+  une_node_free(function.body, true);
   #ifdef UNE_DEBUG_LOG_FREE
-    wprintf(L"Function: %ls\n", function.name);
+    wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Function: %ls\n", __FILE__, __FUNCTION__, __LINE__, function.name);
   #endif
 }
 #pragma endregion une_function_free
@@ -71,3 +71,27 @@ une_variable *une_variable_create(
   return var;
 }
 #pragma endregion une_variable_create
+
+#pragma region une_function_create
+une_function *une_function_create(
+  une_function **functions,
+  size_t *functions_count,
+  size_t *functions_size,
+  wchar_t *name
+)
+{
+  if (*functions_count >= *functions_size) {
+    *functions_size *= 2;
+    une_function *_functions = realloc(*functions, *functions_size*sizeof(*_functions));
+    if (_functions == NULL) WERR(L"Out of memory.");
+    *functions = _functions;
+  }
+  une_function *var = &((*functions)[*functions_count]);
+  var->name = wcs_dup(name);
+  var->params_count = 0;
+  var->params = NULL;
+  var->body = NULL;
+  (*functions_count)++;
+  return var;
+}
+#pragma endregion une_function_create
