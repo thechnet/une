@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Updated 2021-04-25
+Updated 2021-04-28
 */
 
 #include "lexer.h"
@@ -9,15 +9,13 @@ Updated 2021-04-25
 une_token *une_lex_wcs(wchar_t *text, une_error *error)
 {
   size_t tokens_size = UNE_SIZE_MEDIUM; // FIXME:
-  une_token *tokens = malloc(tokens_size*sizeof(*tokens));
-  if (tokens == NULL) WERR(L"Out of memory.");
+  une_token *tokens = rmalloc(tokens_size*sizeof(*tokens));
   size_t tokens_index = 0;
   size_t idx = 0;
   while (true) {
     if (tokens_index+1 >= tokens_size) {
       tokens_size *= 2;
-      une_token *_tokens = realloc(tokens, tokens_size *sizeof(*_tokens));
-      if (_tokens == NULL) WERR(L"Out of memory.");
+      une_token *_tokens = rrealloc(tokens, tokens_size *sizeof(*_tokens));
       tokens = _tokens;
       wprintf(L"Warning: Tokens doubled\n");
     }
@@ -26,8 +24,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     if (text[idx] >= L'0' && text[idx] <= L'9') {
 
       size_t buffer_size = UNE_SIZE_SMALL;
-      wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
-      if (buffer == NULL) WERR(L"Out of memory.");
+      wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
       size_t idx_start = idx;
 
@@ -35,8 +32,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
         
         while (idx-idx_start >= buffer_size-2) { // NUL || '0' NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 
@@ -68,8 +64,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
         
         if (idx-idx_start >= buffer_size-2) { // NUL || '0' NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 
@@ -100,19 +95,16 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma region String
     if (text[idx] == L'"') {
       size_t buffer_size = UNE_SIZE_MEDIUM;
-      wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
-      if (buffer == NULL) WERR(L"Out of memory");
+      wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
       size_t idx_start = idx;
       bool escape = false;
       size_t buffer_index = 0;
-
+int i=-1;
       while (true) {
-        
         if (buffer_index >= buffer_size-1) { // NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 
@@ -173,8 +165,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     || (text[idx] >= L'A' && text[idx] <= L'Z')
     ||  text[idx] == L'_') {
       size_t buffer_size = UNE_SIZE_MEDIUM;
-      wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
-      if (buffer == NULL) WERR(L"Out of memory");
+      wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
       size_t idx_start = idx;
       bool escape = false;
@@ -187,8 +178,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
         
         if (buffer_index >= buffer_size-1) { // NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 
@@ -408,8 +398,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
 une_token *une_lex_file(char *path, une_error *error)
 {
   size_t tokens_size = UNE_SIZE_BIG;
-  une_token *tokens = malloc(tokens_size*sizeof(*tokens));
-  if (tokens == NULL) WERR(L"Out of memory.");
+  une_token *tokens = rmalloc(tokens_size*sizeof(*tokens));
   size_t tokens_index = 0;
 
   wint_t wchar; /* Can represent any Unicode character +(!) WEOF.
@@ -442,8 +431,7 @@ une_token *une_lex_file(char *path, une_error *error)
     if (wchar >= L'0' && wchar <= L'9') {
 
       size_t buffer_size = UNE_SIZE_SMALL;
-      wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
-      if (buffer == NULL) WERR(L"Out of memory.");
+      wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
       size_t pos_start = pos;
 
@@ -451,8 +439,7 @@ une_token *une_lex_file(char *path, une_error *error)
         
         if (pos-pos_start >= buffer_size-2) { // NUL || '0' NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 
@@ -485,8 +472,7 @@ une_token *une_lex_file(char *path, une_error *error)
         
         if (pos-pos_start >= buffer_size-2) { // NUL || '0' NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 
@@ -517,8 +503,7 @@ une_token *une_lex_file(char *path, une_error *error)
     #pragma region String
     if (wchar == L'"') {
       size_t buffer_size = UNE_SIZE_MEDIUM;
-      wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
-      if (buffer == NULL) WERR(L"Out of memory");
+      wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
       size_t pos_start = pos;
       bool escape = false;
@@ -528,8 +513,7 @@ une_token *une_lex_file(char *path, une_error *error)
         
         if (buffer_index >= buffer_size-1) { // NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 
@@ -592,8 +576,7 @@ une_token *une_lex_file(char *path, une_error *error)
     || (wchar >= L'A' && wchar <= L'Z')
     ||  wchar == L'_') {
       size_t buffer_size = UNE_SIZE_MEDIUM;
-      wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
-      if (buffer == NULL) WERR(L"Out of memory");
+      wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
       size_t pos_start = pos;
       bool escape = false;
@@ -606,8 +589,7 @@ une_token *une_lex_file(char *path, une_error *error)
         
         if (buffer_index >= buffer_size-1) { // NUL
           buffer_size *= 2;
-          wchar_t *_buffer = realloc(buffer, buffer_size*sizeof(*_buffer));
-          if (_buffer == NULL) WERR(L"Out of memory");
+          wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
           buffer = _buffer;
         }
 

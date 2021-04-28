@@ -1,6 +1,6 @@
 /*
 symbols.c - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #include "symbols.h"
@@ -59,14 +59,12 @@ une_variable *une_variable_create(
 {
   if (*variables_count >= *variables_size) {
     *variables_size *= 2;
-    une_variable *_variables = realloc(*variables, *variables_size*sizeof(*_variables));
-    if (_variables == NULL) WERR(L"Out of memory.");
+    une_variable *_variables = rrealloc(*variables, *variables_size*sizeof(*_variables));
     *variables = _variables;
   }
   une_variable *var = &((*variables)[*variables_count]);
   var->name = wcs_dup(name);
-  var->content.type = UNE_RT_INT;
-  var->content.value._int = 0;
+  var->content = une_result_create();
   (*variables_count)++;
   return var;
 }
@@ -82,8 +80,7 @@ une_function *une_function_create(
 {
   if (*functions_count >= *functions_size) {
     *functions_size *= 2;
-    une_function *_functions = realloc(*functions, *functions_size*sizeof(*_functions));
-    if (_functions == NULL) WERR(L"Out of memory.");
+    une_function *_functions = rrealloc(*functions, *functions_size*sizeof(*_functions));
     *functions = _functions;
   }
   une_function *var = &((*functions)[*functions_count]);

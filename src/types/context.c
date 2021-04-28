@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #include "context.h"
@@ -53,8 +53,7 @@ void une_context_free(une_context *context)
 #pragma region une_context_create
 une_context *une_context_create(void)
 {
-  une_context *context = malloc(sizeof(*context));
-  if (context == NULL) WERR(L"Out of memory.");
+  une_context *context = rmalloc(sizeof(*context));
   context->parent = NULL;
   context->name = NULL;
   context->text = NULL;
@@ -77,3 +76,29 @@ une_context *une_context_create(void)
   return context;
 }
 #pragma endregion une_context_create
+
+#pragma region une_variable_find_global
+une_variable *une_variable_find_global(une_context *context, wchar_t *name)
+{
+  une_variable *var = NULL;
+  while (var == NULL) {
+    var = une_variable_find(context->variables, context->variables_count, name);
+    if (context->parent == NULL) break;
+    context = context->parent;
+  }
+  return var;
+}
+#pragma endregion une_variable_find_global
+
+#pragma region une_function_find_global
+une_function *une_function_find_global(une_context *context, wchar_t *name)
+{
+  une_function *fn = NULL;
+  while (fn == NULL) {
+    fn = une_function_find(context->functions, context->functions_count, name);
+    if (context->parent == NULL) break;
+    context = context->parent;
+  }
+  return fn;
+}
+#pragma endregion une_function_find_global

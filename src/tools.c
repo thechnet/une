@@ -1,9 +1,33 @@
 /*
 tools.c - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #include "tools.h"
+
+#pragma region rmalloc
+/* DOC:
+Attemps to allocate memory and crashes immediately on fail.
+*/
+void *rmalloc(size_t size)
+{
+  void *p = malloc(size);
+  if (p == NULL) WERR(L"Out of memory.");
+  return p;
+}
+#pragma endregion rmalloc
+
+#pragma region rrealloc
+/* DOC:
+Attemps to reallocate memory and crashes immediately on fail.
+*/
+void *rrealloc(void *memory, size_t new_size)
+{
+  void *p = realloc(memory, new_size);
+  if (p == NULL) WERR(L"Out of memory.");
+  return p;
+}
+#pragma endregion rmalloc
 
 #pragma region wcs_to_une_int
 /* DOC:
@@ -14,7 +38,7 @@ we already know the string is an integer number.
 une_int wcs_to_une_int(wchar_t *str)
 {
   une_int out = 0;
-  for (size_t i = 0; str[i] != L'\0'; i++) {
+  for (size_t i=0; str[i] != L'\0'; i++) {
     if (str[i] < L'0' || str[i] > L'9') return 0;
     out = 10 * out + str[i] - L'0';
   }
@@ -31,7 +55,7 @@ we already know the string is a floating point number.
 une_flt wcs_to_une_flt(wchar_t *str)
 {
   une_flt out = 0;
-  for (int var = 1, i = 0; str[i] != L'\0'; i++) {
+  for (int var=1, i = 0; str[i] != L'\0'; i++) {
     if ((str[i] < L'0' || str[i] > L'9')        // Not a digit.
     && (str[i] != L'.' || var != 1)) return 0; // Second dot.
     if (var != 1) var *= 10;
@@ -52,8 +76,7 @@ Opens a UTF-8 file at 'path' and returns its text contents as wchar_t string.
 wchar_t *file_read(char *path)
 {
   size_t text_size = UNE_SIZE_MEDIUM;
-  wchar_t *text = malloc(text_size * sizeof(*text));
-  if (text == NULL) WERR(L"Out of memory.");
+  wchar_t *text = rmalloc(text_size * sizeof(*text));
   FILE *f = fopen(path, "r,ccs=UTF-8");
   if (f == NULL) WERR(L"File not found");
   size_t cursor = 0;
@@ -66,8 +89,7 @@ wchar_t *file_read(char *path)
     if (c == L'\r') continue;
     if (cursor >= text_size-1) { // NUL
       text_size *= 2;
-      wchar_t *_text = realloc(text, text_size *sizeof(*_text));
-      if (_text == NULL) WERR(L"Out of memory.");
+      wchar_t *_text = rrealloc(text, text_size *sizeof(*_text));
       text = _text;
     }
     if (c == WEOF) break;
@@ -87,8 +109,7 @@ Creates a wchar_t string containing the contents of 'str'.
 wchar_t *str_to_wcs(char *str)
 {
   size_t len = strlen(str);
-  wchar_t *wcs = malloc((len + 1) * sizeof(*wcs));
-  if (wcs == NULL) WERR(L"Out of memory.");
+  wchar_t *wcs = rmalloc((len + 1) * sizeof(*wcs));
   swprintf(wcs, (len + 1) * sizeof(*wcs), L"%hs", str);
   return wcs;
 }
@@ -101,8 +122,7 @@ Duplicates a wchar_t string.
 wchar_t *wcs_dup(wchar_t *src)
 {
   size_t len = wcslen(src);
-  wchar_t *new = malloc((len+1)*sizeof(*new));
-  if (new == NULL) WERR(L"Out of memory.");
+  wchar_t *new = rmalloc((len+1)*sizeof(*new));
   wcscpy(new, src);
   return new;
 }

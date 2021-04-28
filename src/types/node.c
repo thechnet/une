@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #include "node.h"
@@ -37,7 +37,7 @@ const wchar_t *une_node_type_to_wcs(une_node_type type)
     // Conditional Operation
     case UNE_NT_COP: return L"COP";
     // Set, Get
-    case UNE_NT_IDX: return L"IDX";
+    case UNE_NT_IDX_GET: return L"IDX";
     case UNE_NT_SET: return L"SET";
     case UNE_NT_SET_IDX: return L"SET_IDX";
     case UNE_NT_GET: return L"GET";
@@ -68,8 +68,7 @@ leaving this vulnerability in here.
 */
 wchar_t *une_node_to_wcs(une_node *node)
 {
-  wchar_t *buffer = malloc(UNE_SIZE_BIG * sizeof(*buffer));
-  if (buffer == NULL) WERR(L"Out of memory.");
+  wchar_t *buffer = rmalloc(UNE_SIZE_BIG * sizeof(*buffer));
   if (node == NULL) {
     wcscpy(buffer, UNE_COLOR_HINT L"NULL" UNE_COLOR_NEUTRAL);
     return buffer;
@@ -165,7 +164,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_FDIV:
     case UNE_NT_MOD:
     case UNE_NT_POW:
-    case UNE_NT_IDX:
+    case UNE_NT_IDX_GET:
     case UNE_NT_EQU:
     case UNE_NT_NEQ:
     case UNE_NT_GTR:
@@ -424,7 +423,7 @@ void une_node_free(une_node *node, bool free_wcs)
     case UNE_NT_SET:
     case UNE_NT_CALL:
     case UNE_NT_WHILE:
-    case UNE_NT_IDX:
+    case UNE_NT_IDX_GET:
       une_node_free(node->content.branch.a, free_wcs);
       une_node_free(node->content.branch.b, free_wcs);
       #ifdef UNE_DEBUG_LOG_FREE
@@ -467,8 +466,7 @@ void une_node_free(une_node *node, bool free_wcs)
 #pragma region une_node_create
 une_node *une_node_create(une_node_type type)
 {
-  une_node *node = malloc(sizeof(*node));
-  if (node == NULL) WERR(L"Out of memory.");
+  une_node *node = rmalloc(sizeof(*node));
   node->type = type;
   node->pos = (une_position){0, 0};
   node->content.branch.a = NULL;
@@ -504,8 +502,7 @@ une_node *une_node_copy(une_node *src)
     case UNE_NT_STMTS: {
       une_node **list = (une_node**)src->content.value._vpp;
       size_t size = list[0]->content.value._int;
-      une_node **new_list = malloc((size+1)*sizeof(*new_list));
-      if(new_list == NULL) WERR(L"Out of memory.");
+      une_node **new_list = rmalloc((size+1)*sizeof(*new_list));
       for(size_t i=0; i<=size; i++) new_list[i] = une_node_copy(list[i]);
       dest->content.value._vpp = (void**)new_list;
       break; }

@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -36,7 +36,7 @@ une_result une_interpret_leq(une_node *node, une_context *context);
 une_result une_interpret_and(une_node *node, une_context *context);
 une_result une_interpret_or(une_node *node, une_context *context);
 une_result une_interpret_cop(une_node *node, une_context *context);
-une_result une_interpret_idx(une_node *node, une_context *context);
+une_result une_interpret_idx_get(une_node *node, une_context *context);
 une_result une_interpret_set(une_node *node, une_context *context);
 une_result une_interpret_set_idx(une_node *node, une_context *context);
 une_result une_interpret_get(une_node *node, une_context *context);

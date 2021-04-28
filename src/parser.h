@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_PARSER_H
@@ -11,6 +11,7 @@ Updated 2021-04-24
 #include "types/token.h"
 #include "types/node.h"
 #include <string.h>
+#include "tools.h"
 
 une_node *une_parse_block(une_token *tokens, size_t *token_index, une_error *error);
 une_node **une_parse_sequence(

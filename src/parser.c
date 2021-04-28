@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Updated 2021-04-25
+Updated 2021-04-28
 */
 
 #include "parser.h"
@@ -95,8 +95,7 @@ une_node **une_parse_sequence(
 )
 {
   size_t sequence_size = UNE_SIZE_MEDIUM; // FIXME:
-  une_node **sequence = malloc(sequence_size *sizeof(*sequence));
-  if (sequence == NULL) WERR(L"Out of memory.");
+  une_node **sequence = rmalloc(sequence_size *sizeof(*sequence));
   
   size_t pos_start = tokens[*token_index].pos.start;
 
@@ -113,8 +112,7 @@ une_node **une_parse_sequence(
 
     if (sequence_index >= sequence_size) {
       sequence_size *= 2;
-      une_node **_sequence = realloc(sequence, sequence_size *sizeof(_sequence));
-      if (_sequence == NULL) WERR(L"Out of memory.");
+      une_node **_sequence = rrealloc(sequence, sequence_size *sizeof(_sequence));
       sequence = _sequence;
       wprintf(L"Warning: Sequence doubled\n");
     }
@@ -311,13 +309,11 @@ une_node *une_parse_stmt(
         varset->pos.end = conditional_operation->pos.end;
         if (varset->type == UNE_NT_SET_IDX) {
           varset->content.branch.c = conditional_operation;
-        }
-        else {
+        } else {
           varset->content.branch.b = conditional_operation;
         }
         return varset;
-      }
-      else {
+      } else {
         une_node_free(varset, false);
         *token_index = token_index_before;
         /*
@@ -424,8 +420,7 @@ une_node *une_parse_if(
       #endif
     }
     ifstmt->content.branch.c = falsebody;
-  }
-  else if (tokens[*token_index].type == UNE_TT_ELSE) {
+  } else if (tokens[*token_index].type == UNE_TT_ELSE) {
     // else stmt
     (*token_index)++;
     une_node *falsebody = une_parse_stmt(tokens, token_index, error);
@@ -439,8 +434,7 @@ une_node *une_parse_if(
       #endif
     }
     ifstmt->content.branch.c = falsebody;
-  }
-  else {
+  } else {
     *token_index = _token_index;
   }
 
@@ -1036,7 +1030,7 @@ une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *err
   }
   
   while (tokens[*token_index].type == UNE_TT_LSQB) {
-    une_node *new_left = une_node_create(UNE_NT_IDX);
+    une_node *new_left = une_node_create(UNE_NT_IDX_GET);
     new_left->pos.start = left->pos.start;
     new_left->content.branch.a = left;
     (*token_index)++;
@@ -1283,8 +1277,7 @@ une_node *une_parse_return(une_token *tokens, size_t *token_index, une_error *er
     // DOC: NULL _here_ means an error.
     if (value == NULL) return value;
     returnnode->pos.end = value->pos.end;
-  }
-  else {
+  } else {
     // DOC: NULL _here_ means no return value was specified. This tells the interpreter
     // not to try to interpret a return value where there is none.
     value = NULL;

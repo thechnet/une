@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_NODE_H
@@ -39,7 +39,7 @@ typedef enum _une_node_type {
   // Conditional Operation
   UNE_NT_COP,
   // Set, Get
-  UNE_NT_IDX,
+  UNE_NT_IDX_GET,
   UNE_NT_SET,
   UNE_NT_SET_IDX,
   UNE_NT_GET,

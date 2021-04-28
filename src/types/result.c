@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #include "result.h"
@@ -26,6 +26,25 @@ const wchar_t *une_result_type_to_wcs(une_result_type result_type)
   }
 }
 #pragma endregion une_result_type_to_wcs
+
+#pragma region une_result_create
+une_result une_result_create(void)
+{
+  return (une_result){
+    .type = UNE_RT_VOID,
+    .value._wcs = NULL,
+  };
+}
+#pragma endregion une_result_create
+
+#pragma region une_result_list_create
+une_result *une_result_list_create(size_t items)
+{
+  une_result *list = rmalloc((items+1)*sizeof(*list));
+  list[0] = (une_result){.type = UNE_RT_SIZE, .value._int = items};
+  return list;
+}
+#pragma endregion une_result_list_create
 
 #pragma region une_result_is_true
 /* DOC:
@@ -53,14 +72,11 @@ une_int une_results_are_equal(une_result left, une_result right)
   // INT and FLT
   if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
     return left.value._int == right.value._int;
-  }
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    return (float)left.value._int == right.value._flt;
-  }
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    return left.value._flt == (float)right.value._int;
-  }
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
+  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
+    return (une_flt)left.value._int == right.value._flt;
+  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
+    return left.value._flt == (une_flt)right.value._int;
+  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
     return left.value._flt == right.value._flt;
   }
   // STR and STR
@@ -75,9 +91,8 @@ une_int une_results_are_equal(une_result left, une_result right)
     size_t right_size = right_list[0].value._int;
     if (left_size != right_size) {
       return 0;
-    }
-    else {
-      for (size_t i=1; i<=left_size; i++) {
+    } else {
+      UNE_FOR_NODE_LIST_ITEM(i, left_size) {
         if (!une_results_are_equal(left_list[i], right_list[i])) return 0;
       }
     }
@@ -95,13 +110,12 @@ Returns a text representation of a une_result.
 */
 wchar_t *une_result_to_wcs(une_result result)
 {
-  wchar_t *wcs = malloc(UNE_SIZE_MEDIUM * sizeof(*wcs));
-  if (wcs == NULL) WERR(L"Out of memory.");
+  wchar_t *wcs = rmalloc(UNE_SIZE_BIG * sizeof(*wcs));
   
-  size_t offset = swprintf(wcs, UNE_SIZE_MEDIUM, UNE_COLOR_NEUTRAL L"%ls",
+  size_t offset = swprintf(wcs, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"%ls",
                            une_result_type_to_wcs(result.type));
   if (result.type != UNE_RT_VOID ) {
-    offset += swprintf(wcs+offset, UNE_SIZE_MEDIUM,
+    offset += swprintf(wcs+offset, UNE_SIZE_BIG,
                      UNE_COLOR_HINT L": " UNE_COLOR_SUCCESS);
   }
 
@@ -109,15 +123,15 @@ wchar_t *une_result_to_wcs(une_result result)
     case UNE_RT_VOID: break;
 
     case UNE_RT_INT:
-      swprintf(wcs+offset, UNE_SIZE_MEDIUM, L"%lld", result.value._int);
+      swprintf(wcs+offset, UNE_SIZE_BIG, L"%lld", result.value._int);
       break;
     
     case UNE_RT_FLT:
-      swprintf(wcs+offset, UNE_SIZE_MEDIUM, L"%.3f", result.value._flt);
+      swprintf(wcs+offset, UNE_SIZE_BIG, L"%.3f", result.value._flt);
       break;
     
     case UNE_RT_STR:
-      swprintf(wcs+offset, UNE_SIZE_MEDIUM, UNE_COLOR_HINT L"\"" UNE_COLOR_SUCCESS L"%ls" UNE_COLOR_HINT L"\"", result.value._wcs);
+      swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_HINT L"\"" UNE_COLOR_SUCCESS L"%ls" UNE_COLOR_HINT L"\"", result.value._wcs);
       break;
     
     case UNE_RT_LIST: {
@@ -125,22 +139,22 @@ wchar_t *une_result_to_wcs(une_result result)
       if (list == NULL) WERR(L"Undefined list pointer");
       size_t list_size = list[0].value._int;
       if (list_size == 0) {
-        swprintf(wcs+offset, UNE_SIZE_MEDIUM, UNE_COLOR_NEUTRAL L"[]");
+        swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"[]");
         break;
       }
       wchar_t *return_as_wcs = une_result_to_wcs(list[1]);
-      offset += swprintf(wcs+offset, UNE_SIZE_MEDIUM,
+      offset += swprintf(wcs+offset, UNE_SIZE_BIG,
                          UNE_COLOR_NEUTRAL L"[%ls",
                          return_as_wcs);
       free(return_as_wcs);
       for (size_t i=2; i<=list_size; i++) {
         return_as_wcs = une_result_to_wcs(list[i]);
-        offset += swprintf(wcs+offset, UNE_SIZE_MEDIUM,
+        offset += swprintf(wcs+offset, UNE_SIZE_BIG,
                            UNE_COLOR_NEUTRAL L", " UNE_COLOR_SUCCESS L"%ls",
                            return_as_wcs);
         free(return_as_wcs);
       }
-      swprintf(wcs+offset, UNE_SIZE_MEDIUM, UNE_COLOR_NEUTRAL L"]");
+      swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"]");
       break; }
     
     default:
@@ -201,7 +215,7 @@ Duplicates a une_result object with all its contents.
 */
 une_result une_result_copy(une_result src)
 {
-  une_result dest;
+  une_result dest = une_result_create();
   dest.type = src.type;
   
   switch (src.type) {
@@ -228,8 +242,7 @@ une_result une_result_copy(une_result src)
     case UNE_RT_LIST: {
       une_result *list = (une_result*)src.value._vp;
       size_t list_size = list[0].value._int;
-      une_result *list_copy = malloc((list_size+1)*sizeof(*list_copy));
-      if (list_copy == NULL) WERR(L"Out of memory.");
+      une_result *list_copy = rmalloc((list_size+1)*sizeof(*list_copy));
       /* Here we start at 0 because we _do_ want to copy the UNE_RT_SIZE value. */
       for (size_t i=0; i<=list_size; i++) {
         list_copy[i] = une_result_copy(list[i]);
@@ -244,3 +257,89 @@ une_result une_result_copy(une_result src)
   return dest;
 }
 #pragma endregion une_result_copy
+
+#pragma region une_result_lists_add
+une_result une_result_lists_add(une_result left, une_result right)
+{
+  UNE_UNPACK_RESULT_LIST(left, left_list, left_size);
+  UNE_UNPACK_RESULT_LIST(right, right_list, right_size);
+  
+  une_result *new = une_result_list_create(left_size+right_size);
+
+  UNE_FOR_NODE_LIST_ITEM(i, left_size) {
+    new[i] = une_result_copy(left_list[i]);
+  }
+  UNE_FOR_NODE_LIST_ITEM(i, right_size) {
+    new[left_size+i] = une_result_copy(right_list[i]);
+  }
+
+  return (une_result){
+    .type = UNE_RT_LIST,
+    .value._vp = (void*)new
+  };
+}
+#pragma endregion une_result_lists_add
+
+#pragma region une_result_list_mul
+une_result une_result_list_mul(une_result list, une_int count)
+{
+  UNE_UNPACK_RESULT_LIST(list, list_p, list_size);
+
+  une_result *new = rmalloc((count*list_size+1)*sizeof(*new));
+
+  new[0] = (une_result){
+    .type = UNE_RT_SIZE,
+    .value._int = count*list_size
+  };
+
+  for (size_t i=0; i<count; i++) {
+    UNE_FOR_RESULT_LIST_ITEM(j, list_size) {
+      new[i*list_size+j] = une_result_copy(list_p[j]);
+    }
+  }
+
+  return (une_result){
+    .type = UNE_RT_LIST,
+    .value._vp = (void*)new
+  };
+}
+#pragma endregion une_result_list_mul
+
+#pragma region une_result_strs_add
+une_result une_result_strs_add(une_result left, une_result right)
+{
+  size_t left_size = wcslen(left.value._wcs);
+  size_t right_size = wcslen(right.value._wcs);
+
+  wchar_t *new = rmalloc((left_size+right_size+1)*sizeof(*new));
+
+  wmemcpy(new, left.value._wcs, left_size);
+  wmemcpy(new+left_size, right.value._wcs, right_size);
+  new[left_size+right_size] = L'\0';
+
+  return (une_result){
+    .type = UNE_RT_STR,
+    .value._wcs = new
+  };
+}
+#pragma endregion une_result_strs_add
+
+#pragma region une_result_str_mul
+une_result une_result_str_mul(une_result str, une_int count)
+{
+  size_t str_size = wcslen(str.value._wcs);
+
+  wchar_t *new = rmalloc((count*str_size+1)*sizeof(*new));
+
+  for (size_t i=0; i<count; i++) {
+    wmemcpy(new+i*str_size, str.value._wcs, str_size);
+  }
+
+  new[count*str_size] = L'\0';
+
+  return (une_result){
+    .type = UNE_RT_STR,
+    .value._wcs = new
+  };
+}
+#pragma endregion une_result_str_mul

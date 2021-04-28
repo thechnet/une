@@ -1,4 +1,4 @@
-<img src="res/banner.png" width=40%>
+<img src="res/out/banner.png" width=40%>
 
 ---
 

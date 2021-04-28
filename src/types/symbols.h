@@ -1,12 +1,13 @@
 /*
 symbols.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_SYMBOLS_H
 #define UNE_SYMBOLS_H
 
 #include "../primitive.h"
+#include "../tools.h"
 #include "result.h"
 #include "node.h"
 

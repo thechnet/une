@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_CONTEXT_H
@@ -33,5 +33,7 @@ typedef struct _une_context {
 
 void une_context_free(une_context *context);
 une_context *une_context_create(void);
+une_variable *une_variable_find_global(une_context *context, wchar_t *name);
+une_function *une_function_find_global(une_context *context, wchar_t *name);
 
 #endif /* !UNE_CONTEXT_H */

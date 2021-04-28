@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_RESULT_H
@@ -38,5 +38,11 @@ une_int une_results_are_equal(une_result left, une_result right);
 wchar_t *une_result_to_wcs(une_result result);
 void une_result_free(une_result result);
 une_result une_result_copy(une_result src);
+une_result une_result_create(void);
+une_result *une_result_list_create(size_t size);
+une_result une_result_lists_add(une_result left, une_result right);
+une_result une_result_list_mul(une_result list, une_int count);
+une_result une_result_strs_add(une_result left, une_result right);
+une_result une_result_str_mul(une_result str, une_int count);
 
 #endif /* !UNE_RESULT_H */

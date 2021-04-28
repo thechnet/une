@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #include "error.h"
@@ -8,8 +8,7 @@ Updated 2021-04-24
 #pragma region une_error_value_to_wcs
 wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
 {
-  wchar_t *wcs = malloc(UNE_SIZE_MEDIUM * sizeof(*wcs));
-  if (wcs == NULL) WERR(L"Out of memory.");
+  wchar_t *wcs = rmalloc(UNE_SIZE_MEDIUM * sizeof(*wcs));
   switch (type) {
     case UNE_ET_NO_ERROR:
       swprintf(wcs, UNE_SIZE_MEDIUM, L"No error defined.");

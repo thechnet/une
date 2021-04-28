@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #include "token.h"
@@ -125,8 +125,7 @@ leaving this vulnerability in here.
 */
 wchar_t *une_token_to_wcs(une_token token)
 {
-  wchar_t *str = malloc(UNE_SIZE_MEDIUM * sizeof(*str));
-  if (str == NULL) WERR(L"Out of memory.");
+  wchar_t *str = rmalloc(UNE_SIZE_MEDIUM * sizeof(*str));
   wcscpy(str, UNE_COLOR_TOKEN_TYPE);
   wcscat(str, une_token_type_to_wcs(token.type));
   wcscat(str, UNE_COLOR_NEUTRAL);

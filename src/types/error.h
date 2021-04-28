@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_ERROR_H
@@ -50,7 +50,7 @@ typedef struct _une_error {
   une_error_type type;
   une_position pos;
   une_value values[2]; /* If you change this number, don't forget to change it in
-                       une_error_free and UNE_ERROR_SET */
+                          une_error_free and UNE_ERROR_SET */
   char *__file__;  // Debugging
   size_t __line__; // ''
 } une_error;

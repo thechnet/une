@@ -1,12 +1,13 @@
 /*
 token.h - Une
-Updated 2021-04-24
+Updated 2021-04-28
 */
 
 #ifndef UNE_TOKEN_H
 #define UNE_TOKEN_H
 
 #include "../primitive.h"
+#include "../tools.h"
 
 #pragma region une_token_type
 typedef enum _une_token_type {

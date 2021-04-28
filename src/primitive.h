@@ -1,18 +1,31 @@
 /*
 primitive.h - Une
-Updated 2021-04-25
+Updated 2021-04-28
 */
 
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
 
-extern int uneerr;
-#define UNE_DEBUG_MALLOC_COUNTER
-// #define UNE_DEBUG_LOG_FREE
+#define UNE_DEBUG
 #define UNE_DO_READ
 #define UNE_DO_LEX
 #define UNE_DO_PARSE
 #define UNE_DO_INTERPRET
+
+#ifdef UNE_DEBUG
+  // #define UNE_DISPLAY_BAR
+  // #define UNE_DISPLAY_TOKENS
+  // #define UNE_DISPLAY_NODES
+  #define UNE_DISPLAY_RESULT
+  #define UNE_DISPLAY_MEMORY_REPORT
+
+  #define UNE_DEBUG_MALLOC_COUNTER
+
+  // #define UNE_DEBUG_LOG_INTERPRET
+  // #define UNE_DEBUG_LOG_FREE
+
+  extern int err;
+#endif
 
 #include <stdlib.h>
 #include <wchar.h>
@@ -74,13 +87,34 @@ typedef double une_flt;
     __FILE__, __LINE__, num\
   );\
 }
+#define LOGC(ch)\
+{\
+  wprintf(\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: '%c'\33[0m\n",\
+    __FILE__, __LINE__, ch\
+  );\
+}
 #define LOGS(str)\
 {\
   wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: '%ls'\33[0m\n",\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: \"%ls\"\33[0m\n",\
     __FILE__, __LINE__, str\
   );\
 }
+
+#define UNE_UNPACK_NODE_LIST(listnode, listname, listsize)\
+  une_node **listname = (une_node**)listnode->content.value._vpp;\
+  size_t listsize = listname[0]->content.value._int;
+
+#define UNE_FOR_NODE_LIST_ITEM(var, size)\
+  for (size_t var=1; var<=size; var++)
+
+#define UNE_UNPACK_RESULT_LIST(listresult, listname, listsize)\
+  une_result *listname = (une_result*)listresult.value._vp;\
+  size_t listsize = listname[0].value._int;
+
+#define UNE_FOR_RESULT_LIST_ITEM(var, size)\
+  for (size_t var=1; var<=size; var++)
 
 #pragma region une_position
 typedef struct _une_position {
