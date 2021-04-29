@@ -30,7 +30,8 @@ src="main.c "\
 "types/result.c "\
 "types/node.c "\
 "types/token.c "\
-"tools.c"
+"tools.c "\
+"builtin.c"
 
 >/dev/null pushd src
 $compiler $src -o ../une

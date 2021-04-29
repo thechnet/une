@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -101,20 +101,6 @@ typedef double une_flt;
     __FILE__, __LINE__, str\
   );\
 }
-
-#define UNE_UNPACK_NODE_LIST(listnode, listname, listsize)\
-  une_node **listname = (une_node**)listnode->content.value._vpp;\
-  size_t listsize = listname[0]->content.value._int;
-
-#define UNE_FOR_NODE_LIST_ITEM(var, size)\
-  for (size_t var=1; var<=size; var++)
-
-#define UNE_UNPACK_RESULT_LIST(listresult, listname, listsize)\
-  une_result *listname = (une_result*)listresult.value._vp;\
-  size_t listsize = listname[0].value._int;
-
-#define UNE_FOR_RESULT_LIST_ITEM(var, size)\
-  for (size_t var=1; var<=size; var++)
 
 #pragma region une_position
 typedef struct _une_position {

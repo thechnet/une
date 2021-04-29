@@ -1,6 +1,6 @@
 /*
 symbols.h - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #ifndef UNE_SYMBOLS_H
@@ -31,19 +31,5 @@ typedef struct _une_function {
 
 void une_variable_free(une_variable variable);
 void une_function_free(une_function function);
-une_variable *une_variable_find(une_variable *variables, size_t variables_count, wchar_t *name);
-une_function *une_function_find(une_function *functions, size_t functions_count, wchar_t *name);
-une_variable *une_variable_create(
-  une_variable **variables,
-  size_t *variables_count,
-  size_t *variables_size,
-  wchar_t *name
-);
-une_function *une_function_create(
-  une_function **functions,
-  size_t *functions_count,
-  size_t *functions_size,
-  wchar_t *name
-);
 
 #endif /* !UNE_SYMBOLS_H */

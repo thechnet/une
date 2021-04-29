@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #ifndef UNE_RESULT_H
@@ -22,6 +22,7 @@ typedef enum _une_result_type {
   UNE_RT_CONTINUE,
   UNE_RT_BREAK,
   UNE_RT_SIZE,
+  __UNE_RT_max__
 } une_result_type;
 #pragma endregion une_result_type
 
@@ -38,11 +39,18 @@ une_int une_results_are_equal(une_result left, une_result right);
 wchar_t *une_result_to_wcs(une_result result);
 void une_result_free(une_result result);
 une_result une_result_copy(une_result src);
-une_result une_result_create(void);
+une_result une_result_create(une_result_type type);
 une_result *une_result_list_create(size_t size);
 une_result une_result_lists_add(une_result left, une_result right);
 une_result une_result_list_mul(une_result list, une_int count);
 une_result une_result_strs_add(une_result left, une_result right);
 une_result une_result_str_mul(une_result str, une_int count);
+
+#define UNE_UNPACK_RESULT_LIST(listresult, listname, listsize)\
+  une_result *listname = (une_result*)listresult.value._vp;\
+  size_t listsize = listname[0].value._int;
+
+#define UNE_FOR_RESULT_LIST_ITEM(var, size)\
+  for (size_t var=1; var<=size; var++)
 
 #endif /* !UNE_RESULT_H */

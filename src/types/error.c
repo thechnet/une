@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #include "error.h"
@@ -99,6 +99,11 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
                une_result_type_to_wcs((une_result_type)values[0]._int));
       break;
     
+    case UNE_ET_SET_NOT_INDEXABLE:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot set index of %ls",
+               une_result_type_to_wcs((une_result_type)values[0]._int));
+      break;
+    
     case UNE_ET_NOT_INDEX_TYPE:
       swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot use %ls as index",
                une_result_type_to_wcs((une_result_type)values[0]._int));
@@ -152,13 +157,37 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
       swprintf(wcs, UNE_SIZE_MEDIUM, L"Function '%ls' already defined", values[0]._wcs);
       break;
 
-  case UNE_ET_CALL:
+    case UNE_ET_CALL:
       swprintf(wcs, UNE_SIZE_MEDIUM, L"Function '%ls' not defined", values[0]._wcs);
       break;
-  
-  case UNE_ET_CALL_ARGS:
+
+    case UNE_ET_CALL_ARGS:
       swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected %lld arguments, got %lld",
-               values[0]._int, values[1]._int);
+                 values[0]._int, values[1]._int);
+      break;
+
+    case UNE_ET_EXPECTED_RESULT_TYPE: {
+      int offset = swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected %ls",
+                            une_result_type_to_wcs((une_result_type)values[0]._int));
+      if (values[1]._wcs != NULL) {
+        swprintf(wcs+offset, UNE_SIZE_MEDIUM, L" or %ls",
+                 une_result_type_to_wcs((une_result_type)values[1]._int));
+      }
+      break; }
+
+    case UNE_ET_PRINT_VOID:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot print VOID");
+      break;
+    
+    case UNE_ET_CONVERSION:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot convert %ls to %ls",
+               une_result_type_to_wcs((une_result_type)values[0]._int),
+               une_result_type_to_wcs((une_result_type)values[1]._int));
+      break;
+    
+    case UNE_ET_GETLEN:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot get length of %ls",
+               une_result_type_to_wcs((une_result_type)values[0]._int));
       break;
 
     default:
@@ -231,9 +260,14 @@ void une_error_free(une_error error)
     case UNE_ET_NOT_INDEX_TYPE:
     case UNE_ET_INDEX_OUT_OF_RANGE:
     case UNE_ET_SET:
+    case UNE_ET_SET_NOT_INDEXABLE:
     case UNE_ET_UNREAL_NUMBER:
     case UNE_ET_SET_NO_ID:
     case UNE_ET_CALL_ARGS:
+    case UNE_ET_EXPECTED_RESULT_TYPE:
+    case UNE_ET_PRINT_VOID:
+    case UNE_ET_CONVERSION:
+    case UNE_ET_GETLEN:
       #ifdef UNE_DEBUG_LOG_FREE
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Error: %d\n", __FILE__, __FUNCTION__, __LINE__, error.type);
       #endif
@@ -284,6 +318,7 @@ une_error une_error_copy(une_error src)
     case UNE_ET_UNREAL_NUMBER:
     case UNE_ET_SET_NO_ID:
     case UNE_ET_CALL_ARGS:
+    case UNE_ET_GETLEN:
       dest.values[0]._int = src.values[0]._int;
       dest.values[1]._int = src.values[1]._int;
       break;

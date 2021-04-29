@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #include "node.h"
@@ -37,7 +37,7 @@ const wchar_t *une_node_type_to_wcs(une_node_type type)
     // Conditional Operation
     case UNE_NT_COP: return L"COP";
     // Set, Get
-    case UNE_NT_IDX_GET: return L"IDX";
+    case UNE_NT_GET_IDX: return L"IDX";
     case UNE_NT_SET: return L"SET";
     case UNE_NT_SET_IDX: return L"SET_IDX";
     case UNE_NT_GET: return L"GET";
@@ -164,7 +164,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_FDIV:
     case UNE_NT_MOD:
     case UNE_NT_POW:
-    case UNE_NT_IDX_GET:
+    case UNE_NT_GET_IDX:
     case UNE_NT_EQU:
     case UNE_NT_NEQ:
     case UNE_NT_GTR:
@@ -423,7 +423,7 @@ void une_node_free(une_node *node, bool free_wcs)
     case UNE_NT_SET:
     case UNE_NT_CALL:
     case UNE_NT_WHILE:
-    case UNE_NT_IDX_GET:
+    case UNE_NT_GET_IDX:
       une_node_free(node->content.branch.a, free_wcs);
       une_node_free(node->content.branch.b, free_wcs);
       #ifdef UNE_DEBUG_LOG_FREE

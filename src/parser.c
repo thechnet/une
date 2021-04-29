@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #include "parser.h"
@@ -1030,7 +1030,7 @@ une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *err
   }
   
   while (tokens[*token_index].type == UNE_TT_LSQB) {
-    une_node *new_left = une_node_create(UNE_NT_IDX_GET);
+    une_node *new_left = une_node_create(UNE_NT_GET_IDX);
     new_left->pos.start = left->pos.start;
     new_left->content.branch.a = left;
     (*token_index)++;
@@ -1270,9 +1270,11 @@ une_node *une_parse_return(une_token *tokens, size_t *token_index, une_error *er
 
   // value?
   une_node *value;
-  if (tokens[*token_index].type != UNE_TT_NEW
-  && tokens[*token_index].type != UNE_TT_EOF) // FIXME: ?
-  {
+  if ( // FIXME:
+    tokens[*token_index].type != UNE_TT_NEW &&
+    tokens[*token_index].type != UNE_TT_EOF &&
+    tokens[*token_index].type != UNE_TT_RBRC
+  ) {
     value = une_parse_conditional_operation(tokens, token_index, error);
     // DOC: NULL _here_ means an error.
     if (value == NULL) return value;

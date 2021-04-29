@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #ifndef UNE_NODE_H
@@ -39,7 +39,7 @@ typedef enum _une_node_type {
   // Conditional Operation
   UNE_NT_COP,
   // Set, Get
-  UNE_NT_IDX_GET,
+  UNE_NT_GET_IDX,
   UNE_NT_SET,
   UNE_NT_SET_IDX,
   UNE_NT_GET,
@@ -53,6 +53,7 @@ typedef enum _une_node_type {
   UNE_NT_BREAK,
   UNE_NT_CONTINUE,
   UNE_NT_STMTS,
+  __UNE_NT_max__
 } une_node_type;
 #pragma endregion une_node_type
 
@@ -77,5 +78,12 @@ wchar_t *une_node_to_wcs(une_node *node);
 void une_node_free(une_node *node, bool free_wcs);
 une_node *une_node_create(une_node_type type);
 une_node *une_node_copy(une_node *src);
+
+#define UNE_UNPACK_NODE_LIST(listnode, listname, listsize)\
+  une_node **listname = (une_node**)listnode->content.value._vpp;\
+  size_t listsize = listname[0]->content.value._int;
+
+#define UNE_FOR_NODE_LIST_ITEM(var, size)\
+  for (size_t var=1; var<=size; var++)
 
 #endif /* !UNE_NODE_H */

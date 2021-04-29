@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #include "result.h"
@@ -28,11 +28,11 @@ const wchar_t *une_result_type_to_wcs(une_result_type result_type)
 #pragma endregion une_result_type_to_wcs
 
 #pragma region une_result_create
-une_result une_result_create(void)
+une_result une_result_create(une_result_type type)
 {
   return (une_result){
-    .type = UNE_RT_VOID,
-    .value._wcs = NULL,
+    .type = type,
+    .value._vp = NULL,
   };
 }
 #pragma endregion une_result_create
@@ -215,7 +215,7 @@ Duplicates a une_result object with all its contents.
 */
 une_result une_result_copy(une_result src)
 {
-  une_result dest = une_result_create();
+  une_result dest = une_result_create(UNE_RT_VOID);
   dest.type = src.type;
   
   switch (src.type) {

@@ -47,7 +47,8 @@ types/error.c ^
 types/result.c ^
 types/node.c ^
 types/token.c ^
-tools.c
+tools.c ^
+builtin.c
 
 pushd src
 %compiler% %O% %flags% %src% -o ../une.exe

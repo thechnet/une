@@ -1,9 +1,7 @@
 .vscode*
 __pycache__
-notes
-old
+private
 tests
 desktop.ini
-c/test.txt
 *.exe
 *.exe.stackdump

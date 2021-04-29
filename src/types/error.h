@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Updated 2021-04-28
+Updated 2021-04-29
 */
 
 #ifndef UNE_ERROR_H
@@ -31,6 +31,7 @@ typedef enum _une_error_type {
   UNE_ET_NOT_INDEX_TYPE,
   UNE_ET_INDEX_OUT_OF_RANGE,
   UNE_ET_SET,
+  UNE_ET_SET_NOT_INDEXABLE,
   UNE_ET_GET,
   UNE_ET_FOR,
   UNE_ET_BREAK_OUTSIDE_LOOP,
@@ -42,6 +43,11 @@ typedef enum _une_error_type {
   UNE_ET_DEF,
   UNE_ET_CALL,
   UNE_ET_CALL_ARGS,
+  UNE_ET_EXPECTED_RESULT_TYPE,
+  UNE_ET_PRINT_VOID,
+  UNE_ET_CONVERSION,
+  UNE_ET_GETLEN,
+  __UNE_ET_max__
 } une_error_type;
 #pragma endregion une_error_type
 
