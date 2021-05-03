@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Updated 2021-04-29
+Updated 2021-05-01
 */
 
 #ifndef UNE_NODE_H
@@ -11,48 +11,61 @@ Updated 2021-04-29
 
 #pragma region une_node_type
 typedef enum _une_node_type {
-  // Data Types
+  __UNE_NT_none__,
+  
   UNE_NT_INT,
   UNE_NT_FLT,
   UNE_NT_STR,
   UNE_NT_ID,
-  UNE_NT_LIST, UNE_NT_SIZE,
-  // Arithmetic Operations
-  UNE_NT_POW,
-  UNE_NT_MUL,
-  UNE_NT_DIV,
-  UNE_NT_FDIV,
-  UNE_NT_MOD,
-  UNE_NT_ADD,
-  UNE_NT_SUB,
-  UNE_NT_NEG,
-  // Logical Operations
+  UNE_NT_LIST,
+  UNE_NT_SIZE,
+  UNE_NT_STMTS,
+
+  UNE_NT_COP,
+
   UNE_NT_NOT,
+  // Begin And/Or Nodes
+  UNE_NT_AND,
+  UNE_NT_OR,
+  // Begin And/Or Nodes
+
+  // Begin Condition Nodes
   UNE_NT_EQU,
   UNE_NT_NEQ,
   UNE_NT_GTR,
   UNE_NT_GEQ,
   UNE_NT_LSS,
   UNE_NT_LEQ,
-  UNE_NT_AND,
-  UNE_NT_OR,
-  // Conditional Operation
-  UNE_NT_COP,
-  // Set, Get
-  UNE_NT_GET_IDX,
+  // End Condition Nodes
+
+  // Begin Add/Sub Nodes
+  UNE_NT_ADD,
+  UNE_NT_SUB,
+  // End Add/Sub Nodes
+
+  // Begin Term Nodes
+  UNE_NT_MUL,
+  UNE_NT_DIV,
+  UNE_NT_FDIV,
+  UNE_NT_MOD,
+  // End Term Nodes
+
+  UNE_NT_POW,
+  UNE_NT_NEG,
+
   UNE_NT_SET,
   UNE_NT_SET_IDX,
   UNE_NT_GET,
+  UNE_NT_GET_IDX,
   UNE_NT_DEF,
   UNE_NT_CALL,
-  // Control Flow
   UNE_NT_FOR,
   UNE_NT_WHILE,
   UNE_NT_IF,
-  UNE_NT_RETURN,
-  UNE_NT_BREAK,
   UNE_NT_CONTINUE,
-  UNE_NT_STMTS,
+  UNE_NT_BREAK,
+  UNE_NT_RETURN,
+
   __UNE_NT_max__
 } une_node_type;
 #pragma endregion une_node_type

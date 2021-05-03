@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Updated 2021-04-28
+Updated 2021-05-01
 */
 
 #include "lexer.h"
@@ -128,6 +128,7 @@ int i=-1;
             case L'n':
               buffer[buffer_index++] = L'\n';
               continue;
+            case L'\n': continue;
             default:
               *error = UNE_ERROR_SET(UNE_ET_CANT_ESCAPE_CHAR, ((une_position){idx, idx+1}));
               free(buffer);

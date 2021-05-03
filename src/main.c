@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Updated 2021-04-28
+Updated 2021-05-03
 */
 
 #include "une.h"
@@ -53,13 +53,12 @@ int main(int argc, char *argv[])
   #endif
 
   #ifdef UNE_DO_PARSE
-    context->ast = une_node_create(UNE_NT_STMTS);
-    context->ast->pos.start = context->tokens[context->token_index].pos.start;
-    une_node **sequence = une_parse_sequence(
-      context->tokens, &context->token_index, &context->error,
-      &une_parse_stmt, UNE_TT_NEW, UNE_TT_EOF
+    context->ast = une_parse(
+      context->tokens,
+      &context->token_index,
+      &context->error
     );
-    if (sequence == NULL) {
+    if (context->ast == NULL) {
       #ifdef UNE_DEBUG_LOG_FREE
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" \n", __FILE__, __FUNCTION__, __LINE__);
       #endif
@@ -68,8 +67,6 @@ int main(int argc, char *argv[])
       une_node_free(context->ast, false);
       return 1;
     }
-    context->ast->pos.end = context->tokens[context->token_index].pos.end;
-    context->ast->content.value._vpp = (void**)sequence;
     #ifdef UNE_DISPLAY_NODES
       wchar_t *node_as_wcs = une_node_to_wcs(context->ast);
       wprintf(node_as_wcs);

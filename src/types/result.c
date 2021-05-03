@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Updated 2021-04-29
+Updated 2021-05-03
 */
 
 #include "result.h"
@@ -158,7 +158,7 @@ wchar_t *une_result_to_wcs(une_result result)
       break; }
     
     default:
-      WERR(L"une_result_to_wcs: Illegal");
+      WERR(L"une_result_to_wcs: Illegal (%d)", result.type);
   }
   return wcs;
 }

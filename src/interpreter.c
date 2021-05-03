@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Updated 2021-04-29
+Updated 2021-05-01
 */
 
 #include "interpreter.h"
@@ -33,7 +33,7 @@ une_result une_interpret(une_node *node, une_context *context)
     case UNE_NT_AND:     return une_interpret_and     (node, context);
     case UNE_NT_OR:      return une_interpret_or      (node, context);
     case UNE_NT_COP:     return une_interpret_cop     (node, context);
-    case UNE_NT_GET_IDX:     return une_interpret_get_idx     (node, context);
+    case UNE_NT_GET_IDX: return une_interpret_get_idx (node, context);
     case UNE_NT_SET:     return une_interpret_set     (node, context);
     case UNE_NT_SET_IDX: return une_interpret_set_idx (node, context);
     case UNE_NT_GET:     return une_interpret_get     (node, context);
@@ -43,15 +43,8 @@ une_result une_interpret(une_node *node, une_context *context)
     case UNE_NT_DEF:     return une_interpret_def     (node, context);
     case UNE_NT_CALL:    return une_interpret_call    (node, context);
     
-    case UNE_NT_BREAK: {
-      une_result result = une_result_create(UNE_RT_VOID);
-      result.type = UNE_RT_BREAK;
-      return result; }
-    
-    case UNE_NT_CONTINUE: {
-      une_result result = une_result_create(UNE_RT_VOID);
-      result.type = UNE_RT_CONTINUE;
-      return result; }
+    case UNE_NT_BREAK:    return une_result_create(UNE_RT_BREAK);
+    case UNE_NT_CONTINUE: return une_result_create(UNE_RT_CONTINUE);
     
     case UNE_NT_RETURN:
       context->should_return = true;
@@ -1096,9 +1089,10 @@ static une_result une_interpret_if(une_node *node, une_context *context)
     result = une_interpret(node->content.branch.c, context);
   }
 
-  if (context->should_return) return result;
-  une_result_free(result);
-  return une_result_create(UNE_RT_VOID);
+  // if (context->should_return) return result;
+  // une_result_free(result);
+  // return une_result_create(UNE_RT_VOID);
+  return result;
 }
 #pragma endregion une_interpret_if
 
