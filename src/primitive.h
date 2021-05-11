@@ -1,12 +1,11 @@
 /*
 primitive.h - Une
-Updated 2021-04-29
+Updated 2021-05-10
 */
 
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
 
-#define UNE_DEBUG
 #define UNE_DO_READ
 #define UNE_DO_LEX
 #define UNE_DO_PARSE
@@ -22,6 +21,7 @@ Updated 2021-04-29
   #define UNE_DEBUG_MALLOC_COUNTER
 
   // #define UNE_DEBUG_LOG_INTERPRET
+  // #define UNE_DEBUG_LOG_PARSE
   // #define UNE_DEBUG_LOG_FREE
 
   extern int err;
@@ -42,7 +42,7 @@ typedef double une_flt;
 #endif
 
 // malloc/free Counter for Debugging
-#ifdef UNE_DEBUG_MALLOC_COUNTER
+#if defined(UNE_DEBUG) && defined(UNE_DEBUG_MALLOC_COUNTER)
   extern int malloc_counter;
   #define malloc(size) malloc((size)); malloc_counter++;
   #define free(memory) { free((memory)); malloc_counter--; }
@@ -73,6 +73,7 @@ typedef double une_flt;
   );\
   exit(1);\
 }
+#ifdef UNE_DEBUG
 #define LOG(msg, ...)\
 {\
   wprintf(\
@@ -83,24 +84,25 @@ typedef double une_flt;
 #define LOGD(num)\
 {\
   wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: %lld\33[0m\n",\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%04d: %lld\33[0m\n",\
     __FILE__, __LINE__, num\
   );\
 }
 #define LOGC(ch)\
 {\
   wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: '%c'\33[0m\n",\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%04d: '%c'\33[0m\n",\
     __FILE__, __LINE__, ch\
   );\
 }
 #define LOGS(str)\
 {\
   wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: \"%ls\"\33[0m\n",\
+    UNE_COLOR_NEUTRAL L"\33[7m%hs:%04d: \"%ls\"\33[0m\n",\
     __FILE__, __LINE__, str\
   );\
 }
+#endif /* UNE_DEBUG */
 
 #pragma region une_position
 typedef struct _une_position {

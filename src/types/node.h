@@ -86,8 +86,11 @@ typedef struct _une_node {
 } une_node;
 #pragma endregion une_node
 
+#ifdef UNE_DEBUG
 const wchar_t *une_node_type_to_wcs(une_node_type type);
 wchar_t *une_node_to_wcs(une_node *node);
+#endif /* UNE_DEBUG */
+
 void une_node_free(une_node *node, bool free_wcs);
 une_node *une_node_create(une_node_type type);
 une_node *une_node_copy(une_node *src);

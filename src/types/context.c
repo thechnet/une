@@ -1,50 +1,66 @@
 /*
 context.c - Une
-Updated 2021-04-29
+Updated 2021-05-10
 */
 
 #include "context.h"
 
 #pragma region une_context_free
 // FIXME: Complete?
-void une_context_free(une_context *context)
+void une_context_free(une_context *context, bool is_function_context)
 {
   // 1)
-  if (context->name != NULL) free(context->name);
-  #ifdef UNE_DO_READ
-    if (context->text != NULL) free(context->text);
+  if (context->name != NULL) {
+    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
+      wprintf(UNE_COLOR_HINT L"%hs:%hs:%d: " UNE_COLOR_NEUTRAL L"name\n", __FILE__, __FUNCTION__, __LINE__);
+    #endif
+    free(context->name);
+  }
+  
+  #if defined(UNE_DO_READ)
+    if (context->text != NULL) {
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
+        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d: " UNE_COLOR_NEUTRAL L"text\n", __FILE__, __FUNCTION__, __LINE__);
+      #endif
+      free(context->text);
+    }
   #endif
 
-  #ifdef UNE_DO_INTERPRET
-    // 2)
-    for (size_t i=0; i<context->variables_count; i++) {
-      une_variable_free(context->variables[i]);
+  #if defined(UNE_DO_INTERPRET)
+    if (context->ast != NULL || is_function_context) {
+      // 2)
+      for (size_t i=0; i<context->variables_count; i++) {
+        une_variable_free(context->variables[i]);
+      }
+      free(context->variables);
+      // 3)
+      for (size_t i=0; i<context->functions_count; i++) {
+        une_function_free(context->functions[i]);
+      }
+      free(context->functions);
     }
-    free(context->variables);
-    // 3)
-    for (size_t i=0; i<context->functions_count; i++) {
-      une_function_free(context->functions[i]);
-    }
-    free(context->functions);
   #endif
 
-  // 4)
-  #ifdef UNE_DO_PARSE
-    une_node_free(context->ast, false);
-  #endif
-  // 5)
-  #ifdef UNE_DO_LEX
-    une_tokens_free(context->tokens);
-  #endif
+  if (context->tokens != NULL) {
+    // 4)
+    #if defined(UNE_DO_PARSE)
+      une_node_free(context->ast, false);
+    #endif
+    // 5)
+    #if defined(UNE_DO_LEX)
+      une_tokens_free(context->tokens);
+    #endif
+  }
+  
   // 6)
   // It's possible for une_error to contain pointers to allocated memory
   // that's used to provide details for an error message.
   // An example of this is the UNE_ET_GET (see une_interpret_get).
-  
   une_error_free(context->error);
   
   free(context);
-  #ifdef UNE_DEBUG_LOG_FREE
+  
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
     wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Context\n", __FILE__, __FUNCTION__, __LINE__);
   #endif
 }

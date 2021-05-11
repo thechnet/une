@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Updated 2021-04-28
+Updated 2021-05-10
 */
 
 #include "token.h"
@@ -116,6 +116,7 @@ const wchar_t *une_token_type_to_wcs(une_token_type type)
 #pragma endregion une_token_type_to_wcs
 
 #pragma region une_token_to_wcs
+#ifdef UNE_DEBUG
 /*
 This function is not dynamic and will cause a buffer overflow
 if the returned array is longer than UNE_SIZE_MEDIUM. This could
@@ -160,9 +161,11 @@ wchar_t *une_token_to_wcs(une_token token)
   }
   return str;
 }
+#endif /* UNE_DEBUG */
 #pragma endregion une_token_to_wcs
 
 #pragma region une_tokens_display
+#ifdef UNE_DEBUG
 void une_tokens_display(une_token *tokens)
 {
   size_t i = 0;
@@ -176,7 +179,70 @@ void une_tokens_display(une_token *tokens)
   }
   wprintf(L"\n");
 }
+#endif /* UNE_DEBUG */
 #pragma endregion une_tokens_display
+
+#pragma region une_token_free
+void une_token_free(une_token token)
+{
+  switch (token.type) {
+    case UNE_TT_ID:
+    case UNE_TT_STR:
+      free(token.value._wcs);
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
+        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Token: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_token_type_to_wcs(token.type));
+      #endif
+      break;
+    
+    case UNE_TT_INT:
+    case UNE_TT_FLT:
+    case UNE_TT_LPAR:
+    case UNE_TT_RPAR:
+    case UNE_TT_LBRC:
+    case UNE_TT_RBRC:
+    case UNE_TT_LSQB:
+    case UNE_TT_RSQB:
+    case UNE_TT_SEP:
+    case UNE_TT_NEW:
+    case UNE_TT_EOF:
+    case UNE_TT_SET:
+    case UNE_TT_ADD:
+    case UNE_TT_SUB:
+    case UNE_TT_MUL:
+    case UNE_TT_DIV:
+    case UNE_TT_FDIV:
+    case UNE_TT_MOD:
+    case UNE_TT_POW:
+    case UNE_TT_NOT:
+    case UNE_TT_AND:
+    case UNE_TT_OR:
+    case UNE_TT_EQU:
+    case UNE_TT_NEQ:
+    case UNE_TT_GTR:
+    case UNE_TT_GEQ:
+    case UNE_TT_LSS:
+    case UNE_TT_LEQ:
+    case UNE_TT_IF:
+    case UNE_TT_ELIF:
+    case UNE_TT_ELSE:
+    case UNE_TT_FOR:
+    case UNE_TT_FROM:
+    case UNE_TT_TILL:
+    case UNE_TT_WHILE:
+    case UNE_TT_DEF:
+    case UNE_TT_CONTINUE:
+    case UNE_TT_BREAK:
+    case UNE_TT_RETURN:
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
+        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Token: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_token_type_to_wcs(token.type));
+      #endif
+      break;
+    
+    default:
+      WERR(L"Unhandled token type in une_token_free()!\n");
+  }
+}
+#pragma endregion une_token_free
 
 #pragma region une_tokens_free
 void une_tokens_free(une_token *tokens)
@@ -184,62 +250,7 @@ void une_tokens_free(une_token *tokens)
   if (tokens == NULL) return;
   size_t i = 0;
   while (true) {
-    switch (tokens[i].type) {
-      case UNE_TT_ID:
-      case UNE_TT_STR:
-        free(tokens[i].value._wcs);
-        #ifdef UNE_DEBUG_LOG_FREE
-          wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Token: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_token_type_to_wcs(tokens[i].type));
-        #endif
-        break;
-      
-      case UNE_TT_INT:
-      case UNE_TT_FLT:
-      case UNE_TT_LPAR:
-      case UNE_TT_RPAR:
-      case UNE_TT_LBRC:
-      case UNE_TT_RBRC:
-      case UNE_TT_LSQB:
-      case UNE_TT_RSQB:
-      case UNE_TT_SEP:
-      case UNE_TT_NEW:
-      case UNE_TT_EOF:
-      case UNE_TT_SET:
-      case UNE_TT_ADD:
-      case UNE_TT_SUB:
-      case UNE_TT_MUL:
-      case UNE_TT_DIV:
-      case UNE_TT_FDIV:
-      case UNE_TT_MOD:
-      case UNE_TT_POW:
-      case UNE_TT_NOT:
-      case UNE_TT_AND:
-      case UNE_TT_OR:
-      case UNE_TT_EQU:
-      case UNE_TT_NEQ:
-      case UNE_TT_GTR:
-      case UNE_TT_GEQ:
-      case UNE_TT_LSS:
-      case UNE_TT_LEQ:
-      case UNE_TT_IF:
-      case UNE_TT_ELIF:
-      case UNE_TT_ELSE:
-      case UNE_TT_FOR:
-      case UNE_TT_FROM:
-      case UNE_TT_TILL:
-      case UNE_TT_WHILE:
-      case UNE_TT_DEF:
-      case UNE_TT_CONTINUE:
-      case UNE_TT_BREAK:
-      case UNE_TT_RETURN:
-        #ifdef UNE_DEBUG_LOG_FREE
-          wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Token: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_token_type_to_wcs(tokens[i].type));
-        #endif
-        break;
-      
-      default:
-        WERR(L"Unhandled token type in une_tokens_free()!\n");
-    }
+    une_token_free(tokens[i]);
     if (tokens[i].type == UNE_TT_EOF) break;
     i++;
   }

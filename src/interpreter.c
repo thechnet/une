@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Updated 2021-05-01
+Updated 2021-05-10
 */
 
 #include "interpreter.h"
@@ -8,8 +8,8 @@ Updated 2021-05-01
 #pragma region une_interpret
 une_result une_interpret(une_node *node, une_context *context)
 {
-  #ifdef UNE_DEBUG_LOG_INTERPRET
-    LOGS(une_node_type_to_wcs(node->type));
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
+    LOG(L"interpret:%ls", une_node_type_to_wcs(node->type));
   #endif
   
   switch (node->type) {
@@ -1159,7 +1159,7 @@ static une_result une_interpret_call_def(une_function *fn, une_result *args, une
 
 // Return to parent context.
   _context = context->parent;
-  une_context_free(context);
+  une_context_free(context, true);
   context = _context;
   return result;
 }

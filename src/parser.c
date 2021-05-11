@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Updated 2021-05-03
+Updated 2021-05-10
 */
 
 #include "parser.h"
@@ -8,6 +8,10 @@ Updated 2021-05-03
 #pragma region une_parse
 une_node *une_parse(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:parse [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   return une_parse_sequence(
     tokens, token_index, error,
     UNE_NT_STMTS,
@@ -25,6 +29,10 @@ static une_node *une_parse_sequence(
   une_node* (*parser)(une_token*, size_t*, une_error*)
 )
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:sequence [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   // [Begin Sequence]
   if (tt_begin != __UNE_TT_none__) {
     if (tokens[*token_index].type != tt_begin) {
@@ -61,7 +69,7 @@ static une_node *une_parse_sequence(
     if (tokens[*token_index].type == UNE_TT_EOF) {
       /* This can happen if a block, list, list of parameters, or list of
       arguments is opened at the end of the file without being closed. */
-      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i], false);
+      for (size_t i=1; i<sequence_index; i++) une_node_free(sequence[i], false);
       free(sequence);
       *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, tokens[*token_index].pos,
                               _int=(int)UNE_TT_EOF, _int=0);
@@ -71,7 +79,7 @@ static une_node *une_parse_sequence(
     // PARSE ITEM
     sequence[sequence_index] = (*parser)(tokens, token_index, error);
     if (sequence[sequence_index] == NULL) {
-      for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i], false);
+      for (size_t i=1; i<sequence_index; i++) une_node_free(sequence[i], false);
       free(sequence);
       return NULL;
     }
@@ -83,7 +91,7 @@ static une_node *une_parse_sequence(
       tokens[*token_index].type == tt_end_of_item ||
       tokens[*token_index].type == UNE_TT_NEW
     ) continue;
-    for (size_t i=0; i<sequence_index; i++) une_node_free(sequence[i], false);
+    for (size_t i=1; i<sequence_index; i++) une_node_free(sequence[i], false);
     free(sequence);
     *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
                             _int=(int)tt_end_of_item, _int=(int)tt_end);
@@ -105,7 +113,6 @@ static une_node *une_parse_sequence(
   /* We don't skip EOF because it may still be needed by other functions up
   the call chain. */
   if (tt_end != UNE_TT_EOF) (*token_index)++;
-  
   return node;
 }
 #pragma endregion une_parse_sequence
@@ -118,6 +125,10 @@ static une_node *une_parse_stmt(
   /*bool is_loop_body*/
 )
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:stmt [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   if (tokens[*token_index].type == UNE_TT_NEW) (*token_index)++;
   
   switch (tokens[*token_index].type) {
@@ -233,6 +244,10 @@ static une_node *une_parse_stmt(
 #pragma region une_parse_if
 static une_node *une_parse_if(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:if [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   size_t pos_start = tokens[*token_index].pos.start;
   
   // [If || Elif]
@@ -280,8 +295,16 @@ static une_node *une_parse_if(une_token *tokens, size_t *token_index, une_error 
     return ifstmt;
   }
 
+  // FIXME: ↑ ↓ Is there a smarter way to do this?
+  
   // [Elif Body || Else Body]
-  une_node *falsebody = une_parse_if(tokens, token_index, error);
+  une_node *falsebody;
+  if (tokens[*token_index].type == UNE_TT_ELIF) {
+    falsebody = une_parse_if(tokens, token_index, error);
+  } else {
+    (*token_index)++;
+    falsebody = une_parse_stmt(tokens, token_index, error);
+  }
   if (falsebody == NULL) {
     une_node_free(ifstmt, false);
     return NULL;
@@ -294,6 +317,10 @@ static une_node *une_parse_if(une_token *tokens, size_t *token_index, une_error 
 
 #pragma region une_parse_for
 static une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error *error) {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:for [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   size_t pos_start = tokens[*token_index].pos.start;
   
   // [For]
@@ -361,6 +388,10 @@ static une_node *une_parse_for(une_token *tokens, size_t *token_index, une_error
 
 #pragma region une_parse_while
 static une_node *une_parse_while(une_token *tokens, size_t *token_index, une_error *error) {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:while [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   size_t pos_start = tokens[*token_index].pos.start;
   
   // [While]
@@ -391,6 +422,10 @@ static une_node *une_parse_while(une_token *tokens, size_t *token_index, une_err
 #pragma region une_parse_def
 static une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:def [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   // [Def]
   size_t pos_start = tokens[*token_index].pos.start;
   (*token_index)++;
@@ -435,6 +470,10 @@ static une_node *une_parse_def(une_token *tokens, size_t *token_index, une_error
 #pragma region une_parse_expression
 static une_node *une_parse_expression(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:expression [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   // [Expression]
   une_node *exp_true = une_parse_and_or(tokens, token_index, error);
   if (exp_true == NULL) return NULL;
@@ -483,6 +522,10 @@ static une_node *une_parse_expression(une_token *tokens, size_t *token_index, un
 #pragma region une_parse_and_or
 static une_node *une_parse_and_or(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:and_or [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   return une_parse_binary_operation(
     tokens,
     token_index,
@@ -500,7 +543,14 @@ static une_node *une_parse_and_or(une_token *tokens, size_t *token_index, une_er
 #pragma region une_parse_condition
 static une_node *une_parse_condition(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:condition [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   if (tokens[*token_index].type == UNE_TT_NOT) {
+    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+      LOG(L"parse:condition:not [%ls]", une_token_to_wcs(tokens[*token_index]));
+    #endif
     return une_parse_unary_operation(
       tokens, token_index, error,
       UNE_NT_NOT,
@@ -525,6 +575,10 @@ static une_node *une_parse_condition(une_token *tokens, size_t *token_index, une
 #pragma region une_parse_add_sub
 static une_node *une_parse_add_sub(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:add_sub [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   return une_parse_binary_operation(
     tokens,
     token_index,
@@ -542,6 +596,10 @@ static une_node *une_parse_add_sub(une_token *tokens, size_t *token_index, une_e
 #pragma region une_parse_term
 static une_node *une_parse_term(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:term [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   return une_parse_binary_operation(
     tokens,
     token_index,
@@ -559,6 +617,10 @@ static une_node *une_parse_term(une_token *tokens, size_t *token_index, une_erro
 #pragma region une_parse_power
 static une_node *une_parse_power(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:power [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   return une_parse_binary_operation(
     tokens,
     token_index,
@@ -577,6 +639,10 @@ static une_node *une_parse_power(une_token *tokens, size_t *token_index, une_err
 #pragma region une_parse_index
 static une_node *une_parse_index(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:index [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   une_node *left = une_parse_atom(tokens, token_index, error);
   if (left == NULL) return NULL;
   
@@ -610,18 +676,29 @@ static une_node *une_parse_index(une_token *tokens, size_t *token_index, une_err
 #pragma region une_parse_atom
 static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:atom [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   switch (tokens[*token_index].type) {
     
     #pragma region Negate
-    case UNE_TT_SUB: return une_parse_unary_operation(
-      tokens, token_index, error,
-      UNE_NT_NEG,
-      &une_parse_atom
-    );
+    case UNE_TT_SUB:
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:negate [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
+      return une_parse_unary_operation(
+        tokens, token_index, error,
+        UNE_NT_NEG,
+        &une_parse_atom
+      );
     #pragma endregion Negate
 
     #pragma region Int
     case UNE_TT_INT: {
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:int [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
       une_node *num = une_node_create(UNE_NT_INT);
       num->pos = tokens[*token_index].pos;
       num->content.value._int = tokens[*token_index].value._int;
@@ -632,6 +709,9 @@ static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_erro
     
     #pragma region Flt
     case UNE_TT_FLT: {
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:flt [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
       une_node *num = une_node_create(UNE_NT_FLT);
       num->pos = tokens[*token_index].pos;
       num->content.value._flt = tokens[*token_index].value._flt;
@@ -642,6 +722,9 @@ static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_erro
     
     #pragma region Str
     case UNE_TT_STR: {
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:str [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
       une_node *str = une_node_create(UNE_NT_STR);
       str->pos = tokens[*token_index].pos;
       /* DOC: Memory Management: This shows that nodes reference tokens' WCS
@@ -654,12 +737,18 @@ static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_erro
     
     #pragma region Get/Call
     case UNE_TT_ID: {
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:get/call [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
       une_node *id = une_node_create(UNE_NT_ID);
       id->pos = tokens[*token_index].pos;
       id->content.value._wcs = tokens[*token_index].value._wcs;
       (*token_index)++;
 
       if (tokens[*token_index].type != UNE_TT_LPAR) {
+        #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+          LOG(L"parse:atom:get/call:get [%ls]", une_token_to_wcs(tokens[*token_index]));
+        #endif
         une_node *get = une_node_create(UNE_NT_GET);
         get->pos = id->pos;
         get->content.branch.a = id;
@@ -667,6 +756,9 @@ static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_erro
       }
 
       // Function Call.
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:get/call:call [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
       une_node *args = une_parse_sequence(
         tokens, token_index, error,
         UNE_NT_LIST,
@@ -690,7 +782,11 @@ static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_erro
     #pragma endregion Get/Call
 
     #pragma region List
-    case UNE_TT_LSQB: return une_parse_sequence(
+    case UNE_TT_LSQB:
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:list [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
+      return une_parse_sequence(
         tokens, token_index, error,
         UNE_NT_LIST,
         UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB,
@@ -700,6 +796,9 @@ static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_erro
     
     #pragma region Expression
     case UNE_TT_LPAR: {
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+        LOG(L"parse:atom:expression [%ls]", une_token_to_wcs(tokens[*token_index]));
+      #endif
       (*token_index)++;
       une_node *expression = une_parse_expression(tokens, token_index, error);
       if (expression == NULL) return NULL;
@@ -726,6 +825,10 @@ static une_node *une_parse_atom(une_token *tokens, size_t *token_index, une_erro
 #pragma region une_parse_id
 static une_node *une_parse_id(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:id [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   if (tokens[*token_index].type != UNE_TT_ID) {
     *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, tokens[*token_index].pos,
                             _int=UNE_TT_ID, _int=0);
@@ -742,6 +845,10 @@ static une_node *une_parse_id(une_token *tokens, size_t *token_index, une_error 
 #pragma region une_parse_return
 static une_node *une_parse_return(une_token *tokens, size_t *token_index, une_error *error)
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:return [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   une_position pos = tokens[*token_index].pos; /* If the parser finds a return
                                                   value after this, pos.end is
                                                   changed again further down. */
@@ -781,6 +888,10 @@ static une_node *une_parse_binary_operation(
   une_node* (*parse_right)(une_token*, size_t*, une_error*)
 )
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:binary_operation [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   une_node *left = (*parse_left)(tokens, token_index, error);
   if (left == NULL) return NULL;
 
@@ -794,7 +905,10 @@ static une_node *une_parse_binary_operation(
     (*token_index)++;
 
     une_node *right = (*parse_right)(tokens, token_index, error);
-    if (right == NULL) return NULL;
+    if (right == NULL) {
+      une_node_free(left, false);
+      return NULL;
+    }
 
     une_node *new_left = une_node_create(type);
     new_left->pos = (une_position){
@@ -819,6 +933,10 @@ static une_node *une_parse_unary_operation(
   une_node* (*parse)(une_token*, size_t*, une_error*)
 )
 {
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+    LOG(L"parse:unary_operation [%ls]", une_token_to_wcs(tokens[*token_index]));
+  #endif
+  
   size_t pos_start = tokens[*token_index].pos.start;
   
   (*token_index)++;

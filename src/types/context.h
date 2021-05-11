@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Updated 2021-04-29
+Updated 2021-05-10
 */
 
 #ifndef UNE_CONTEXT_H
@@ -31,7 +31,11 @@ typedef struct _une_context {
 } une_context;
 #pragma endregion une_context
 
-void une_context_free(une_context *context);
+void une_context_free(
+  une_context *context,
+  bool is_function_context /* FIXME: HORRENDOUS solution, this will be tackled
+                              with an overworked data structure. */
+);
 une_context *une_context_create(void);
 
 une_variable *une_variable_create(

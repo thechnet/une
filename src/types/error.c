@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-04-29
+Updated 2021-05-10
 */
 
 #include "error.h"
@@ -8,7 +8,7 @@ Updated 2021-04-29
 #pragma region une_error_value_to_wcs
 wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
 {
-  wchar_t *wcs = rmalloc(UNE_SIZE_MEDIUM * sizeof(*wcs));
+  wchar_t *wcs = rmalloc(UNE_SIZE_MEDIUM*sizeof(*wcs));
   switch (type) {
     case UNE_ET_NO_ERROR:
       swprintf(wcs, UNE_SIZE_MEDIUM, L"No error defined.");
@@ -268,7 +268,8 @@ void une_error_free(une_error error)
     case UNE_ET_PRINT_VOID:
     case UNE_ET_CONVERSION:
     case UNE_ET_GETLEN:
-      #ifdef UNE_DEBUG_LOG_FREE
+    case UNE_ET_UNTERMINATED_STRING:
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Error: %d\n", __FILE__, __FUNCTION__, __LINE__, error.type);
       #endif
       break;
@@ -276,7 +277,7 @@ void une_error_free(une_error error)
     case UNE_ET_GET:
     case UNE_ET_CALL:
       free(error.values[0]._wcs);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Error: %d\n", __FILE__, __FUNCTION__, __LINE__, error.type);
       #endif
       break;

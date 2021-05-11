@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Updated 2021-05-01
+Updated 2021-05-10
 */
 
 #ifndef UNE_TOKEN_H
@@ -82,9 +82,15 @@ typedef struct _une_token {
 } une_token;
 #pragma endregion une_token
 
+// For errors.
 const wchar_t *une_token_type_to_wcs(une_token_type type);
+
+#ifdef UNE_DEBUG
 wchar_t *une_token_to_wcs(une_token token);
 void une_tokens_display(une_token *tokens);
+#endif /* UNE_DEBUG */
+
+void une_token_free(une_token token);
 void une_tokens_free(une_token *tokens);
 
 #endif /* !UNE_TOKEN_H */

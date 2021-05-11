@@ -6,6 +6,7 @@ Updated 2021-04-29
 #include "node.h"
 
 #pragma region une_node_type_to_wcs
+#ifdef UNE_DEBUG
 const wchar_t *une_node_type_to_wcs(une_node_type type)
 {
   switch (type) {
@@ -56,9 +57,11 @@ const wchar_t *une_node_type_to_wcs(une_node_type type)
     default: return L"?";
   }
 }
+#endif /* UNE_DEBUG */
 #pragma endregion une_node_type_to_wcs
 
 #pragma region une_node_to_wcs
+#ifdef UNE_DEBUG
 /*
 This function is not dynamic and will cause a buffer overflow
 if the returned array is longer than UNE_SIZE_MEDIUM. This could
@@ -334,13 +337,14 @@ wchar_t *une_node_to_wcs(une_node *node)
   }
   return buffer;
 }
+#endif /* UNE_DEBUG */
 #pragma endregion une_node_to_wcs
 
 #pragma region une_node_free
 void une_node_free(une_node *node, bool free_wcs)
 {
   if (node == NULL) {
-    #ifdef UNE_DEBUG_LOG_FREE
+    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
       wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: NULL\n", __FILE__, __FUNCTION__, __LINE__);
     #endif
     return;
@@ -353,7 +357,7 @@ void une_node_free(une_node *node, bool free_wcs)
     case UNE_NT_BREAK:
     case UNE_NT_CONTINUE:
     case UNE_NT_SIZE:
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_node_type_to_wcs(node->type));
       #endif
       free(node);
@@ -367,7 +371,7 @@ void une_node_free(une_node *node, bool free_wcs)
       which may still be needed after the parse. This memory is freed alongside the tokens.
       */
       if (free_wcs) free(node->content.value._wcs);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_node_type_to_wcs(node->type));
       #endif
       free(node);
@@ -386,7 +390,7 @@ void une_node_free(une_node *node, bool free_wcs)
         une_node_free(list[i], free_wcs);
       }
       free(list);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_node_type_to_wcs(node->type));
       #endif
       free(node);
@@ -398,7 +402,7 @@ void une_node_free(une_node *node, bool free_wcs)
     case UNE_NT_GET:
     case UNE_NT_RETURN:
       une_node_free(node->content.branch.a, free_wcs);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_node_type_to_wcs(node->type));
       #endif
       free(node);
@@ -426,7 +430,7 @@ void une_node_free(une_node *node, bool free_wcs)
     case UNE_NT_GET_IDX:
       une_node_free(node->content.branch.a, free_wcs);
       une_node_free(node->content.branch.b, free_wcs);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_node_type_to_wcs(node->type));
       #endif
       free(node);
@@ -440,7 +444,7 @@ void une_node_free(une_node *node, bool free_wcs)
       une_node_free(node->content.branch.a, free_wcs);
       une_node_free(node->content.branch.b, free_wcs);
       une_node_free(node->content.branch.c, free_wcs);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_node_type_to_wcs(node->type));
       #endif
       free(node);
@@ -452,7 +456,7 @@ void une_node_free(une_node *node, bool free_wcs)
       une_node_free(node->content.branch.b, free_wcs);
       une_node_free(node->content.branch.c, free_wcs);
       une_node_free(node->content.branch.d, free_wcs);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Node: %ls\n", __FILE__, __FUNCTION__, __LINE__, une_node_type_to_wcs(node->type));
       #endif
       free(node);

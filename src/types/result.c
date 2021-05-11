@@ -123,15 +123,15 @@ wchar_t *une_result_to_wcs(une_result result)
     case UNE_RT_VOID: break;
 
     case UNE_RT_INT:
-      swprintf(wcs+offset, UNE_SIZE_BIG, L"%lld", result.value._int);
+      swprintf(wcs+offset, UNE_SIZE_BIG, L"%lld\33[0m", result.value._int);
       break;
     
     case UNE_RT_FLT:
-      swprintf(wcs+offset, UNE_SIZE_BIG, L"%.3f", result.value._flt);
+      swprintf(wcs+offset, UNE_SIZE_BIG, L"%.3f\33[0m", result.value._flt);
       break;
     
     case UNE_RT_STR:
-      swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_HINT L"\"" UNE_COLOR_SUCCESS L"%ls" UNE_COLOR_HINT L"\"", result.value._wcs);
+      swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_HINT L"\"" UNE_COLOR_SUCCESS L"%ls" UNE_COLOR_HINT L"\"\33[0m", result.value._wcs);
       break;
     
     case UNE_RT_LIST: {
@@ -139,7 +139,7 @@ wchar_t *une_result_to_wcs(une_result result)
       if (list == NULL) WERR(L"Undefined list pointer");
       size_t list_size = list[0].value._int;
       if (list_size == 0) {
-        swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"[]");
+        swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"[]\33[0m");
         break;
       }
       wchar_t *return_as_wcs = une_result_to_wcs(list[1]);
@@ -154,7 +154,7 @@ wchar_t *une_result_to_wcs(une_result result)
                            return_as_wcs);
         free(return_as_wcs);
       }
-      swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"]");
+      swprintf(wcs+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"]\33[0m");
       break; }
     
     default:
@@ -174,7 +174,7 @@ void une_result_free(une_result result)
     case UNE_RT_STR:
     case UNE_RT_ID:
       free(result.value._wcs);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
       #endif
       break;
@@ -187,7 +187,7 @@ void une_result_free(une_result result)
         une_result_free(list[i]);
       }
       free(list);
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
       #endif
       break; }
@@ -199,7 +199,7 @@ void une_result_free(une_result result)
     case UNE_RT_CONTINUE:
     case UNE_RT_SIZE:
     case UNE_RT_VOID:
-      #ifdef UNE_DEBUG_LOG_FREE
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
         wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
       #endif
       break;

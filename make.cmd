@@ -6,19 +6,15 @@ setlocal enableDelayedExpansion
 
 :: 1, 0
 set release=0
-:: FIXME:
 set debug=1
+set debug_gdb=1
 
-:: gcc, clang, tcc, vs
+:: gcc, clang, tcc
 set compiler=gcc
 
 ::#endregion Preferences
 
 ::#region Options
-
-if %debug% Equ 1 (
-  set UNE_DEBUG=1
-)
 
 set O=
 if %release% Equ 1 (
@@ -28,10 +24,19 @@ if %release% Equ 1 (
     set O=-O3
   )
 )
+if %debug_gdb% Equ 1 (
+  set O=-Og
+)
 
 set flags=
 if %compiler% Equ clang (
-  set flags=-Wno-deprecated
+  set "flags=!flags! -Wno-deprecated"
+)
+if %debug_gdb% Equ 1 (
+  set "flags=!flags! -g"
+)
+if %debug% Equ 1 (
+  set "flags=!flags! -DUNE_DEBUG"
 )
 
 ::#endregion Options

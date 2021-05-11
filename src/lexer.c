@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Updated 2021-05-01
+Updated 2021-05-10
 */
 
 #include "lexer.h"
@@ -76,6 +76,8 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       if (idx == idx_before_decimals) {
         *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
             _int=(une_int)text[idx], _int=0);
+        for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
+        free(tokens);
         return NULL;
       }
 
@@ -100,7 +102,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       size_t idx_start = idx;
       bool escape = false;
       size_t buffer_index = 0;
-int i=-1;
+
       while (true) {
         if (buffer_index >= buffer_size-1) { // NUL
           buffer_size *= 2;
@@ -112,6 +114,8 @@ int i=-1;
 
         if (text[idx] == L'\0') {
           *error = UNE_ERROR_SET(UNE_ET_UNTERMINATED_STRING, ((une_position){idx, idx+1}));
+          for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
+          free(tokens);
           free(buffer);
           return NULL;
         }
@@ -131,6 +135,8 @@ int i=-1;
             case L'\n': continue;
             default:
               *error = UNE_ERROR_SET(UNE_ET_CANT_ESCAPE_CHAR, ((une_position){idx, idx+1}));
+              for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
+              free(tokens);
               free(buffer);
               return NULL;
           }
@@ -328,6 +334,8 @@ int i=-1;
       // FIXME:
       *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
           _int=(int)text[idx], _int=0);
+      for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
+      free(tokens);
       return NULL;
     }
     if (text[idx] == L'>') {
@@ -387,6 +395,8 @@ int i=-1;
     #pragma region Illegal Character
     *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
         _int=(int)text[idx], _int=0);
+    for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
+    free(tokens);
     return NULL;
     #pragma endregion Illegal Character
   }
@@ -395,6 +405,7 @@ int i=-1;
 #pragma endregion une_lex_wcs
 
 #pragma region une_lex_file
+#ifdef UNE_DEBUG
 // FIXME: Unfinished!
 une_token *une_lex_file(char *path, une_error *error)
 {
@@ -695,4 +706,5 @@ une_token *une_lex_file(char *path, une_error *error)
   fclose(file);
   return tokens;
 }
+#endif /* UNE_DEBUG */
 #pragma endregion une_lex_file
