@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Updated 2021-05-10
+Updated 2021-05-21
 */
 
 #include "context.h"
@@ -74,7 +74,7 @@ une_context *une_context_create(void)
   context->name = NULL;
   context->text = NULL;
   context->error = (une_error){
-    .type = UNE_ET_NO_ERROR,
+    .type = __UNE_ET_none__,
     .pos = (une_position){0, 1},
     .values[0]._wcs = NULL,
     .values[1]._wcs = NULL,

@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-05-10
+Updated 2021-05-21
 */
 
 #include "error.h"
@@ -10,8 +10,8 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
 {
   wchar_t *wcs = rmalloc(UNE_SIZE_MEDIUM*sizeof(*wcs));
   switch (type) {
-    case UNE_ET_NO_ERROR:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"No error defined.");
+    case __UNE_ET_none__:
+      swprintf(wcs, UNE_SIZE_MEDIUM, L"No error defined!");
       break;
     
     case UNE_ET_EXPECTED_TOKEN: {
@@ -241,7 +241,7 @@ void une_error_display(une_error error, wchar_t *text, wchar_t *name)
 void une_error_free(une_error error)
 {
   switch (error.type) {
-    case UNE_ET_NO_ERROR:
+    case __UNE_ET_none__:
     case UNE_ET_EXPECTED_TOKEN:
     case UNE_ET_UNEXPECTED_TOKEN:
     case UNE_ET_UNEXPECTED_CHARACTER:
@@ -297,7 +297,7 @@ une_error une_error_copy(une_error src)
   dest.__file__ = src.__file__;
 
   switch (src.type) {
-    case UNE_ET_NO_ERROR:
+    case __UNE_ET_none__:
     case UNE_ET_EXPECTED_TOKEN:
     case UNE_ET_UNEXPECTED_TOKEN:
     case UNE_ET_UNEXPECTED_CHARACTER:

@@ -1,29 +1,33 @@
 /*
 result.c - Une
-Updated 2021-05-03
+Updated 2021-05-21
 */
 
 #include "result.h"
+
+#pragma region Result Name Table
+wchar_t *une_result_table[] = {
+  L"VOID",
+  L"ERROR",
+  L"INT",
+  L"FLT",
+  L"STR",
+  L"LIST",
+  L"ID",
+  L"CONTINUE",
+  L"BREAK",
+  L"SIZE"
+};
+#pragma endregion Result Name Table
 
 #pragma region une_result_type_to_wcs
 /* DOC:
 Returns a text representation of a une_result type.
 */
-const wchar_t *une_result_type_to_wcs(une_result_type result_type)
+const wchar_t *une_result_type_to_wcs(une_result_type type)
 {
-  switch (result_type) {
-    case UNE_RT_INT:      return L"INT";
-    case UNE_RT_FLT:      return L"FLT";
-    case UNE_RT_STR:      return L"STR";
-    case UNE_RT_LIST:     return L"LIST";
-    case UNE_RT_ERROR:    return L"ERROR";
-    case UNE_RT_ID:       return L"ID";
-    case UNE_RT_CONTINUE: return L"CONTINUE";
-    case UNE_RT_BREAK:    return L"BREAK";
-    case UNE_RT_SIZE:     return L"SIZE";
-    case UNE_RT_VOID:     return L"VOID";
-    default: WERR(L"une_result_type_to_wcs: Unhandled result type!");
-  }
+  if (type <= 0 || type >= __UNE_RT_max__) WERR(L"Result type out of bounds: %d", type);
+  return une_result_table[type-1];
 }
 #pragma endregion une_result_type_to_wcs
 
@@ -58,7 +62,7 @@ une_int une_result_is_true(une_result result)
     case UNE_RT_STR: return wcslen(result.value._wcs) == 0 ? 0 : 1;
     case UNE_RT_LIST:
       return ((une_result*)result.value._vp)[0].value._int == 0 ? 0 : 1;
-    default: WERR(L"une_result_is_true: Unhandled result type");
+    default: WERR(L"Unhandled result type");
   }
 }
 #pragma endregion une_result_is_true
@@ -158,7 +162,7 @@ wchar_t *une_result_to_wcs(une_result result)
       break; }
     
     default:
-      WERR(L"une_result_to_wcs: Illegal (%d)", result.type);
+      WERR(L"Illegal (%d)", result.type);
   }
   return wcs;
 }
@@ -170,6 +174,13 @@ Frees a une_result object and all its contents.
 */
 void une_result_free(une_result result)
 {
+  if (
+    result.type <= __UNE_RT_none__ ||
+    result.type >= __UNE_RT_max__
+  ) {
+    WERR(L"result.type=%d", (int)result.type)
+  }
+  
   switch (result.type) {
     case UNE_RT_STR:
     case UNE_RT_ID:
@@ -192,19 +203,11 @@ void une_result_free(une_result result)
       #endif
       break; }
     
-    case UNE_RT_INT:
-    case UNE_RT_FLT:
-    case UNE_RT_ERROR:
-    case UNE_RT_BREAK:
-    case UNE_RT_CONTINUE:
-    case UNE_RT_SIZE:
-    case UNE_RT_VOID:
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
-      #endif
+    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
+    default:
+      wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Return: %d\n", __FILE__, __FUNCTION__, __LINE__, result.type);
       break;
-    
-    default: WERR(L"Unhandled result type %lld in une_result_free()\n", result.type);
+    #endif
   }
 }
 #pragma endregion une_result_free
@@ -251,7 +254,7 @@ une_result une_result_copy(une_result src)
       break; }
     
     default:
-      WERR(L"une_result_copy: Unhandled result type %lld", src.type);
+      WERR(L"Unhandled result type %lld", src.type);
   }
   
   return dest;

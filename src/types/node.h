@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Updated 2021-05-01
+Updated 2021-05-21
 */
 
 #ifndef UNE_NODE_H
@@ -12,7 +12,6 @@ Updated 2021-05-01
 #pragma region une_node_type
 typedef enum _une_node_type {
   __UNE_NT_none__,
-  
   UNE_NT_INT,
   UNE_NT_FLT,
   UNE_NT_STR,
@@ -20,39 +19,24 @@ typedef enum _une_node_type {
   UNE_NT_LIST,
   UNE_NT_SIZE,
   UNE_NT_STMTS,
-
   UNE_NT_COP,
-
   UNE_NT_NOT,
-  // Begin And/Or Nodes
-  UNE_NT_AND,
-  UNE_NT_OR,
-  // Begin And/Or Nodes
-
-  // Begin Condition Nodes
-  UNE_NT_EQU,
+  UNE_NT_AND, // Begin And/Or Nodes
+  UNE_NT_OR, // End And/Or Nodes
+  UNE_NT_EQU, // Begin Condition Nodes
   UNE_NT_NEQ,
   UNE_NT_GTR,
   UNE_NT_GEQ,
   UNE_NT_LSS,
-  UNE_NT_LEQ,
-  // End Condition Nodes
-
-  // Begin Add/Sub Nodes
-  UNE_NT_ADD,
-  UNE_NT_SUB,
-  // End Add/Sub Nodes
-
-  // Begin Term Nodes
-  UNE_NT_MUL,
+  UNE_NT_LEQ, // End Condition Nodes
+  UNE_NT_ADD, // Begin Add/Sub Nodes
+  UNE_NT_SUB, // End Add/Sub Nodes
+  UNE_NT_MUL, // Begin Term Nodes
   UNE_NT_DIV,
   UNE_NT_FDIV,
-  UNE_NT_MOD,
-  // End Term Nodes
-
+  UNE_NT_MOD, // End Term Nodes
   UNE_NT_POW,
   UNE_NT_NEG,
-
   UNE_NT_SET,
   UNE_NT_SET_IDX,
   UNE_NT_GET,
@@ -65,7 +49,6 @@ typedef enum _une_node_type {
   UNE_NT_CONTINUE,
   UNE_NT_BREAK,
   UNE_NT_RETURN,
-
   __UNE_NT_max__
 } une_node_type;
 #pragma endregion une_node_type

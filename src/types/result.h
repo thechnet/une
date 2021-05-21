@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Updated 2021-04-29
+Updated 2021-05-21
 */
 
 #ifndef UNE_RESULT_H
@@ -12,6 +12,7 @@ Updated 2021-04-29
 
 #pragma region une_result_type
 typedef enum _une_result_type {
+  __UNE_RT_none__,
   UNE_RT_VOID,
   UNE_RT_ERROR,
   UNE_RT_INT,

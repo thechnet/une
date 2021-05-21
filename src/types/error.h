@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Updated 2021-04-29
+Updated 2021-05-21
 */
 
 #ifndef UNE_ERROR_H
@@ -12,7 +12,7 @@ Updated 2021-04-29
 
 #pragma region une_error_type
 typedef enum _une_error_type {
-  UNE_ET_NO_ERROR, // Debugging
+  __UNE_ET_none__, // Debugging
   UNE_ET_EXPECTED_TOKEN,
   UNE_ET_UNEXPECTED_TOKEN,
   UNE_ET_UNEXPECTED_CHARACTER,

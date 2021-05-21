@@ -1,10 +1,13 @@
 /*
 primitive.h - Une
-Updated 2021-05-10
+Updated 2021-05-21
 */
 
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
+
+#undef UNE_DEBUG
+#define UNE_DEBUG
 
 #define UNE_DO_READ
 #define UNE_DO_LEX
@@ -68,8 +71,8 @@ typedef double une_flt;
 #define WERR(msg, ...)\
 {\
   wprintf(\
-    UNE_COLOR_FAIL L"%hs:%d: " msg "\33[0m\n",\
-    __FILE__, __LINE__, ##__VA_ARGS__\
+    UNE_COLOR_FAIL L"%hs:%hs:%d: " msg "\33[0m\n",\
+    __FILE__, __func__, __LINE__, ##__VA_ARGS__\
   );\
   exit(1);\
 }

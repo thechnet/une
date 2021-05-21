@@ -1,61 +1,58 @@
 /*
 node.c - Une
-Updated 2021-04-29
+Updated 2021-05-21
 */
 
 #include "node.h"
+
+#pragma region Node Name Table
+wchar_t *une_node_table[] = {
+  L"INT",
+  L"FLT",
+  L"STR",
+  L"ID",
+  L"LIST",
+  L"SIZE",
+  L"STMTS",
+  L"COP",
+  L"NOT",
+  L"AND",
+  L"OR",
+  L"EQU",
+  L"NEQ",
+  L"GTR",
+  L"GEQ",
+  L"LSS",
+  L"LEQ",
+  L"ADD",
+  L"SUB",
+  L"MUL",
+  L"DIV",
+  L"FDIV",
+  L"MOD",
+  L"POW",
+  L"NEG",
+  L"SET",
+  L"SET_IDX",
+  L"GET",
+  L"GET_IDX",
+  L"DEF",
+  L"CALL",
+  L"FOR",
+  L"WHILE",
+  L"IF",
+  L"CONTINUE",
+  L"BREAK",
+  L"RETURN"
+};
+#pragma endregion Node Name Table
 
 #pragma region une_node_type_to_wcs
 #ifdef UNE_DEBUG
 const wchar_t *une_node_type_to_wcs(une_node_type type)
 {
-  switch (type) {
-    // Data Types
-    case UNE_NT_INT: return L"INT";
-    case UNE_NT_FLT: return L"FLT";
-    case UNE_NT_STR: return L"STR";
-    case UNE_NT_LIST: return L"LIST";
-    case UNE_NT_ID: return L"ID";
-    // Arithmetic Operations
-    case UNE_NT_POW: return L"POW";
-    case UNE_NT_MUL: return L"MUL";
-    case UNE_NT_DIV: return L"DIV";
-    case UNE_NT_FDIV: return L"FDIV";
-    case UNE_NT_MOD: return L"MOD";
-    case UNE_NT_ADD: return L"ADD";
-    case UNE_NT_SUB: return L"SUB";
-    case UNE_NT_NEG: return L"NEG";
-    // Logical Operations
-    case UNE_NT_NOT: return L"NOT";
-    case UNE_NT_EQU: return L"EQU";
-    case UNE_NT_NEQ: return L"NEQ";
-    case UNE_NT_GTR: return L"GTR";
-    case UNE_NT_GEQ: return L"GEQ";
-    case UNE_NT_LSS: return L"LSS";
-    case UNE_NT_LEQ: return L"LEQ";
-    case UNE_NT_AND: return L"AND";
-    case UNE_NT_OR: return L"OR";
-    // Conditional Operation
-    case UNE_NT_COP: return L"COP";
-    // Set, Get
-    case UNE_NT_GET_IDX: return L"IDX";
-    case UNE_NT_SET: return L"SET";
-    case UNE_NT_SET_IDX: return L"SET_IDX";
-    case UNE_NT_GET: return L"GET";
-    case UNE_NT_DEF: return L"DEF";
-    case UNE_NT_CALL: return L"CALL";
-    // Control Flow
-    case UNE_NT_FOR: return L"FOR";
-    case UNE_NT_WHILE: return L"WHILE";
-    case UNE_NT_IF: return L"IF";
-    case UNE_NT_RETURN: return L"RETURN";
-    case UNE_NT_BREAK: return L"BREAK";
-    case UNE_NT_CONTINUE: return L"CONTINUE";
-    case UNE_NT_STMTS: return L"STMTS";
-    case UNE_NT_SIZE: return L"SIZE";
-    
-    default: return L"?";
-  }
+  if (type <= 0 || type >= __UNE_NT_max__) WERR(L"Node type out of bounds: %d", type);
+  return une_node_table[type-1];
 }
 #endif /* UNE_DEBUG */
 #pragma endregion une_node_type_to_wcs
@@ -78,6 +75,8 @@ wchar_t *une_node_to_wcs(une_node *node)
   }
   buffer[0] = L'\0';
   switch (node->type) {
+    
+    #pragma region STMTS
     case UNE_NT_STMTS: {
       une_node **list = (une_node**)node->content.value._vpp;
       if (list == NULL) WERR(L"Undefined stmts pointer");
@@ -101,7 +100,9 @@ wchar_t *une_node_to_wcs(une_node *node)
       }
       swprintf(buffer+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"}");
       break; }
+    #pragma endregion STMTS
     
+    #pragma region DATA
     case UNE_NT_INT:
     case UNE_NT_SIZE:
       swprintf(buffer, UNE_SIZE_BIG,
@@ -158,8 +159,33 @@ wchar_t *une_node_to_wcs(une_node *node)
       }
       swprintf(buffer+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"]");
       break; }
+    #pragma endregion DATA
 
-    // Binary Operation
+    #pragma region Nullary Operations
+    case UNE_NT_BREAK:
+    case UNE_NT_CONTINUE: {
+      swprintf(buffer, UNE_SIZE_BIG,
+               UNE_COLOR_NODE_BRANCH_TYPE L"%ls" UNE_COLOR_NEUTRAL,
+               une_node_type_to_wcs(node->type));
+      break; }
+    #pragma endregion Nullary Operations
+    
+    #pragma region Unary Operations
+    case UNE_NT_NEG:
+    case UNE_NT_NOT:
+    case UNE_NT_GET:
+    case UNE_NT_RETURN: {
+      wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
+      swprintf(buffer, UNE_SIZE_BIG,
+               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
+               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L")",
+               une_node_type_to_wcs(node->type),
+               branch1);
+      free(branch1);
+      break; }
+    #pragma endregion Unary Operations
+
+    #pragma region Binary Operations
     case UNE_NT_ADD:
     case UNE_NT_SUB:
     case UNE_NT_MUL:
@@ -177,159 +203,66 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_AND:
     case UNE_NT_OR:
     case UNE_NT_CALL:
+    case UNE_NT_WHILE:
     case UNE_NT_SET: {
-      wchar_t *left_branch_as_wcs = une_node_to_wcs(
-                                     node->content.branch.a);
-      wchar_t *right_branch_as_wcs = une_node_to_wcs(
-                                      node->content.branch.b);
+      wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
+      wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
       swprintf(buffer, UNE_SIZE_BIG,
                UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
                UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
                UNE_COLOR_NEUTRAL L")",
                une_node_type_to_wcs(node->type),
-               left_branch_as_wcs,
-               right_branch_as_wcs);
-      free(left_branch_as_wcs);
-      free(right_branch_as_wcs);
+               branch1,
+               branch2);
+      free(branch1);
+      free(branch2);
       break; }
+    #pragma endregion Binary Operation
     
-    // Unary Operation
-    case UNE_NT_NEG:
-    case UNE_NT_NOT:
-    case UNE_NT_GET:
-    case UNE_NT_RETURN: {
-      wchar_t *center_branch_as_wcs = une_node_to_wcs(
-                                       node->content.branch.a);
+    #pragma region Ternary Operations
+    case UNE_NT_DEF:
+    case UNE_NT_SET_IDX:
+    case UNE_NT_COP:
+    case UNE_NT_IF: {
+      wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
+      wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
+      wchar_t *branch3 = une_node_to_wcs(node->content.branch.c);
       swprintf(buffer, UNE_SIZE_BIG,
                UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
-               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L")",
+               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
+               UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
                une_node_type_to_wcs(node->type),
-               center_branch_as_wcs);
-      free(center_branch_as_wcs);
+               branch1,
+               branch2,
+               branch3);
+      free(branch1);
+      free(branch2);
+      free(branch3);
       break; }
+    #pragma endregion Ternary Operations
     
-    // Without operation
-    case UNE_NT_BREAK:
-    case UNE_NT_CONTINUE: {
-      swprintf(buffer, UNE_SIZE_BIG,
-               UNE_COLOR_NODE_BRANCH_TYPE L"%ls" UNE_COLOR_NEUTRAL,
-               une_node_type_to_wcs(node->type));
-      break; }
-    
+    #pragma region Quaternary Operations
     case UNE_NT_FOR: {
-      wchar_t *counter_branch_as_wcs = une_node_to_wcs(
-                                        node->content.branch.a);
-      wchar_t *from_branch_as_wcs = une_node_to_wcs(
-                                     node->content.branch.b);
-      wchar_t *to_branch_as_wcs = une_node_to_wcs(
-                                   node->content.branch.c);
-      wchar_t *body_branch_as_wcs = une_node_to_wcs(
-                                     node->content.branch.d);
+      wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
+      wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
+      wchar_t *branch3 = une_node_to_wcs(node->content.branch.c);
+      wchar_t *branch4 = une_node_to_wcs(node->content.branch.d);
       swprintf(buffer, UNE_SIZE_BIG,
-               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"FOR"
+               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
                UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
                UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L", %ls"
                UNE_COLOR_NEUTRAL L")",
-               counter_branch_as_wcs,
-               from_branch_as_wcs,
-               to_branch_as_wcs,
-               body_branch_as_wcs);
-      free(counter_branch_as_wcs);
-      free(from_branch_as_wcs);
-      free(to_branch_as_wcs);
-      free(body_branch_as_wcs);
+               une_node_type_to_wcs(node->type),
+               branch1,
+               branch2,
+               branch3,
+               branch4);
+      free(branch1);
+      free(branch2);
+      free(branch3);
+      free(branch4);
       break; }
-    
-    case UNE_NT_WHILE: {
-      wchar_t *condition_branch_as_wcs = une_node_to_wcs(
-                                          node->content.branch.a);
-      wchar_t *body_branch_as_wcs = une_node_to_wcs(
-                                     node->content.branch.b);
-      swprintf(buffer, UNE_SIZE_BIG,
-               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"WHILE"
-               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
-               UNE_COLOR_NEUTRAL L")",
-               condition_branch_as_wcs,
-               body_branch_as_wcs);
-      free(condition_branch_as_wcs);
-      free(body_branch_as_wcs);
-      break; }
-
-    case UNE_NT_IF: {
-      wchar_t *condition_branch_as_wcs = une_node_to_wcs(
-                                          node->content.branch.a);
-      wchar_t *truebody_branch_as_wcs = une_node_to_wcs(
-                                         node->content.branch.b);
-      wchar_t *falsebody_branch_as_wcs = une_node_to_wcs(
-                                          node->content.branch.c);
-      swprintf(buffer, UNE_SIZE_BIG,
-               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE "IF"
-               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
-               UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
-               condition_branch_as_wcs,
-               truebody_branch_as_wcs,
-               falsebody_branch_as_wcs);
-      free(condition_branch_as_wcs);
-      free(truebody_branch_as_wcs);
-      free(falsebody_branch_as_wcs);
-      break; }
-    
-    case UNE_NT_COP: {
-      wchar_t *trueconditions_branch_as_wcs = une_node_to_wcs(
-                                               node->content.branch.a);
-      wchar_t *condition_branch_as_wcs = une_node_to_wcs(
-                                          node->content.branch.b);
-      wchar_t *falseconditions_branch_as_wcs = une_node_to_wcs(
-                                                node->content.branch.c);
-      swprintf(buffer, UNE_SIZE_BIG,
-               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"COP"
-               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
-               UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
-               trueconditions_branch_as_wcs,
-               condition_branch_as_wcs,
-               falseconditions_branch_as_wcs);
-      free(trueconditions_branch_as_wcs);
-      free(condition_branch_as_wcs);
-      free(falseconditions_branch_as_wcs);
-      break; }
-    
-    case UNE_NT_SET_IDX: {
-      wchar_t *name_branch_as_wcs = une_node_to_wcs(
-                                     node->content.branch.a);
-      wchar_t *index_branch_as_wcs = une_node_to_wcs(
-                                      node->content.branch.b);
-      wchar_t *value_branch_as_wcs = une_node_to_wcs(
-                                      node->content.branch.c);
-      swprintf(buffer, UNE_SIZE_BIG,
-               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"SET_IDX"
-               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
-               UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
-               name_branch_as_wcs,
-               index_branch_as_wcs,
-               value_branch_as_wcs);
-      free(name_branch_as_wcs);
-      free(index_branch_as_wcs);
-      free(value_branch_as_wcs);
-      break; }
-    
-    case UNE_NT_DEF: {
-      wchar_t *name_branch_as_wcs = une_node_to_wcs(
-                                     node->content.branch.a);
-      wchar_t *params_branch_as_wcs = une_node_to_wcs(
-                                       node->content.branch.b);
-      wchar_t *body_branch_as_wcs = une_node_to_wcs(
-                                     node->content.branch.c);
-      swprintf(buffer, UNE_SIZE_BIG,
-               UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"DEF"
-               UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls"
-               UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
-               name_branch_as_wcs,
-               params_branch_as_wcs,
-               body_branch_as_wcs);
-      free(name_branch_as_wcs);
-      free(params_branch_as_wcs);
-      free(body_branch_as_wcs);
-      break; }
+    #pragma endregion Quaternary Operations
 
     default:
       swprintf(buffer, UNE_SIZE_BIG,
@@ -351,7 +284,8 @@ void une_node_free(une_node *node, bool free_wcs)
   }
 
   switch (node->type) {
-    // No Operation (Data)
+    
+    #pragma region Stack / Nullary Operation
     case UNE_NT_INT:
     case UNE_NT_FLT:
     case UNE_NT_BREAK:
@@ -362,8 +296,9 @@ void une_node_free(une_node *node, bool free_wcs)
       #endif
       free(node);
       break;
-
-    // Strings
+    #pragma endregion Stack / Nullary Operation
+      
+    #pragma region String
     case UNE_NT_STR:
     case UNE_NT_ID:
       /* DOC: Memory Management
@@ -376,8 +311,9 @@ void une_node_free(une_node *node, bool free_wcs)
       #endif
       free(node);
       break;
+    #pragma endregion String
     
-    // Sequences (Data)
+    #pragma region Sequence
     case UNE_NT_LIST:
     case UNE_NT_STMTS: {
       une_node **list = (une_node**)node->content.value._vpp;
@@ -395,8 +331,9 @@ void une_node_free(une_node *node, bool free_wcs)
       #endif
       free(node);
       break; }
+    #pragma endregion Sequence
     
-    // Unary Operation
+    #pragma region Unary Operation
     case UNE_NT_NEG:
     case UNE_NT_NOT:
     case UNE_NT_GET:
@@ -407,8 +344,9 @@ void une_node_free(une_node *node, bool free_wcs)
       #endif
       free(node);
       break;
+    #pragma endregion Unary Operation
     
-    // Binary Operation
+    #pragma region Binary Operation
     case UNE_NT_POW:
     case UNE_NT_MUL:
     case UNE_NT_DIV:
@@ -435,8 +373,9 @@ void une_node_free(une_node *node, bool free_wcs)
       #endif
       free(node);
       break;
+    #pragma endregion Binary Operation
     
-    // Ternary Operation
+    #pragma region Ternary Operation
     case UNE_NT_COP:
     case UNE_NT_DEF:
     case UNE_NT_IF:
@@ -449,8 +388,9 @@ void une_node_free(une_node *node, bool free_wcs)
       #endif
       free(node);
       break;
+    #pragma endregion Ternary Operation
     
-    // Quaternary Operation
+    #pragma region Quaternary Operation
     case UNE_NT_FOR:
       une_node_free(node->content.branch.a, free_wcs);
       une_node_free(node->content.branch.b, free_wcs);
@@ -461,8 +401,10 @@ void une_node_free(une_node *node, bool free_wcs)
       #endif
       free(node);
       break;
+    #pragma endregion Quaternary Operation
     
-    default: WERR(L"Unhandled node type in une_node_free()!\n", free_wcs);
+    default:
+      WERR(L"Unhandled node type!\n");
   }
 }
 #pragma endregion une_node_free

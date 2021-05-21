@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Updated 2021-05-10
+Updated 2021-05-21
 */
 
 #include "interpreter.h"
@@ -70,13 +70,8 @@ une_result une_interpret(une_node *node, une_context *context)
         .type = UNE_RT_STR,
         .value._wcs = wcs_dup(node->content.value._wcs) }; }
 
-    case UNE_NT_ID: {
-      return (une_result){
-        .type = UNE_RT_ID,
-        .value._wcs = wcs_dup(node->content.value._wcs) }; }
-
     default:
-      WERR(L"une_interpret: Unhandled node type %d", node->type);
+      WERR(L"Unhandled node type %d", node->type);
   
   }
 }
@@ -929,21 +924,20 @@ static une_result une_interpret_get_idx_str(une_result str, une_int index)
 #pragma region une_interpret_get
 static une_result une_interpret_get(une_node *node, une_context *context)
 {
-  une_result name = une_interpret(node->content.branch.a, context);
-  if (name.type == UNE_RT_ERROR) return name;
+  // une_result name = une_interpret(node->content.branch.a, context);
+  // if (name.type == UNE_RT_ERROR) return name;
+  wchar_t *name = node->content.branch.a->content.value._wcs;
 
   // Find variable in all contexts
-  une_variable *var = une_variable_find_global(context, name.value._wcs);
+  une_variable *var = une_variable_find_global(context, name);
   if (var == NULL) {
     context->error = UNE_ERROR_SETX(UNE_ET_GET, node->content.branch.a->pos,
-        _wcs=wcs_dup(name.value._wcs), _int=0);
-    une_result_free(name);
+        _wcs=wcs_dup(name), _int=0);
     return (une_result){
       .type = UNE_RT_ERROR,
     };
   }
 
-  une_result_free(name);
   return une_result_copy(var->content);
 }
 #pragma endregion une_interpret_get
@@ -1174,7 +1168,7 @@ static une_result une_interpret_call_builtin(une_builtin_type type, une_result *
     case UNE_BIF_TO_FLT: return une_builtin_to_flt(args[0], context, pos);
     case UNE_BIF_TO_STR: return une_builtin_to_str(args[0], context, pos);
     case UNE_BIF_GET_LEN: return une_builtin_get_len(args[0], context, pos);
-    default: WERR(L"une_interpret_call_builtin: Unhandled builtin type %d", type);
+    default: WERR(L"Unhandled builtin type %d", type);
   }
 }
 #pragma endregion une_interpret_call_builtin
@@ -1216,14 +1210,15 @@ une_result une_interpret_call(une_node *node, une_context *context)
 // Interpret arguments.
   une_result *args = rmalloc(args_count*sizeof(*args));
   for (size_t i=0; i<args_count; i++) {
-    args[i] = une_interpret(args_n[i+1], context);
-    if (args[i].type == UNE_RT_ERROR) {
+    une_result temp = une_interpret(args_n[i+1], context);
+    if (temp.type == UNE_RT_ERROR) {
       for (size_t j=0; j<i; j++) {
         une_result_free(args[j]);
       }
       free(args);
-      return args[i];
+      return temp;
     }
+    args[i] = temp;
   }
 
 // Execute function.

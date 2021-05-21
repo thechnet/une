@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Updated 2021-05-11
+Updated 2021-05-21
 */
 
 #include "une.h"
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         wprintf(L"\n");
       }
       #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
-        else {
+        else if (result.type != UNE_RT_VOID) {
           wchar_t *return_as_wcs = une_result_to_wcs(result);
           wprintf(L"%ls", return_as_wcs);
           free(return_as_wcs);

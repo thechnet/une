@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-04-29
+Modified 2021-05-21
 */
 
 #include "builtin.h"
@@ -26,7 +26,7 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
     case UNE_BIF_TO_FLT: return 1;
     case UNE_BIF_TO_STR: return 1;
     case UNE_BIF_GET_LEN: return 1;
-    default: WERR(L"une_builtin_get_num_of_params: Unhandled type %d", type);
+    default: WERR(L"Unhandled type %d", type);
   }
 }
 #pragma endregion une_builtin_get_num_of_params
@@ -60,7 +60,7 @@ une_result une_builtin_print(une_result result, une_context *context, une_positi
       wprintf(L"]");
       break;
     }
-    default: WERR(L"une_builtin_print: Unhandled result type %d", result.type);
+    default: WERR(L"Unhandled result type %d", result.type);
   }
   return une_result_create(UNE_RT_VOID);
 }
@@ -107,7 +107,7 @@ une_result une_builtin_to_flt(une_result result, une_context *context, une_posit
       };
   }
   context->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
-    _int=(int)result.type, _int=(int)UNE_RT_INT);
+    _int=(int)result.type, _int=(int)UNE_RT_FLT);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_flt
@@ -136,7 +136,7 @@ une_result une_builtin_to_str(une_result result, une_context *context, une_posit
       return une_result_copy(result);
   }
   context->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
-    _int=(int)result.type, _int=(int)UNE_RT_INT);
+    _int=(int)result.type, _int=(int)UNE_RT_STR);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_str
