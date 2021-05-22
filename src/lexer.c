@@ -1,14 +1,14 @@
 /*
 lexer.c - Une
-Updated 2021-05-10
+Updated 2021-05-22
 */
 
 #include "lexer.h"
 
 #pragma region une_lex_wcs
-une_token *une_lex_wcs(wchar_t *text, une_error *error)
+une_token *une_lex_wcs(une_instance *inst)
 {
-  size_t tokens_size = UNE_SIZE_MEDIUM; // FIXME:
+  size_t tokens_size = UNE_SIZE_MEDIUM; // FIXME: SIZE
   une_token *tokens = rmalloc(tokens_size*sizeof(*tokens));
   size_t tokens_index = 0;
   size_t idx = 0;
@@ -21,14 +21,14 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     }
     
     #pragma region Number
-    if (text[idx] >= L'0' && text[idx] <= L'9') {
+    if (inst->ls.wcs[idx] >= L'0' && inst->ls.wcs[idx] <= L'9') {
 
       size_t buffer_size = UNE_SIZE_SMALL;
       wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
       size_t idx_start = idx;
 
-      while (text[idx] >= L'0' && text[idx] <= L'9') {
+      while (inst->ls.wcs[idx] >= L'0' && inst->ls.wcs[idx] <= L'9') {
         
         while (idx-idx_start >= buffer_size-2) { // NUL || '0' NUL
           buffer_size *= 2;
@@ -36,13 +36,13 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
           buffer = _buffer;
         }
 
-        buffer[idx-idx_start] = text[idx];
+        buffer[idx-idx_start] = inst->ls.wcs[idx];
         idx++;
 
       }
 
       // Integer
-      if (text[idx] != L'.') {
+      if (inst->ls.wcs[idx] != L'.') {
         buffer[idx-idx_start] = L'\0';
         une_token tk = (une_token){
           .type = UNE_TT_INT,
@@ -55,12 +55,12 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       }
 
       // Floating Point Number
-      buffer[idx-idx_start] = text[idx];
+      buffer[idx-idx_start] = inst->ls.wcs[idx];
       idx++;
 
       size_t idx_before_decimals = idx;
 
-      while (text[idx] >= L'0' && text[idx] <= L'9') {
+      while (inst->ls.wcs[idx] >= L'0' && inst->ls.wcs[idx] <= L'9') {
         
         if (idx-idx_start >= buffer_size-2) { // NUL || '0' NUL
           buffer_size *= 2;
@@ -68,14 +68,14 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
           buffer = _buffer;
         }
 
-        buffer[idx-idx_start] = text[idx];
+        buffer[idx-idx_start] = inst->ls.wcs[idx];
         idx++;
 
       }
 
       if (idx == idx_before_decimals) {
-        *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
-            _int=(une_int)text[idx], _int=0);
+        inst->error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
+            _int=(une_int)inst->ls.wcs[idx], _int=0);
         for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
         free(tokens);
         return NULL;
@@ -95,7 +95,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma endregion Number
 
     #pragma region String
-    if (text[idx] == L'"') {
+    if (inst->ls.wcs[idx] == L'"') {
       size_t buffer_size = UNE_SIZE_MEDIUM;
       wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
@@ -112,29 +112,29 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
 
         idx++;
 
-        if (text[idx] == L'\0') {
-          *error = UNE_ERROR_SET(UNE_ET_UNTERMINATED_STRING, ((une_position){idx, idx+1}));
+        if (inst->ls.wcs[idx] == L'\0') {
+          inst->error = UNE_ERROR_SET(UNE_ET_UNTERMINATED_STRING, ((une_position){idx, idx+1}));
           for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
           free(tokens);
           free(buffer);
           return NULL;
         }
 
-        if (text[idx] == L'\r') continue;
+        if (inst->ls.wcs[idx] == L'\r') continue;
 
         if (escape) {
           escape = false;
-          switch (text[idx]) {
+          switch (inst->ls.wcs[idx]) {
             case L'\\':
             case L'"':
-              buffer[buffer_index++] = text[idx];
+              buffer[buffer_index++] = inst->ls.wcs[idx];
               continue;
             case L'n':
               buffer[buffer_index++] = L'\n';
               continue;
             case L'\n': continue;
             default:
-              *error = UNE_ERROR_SET(UNE_ET_CANT_ESCAPE_CHAR, ((une_position){idx, idx+1}));
+              inst->error = UNE_ERROR_SET(UNE_ET_CANT_ESCAPE_CHAR, ((une_position){idx, idx+1}));
               for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
               free(tokens);
               free(buffer);
@@ -142,17 +142,17 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
           }
         }
 
-        if (text[idx] == L'\\') {
+        if (inst->ls.wcs[idx] == L'\\') {
           escape = true;
           continue;
         }
 
-        if (text[idx] == L'"') {
+        if (inst->ls.wcs[idx] == L'"') {
           idx++;
           break;
         }
 
-        buffer[buffer_index++] = text[idx];
+        buffer[buffer_index++] = inst->ls.wcs[idx];
       }
 
       buffer[buffer_index] = L'\0';
@@ -168,9 +168,9 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma endregion String
 
     #pragma region Identifier
-    if ((text[idx] >= L'a' && text[idx] <= L'z')
-    || (text[idx] >= L'A' && text[idx] <= L'Z')
-    ||  text[idx] == L'_') {
+    if ((inst->ls.wcs[idx] >= L'a' && inst->ls.wcs[idx] <= L'z')
+    || (inst->ls.wcs[idx] >= L'A' && inst->ls.wcs[idx] <= L'Z')
+    ||  inst->ls.wcs[idx] == L'_') {
       size_t buffer_size = UNE_SIZE_MEDIUM;
       wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
 
@@ -178,10 +178,10 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       bool escape = false;
       size_t buffer_index = 0;
 
-      while ((text[idx] >= L'a' && text[idx] <= L'z')
-      || (text[idx] >= L'A' && text[idx] <= L'Z')
-      || (text[idx] >= L'0' && text[idx] <= L'9')
-      ||  text[idx] == L'_') {
+      while ((inst->ls.wcs[idx] >= L'a' && inst->ls.wcs[idx] <= L'z')
+      || (inst->ls.wcs[idx] >= L'A' && inst->ls.wcs[idx] <= L'Z')
+      || (inst->ls.wcs[idx] >= L'0' && inst->ls.wcs[idx] <= L'9')
+      ||  inst->ls.wcs[idx] == L'_') {
         
         if (buffer_index >= buffer_size-1) { // NUL
           buffer_size *= 2;
@@ -189,7 +189,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
           buffer = _buffer;
         }
 
-        buffer[buffer_index++] = text[idx];
+        buffer[buffer_index++] = inst->ls.wcs[idx];
         
         idx++;
       }
@@ -226,48 +226,48 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma endregion Identifier
 
     #pragma region Grouping and Ordering (- NEW)
-    if (text[idx] == L'(') {
+    if (inst->ls.wcs[idx] == L'(') {
       tokens[tokens_index++] = (une_token){UNE_TT_LPAR, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L')') {
+    if (inst->ls.wcs[idx] == L')') {
       tokens[tokens_index++] = (une_token){UNE_TT_RPAR, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L'{') {
+    if (inst->ls.wcs[idx] == L'{') {
       tokens[tokens_index++] = (une_token){UNE_TT_LBRC, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L'}') {
+    if (inst->ls.wcs[idx] == L'}') {
       tokens[tokens_index++] = (une_token){UNE_TT_RBRC, (une_position){idx, idx+1}, 0};
       tokens[tokens_index++] = (une_token){UNE_TT_NEW, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L'[') {
+    if (inst->ls.wcs[idx] == L'[') {
       tokens[tokens_index++] = (une_token){UNE_TT_LSQB, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L']') {
+    if (inst->ls.wcs[idx] == L']') {
       tokens[tokens_index++] = (une_token){UNE_TT_RSQB, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L',') {
+    if (inst->ls.wcs[idx] == L',') {
       size_t pos_start = idx;
       idx++;
-      while (text[idx] == L',') idx++;
+      while (inst->ls.wcs[idx] == L',') idx++;
       tokens[tokens_index++] = (une_token){
         .type = UNE_TT_SEP,
         .pos = (une_position){pos_start, idx+1},
       };
       continue;
     }
-    if (text[idx] == L'\0') {
+    if (inst->ls.wcs[idx] == L'\0') {
       if (tokens_index == 0 || tokens[tokens_index-1].type != UNE_TT_NEW) {
         tokens[tokens_index++] = (une_token){UNE_TT_NEW, (une_position){idx, idx+1}, 0};
       }
@@ -277,9 +277,9 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma endregion Grouping and Ordering (- NEW, EOF)
     
     #pragma region Operators (+ Logical Equal)
-    if (text[idx] == L'=') {
+    if (inst->ls.wcs[idx] == L'=') {
       idx++;
-      if (text[idx] == L'=') {
+      if (inst->ls.wcs[idx] == L'=') {
         tokens[tokens_index++] = (une_token){UNE_TT_EQU, (une_position){idx-1, idx+1}, 0};
         idx++;
         continue;
@@ -287,19 +287,19 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       tokens[tokens_index++] = (une_token){UNE_TT_SET, (une_position){idx, idx+1}, 0};
       continue;
     }
-    if (text[idx] == L'+') {
+    if (inst->ls.wcs[idx] == L'+') {
       tokens[tokens_index++] = (une_token){UNE_TT_ADD, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L'-') {
+    if (inst->ls.wcs[idx] == L'-') {
       tokens[tokens_index++] = (une_token){UNE_TT_SUB, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
     }
-    if (text[idx] == L'*') {
+    if (inst->ls.wcs[idx] == L'*') {
       idx++;
-      if (text[idx] == L'*') {
+      if (inst->ls.wcs[idx] == L'*') {
         tokens[tokens_index++] = (une_token){UNE_TT_POW, (une_position){idx-1, idx+1}, 0};
         idx++;
         continue;
@@ -307,9 +307,9 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       tokens[tokens_index++] = (une_token){UNE_TT_MUL, (une_position){idx, idx+1}, 0};
       continue;
     }
-    if (text[idx] == L'/') {
+    if (inst->ls.wcs[idx] == L'/') {
       idx++;
-      if (text[idx] == L'/') {
+      if (inst->ls.wcs[idx] == L'/') {
         tokens[tokens_index++] = (une_token){UNE_TT_FDIV, (une_position){idx-1, idx+1}, 0};
         idx++;
         continue;
@@ -317,7 +317,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       tokens[tokens_index++] = (une_token){UNE_TT_DIV, (une_position){idx, idx+1}, 0};
       continue;
     }
-    if (text[idx] == L'%') {
+    if (inst->ls.wcs[idx] == L'%') {
       tokens[tokens_index++] = (une_token){UNE_TT_MOD, (une_position){idx, idx+1}, 0};
       idx++;
       continue;
@@ -325,22 +325,21 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma endregion Operators (+ Logical Equal)
 
     #pragma region Comparisons (- Logical Equal)
-    if (text[idx] == L'!') {
-      if (text[idx+1] == L'=') {
+    if (inst->ls.wcs[idx] == L'!') {
+      if (inst->ls.wcs[idx+1] == L'=') {
         tokens[tokens_index++] = (une_token){UNE_TT_NEQ, (une_position){idx, idx+2}, 0};
         idx += 2;
         continue;
       }
-      // FIXME:
-      *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
-          _int=(int)text[idx], _int=0);
+      inst->error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
+                                   _int=(int)inst->ls.wcs[idx], _int=0);
       for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
       free(tokens);
       return NULL;
     }
-    if (text[idx] == L'>') {
+    if (inst->ls.wcs[idx] == L'>') {
       idx++;
-      if (text[idx] == L'=') {
+      if (inst->ls.wcs[idx] == L'=') {
         tokens[tokens_index++] = (une_token){UNE_TT_GEQ, (une_position){idx-1, idx+1}, 0};
         idx++;
         continue;
@@ -348,9 +347,9 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
       tokens[tokens_index++] = (une_token){UNE_TT_GTR, (une_position){idx, idx+1}, 0};
       continue;
     }
-    if (text[idx] == L'<') {
+    if (inst->ls.wcs[idx] == L'<') {
       idx++;
-      if (text[idx] == L'=') {
+      if (inst->ls.wcs[idx] == L'=') {
         tokens[tokens_index++] = (une_token){UNE_TT_LEQ, (une_position){idx-1, idx+1}, 0};
         idx++;
         continue;
@@ -361,21 +360,21 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma endregion Comparisons (- Logical Equal)
 
     #pragma region Whitespace
-    if (text[idx] == L' ' || text[idx] == L'\t') {
+    if (inst->ls.wcs[idx] == L' ' || inst->ls.wcs[idx] == L'\t') {
       idx++;
       continue;
     }
-    if (text[idx] == L'\r'
-    || text[idx] == L'\n'
-    || text[idx] == L';')
+    if (inst->ls.wcs[idx] == L'\r'
+    || inst->ls.wcs[idx] == L'\n'
+    || inst->ls.wcs[idx] == L';')
     {
       size_t idx_left = idx;
       idx++;
-      while (text[idx] == L' '
-         || text[idx] == L'\t'
-         || text[idx] == L'\r'
-         || text[idx] == L'\n'
-         || text[idx] == L';') idx++;
+      while (inst->ls.wcs[idx] == L' '
+         || inst->ls.wcs[idx] == L'\t'
+         || inst->ls.wcs[idx] == L'\r'
+         || inst->ls.wcs[idx] == L'\n'
+         || inst->ls.wcs[idx] == L';') idx++;
       if (tokens_index == 0
       || tokens[tokens_index-1].type != UNE_TT_NEW)
       {
@@ -386,15 +385,15 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
     #pragma endregion Whitespace
 
     #pragma region Comment
-    if (text[idx] == L'#') {
-      while (text[idx] != L'\0' && text[idx] != L'\n') idx++;
+    if (inst->ls.wcs[idx] == L'#') {
+      while (inst->ls.wcs[idx] != L'\0' && inst->ls.wcs[idx] != L'\n') idx++;
       continue;
     }
     #pragma endregion Comment
 
     #pragma region Illegal Character
-    *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
-        _int=(int)text[idx], _int=0);
+    inst->error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){idx, idx+1}),
+        _int=(int)inst->ls.wcs[idx], _int=0);
     for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
     free(tokens);
     return NULL;
@@ -406,7 +405,7 @@ une_token *une_lex_wcs(wchar_t *text, une_error *error)
 
 #pragma region une_lex_file
 #ifdef UNE_DEBUG
-// FIXME: Unfinished!
+// Deprecated!
 une_token *une_lex_file(char *path, une_error *error)
 {
   size_t tokens_size = UNE_SIZE_BIG;

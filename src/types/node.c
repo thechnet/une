@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Updated 2021-05-21
+Updated 2021-05-22
 */
 
 #include "node.h"
@@ -431,12 +431,9 @@ une_node *une_node_copy(une_node *src)
   dest->pos = src->pos;
   switch(src->type) {
     case UNE_NT_INT:
-    case UNE_NT_SIZE: // FIXME: .value = .value?
-      dest->content.value._int = src->content.value._int;
-      break;
-    
+    case UNE_NT_SIZE:
     case UNE_NT_FLT:
-      dest->content.value._flt = src->content.value._flt;
+      dest->content.value = src->content.value;
       break;
     
     case UNE_NT_STR:

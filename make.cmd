@@ -46,12 +46,16 @@ main.c ^
 interpreter.c ^
 parser.c ^
 lexer.c ^
+types/instance.c ^
 types/context.c ^
 types/symbols.c ^
 types/error.c ^
 types/result.c ^
 types/node.c ^
 types/token.c ^
+types/interpreter_state.c ^
+types/parser_state.c ^
+types/lexer_state.c ^
 tools.c ^
 builtin.c
 

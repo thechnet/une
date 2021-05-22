@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-05-21
+Modified 2021-05-22
 */
 
 #include "builtin.h"
@@ -9,10 +9,10 @@ Modified 2021-05-21
 const une_builtin_type une_builtin_wcs_to_type(wchar_t *name)
 {
   if (wcscmp(name, L"print") == 0) return UNE_BIF_PRINT;
-  if (wcscmp(name, L"int") == 0) return UNE_BIF_TO_INT;
+  if (wcscmp(name, L"int") == 0)   return UNE_BIF_TO_INT;
   if (wcscmp(name, L"float") == 0) return UNE_BIF_TO_FLT;
-  if (wcscmp(name, L"str") == 0) return UNE_BIF_TO_STR;
-  if (wcscmp(name, L"len") == 0) return UNE_BIF_GET_LEN;
+  if (wcscmp(name, L"str") == 0)   return UNE_BIF_TO_STR;
+  if (wcscmp(name, L"len") == 0)   return UNE_BIF_GET_LEN;
   return UNE_BIF_NONE;
 }
 #pragma endregion une_builtin_wcs_to_type
@@ -21,10 +21,10 @@ const une_builtin_type une_builtin_wcs_to_type(wchar_t *name)
 const une_int une_builtin_get_num_of_params(une_builtin_type type)
 {
   switch (type) {
-    case UNE_BIF_PRINT: return 1;
-    case UNE_BIF_TO_INT: return 1;
-    case UNE_BIF_TO_FLT: return 1;
-    case UNE_BIF_TO_STR: return 1;
+    case UNE_BIF_PRINT:   return 1;
+    case UNE_BIF_TO_INT:  return 1;
+    case UNE_BIF_TO_FLT:  return 1;
+    case UNE_BIF_TO_STR:  return 1;
     case UNE_BIF_GET_LEN: return 1;
     default: WERR(L"Unhandled type %d", type);
   }
@@ -32,11 +32,11 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
 #pragma endregion une_builtin_get_num_of_params
 
 #pragma region une_builtin_print
-une_result une_builtin_print(une_result result, une_context *context, une_position pos)
+une_result une_builtin_print(une_instance *inst, une_position pos, une_result result)
 {
   switch (result.type) {
     case UNE_RT_VOID:
-      context->error = UNE_ERROR_SET(UNE_ET_PRINT_VOID, pos);
+      inst->error = UNE_ERROR_SET(UNE_ET_PRINT_VOID, pos);
       return une_result_create(UNE_RT_ERROR);
     case UNE_RT_INT:
       wprintf(L"%lld", result.value._int);
@@ -51,10 +51,14 @@ une_result une_builtin_print(une_result result, une_context *context, une_positi
       UNE_UNPACK_RESULT_LIST(result, list, list_size);
       wprintf(L"[");
       if (list_size > 0) {
-        wprintf(L"%ls", une_builtin_print(list[1], context, pos));
+        if (list[1].type == UNE_RT_STR) wprintf(L"\""); // FIXME: Better solution?
+        une_builtin_print(inst, pos, list[1]);
+        if (list[1].type == UNE_RT_STR) wprintf(L"\"");
         for (size_t i=2; i<=list_size; i++) {
           wprintf(L", ");
-          une_builtin_print(list[i], context, pos);
+          if (list[i].type == UNE_RT_STR) wprintf(L"\"");
+          une_builtin_print(inst, pos, list[i]);
+          if (list[i].type == UNE_RT_STR) wprintf(L"\"");
         }
       }
       wprintf(L"]");
@@ -67,7 +71,7 @@ une_result une_builtin_print(une_result result, une_context *context, une_positi
 #pragma endregion une_builtin_print
 
 #pragma region une_builtin_to_int
-une_result une_builtin_to_int(une_result result, une_context *context, une_position pos)
+une_result une_builtin_to_int(une_instance *inst, une_position pos, une_result result)
 {
   switch (result.type) {
     case UNE_RT_INT:
@@ -83,14 +87,14 @@ une_result une_builtin_to_int(une_result result, une_context *context, une_posit
         .value._int = wcs_to_une_int(result.value._wcs)
       };
   }
-  context->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
+  inst->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
     _int=(int)result.type, _int=(int)UNE_RT_INT);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_int
 
 #pragma region une_builtin_to_flt
-une_result une_builtin_to_flt(une_result result, une_context *context, une_position pos)
+une_result une_builtin_to_flt(une_instance *inst, une_position pos, une_result result)
 {
   switch (result.type) {
     case UNE_RT_INT:
@@ -106,14 +110,14 @@ une_result une_builtin_to_flt(une_result result, une_context *context, une_posit
         .value._flt = wcs_to_une_flt(result.value._wcs)
       };
   }
-  context->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
+  inst->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
     _int=(int)result.type, _int=(int)UNE_RT_FLT);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_flt
 
 #pragma region une_builtin_to_str
-une_result une_builtin_to_str(une_result result, une_context *context, une_position pos)
+une_result une_builtin_to_str(une_instance *inst, une_position pos, une_result result)
 {
   switch (result.type) {
     case UNE_RT_INT: {
@@ -135,14 +139,14 @@ une_result une_builtin_to_str(une_result result, une_context *context, une_posit
     case UNE_RT_STR:
       return une_result_copy(result);
   }
-  context->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
+  inst->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
     _int=(int)result.type, _int=(int)UNE_RT_STR);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_str
 
 #pragma region une_builtin_get_len
-une_result une_builtin_get_len(une_result result, une_context *context, une_position pos)
+une_result une_builtin_get_len(une_instance *inst, une_position pos, une_result result)
 {
   switch (result.type) {
     case UNE_RT_STR:
@@ -158,7 +162,7 @@ une_result une_builtin_get_len(une_result result, une_context *context, une_posi
       };
     }
   }
-  context->error = UNE_ERROR_SETX(UNE_ET_GETLEN, pos,
+  inst->error = UNE_ERROR_SETX(UNE_ET_GETLEN, pos,
     _int=(int)result.type, _int=0);
   return une_result_create(UNE_RT_ERROR);
 }

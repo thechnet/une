@@ -1,12 +1,12 @@
 /*
 interpreter.c - Une
-Updated 2021-05-21
+Updated 2021-05-22
 */
 
 #include "interpreter.h"
 
 #pragma region une_interpret
-une_result une_interpret(une_node *node, une_context *context)
+une_result une_interpret(une_instance *inst, une_node *node)
 {
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
     LOG(L"interpret:%ls", une_node_type_to_wcs(node->type));
@@ -14,46 +14,46 @@ une_result une_interpret(une_node *node, une_context *context)
   
   switch (node->type) {
 
-    case UNE_NT_STMTS:   return une_interpret_stmts   (node, context);
-    case UNE_NT_ADD:     return une_interpret_add     (node, context);
-    case UNE_NT_SUB:     return une_interpret_sub     (node, context);
-    case UNE_NT_MUL:     return une_interpret_mul     (node, context);
-    case UNE_NT_DIV:     return une_interpret_div     (node, context);
-    case UNE_NT_FDIV:    return une_interpret_fdiv    (node, context);
-    case UNE_NT_MOD:     return une_interpret_mod     (node, context);
-    case UNE_NT_NEG:     return une_interpret_neg     (node, context);
-    case UNE_NT_POW:     return une_interpret_pow     (node, context);
-    case UNE_NT_NOT:     return une_interpret_not     (node, context);
-    case UNE_NT_EQU:     return une_interpret_equ     (node, context);
-    case UNE_NT_NEQ:     return une_interpret_neq     (node, context);
-    case UNE_NT_GTR:     return une_interpret_gtr     (node, context);
-    case UNE_NT_GEQ:     return une_interpret_geq     (node, context);
-    case UNE_NT_LSS:     return une_interpret_lss     (node, context);
-    case UNE_NT_LEQ:     return une_interpret_leq     (node, context);
-    case UNE_NT_AND:     return une_interpret_and     (node, context);
-    case UNE_NT_OR:      return une_interpret_or      (node, context);
-    case UNE_NT_COP:     return une_interpret_cop     (node, context);
-    case UNE_NT_GET_IDX: return une_interpret_get_idx (node, context);
-    case UNE_NT_SET:     return une_interpret_set     (node, context);
-    case UNE_NT_SET_IDX: return une_interpret_set_idx (node, context);
-    case UNE_NT_GET:     return une_interpret_get     (node, context);
-    case UNE_NT_FOR:     return une_interpret_for     (node, context);
-    case UNE_NT_WHILE:   return une_interpret_while   (node, context);
-    case UNE_NT_IF:      return une_interpret_if      (node, context);
-    case UNE_NT_DEF:     return une_interpret_def     (node, context);
-    case UNE_NT_CALL:    return une_interpret_call    (node, context);
+    case UNE_NT_STMTS:   return une_interpret_stmts  (inst, node);
+    case UNE_NT_ADD:     return une_interpret_add    (inst, node);
+    case UNE_NT_SUB:     return une_interpret_sub    (inst, node);
+    case UNE_NT_MUL:     return une_interpret_mul    (inst, node);
+    case UNE_NT_DIV:     return une_interpret_div    (inst, node);
+    case UNE_NT_FDIV:    return une_interpret_fdiv   (inst, node);
+    case UNE_NT_MOD:     return une_interpret_mod    (inst, node);
+    case UNE_NT_NEG:     return une_interpret_neg    (inst, node);
+    case UNE_NT_POW:     return une_interpret_pow    (inst, node);
+    case UNE_NT_NOT:     return une_interpret_not    (inst, node);
+    case UNE_NT_EQU:     return une_interpret_equ    (inst, node);
+    case UNE_NT_NEQ:     return une_interpret_neq    (inst, node);
+    case UNE_NT_GTR:     return une_interpret_gtr    (inst, node);
+    case UNE_NT_GEQ:     return une_interpret_geq    (inst, node);
+    case UNE_NT_LSS:     return une_interpret_lss    (inst, node);
+    case UNE_NT_LEQ:     return une_interpret_leq    (inst, node);
+    case UNE_NT_AND:     return une_interpret_and    (inst, node);
+    case UNE_NT_OR:      return une_interpret_or     (inst, node);
+    case UNE_NT_COP:     return une_interpret_cop    (inst, node);
+    case UNE_NT_GET_IDX: return une_interpret_get_idx(inst, node);
+    case UNE_NT_SET:     return une_interpret_set    (inst, node);
+    case UNE_NT_SET_IDX: return une_interpret_set_idx(inst, node);
+    case UNE_NT_GET:     return une_interpret_get    (inst, node);
+    case UNE_NT_FOR:     return une_interpret_for    (inst, node);
+    case UNE_NT_WHILE:   return une_interpret_while  (inst, node);
+    case UNE_NT_IF:      return une_interpret_if     (inst, node);
+    case UNE_NT_DEF:     return une_interpret_def    (inst, node);
+    case UNE_NT_CALL:    return une_interpret_call   (inst, node);
     
     case UNE_NT_BREAK:    return une_result_create(UNE_RT_BREAK);
     case UNE_NT_CONTINUE: return une_result_create(UNE_RT_CONTINUE);
     
     case UNE_NT_RETURN:
-      context->should_return = true;
+      inst->is.should_return = true;
       if (node->content.branch.a == NULL)
         return une_result_create(UNE_RT_VOID);
-      return une_interpret(node->content.branch.a, context);
+      return une_interpret(inst, node->content.branch.a);
 
     case UNE_NT_LIST:
-      return une_interpret_list(node, context);
+      return une_interpret_list(inst, node);
 
     case UNE_NT_INT:
       return (une_result){
@@ -78,11 +78,11 @@ une_result une_interpret(une_node *node, une_context *context)
 #pragma endregion une_interpret
 
 #pragma region une_interpret_as
-static une_result une_interpret_as(une_result_type type, une_node *node, une_context *context)
+static une_result une_interpret_as(une_instance *inst, une_node *node, une_result_type type)
 {
-  une_result result = une_interpret(node, context);
+  une_result result = une_interpret(inst, node);
   if (result.type != type && result.type != UNE_RT_ERROR) {
-    context->error = UNE_ERROR_SETX(
+    inst->error = UNE_ERROR_SETX(
       UNE_ET_EXPECTED_RESULT_TYPE,
       node->pos,
       _int=(int)type,
@@ -96,7 +96,7 @@ static une_result une_interpret_as(une_result_type type, une_node *node, une_con
 #pragma endregion une_interpret_as
 
 #pragma region une_interpret_stmts
-static une_result une_interpret_stmts(une_node *node, une_context *context)
+static une_result une_interpret_stmts(une_instance *inst, une_node *node)
 {
   une_result _result; /* Here it's ok to not initialize the result, as it
                          will never be returned like this. */
@@ -105,7 +105,7 @@ static une_result une_interpret_stmts(une_node *node, une_context *context)
 
   UNE_FOR_NODE_LIST_ITEM(i, nodes_size) {
 
-    _result = une_interpret(nodes[i], context);
+    _result = une_interpret(inst, nodes[i]);
     
     if (_result.type == UNE_RT_ERROR) {
       /* DOC: We only keep _result if there was an error. Otherwise, results of
@@ -115,7 +115,7 @@ static une_result une_interpret_stmts(une_node *node, une_context *context)
     }
     
     if (
-      context->should_return ||
+      inst->is.should_return ||
       _result.type == UNE_RT_CONTINUE ||
       _result.type == UNE_RT_BREAK
     ) {
@@ -132,12 +132,12 @@ static une_result une_interpret_stmts(une_node *node, une_context *context)
 #pragma endregion une_interpret_stmts
 
 #pragma region une_interpret_add
-static une_result une_interpret_add(une_node *node, une_context *context)
+static une_result une_interpret_add(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
   
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -172,7 +172,7 @@ static une_result une_interpret_add(une_node *node, une_context *context)
 
   // Error
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_ADD, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_ADD, node->pos,
         _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -185,11 +185,11 @@ static une_result une_interpret_add(une_node *node, une_context *context)
 #pragma endregion une_interpret_add
 
 #pragma region une_interpret_sub
-static une_result une_interpret_sub(une_node *node, une_context *context)
+static une_result une_interpret_sub(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -214,7 +214,7 @@ static une_result une_interpret_sub(une_node *node, une_context *context)
 
   // Error
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_SUB, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_SUB, node->pos,
         _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -227,11 +227,11 @@ static une_result une_interpret_sub(une_node *node, une_context *context)
 #pragma endregion une_interpret_sub
 
 #pragma region une_interpret_mul
-static une_result une_interpret_mul(une_node *node, une_context *context)
+static une_result une_interpret_mul(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -292,7 +292,7 @@ static une_result une_interpret_mul(une_node *node, une_context *context)
 
   // Error
   else {
-    context->error = UNE_ERROR_SETX(
+    inst->error = UNE_ERROR_SETX(
       UNE_ET_MUL, node->pos, _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -305,11 +305,11 @@ static une_result une_interpret_mul(une_node *node, une_context *context)
 #pragma endregion une_interpret_mul
 
 #pragma region une_interpret_div
-static une_result une_interpret_div(une_node *node, une_context *context)
+static une_result une_interpret_div(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -321,7 +321,7 @@ static une_result une_interpret_div(une_node *node, une_context *context)
     (right.type == UNE_RT_INT && right.value._int == 0) ||
     (right.type == UNE_RT_FLT && right.value._flt == 0.0)
   ) {
-    context->error = UNE_ERROR_SET(
+    inst->error = UNE_ERROR_SET(
       UNE_ET_ZERO_DIVISION, node->content.branch.b->pos);
     result.type = UNE_RT_ERROR;
   }
@@ -348,7 +348,7 @@ static une_result une_interpret_div(une_node *node, une_context *context)
 
   // Error
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_DIV, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_DIV, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -361,11 +361,11 @@ static une_result une_interpret_div(une_node *node, une_context *context)
 #pragma endregion une_interpret_div
 
 #pragma region une_interpret_fdiv
-static une_result une_interpret_fdiv(une_node *node, une_context *context)
+static une_result une_interpret_fdiv(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -377,7 +377,7 @@ static une_result une_interpret_fdiv(une_node *node, une_context *context)
     (right.type == UNE_RT_INT && right.value._int == 0) ||
     (right.type == UNE_RT_FLT && right.value._flt == 0.0)
   ) {
-    context->error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, 
+    inst->error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, 
       node->content.branch.b->pos);
     result.type = UNE_RT_ERROR;
   }
@@ -399,7 +399,7 @@ static une_result une_interpret_fdiv(une_node *node, une_context *context)
 
   // Error
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_FDIV, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_FDIV, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -412,11 +412,11 @@ static une_result une_interpret_fdiv(une_node *node, une_context *context)
 #pragma endregion une_interpret_fdiv
 
 #pragma region une_interpret_mod
-static une_result une_interpret_mod(une_node *node, une_context *context)
+static une_result une_interpret_mod(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -441,7 +441,7 @@ static une_result une_interpret_mod(une_node *node, une_context *context)
 
   // Error
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_MOD, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_MOD, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -454,9 +454,9 @@ static une_result une_interpret_mod(une_node *node, une_context *context)
 #pragma endregion une_interpret_mod
 
 #pragma region une_interpret_neg
-static une_result une_interpret_neg(une_node *node, une_context *context)
+static une_result une_interpret_neg(une_instance *inst, une_node *node)
 {
-  une_result center = une_interpret(node->content.branch.a, context);
+  une_result center = une_interpret(inst, node->content.branch.a);
   
   une_result result = une_result_create(UNE_RT_VOID);
   
@@ -469,7 +469,7 @@ static une_result une_interpret_neg(une_node *node, une_context *context)
     result.type = UNE_RT_FLT;
     result.value._flt = -center.value._flt;
   } else {
-    context->error = UNE_ERROR_SETX(UNE_ET_NEG, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_NEG, node->pos,
       _int=(int)center.type, _int=0);
     result.type = UNE_RT_ERROR;
   }
@@ -481,11 +481,11 @@ static une_result une_interpret_neg(une_node *node, une_context *context)
 #pragma endregion une_interpret_neg
 
 #pragma region une_interpret_pow
-static une_result une_interpret_pow(une_node *node, une_context *context)
+static une_result une_interpret_pow(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -510,13 +510,13 @@ static une_result une_interpret_pow(une_node *node, une_context *context)
   
 // Error
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_POW, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_POW, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
 
   if (result.type == UNE_RT_FLT && isnan(result.value._flt)) {
-    context->error = UNE_ERROR_SET(UNE_ET_UNREAL_NUMBER, node->pos);
+    inst->error = UNE_ERROR_SET(UNE_ET_UNREAL_NUMBER, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -527,9 +527,9 @@ static une_result une_interpret_pow(une_node *node, une_context *context)
 #pragma endregion une_interpret_pow
 
 #pragma region une_interpret_not
-static une_result une_interpret_not(une_node *node, une_context *context)
+static une_result une_interpret_not(une_instance *inst, une_node *node)
 {
-  une_result center = une_interpret(node->content.branch.a, context);
+  une_result center = une_interpret(inst, node->content.branch.a);
   if (center.type == UNE_RT_ERROR) return center;
   
   une_result result = (une_result){
@@ -543,11 +543,11 @@ static une_result une_interpret_not(une_node *node, une_context *context)
 #pragma endregion une_interpret_not
 
 #pragma region une_interpret_equ
-static une_result une_interpret_equ(une_node *node, une_context *context)
+static une_result une_interpret_equ(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -558,7 +558,7 @@ static une_result une_interpret_equ(une_node *node, une_context *context)
   une_result result = une_result_create(UNE_RT_VOID);
   
   if (is_equal == -1) {
-    context->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   } else {
@@ -574,9 +574,9 @@ static une_result une_interpret_equ(une_node *node, une_context *context)
 #pragma endregion une_interpret_equ
 
 #pragma region une_interpret_neq
-static une_result une_interpret_neq(une_node *node, une_context *context)
+static une_result une_interpret_neq(une_instance *inst, une_node *node)
 {
-  une_result equ = une_interpret_equ(node, context);
+  une_result equ = une_interpret_equ(inst, node);
   if (equ.type == UNE_RT_ERROR) return equ;
 
   equ.value._int = !equ.value._int;
@@ -585,11 +585,11 @@ static une_result une_interpret_neq(une_node *node, une_context *context)
 #pragma endregion une_interpret_neq
 
 #pragma region une_interpret_gtr
-static une_result une_interpret_gtr(une_node *node, une_context *context)
+static une_result une_interpret_gtr(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -624,7 +624,7 @@ static une_result une_interpret_gtr(une_node *node, une_context *context)
   
   // Illegal Comparison
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -637,11 +637,11 @@ static une_result une_interpret_gtr(une_node *node, une_context *context)
 #pragma endregion une_interpret_gtr
 
 #pragma region une_interpret_geq
-static une_result une_interpret_geq(une_node *node, une_context *context)
+static une_result une_interpret_geq(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -676,7 +676,7 @@ static une_result une_interpret_geq(une_node *node, une_context *context)
   
   // Illegal Comparison
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -689,11 +689,11 @@ static une_result une_interpret_geq(une_node *node, une_context *context)
 #pragma endregion une_interpret_geq
 
 #pragma region une_interpret_lss
-static une_result une_interpret_lss(une_node *node, une_context *context)
+static une_result une_interpret_lss(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -728,7 +728,7 @@ static une_result une_interpret_lss(une_node *node, une_context *context)
   
   // Illegal Comparison
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -741,11 +741,11 @@ static une_result une_interpret_lss(une_node *node, une_context *context)
 #pragma endregion une_interpret_lss
 
 #pragma region une_interpret_leq
-static une_result une_interpret_leq(une_node *node, une_context *context)
+static une_result une_interpret_leq(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR) return left;
-  une_result right = une_interpret(node->content.branch.b, context);
+  une_result right = une_interpret(inst, node->content.branch.b);
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -780,7 +780,7 @@ static une_result une_interpret_leq(une_node *node, une_context *context)
   
   // Illegal Comparison
   else {
-    context->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_COMPARISON, node->pos,
       _int=(int)left.type, _int=(int)right.type);
     result.type = UNE_RT_ERROR;
   }
@@ -793,9 +793,9 @@ static une_result une_interpret_leq(une_node *node, une_context *context)
 #pragma endregion une_interpret_leq
 
 #pragma region une_interpret_and
-static une_result une_interpret_and(une_node *node, une_context *context)
+static une_result une_interpret_and(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR || !une_result_is_true(left)) return left;
   une_result_free(left);
 
@@ -806,14 +806,14 @@ static une_result une_interpret_and(une_node *node, une_context *context)
   - false, we still return it knowing the main
     evaluation of the expression will remain false.
 */
-  return une_interpret(node->content.branch.b, context);
+  return une_interpret(inst, node->content.branch.b);
 }
 #pragma endregion une_interpret_and
 
 #pragma region une_interpret_or
-static une_result une_interpret_or(une_node *node, une_context *context)
+static une_result une_interpret_or(une_instance *inst, une_node *node)
 {
-  une_result left = une_interpret(node->content.branch.a, context);
+  une_result left = une_interpret(inst, node->content.branch.a);
   if (left.type == UNE_RT_ERROR || une_result_is_true(left)) return left;
   une_result_free(left);
 
@@ -824,34 +824,34 @@ static une_result une_interpret_or(une_node *node, une_context *context)
   - false, we still return it knowing the main
     evaluation of the expression will remain false.
 */
-  return une_interpret(node->content.branch.b, context);
+  return une_interpret(inst, node->content.branch.b);
 }
 #pragma endregion une_interpret_or
 
 #pragma region une_interpret_cop
-static une_result une_interpret_cop(une_node *node, une_context *context)
+static une_result une_interpret_cop(une_instance *inst, une_node *node)
 {
-  une_result condition = une_interpret(node->content.branch.b, context);
+  une_result condition = une_interpret(inst, node->content.branch.b);
   if (condition.type == UNE_RT_ERROR) return condition;
   
   une_int is_true = une_result_is_true(condition);
   une_result_free(condition);
 
   if (is_true)
-    return une_interpret(node->content.branch.a, context);
-  return une_interpret(node->content.branch.c, context);
+    return une_interpret(inst, node->content.branch.a);
+  return une_interpret(inst, node->content.branch.c);
 }
 #pragma endregion une_interpret_cop
 
 #pragma region une_interpret_get_idx
-static une_result une_interpret_get_idx(une_node *node, une_context *context)
+static une_result une_interpret_get_idx(une_instance *inst, une_node *node)
 {
 // Get base.
-  une_result base = une_interpret(node->content.branch.a, context);
+  une_result base = une_interpret(inst, node->content.branch.a);
   if (base.type == UNE_RT_ERROR) return base;
 
 // Get index.
-  une_result index_result = une_interpret_as(UNE_RT_INT, node->content.branch.b, context);
+  une_result index_result = une_interpret_as(inst, node->content.branch.b, UNE_RT_INT);
   if (index_result.type == UNE_RT_ERROR) {
     une_result_free(base);
     return index_result;
@@ -877,7 +877,7 @@ static une_result une_interpret_get_idx(une_node *node, une_context *context)
 
     // Type not indexable.
     default:
-      context->error = UNE_ERROR_SETX(UNE_ET_NOT_INDEXABLE, node->pos,
+      inst->error = UNE_ERROR_SETX(UNE_ET_NOT_INDEXABLE, node->pos,
         _int=(int)base.type, _int=0);
       une_result_free(base);
       return une_result_create(UNE_RT_VOID);
@@ -885,7 +885,7 @@ static une_result une_interpret_get_idx(une_node *node, une_context *context)
 
 // Index out of range (une_interpret_get_idx_TYPE returned UNE_RT_ERROR).
   une_result_free(base);
-  context->error = UNE_ERROR_SETX(UNE_ET_INDEX_OUT_OF_RANGE,
+  inst->error = UNE_ERROR_SETX(UNE_ET_INDEX_OUT_OF_RANGE,
     node->content.branch.b->pos, _int=index, _int=0);
   return une_result_create(UNE_RT_ERROR);
 }
@@ -922,16 +922,16 @@ static une_result une_interpret_get_idx_str(une_result str, une_int index)
 #pragma endregion une_interpret_get_idx_str
 
 #pragma region une_interpret_get
-static une_result une_interpret_get(une_node *node, une_context *context)
+static une_result une_interpret_get(une_instance *inst, une_node *node)
 {
-  // une_result name = une_interpret(node->content.branch.a, context);
+  // une_result name = une_interpret(inst, node->content.branch.a);
   // if (name.type == UNE_RT_ERROR) return name;
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
   // Find variable in all contexts
-  une_variable *var = une_variable_find_global(context, name);
+  une_variable *var = une_variable_find_global(inst->is.context, name);
   if (var == NULL) {
-    context->error = UNE_ERROR_SETX(UNE_ET_GET, node->content.branch.a->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_GET, node->content.branch.a->pos,
         _wcs=wcs_dup(name), _int=0);
     return (une_result){
       .type = UNE_RT_ERROR,
@@ -943,38 +943,38 @@ static une_result une_interpret_get(une_node *node, une_context *context)
 #pragma endregion une_interpret_get
 
 #pragma region une_interpret_set_idx
-static une_result une_interpret_set_idx(une_node *node, une_context *context)
+static une_result une_interpret_set_idx(une_instance *inst, une_node *node)
 {
 // Get name of list
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
 // Find list in all contexts
-  une_variable *var = une_variable_find_global(context, name);
+  une_variable *var = une_variable_find_global(inst->is.context, name);
   if (var == NULL) {
-    context->error = UNE_ERROR_SETX(UNE_ET_GET, node->content.branch.a->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_GET, node->content.branch.a->pos,
       _wcs=wcs_dup(name), _int=0);
     return une_result_create(UNE_RT_ERROR);
   }
   if (var->content.type != UNE_RT_LIST) {
-    context->error = UNE_ERROR_SETX(UNE_ET_SET_NOT_INDEXABLE, node->content.branch.a->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_SET_NOT_INDEXABLE, node->content.branch.a->pos,
       _int=(une_int)var->content.type, _int=0);
     return une_result_create(UNE_RT_ERROR);
   }
   UNE_UNPACK_RESULT_LIST(var->content, list, list_size);
 
 // Get index to list
-  une_result index = une_interpret_as(UNE_RT_INT, node->content.branch.b, context);
+  une_result index = une_interpret_as(inst, node->content.branch.b, UNE_RT_INT);
   if (index.type == UNE_RT_ERROR) return index;
   une_int index_value = index.value._int;
   une_result_free(index);
   if (index_value < 0 || index_value >= list_size) {
-    context->error = UNE_ERROR_SETX(UNE_ET_INDEX_OUT_OF_RANGE,
+    inst->error = UNE_ERROR_SETX(UNE_ET_INDEX_OUT_OF_RANGE,
       node->content.branch.b->pos, _int=index_value, _int=0);
     return une_result_create(UNE_RT_ERROR);
   }
 
 // Set result
-  une_result result = une_interpret(node->content.branch.c, context);
+  une_result result = une_interpret(inst, node->content.branch.c);
   if (result.type == UNE_RT_ERROR) return result;
   list[1+index_value] = result;
 
@@ -983,15 +983,15 @@ static une_result une_interpret_set_idx(une_node *node, une_context *context)
 #pragma endregion une_interpret_set_idx
 
 #pragma region une_interpret_set
-static une_result une_interpret_set(une_node *node, une_context *context)
+static une_result une_interpret_set(une_instance *inst, une_node *node)
 {
-  une_result result = une_interpret(node->content.branch.b, context);
+  une_result result = une_interpret(inst, node->content.branch.b);
   if (result.type == UNE_RT_ERROR) return result;
 
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
   // Check if variable already exists *in current context*.
-  une_variable *var = une_variable_find_or_create(context, name);
+  une_variable *var = une_variable_find_or_create(inst->is.context, name);
   
   une_result_free(var->content);
   var->content = result;
@@ -1001,14 +1001,14 @@ static une_result une_interpret_set(une_node *node, une_context *context)
 #pragma endregion une_interpret_set
 
 #pragma region une_interpret_for
-static une_result une_interpret_for(une_node *node, une_context *context)
+static une_result une_interpret_for(une_instance *inst, une_node *node)
 {
-  une_result result = une_interpret_as(UNE_RT_INT, node->content.branch.b, context);
+  une_result result = une_interpret_as(inst, node->content.branch.b, UNE_RT_INT);
   if (result.type == UNE_RT_ERROR) return result;
   une_int from = result.value._int;
   une_result_free(result);
 
-  result = une_interpret_as(UNE_RT_INT, node->content.branch.c, context);
+  result = une_interpret_as(inst, node->content.branch.c, UNE_RT_INT);
   if (result.type == UNE_RT_ERROR) return result;
   une_int till = result.value._int;
   une_result_free(result);
@@ -1025,7 +1025,7 @@ static une_result une_interpret_for(une_node *node, une_context *context)
   wchar_t *id = node->content.branch.a->content.value._wcs;
 
 // We only check the *local* variables.
-  une_variable *var = une_variable_find_or_create(context, id);
+  une_variable *var = une_variable_find_or_create(inst->is.context, id);
 
   for (une_int i=from; i!=till; i+=step) {
     une_result_free(var->content);
@@ -1033,8 +1033,8 @@ static une_result une_interpret_for(une_node *node, une_context *context)
       .type = UNE_RT_INT,
       .value._int = i
     };
-    result = une_interpret(node->content.branch.d, context);
-    if (result.type == UNE_RT_ERROR || context->should_return) return result;
+    result = une_interpret(inst, node->content.branch.d);
+    if (result.type == UNE_RT_ERROR || inst->is.should_return) return result;
     if (result.type == UNE_RT_BREAK) break;
     if (i+step != till) une_result_free(result);
   }
@@ -1045,20 +1045,20 @@ static une_result une_interpret_for(une_node *node, une_context *context)
 #pragma endregion une_interpret_for
 
 #pragma region une_interpret_while
-static une_result une_interpret_while(une_node *node, une_context *context)
+static une_result une_interpret_while(une_instance *inst, une_node *node)
 {
   une_result result, condition;
   une_result_type result_type;
   une_int condition_is_true;
 
   while (true) {
-    condition = une_interpret(node->content.branch.a, context);
+    condition = une_interpret(inst, node->content.branch.a);
     if (condition.type == UNE_RT_ERROR) return condition;
     condition_is_true = une_result_is_true(condition);
     une_result_free(condition);
     if (!condition_is_true) break;
-    result = une_interpret(node->content.branch.b, context);
-    if (result.type == UNE_RT_ERROR || context->should_return) return result;
+    result = une_interpret(inst, node->content.branch.b);
+    if (result.type == UNE_RT_ERROR || inst->is.should_return) return result;
     result_type = result.type;
     une_result_free(result);
     if (result_type == UNE_RT_BREAK) break;
@@ -1069,18 +1069,18 @@ static une_result une_interpret_while(une_node *node, une_context *context)
 #pragma endregion une_interpret_while
 
 #pragma region une_interpret_if
-static une_result une_interpret_if(une_node *node, une_context *context)
+static une_result une_interpret_if(une_instance *inst, une_node *node)
 {
-  une_result condition = une_interpret(node->content.branch.a, context);
+  une_result condition = une_interpret(inst, node->content.branch.a);
   if (condition.type == UNE_RT_ERROR) return condition;
   une_int is_true = une_result_is_true(condition);
   une_result_free(condition);
 
   une_result result = une_result_create(UNE_RT_VOID);
   if (is_true) {
-    result = une_interpret(node->content.branch.b, context);
+    result = une_interpret(inst, node->content.branch.b);
   } else if (node->content.branch.c != NULL) {
-    result = une_interpret(node->content.branch.c, context);
+    result = une_interpret(inst, node->content.branch.c);
   }
 
   // if (context->should_return) return result;
@@ -1091,15 +1091,17 @@ static une_result une_interpret_if(une_node *node, une_context *context)
 #pragma endregion une_interpret_if
 
 #pragma region une_interpret_def
-static une_result une_interpret_def(une_node *node, une_context *context)
+static une_result une_interpret_def(une_instance *inst, une_node *node)
 {
 // Get function name.
   wchar_t *name = node->content.branch.a->content.value._wcs;
   
 // Check if function already exists *in current context*.
-  une_function *fn = une_function_find(context->functions, context->functions_count, name);
+  une_function *fn = une_function_find(
+    inst->is.context->functions, inst->is.context->functions_count, name
+  );
   if (fn != NULL) {
-    context->error = UNE_ERROR_SETX(UNE_ET_DEF, node->content.branch.a->pos, _wcs=wcs_dup(name), _int=0);
+    inst->error = UNE_ERROR_SETX(UNE_ET_DEF, node->content.branch.a->pos, _wcs=wcs_dup(name), _int=0);
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -1113,9 +1115,9 @@ static une_result une_interpret_def(une_node *node, une_context *context)
 
 // Define function.
   fn = une_function_create(
-    &context->functions,
-    &context->functions_count,
-    &context->functions_size,
+    &inst->is.context->functions,
+    &inst->is.context->functions_count,
+    &inst->is.context->functions_size,
     name
   );
   fn->params_count = params_count;
@@ -1127,12 +1129,12 @@ static une_result une_interpret_def(une_node *node, une_context *context)
 #pragma endregion une_interpret_def
 
 #pragma region une_interpret_call_def
-static une_result une_interpret_call_def(une_function *fn, une_result *args, une_context *context)
+static une_result une_interpret_call_def(une_instance *inst, une_function *fn, une_result *args)
 {
 // Create function context.
-  une_context *_context = une_context_create();
-  _context->parent = context;
-  context = _context;
+  une_context *context = une_context_create();
+  context->parent = inst->is.context;
+  inst->is.context = context;
   context->name = wcs_dup(fn->name);
   context->variables_size = UNE_SIZE_SMALL; // FIXME: SIZE
   context->variables = rmalloc(context->variables_size*sizeof(*context->variables));
@@ -1147,34 +1149,32 @@ static une_result une_interpret_call_def(une_function *fn, une_result *args, une
   }
 
 // Interpret body.
-  une_result result = une_interpret(fn->body, context);
-  if (result.type == UNE_RT_ERROR)
-    context->parent->error = une_error_copy(context->error);
+  une_result result = une_interpret(inst, fn->body);
+  inst->is.should_return = false;
 
 // Return to parent context.
-  _context = context->parent;
-  une_context_free(context, true);
-  context = _context;
+  inst->is.context = context->parent;
+  une_context_free(context);
   return result;
 }
 #pragma endregion une_interpret_call
 
 #pragma region une_interpret_call_builtin
-static une_result une_interpret_call_builtin(une_builtin_type type, une_result *args, une_context *context, une_position pos)
+static une_result une_interpret_call_builtin(une_instance *inst, une_builtin_type type, une_result *args, une_position pos)
 {
   switch (type) {
-    case UNE_BIF_PRINT: return une_builtin_print(args[0], context, pos);
-    case UNE_BIF_TO_INT: return une_builtin_to_int(args[0], context, pos);
-    case UNE_BIF_TO_FLT: return une_builtin_to_flt(args[0], context, pos);
-    case UNE_BIF_TO_STR: return une_builtin_to_str(args[0], context, pos);
-    case UNE_BIF_GET_LEN: return une_builtin_get_len(args[0], context, pos);
+    case UNE_BIF_PRINT: return une_builtin_print    (inst, pos, args[0]);
+    case UNE_BIF_TO_INT: return une_builtin_to_int  (inst, pos, args[0]);
+    case UNE_BIF_TO_FLT: return une_builtin_to_flt  (inst, pos, args[0]);
+    case UNE_BIF_TO_STR: return une_builtin_to_str  (inst, pos, args[0]);
+    case UNE_BIF_GET_LEN: return une_builtin_get_len(inst, pos, args[0]);
     default: WERR(L"Unhandled builtin type %d", type);
   }
 }
 #pragma endregion une_interpret_call_builtin
 
 #pragma region une_interpret_call
-une_result une_interpret_call(une_node *node, une_context *context)
+une_result une_interpret_call(une_instance *inst, une_node *node)
 {
 // Get function name.
   wchar_t *name = node->content.branch.a->content.value._wcs;
@@ -1190,9 +1190,9 @@ une_result une_interpret_call(une_node *node, une_context *context)
 
 // Check if function exists in symbol table.
   else {
-    fn = une_function_find_global(context, name);
+    fn = une_function_find_global(inst->is.context, name);
     if (fn == NULL) {
-      context->error = UNE_ERROR_SETX(UNE_ET_CALL, node->content.branch.a->pos,
+      inst->error = UNE_ERROR_SETX(UNE_ET_CALL, node->content.branch.a->pos,
         _wcs=wcs_dup(name), _int=0);
       return une_result_create(UNE_RT_ERROR);
     }
@@ -1202,7 +1202,7 @@ une_result une_interpret_call(une_node *node, une_context *context)
 // Get arguments and compare number of arguments to number of parameters.
   UNE_UNPACK_NODE_LIST(node->content.branch.b, args_n, args_count);
   if (args_count != num_of_params) {
-    context->error = UNE_ERROR_SETX(UNE_ET_CALL_ARGS, node->content.branch.b->pos,
+    inst->error = UNE_ERROR_SETX(UNE_ET_CALL_ARGS, node->content.branch.b->pos,
       _int=num_of_params, _int=args_count);
     return une_result_create(UNE_RT_ERROR);
   }
@@ -1210,7 +1210,7 @@ une_result une_interpret_call(une_node *node, une_context *context)
 // Interpret arguments.
   une_result *args = rmalloc(args_count*sizeof(*args));
   for (size_t i=0; i<args_count; i++) {
-    une_result temp = une_interpret(args_n[i+1], context);
+    une_result temp = une_interpret(inst, args_n[i+1]);
     if (temp.type == UNE_RT_ERROR) {
       for (size_t j=0; j<i; j++) {
         une_result_free(args[j]);
@@ -1225,13 +1225,13 @@ une_result une_interpret_call(une_node *node, une_context *context)
   une_result result;
   if (builtin_type != UNE_BIF_NONE) {
     result = une_interpret_call_builtin(
+      inst,
       builtin_type,
       args,
-      context,
       node->content.branch.b->pos
     );
   } else {
-    result = une_interpret_call_def(fn, args, context);
+    result = une_interpret_call_def(inst, fn, args);
   }
   for (size_t i=0; i<num_of_params; i++) {
     une_result_free(args[i]);
@@ -1242,7 +1242,7 @@ une_result une_interpret_call(une_node *node, une_context *context)
 #pragma endregion une_interpret_call
 
 #pragma region une_interpret_list
-static une_result une_interpret_list(une_node *node, une_context *context)
+static une_result une_interpret_list(une_instance *inst, une_node *node)
 {
   UNE_UNPACK_NODE_LIST(node, list, list_size);
 
@@ -1254,7 +1254,7 @@ static une_result une_interpret_list(une_node *node, une_context *context)
   };
 
   UNE_FOR_NODE_LIST_ITEM(i, list_size) {
-    result_list[i] = une_interpret(list[i], context);
+    result_list[i] = une_interpret(inst, list[i]);
     if (result_list[i].type == UNE_RT_ERROR) {
       une_result result = une_result_copy(result_list[i]);
       for (size_t j=0; j<=i; j++) {

@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Updated 2021-04-28
+Updated 2021-05-22
 */
 
 #ifndef UNE_LEXER_H
@@ -9,10 +9,11 @@ Updated 2021-04-28
 #include "primitive.h"
 #include "tools.h"
 #include "types/token.h"
-#include "types/error.h"
+#include "types/instance.h"
 #include <string.h>
 
-une_token *une_lex_wcs(wchar_t *text, une_error *error);
+// Public Lexer Interface.
+une_token *une_lex_wcs(une_instance *inst);
 
 #ifdef UNE_DEBUG
 une_token *une_lex_file(char *path, une_error *error);

@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Updated 2021-05-21
+Updated 2021-05-22
 */
 
 #include "result.h"
@@ -230,11 +230,8 @@ une_result une_result_copy(une_result src)
     case UNE_RT_INT:
     case UNE_RT_ERROR:
     case UNE_RT_SIZE:
-      dest.value._int = src.value._int;
-      break;
-    
     case UNE_RT_FLT:
-      dest.value._flt = src.value._flt;
+      dest.value = src.value;
       break;
     
     case UNE_RT_ID:

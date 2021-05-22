@@ -1,33 +1,17 @@
 /*
 context.c - Une
-Updated 2021-05-21
+Updated 2021-05-22
 */
 
 #include "context.h"
 
 #pragma region une_context_free
-// FIXME: Complete?
-void une_context_free(une_context *context, bool is_function_context)
+void une_context_free(une_context *context)
 {
-  // 1)
-  if (context->name != NULL) {
-    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-      wprintf(UNE_COLOR_HINT L"%hs:%hs:%d: " UNE_COLOR_NEUTRAL L"name\n", __FILE__, __FUNCTION__, __LINE__);
-    #endif
-    free(context->name);
-  }
-  
-  #if defined(UNE_DO_READ)
-    if (context->text != NULL) {
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d: " UNE_COLOR_NEUTRAL L"text\n", __FILE__, __FUNCTION__, __LINE__);
-      #endif
-      free(context->text);
-    }
-  #endif
+  free(context->name);
 
   #if defined(UNE_DO_INTERPRET)
-    if (context->ast != NULL || is_function_context) {
+    // if (context->ast != NULL || is_function_context) {
       // 2)
       for (size_t i=0; i<context->variables_count; i++) {
         une_variable_free(context->variables[i]);
@@ -38,25 +22,8 @@ void une_context_free(une_context *context, bool is_function_context)
         une_function_free(context->functions[i]);
       }
       free(context->functions);
-    }
+    // }
   #endif
-
-  if (context->tokens != NULL) {
-    // 4)
-    #if defined(UNE_DO_PARSE)
-      une_node_free(context->ast, false);
-    #endif
-    // 5)
-    #if defined(UNE_DO_LEX)
-      une_tokens_free(context->tokens);
-    #endif
-  }
-  
-  // 6)
-  // It's possible for une_error to contain pointers to allocated memory
-  // that's used to provide details for an error message.
-  // An example of this is the UNE_ET_GET (see une_interpret_get).
-  une_error_free(context->error);
   
   free(context);
   
@@ -71,24 +38,12 @@ une_context *une_context_create(void)
 {
   une_context *context = rmalloc(sizeof(*context));
   context->parent = NULL;
-  context->name = NULL;
-  context->text = NULL;
-  context->error = (une_error){
-    .type = __UNE_ET_none__,
-    .pos = (une_position){0, 1},
-    .values[0]._wcs = NULL,
-    .values[1]._wcs = NULL,
-  };
-  context->tokens = NULL;
-  context->token_index = 0;
-  context->ast = NULL;
   context->variables = NULL;
   context->variables_size = 0;
   context->variables_count = 0;
   context->functions = NULL;
   context->functions_size = 0;
   context->functions_count = 0;
-  context->should_return = false;
   return context;
 }
 #pragma endregion une_context_create

@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Updated 2021-05-21
+Updated 2021-05-22
 */
 
 #include "une.h"
@@ -16,33 +16,18 @@ int main(int argc, char *argv[])
     wprintf(UNE_COLOR_SUCCESS L"\33[7m\33[K\33[27m\33[0m\n");
   #endif
 
-  une_context *context = une_context_create();
-
-  // Run Command Line
-  if (argc > 2 && strcmp(argv[1], "do") == 0) {
-    context->name = rmalloc((wcslen(L"<string>")+1)*sizeof(*context->name));
-    wcscpy(context->name, L"<string>");
-    #if defined(UNE_DO_READ)
-      context->text = str_to_wcs(argv[2]);
-    #endif
-  }
-  // Run File
-  else {
-    if (argc < 2) WERR("No input file.");
-    context->name = str_to_wcs(argv[1]);
-    #if defined(UNE_DO_READ)
-      context->text = file_read(argv[1]);
-    #endif
-  }
+  une_instance instance = une_instance_create();
+  
+  if (argc < 2) WERR("No input file.");
+  instance.is.context->name = str_to_wcs(argv[1]);
+  #if defined(UNE_DO_READ)
+    instance.ls.wcs = file_read(argv[1]);
+  #endif
   
   #if defined(UNE_DO_LEX)
-    #if defined(UNE_DO_READ)
-      context->tokens = une_lex_wcs(context->text, &context->error);
-    #else
-      context->tokens = une_lex_file(context->name, &context->error);
-    #endif
-    if (context->tokens == NULL) {
-      une_error_display(context->error, context->text, context->name);
+    instance.ps.tokens = une_lex_wcs(&instance);
+    if (instance.ps.tokens == NULL) {
+      une_error_display(instance.error, instance.ls, instance.is.context->name);
       wprintf(L"\n");
     }
     #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
@@ -52,15 +37,12 @@ int main(int argc, char *argv[])
   #endif
 
   #if defined(UNE_DO_PARSE)
-    if (context->tokens != NULL) {
-      context->ast = une_parse(
-        context->tokens,
-        &context->token_index,
-        &context->error
-      );
-      if (context->ast == NULL) {
-        une_error_display(context->error, context->text, context->name);
-        une_node_free(context->ast, false);
+    une_node *ast = NULL;
+    if (instance.ps.tokens != NULL) {
+      ast = une_parse(&instance);
+      if (ast == NULL) {
+        une_error_display(instance.error, instance.ls, instance.is.context->name);
+        une_node_free(ast, false);
         wprintf(L"\n");
       }
       #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
@@ -76,14 +58,19 @@ int main(int argc, char *argv[])
   
   int final = 0;
   #if defined(UNE_DO_INTERPRET)
-    if (context->ast != NULL) {
-      context->variables_size = UNE_SIZE_SMALL; // FIXME: SIZE
-      context->variables = rmalloc(context->variables_size*sizeof(*context->variables));
-      context->functions_size = UNE_SIZE_SMALL; // FIXME: SIZE
-      context->functions = rmalloc(context->functions_size*sizeof(*context->functions));
-      une_result result = une_interpret(context->ast, context);
+    if (ast != NULL) {
+      instance.is.context->variables_size = UNE_SIZE_SMALL; // FIXME: SIZE
+      instance.is.context->variables = rmalloc(
+        instance.is.context->variables_size*sizeof(*instance.is.context->variables)
+      );
+      instance.is.context->functions_size = UNE_SIZE_SMALL; // FIXME: SIZE
+      instance.is.context->functions = rmalloc(
+        instance.is.context->functions_size*sizeof(*instance.is.context->functions)
+      );
+      une_result result = une_interpret(&instance, ast);
+      instance.is.should_return = false;
       if (result.type == UNE_RT_ERROR) {
-        une_error_display(context->error, context->text, context->name);
+        une_error_display(instance.error, instance.ls, instance.is.context->name);
         wprintf(L"\n");
       }
       #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
@@ -99,7 +86,8 @@ int main(int argc, char *argv[])
     }
   #endif
   
-  une_context_free(context, false);
+  une_node_free(ast, false);
+  une_instance_free(instance);
 
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_MEMORY_REPORT)
     #if defined(UNE_DEBUG) && defined(UNE_DEBUG_MALLOC_COUNTER )

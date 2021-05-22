@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-05-21
+Updated 2021-05-22
 */
 
 #include "error.h"
@@ -199,7 +199,7 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
 #pragma endregion une_error_value_to_wcs
 
 #pragma region une_error_display
-void une_error_display(une_error error, wchar_t *text, wchar_t *name)
+void une_error_display(une_error error, une_lexer_state ls, wchar_t *name)
 {
   int line = 1;
   size_t line_begin = 0;
@@ -207,13 +207,13 @@ void une_error_display(une_error error, wchar_t *text, wchar_t *name)
   size_t pos_start = error.pos.start;
   size_t pos_end = error.pos.end;
   bool location_found = false;
-  for (size_t i=0; i<wcslen(text)+1 /* Catch '\0' */ ; i++) {
+  for (size_t i=0; i<wcslen(ls.wcs)+1 /* Catch '\0' */ ; i++) {
     if (i == pos_start) location_found = true;
-    if (location_found && (text[i] == L'\n' || text[i] == L'\0')) {
+    if (location_found && (ls.wcs[i] == L'\n' || ls.wcs[i] == L'\0')) {
       line_end = i;
       break;
     }
-    if (text[i] == L'\n') {
+    if (ls.wcs[i] == L'\n') {
       line++;
       line_begin = i+1;
     }
@@ -221,7 +221,7 @@ void une_error_display(une_error error, wchar_t *text, wchar_t *name)
   wprintf(UNE_COLOR_NEUTRAL L"\33[1mFile %ls, Line %d (%hs @ %d):\33[0m"
           UNE_COLOR_NEUTRAL L"\n%.*ls\n",
           name, line, error.__file__, error.__line__,
-          line_end-line_begin, text+line_begin);
+          line_end-line_begin, ls.wcs+line_begin);
   wprintf(L"\33[%dC%ls\33[1m" UNE_COLOR_FAIL,
           pos_start-line_begin, (pos_start-line_begin > 0) ? L"" : L"\33[D");
   if (pos_start >= pos_end) WERR(L"pos_start >= pos_end\n"); // DEBUG: For debugging only.
@@ -240,6 +240,9 @@ void une_error_display(une_error error, wchar_t *text, wchar_t *name)
 #pragma region une_error_free
 void une_error_free(une_error error)
 {
+  // It's possible for une_error to contain pointers to allocated memory
+  // that's used to provide details for an error message.
+  // An example of this is the UNE_ET_GET (see une_interpret_get).
   switch (error.type) {
     case __UNE_ET_none__:
     case UNE_ET_EXPECTED_TOKEN:
@@ -286,6 +289,23 @@ void une_error_free(une_error error)
   }
 }
 #pragma endregion une_error_free
+
+#pragma region une_error_create
+une_error une_error_create(void)
+{
+  return (une_error){
+    .pos = (une_position){
+      .start =0,
+      .end = 0
+    },
+    .type = __UNE_ET_none__,
+    .values[0]._vp = NULL,
+    .values[1]._vp = NULL,
+    .__line__ = 0,
+    .__file__ = NULL
+  };
+}
+#pragma endregion une_error_create
 
 #pragma region une_error_copy
 une_error une_error_copy(une_error src)

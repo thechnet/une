@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Updated 2021-05-21
+Updated 2021-05-22
 */
 
 #ifndef UNE_ERROR_H
@@ -9,6 +9,7 @@ Updated 2021-05-21
 #include "../primitive.h"
 #include "token.h"
 #include "result.h"
+#include "lexer_state.h"
 
 #pragma region une_error_type
 typedef enum _une_error_type {
@@ -63,8 +64,9 @@ typedef struct _une_error {
 #pragma endregion une_error
 
 wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values);
-void une_error_display(une_error error, wchar_t *text, wchar_t *name);
+void une_error_display(une_error error, une_lexer_state ls, wchar_t *name);
 void une_error_free(une_error error);
+une_error une_error_create(void);
 une_error une_error_copy(une_error src);
 
 #define UNE_ERROR_SETX(__type, __pos, __v0, __v1)\

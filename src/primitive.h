@@ -30,6 +30,7 @@ Updated 2021-05-21
   extern int err;
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include <stdint.h>
