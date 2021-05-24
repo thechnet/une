@@ -1,6 +1,6 @@
 /*
 parser_state.c - Une
-Modified 2021-05-22
+Modified 2021-05-24
 */
 
 #include "parser_state.h"
@@ -10,7 +10,6 @@ une_parser_state une_parser_state_create(void)
 {
   return (une_parser_state){
     .index = 0,
-    .inside_function = false,
     .inside_loop = false,
     .tokens = NULL
   };

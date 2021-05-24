@@ -1,6 +1,6 @@
 /*
 lexer_state.c - Une
-Modified 2021-05-22
+Modified 2021-05-23
 */
 
 #include "lexer_state.h"
@@ -10,6 +10,7 @@ une_lexer_state une_lexer_state_create(void)
 {
   return (une_lexer_state){
     .read_from_wcs = false,
+    .path = NULL,
     .file = NULL,
     .wcs = NULL,
     .index = 0
@@ -20,6 +21,7 @@ une_lexer_state une_lexer_state_create(void)
 #pragma region une_lexer_state_free
 void une_lexer_state_free(une_lexer_state ls)
 {
+  if (ls.path != NULL) free(ls.path);
   if (ls.wcs != NULL) free(ls.wcs);
 }
 #pragma endregion une_lexer_state_free

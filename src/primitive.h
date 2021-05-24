@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Updated 2021-05-21
+Updated 2021-05-24
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -16,7 +16,7 @@ Updated 2021-05-21
 
 #ifdef UNE_DEBUG
   // #define UNE_DISPLAY_BAR
-  // #define UNE_DISPLAY_TOKENS
+  #define UNE_DISPLAY_TOKENS
   // #define UNE_DISPLAY_NODES
   #define UNE_DISPLAY_RESULT
   #define UNE_DISPLAY_MEMORY_REPORT

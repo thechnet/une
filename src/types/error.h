@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Updated 2021-05-22
+Updated 2021-05-23
 */
 
 #ifndef UNE_ERROR_H
@@ -64,7 +64,7 @@ typedef struct _une_error {
 #pragma endregion une_error
 
 wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values);
-void une_error_display(une_error error, une_lexer_state ls, wchar_t *name);
+void une_error_display(une_error error, une_lexer_state *ls, wchar_t *name);
 void une_error_free(une_error error);
 une_error une_error_create(void);
 une_error une_error_copy(une_error src);

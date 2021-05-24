@@ -1,6 +1,6 @@
 /*
 parser_state.h - Une
-Modified 2021-05-22
+Modified 2021-05-24
 */
 
 #ifndef UNE_PARSER_STATE_H
@@ -14,7 +14,6 @@ typedef struct _une_parser_state {
   une_token *tokens;
   size_t index;
   bool inside_loop;
-  bool inside_function;
 } une_parser_state;
 #pragma endregion une_parser_state
 

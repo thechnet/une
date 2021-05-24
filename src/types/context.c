@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Updated 2021-05-22
+Updated 2021-05-24
 */
 
 #include "context.h"
@@ -11,18 +11,20 @@ void une_context_free(une_context *context)
   free(context->name);
 
   #if defined(UNE_DO_INTERPRET)
-    // if (context->ast != NULL || is_function_context) {
+    if (context->variables != NULL) {
       // 2)
       for (size_t i=0; i<context->variables_count; i++) {
         une_variable_free(context->variables[i]);
       }
       free(context->variables);
+    }
+    if (context->functions != NULL) {
       // 3)
       for (size_t i=0; i<context->functions_count; i++) {
         une_function_free(context->functions[i]);
       }
       free(context->functions);
-    // }
+    }
   #endif
   
   free(context);

@@ -1,6 +1,6 @@
 /*
 lexer_state.h - Une
-Modified 2021-05-22
+Modified 2021-05-23
 */
 
 #ifndef UNE_LEXER_STATE_H
@@ -11,9 +11,13 @@ Modified 2021-05-22
 #pragma region une_lexer_state
 typedef struct _une_lexer_state {
   bool read_from_wcs;
+  char *path;
   FILE *file;
   wchar_t *wcs;
   size_t index;
+  wint_t wc;
+  void (*get)(struct _une_lexer_state*);
+  wint_t (*peek)(struct _une_lexer_state*);
 } une_lexer_state;
 #pragma region une_lexer_state
 

@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Updated 2021-05-22
+Updated 2021-05-24
 */
 
 #include "parser.h"
@@ -8,6 +8,8 @@ Updated 2021-05-22
 #pragma region une_parse
 une_node *une_parse(une_instance *inst)
 {
+  inst->ps.index = 0; // FIXME: Necessary? (initially added because of lexer.c working with this value)
+  
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
     LOG(L"parse:parse [%ls]", une_token_to_wcs(une_p_peek(inst)));
   #endif
@@ -172,10 +174,10 @@ static une_node *une_parse_stmt(une_instance *inst)
     
     #pragma region Break
     case UNE_TT_BREAK: {
-      // if (!is_loop_body) {
-      //   inst->error = UNE_ERROR_SETX(UNE_ET_BREAK_OUTSIDE_LOOP, une_p_peek(inst).pos);
-      //   return NULL;
-      // }
+      if (!inst->ps.inside_loop) {
+        inst->error = UNE_ERROR_SET(UNE_ET_BREAK_OUTSIDE_LOOP, une_p_peek(inst).pos);
+        return NULL;
+      }
       une_node *break_ = une_node_create(UNE_NT_BREAK);
       break_->pos = une_p_peek(inst).pos;
       une_p_consume(inst);
@@ -185,10 +187,10 @@ static une_node *une_parse_stmt(une_instance *inst)
     
     #pragma region Continue
     case UNE_TT_CONTINUE: {
-      // if (!is_loop_body) {
-      //   inst->error = UNE_ERROR_SETX(UNE_ET_CONTINUE_OUTSIDE_LOOP, une_p_peek(inst).pos);
-      //   return NULL;
-      // }
+      if (!inst->ps.inside_loop) {
+        inst->error = UNE_ERROR_SET(UNE_ET_CONTINUE_OUTSIDE_LOOP, une_p_peek(inst).pos);
+        return NULL;
+      }
       une_node *continue_ = une_node_create(UNE_NT_CONTINUE);
       continue_->pos = une_p_peek(inst).pos;
       une_p_consume(inst);
@@ -388,7 +390,9 @@ static une_node *une_parse_for(une_instance *inst) {
   }
   
   // [Body]
+  inst->ps.inside_loop = true;
   une_node *body = une_parse_stmt(inst);
+  inst->ps.inside_loop = false;
   if (body == NULL) {
     une_node_free(counter, false);
     une_node_free(from, false);
@@ -425,7 +429,9 @@ static une_node *une_parse_while(une_instance *inst) {
   if (condition == NULL) return NULL;
   
   // [Body]
+  inst->ps.inside_loop = true;
   une_node *body = une_parse_stmt(inst);
+  inst->ps.inside_loop = false;
   if (body == NULL) {
     une_node_free(condition, false);
     return NULL;

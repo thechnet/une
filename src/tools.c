@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Updated 2021-04-28
+Updated 2021-05-24
 */
 
 #include "tools.h"
@@ -73,7 +73,7 @@ une_flt wcs_to_une_flt(wchar_t *str)
 /* DOC:
 Opens a UTF-8 file at 'path' and returns its text contents as wchar_t string.
 */
-wchar_t *file_read(char *path)
+wchar_t *file_read(char *path, bool include_carriage_return)
 {
   size_t text_size = UNE_SIZE_MEDIUM;
   wchar_t *text = rmalloc(text_size * sizeof(*text));
@@ -86,7 +86,7 @@ wchar_t *file_read(char *path)
                actual character. */
   while (true) {
     c = fgetwc(f);
-    if (c == L'\r') continue;
+    if (c == L'\r' && !include_carriage_return) continue;
     if (cursor >= text_size-1) { // NUL
       text_size *= 2;
       wchar_t *_text = rrealloc(text, text_size *sizeof(*_text));
@@ -114,6 +114,19 @@ wchar_t *str_to_wcs(char *str)
   return wcs;
 }
 #pragma endregion str_to_wcs
+
+#pragma region str_dup
+/* DOC:
+Duplicates a char string.
+*/
+char *str_dup(char *src)
+{
+  size_t len = strlen(src);
+  char *new = rmalloc((len+1)*sizeof(*new));
+  strcpy(new, src);
+  return new;
+}
+#pragma endregion str_dup
 
 #pragma region wcs_dup
 /* DOC:
