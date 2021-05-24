@@ -8,6 +8,8 @@ Updated 2021-05-22
 #pragma region une_parse
 une_node *une_parse(une_instance *inst)
 {
+  inst->ps.index = 0; // FIXME: Necessary? (initially added because of lexer.c working with this value)
+  
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
     LOG(L"parse:parse [%ls]", une_token_to_wcs(une_p_peek(inst)));
   #endif

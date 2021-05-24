@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Updated 2021-05-22
+Updated 2021-05-24
 */
 
 #include "une.h"
@@ -20,28 +20,30 @@ int main(int argc, char *argv[])
   
   if (argc < 2) WERR("No input file.");
   instance.is.context->name = str_to_wcs(argv[1]);
-  #if defined(UNE_DO_READ)
-    instance.ls.wcs = file_read(argv[1]);
-  #endif
+  instance.ls.read_from_wcs = false;
+  instance.ls.path = str_dup(argv[1]);
   
   #if defined(UNE_DO_LEX)
-    instance.ps.tokens = une_lex_wcs(&instance);
+    une_lex(&instance);
     if (instance.ps.tokens == NULL) {
-      une_error_display(instance.error, instance.ls, instance.is.context->name);
+      une_error_display(instance.error, &instance.ls, instance.is.context->name);
       wprintf(L"\n");
     }
     #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
-      une_tokens_display(context->tokens);
+    else {
+      une_tokens_display(instance.ps.tokens);
       wprintf(L"\n");
+    }
     #endif
   #endif
 
+  une_node *ast = NULL;
+
   #if defined(UNE_DO_PARSE)
-    une_node *ast = NULL;
     if (instance.ps.tokens != NULL) {
       ast = une_parse(&instance);
       if (ast == NULL) {
-        une_error_display(instance.error, instance.ls, instance.is.context->name);
+        une_error_display(instance.error, &instance.ls, instance.is.context->name);
         une_node_free(ast, false);
         wprintf(L"\n");
       }
@@ -70,7 +72,7 @@ int main(int argc, char *argv[])
       une_result result = une_interpret(&instance, ast);
       instance.is.should_return = false;
       if (result.type == UNE_RT_ERROR) {
-        une_error_display(instance.error, instance.ls, instance.is.context->name);
+        une_error_display(instance.error, &instance.ls, instance.is.context->name);
         wprintf(L"\n");
       }
       #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)

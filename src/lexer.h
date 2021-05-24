@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Updated 2021-05-22
+Updated 2021-05-24
 */
 
 #ifndef UNE_LEXER_H
@@ -13,10 +13,18 @@ Updated 2021-05-22
 #include <string.h>
 
 // Public Lexer Interface.
-une_token *une_lex_wcs(une_instance *inst);
+void une_lex(une_instance *inst);
 
-#ifdef UNE_DEBUG
-une_token *une_lex_file(char *path, une_error *error);
-#endif /* UNE_DEBUG */
+// Lexer Functions
+une_token une_lex_num(une_instance *inst);
+une_token une_lex_str(une_instance *inst);
+une_token une_lex_id (une_instance *inst);
+
+// Character Stream
+size_t une_lexer_index(une_lexer_state *ls);
+void une_lexer_fgetwc(une_lexer_state *ls);
+void une_lexer_sgetwc(une_lexer_state *ls);
+wint_t une_lexer_fpeekwc(une_lexer_state *ls);
+wint_t une_lexer_speekwc(une_lexer_state *ls);
 
 #endif /* !UNE_LEXER_H */

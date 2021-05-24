@@ -6,7 +6,7 @@ Updated 2021-05-22
 #include "node.h"
 
 #pragma region Node Name Table
-wchar_t *une_node_table[] = {
+const wchar_t *une_node_table[] = {
   L"INT",
   L"FLT",
   L"STR",

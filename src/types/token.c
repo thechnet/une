@@ -6,7 +6,7 @@ Updated 2021-05-21
 #include "token.h"
 
 #pragma region Token Name Table
-wchar_t *une_token_table[] = {
+const wchar_t *une_token_table[] = {
   L"int",
   L"float",
   L"id",

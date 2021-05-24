@@ -6,7 +6,7 @@ Updated 2021-05-22
 #include "result.h"
 
 #pragma region Result Name Table
-wchar_t *une_result_table[] = {
+const wchar_t *une_result_table[] = {
   L"VOID",
   L"ERROR",
   L"INT",

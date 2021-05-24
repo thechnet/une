@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Updated 2021-04-28
+Updated 2021-05-23
 */
 
 #include "tools.h"
@@ -114,6 +114,19 @@ wchar_t *str_to_wcs(char *str)
   return wcs;
 }
 #pragma endregion str_to_wcs
+
+#pragma region str_dup
+/* DOC:
+Duplicates a char string.
+*/
+char *str_dup(char *src)
+{
+  size_t len = strlen(src);
+  char *new = rmalloc((len+1)*sizeof(*new));
+  strcpy(new, src);
+  return new;
+}
+#pragma endregion str_dup
 
 #pragma region wcs_dup
 /* DOC:
