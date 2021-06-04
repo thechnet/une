@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-05-24
+Updated 2021-06-04
 */
 
 #include "error.h"
@@ -199,45 +199,55 @@ wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
 #pragma endregion une_error_value_to_wcs
 
 #pragma region une_error_display
-void une_error_display(une_error error, une_lexer_state *ls, wchar_t *name)
+void une_error_display(
+  une_error *error,
+  une_lexer_state *ls,
+  une_parser_state *ps,
+  une_interpreter_state *is
+)
 {
   int line = 1;
   size_t line_begin = 0;
   size_t line_end = 0;
-  size_t pos_start = error.pos.start;
-  size_t pos_end = error.pos.end;
+  size_t pos_start = error->pos.start;
+  size_t pos_end = error->pos.end;
   bool location_found = false;
-  if (!ls->read_from_wcs) {
+  if (ls->read_from_file) {
     // FIXME:? Finding a solution to this might also remove
     // the need for the lexer state to be passed as a pointer.
-    ls->wcs = file_read(ls->path, true);
+    ls->text = file_read(ls->path, true);
   }
-  for (size_t i=0; i<wcslen(ls->wcs)+1 /* Catch '\0' */ ; i++) {
+  for (size_t i=0; i<wcslen(ls->text)+1 /* Catch '\0' */ ; i++) {
     if (i == pos_start) location_found = true;
-    if (location_found && (ls->wcs[i] == L'\n' || ls->wcs[i] == L'\0')) {
+    if (location_found && (ls->text[i] == L'\n' || ls->text[i] == L'\0')) {
       line_end = i;
       break;
     }
-    if (ls->wcs[i] == L'\n') {
+    if (ls->text[i] == L'\n') {
       line++;
       line_begin = i+1;
     }
   }
   wprintf(UNE_COLOR_NEUTRAL L"\33[1mFile %ls, Line %d (%hs @ %d):\33[0m"
           UNE_COLOR_NEUTRAL L"\n%.*ls\n",
-          name, line, error.__file__, error.__line__,
-          line_end-line_begin, ls->wcs+line_begin);
+          is->context->name, line, error->__file__, error->__line__,
+          line_end-line_begin, ls->text+line_begin);
   wprintf(L"\33[%dC%ls\33[1m" UNE_COLOR_FAIL,
           pos_start-line_begin, (pos_start-line_begin > 0) ? L"" : L"\33[D");
   if (pos_start > pos_end) WERR(L"pos_start > pos_end\n"); // DEBUG: For debugging only.
   for (int i=0; i<pos_end-pos_start; i++) {
     wprintf(L"~");
   }
-  wchar_t *error_info_as_wcs = une_error_value_to_wcs(error.type, error.values);
+  wchar_t *error_info_as_wcs = une_error_value_to_wcs(error->type, error->values);
   wprintf(UNE_COLOR_FAIL L"\33[1m\n%ls\n\n\33[0m" UNE_COLOR_HINT
-          L"pos_start: %d\npos_end: %d\nline_begin: %d\nline_end: %d\33[0m\n",
+          L"pos_start: %d\npos_end: %d\nline_begin: %d\nline_end: %d\33[0m\n\n",
           error_info_as_wcs,
           pos_start, pos_end, line_begin, line_end); // DEBUG: For debugging only.
+  if (ls->read_from_file) {
+    // FIXME:? Finding a solution to this might also remove
+    // the need for the lexer state to be passed as a pointer.
+    free(ls->text);
+  }
   free(error_info_as_wcs);
 }
 #pragma endregion une_error_display

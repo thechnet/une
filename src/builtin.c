@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-05-22
+Modified 2021-06-04
 */
 
 #include "builtin.h"
@@ -13,6 +13,7 @@ const une_builtin_type une_builtin_wcs_to_type(wchar_t *name)
   if (wcscmp(name, L"float") == 0) return UNE_BIF_TO_FLT;
   if (wcscmp(name, L"str") == 0)   return UNE_BIF_TO_STR;
   if (wcscmp(name, L"len") == 0)   return UNE_BIF_GET_LEN;
+  if (wcscmp(name, L"sleep") == 0) return UNE_BIF_SLEEP;
   return UNE_BIF_NONE;
 }
 #pragma endregion une_builtin_wcs_to_type
@@ -26,17 +27,23 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
     case UNE_BIF_TO_FLT:  return 1;
     case UNE_BIF_TO_STR:  return 1;
     case UNE_BIF_GET_LEN: return 1;
+    case UNE_BIF_SLEEP:   return 1;
     default: WERR(L"Unhandled type %d", type);
   }
 }
 #pragma endregion une_builtin_get_num_of_params
 
 #pragma region une_builtin_print
-une_result une_builtin_print(une_instance *inst, une_position pos, une_result result)
+une_result une_builtin_print(
+  une_error *error,
+  une_interpreter_state *is,
+  une_position pos,
+  une_result result
+)
 {
   switch (result.type) {
     case UNE_RT_VOID:
-      inst->error = UNE_ERROR_SET(UNE_ET_PRINT_VOID, pos);
+      *error = UNE_ERROR_SET(UNE_ET_PRINT_VOID, pos);
       return une_result_create(UNE_RT_ERROR);
     case UNE_RT_INT:
       wprintf(L"%lld", result.value._int);
@@ -52,12 +59,12 @@ une_result une_builtin_print(une_instance *inst, une_position pos, une_result re
       wprintf(L"[");
       if (list_size > 0) {
         if (list[1].type == UNE_RT_STR) wprintf(L"\""); // FIXME: Better solution?
-        une_builtin_print(inst, pos, list[1]);
+        une_builtin_print(error, is, pos, list[1]);
         if (list[1].type == UNE_RT_STR) wprintf(L"\"");
         for (size_t i=2; i<=list_size; i++) {
           wprintf(L", ");
           if (list[i].type == UNE_RT_STR) wprintf(L"\"");
-          une_builtin_print(inst, pos, list[i]);
+          une_builtin_print(error, is, pos, list[i]);
           if (list[i].type == UNE_RT_STR) wprintf(L"\"");
         }
       }
@@ -71,7 +78,12 @@ une_result une_builtin_print(une_instance *inst, une_position pos, une_result re
 #pragma endregion une_builtin_print
 
 #pragma region une_builtin_to_int
-une_result une_builtin_to_int(une_instance *inst, une_position pos, une_result result)
+une_result une_builtin_to_int(
+  une_error *error,
+  une_interpreter_state *is,
+  une_position pos,
+  une_result result
+)
 {
   switch (result.type) {
     case UNE_RT_INT:
@@ -87,14 +99,19 @@ une_result une_builtin_to_int(une_instance *inst, une_position pos, une_result r
         .value._int = wcs_to_une_int(result.value._wcs)
       };
   }
-  inst->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
+  *error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
     _int=(int)result.type, _int=(int)UNE_RT_INT);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_int
 
 #pragma region une_builtin_to_flt
-une_result une_builtin_to_flt(une_instance *inst, une_position pos, une_result result)
+une_result une_builtin_to_flt(
+  une_error *error,
+  une_interpreter_state *is,
+  une_position pos,
+  une_result result
+)
 {
   switch (result.type) {
     case UNE_RT_INT:
@@ -110,14 +127,19 @@ une_result une_builtin_to_flt(une_instance *inst, une_position pos, une_result r
         .value._flt = wcs_to_une_flt(result.value._wcs)
       };
   }
-  inst->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
+  *error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
     _int=(int)result.type, _int=(int)UNE_RT_FLT);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_flt
 
 #pragma region une_builtin_to_str
-une_result une_builtin_to_str(une_instance *inst, une_position pos, une_result result)
+une_result une_builtin_to_str(
+  une_error *error,
+  une_interpreter_state *is,
+  une_position pos,
+  une_result result
+)
 {
   switch (result.type) {
     case UNE_RT_INT: {
@@ -139,14 +161,19 @@ une_result une_builtin_to_str(une_instance *inst, une_position pos, une_result r
     case UNE_RT_STR:
       return une_result_copy(result);
   }
-  inst->error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
+  *error = UNE_ERROR_SETX(UNE_ET_CONVERSION, pos,
     _int=(int)result.type, _int=(int)UNE_RT_STR);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_to_str
 
 #pragma region une_builtin_get_len
-une_result une_builtin_get_len(une_instance *inst, une_position pos, une_result result)
+une_result une_builtin_get_len(
+  une_error *error,
+  une_interpreter_state *is,
+  une_position pos,
+  une_result result
+)
 {
   switch (result.type) {
     case UNE_RT_STR:
@@ -162,8 +189,29 @@ une_result une_builtin_get_len(une_instance *inst, une_position pos, une_result 
       };
     }
   }
-  inst->error = UNE_ERROR_SETX(UNE_ET_GETLEN, pos,
-    _int=(int)result.type, _int=0);
+  *error = UNE_ERROR_SETX(UNE_ET_GETLEN, pos,
+                          _int=(int)result.type, _int=0);
   return une_result_create(UNE_RT_ERROR);
 }
 #pragma endregion une_builtin_get_len
+
+#pragma region une_builtin_sleep
+une_result une_builtin_sleep(
+  une_error *error,
+  une_interpreter_state *is,
+  une_position pos,
+  une_result result
+)
+{
+  if (result.type != UNE_RT_INT) {
+    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_RESULT_TYPE, pos, _int=(int)UNE_RT_INT, _int=0);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  struct timespec ts = {
+    .tv_sec = result.value._int / 1000,
+    .tv_nsec = result.value._int % 1000 * 1000000
+  };
+  nanosleep(&ts, NULL);
+  return une_result_create(UNE_RT_VOID);
+}
+#pragma endregion une_builtin_sleep

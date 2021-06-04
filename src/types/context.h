@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Updated 2021-05-22
+Updated 2021-06-04
 */
 
 #ifndef UNE_CONTEXT_H
@@ -22,7 +22,7 @@ typedef struct _une_context {
 } une_context;
 #pragma endregion une_context
 
-une_context *une_context_create(void);
+une_context *une_context_create(wchar_t *name, size_t variables_size, size_t functions_size);
 void une_context_free(une_context *context);
 
 une_variable *une_variable_create(

@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Updated 2021-05-24
+Updated 2021-06-04
 */
 
 #include "context.h"
@@ -36,16 +36,19 @@ void une_context_free(une_context *context)
 #pragma endregion une_context_free
 
 #pragma region une_context_create
-une_context *une_context_create(void)
+une_context *une_context_create(wchar_t *name, size_t variables_size, size_t functions_size)
 {
   une_context *context = rmalloc(sizeof(*context));
-  context->parent = NULL;
-  context->variables = NULL;
-  context->variables_size = 0;
-  context->variables_count = 0;
-  context->functions = NULL;
-  context->functions_size = 0;
-  context->functions_count = 0;
+  *context = (une_context){
+    .name = wcs_dup(name),
+    .parent = NULL,
+    .variables = rmalloc(variables_size*sizeof(*context->variables)),
+    .variables_size = variables_size,
+    .variables_count = 0,
+    .functions = rmalloc(functions_size*sizeof(*context->functions)),
+    .functions_size = functions_size,
+    .functions_count = 0,
+  };
   return context;
 }
 #pragma endregion une_context_create

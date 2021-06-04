@@ -1,0 +1,31 @@
+# Scrolling Text
+
+# Functions
+def move(str)
+{
+  new = ""
+  amt = len(str)
+  for i from 0 till amt {
+    new = new + str[(i + 1) % amt]
+  }
+  return new
+}
+def cursor(bool)
+  print("[?25h" if bool else "[?25l")
+
+# Settings
+in = "scrolling text! --- "
+revolutions = 3
+speed = 50 # Miliseconds between each step.
+
+# Program
+cursor(0)
+_in=in
+for i from 0 till revolutions {
+  for j from 0 till len(in) {
+    _in = move(_in)
+    print("[F|" + _in + "| " + str(i + 1) + "/" + str(revolutions) + "[K\n")
+    sleep(speed)
+  }
+}
+cursor(1)

@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Updated 2021-05-24
+Updated 2021-06-04
 */
 
 #include "tools.h"
@@ -121,6 +121,7 @@ Duplicates a char string.
 */
 char *str_dup(char *src)
 {
+  if (src == NULL) return NULL;
   size_t len = strlen(src);
   char *new = rmalloc((len+1)*sizeof(*new));
   strcpy(new, src);
@@ -134,6 +135,7 @@ Duplicates a wchar_t string.
 */
 wchar_t *wcs_dup(wchar_t *src)
 {
+  if (src == NULL) return NULL;
   size_t len = wcslen(src);
   wchar_t *new = rmalloc((len+1)*sizeof(*new));
   wcscpy(new, src);

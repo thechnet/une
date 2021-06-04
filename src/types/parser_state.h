@@ -1,6 +1,6 @@
 /*
 parser_state.h - Une
-Modified 2021-05-24
+Modified 2021-06-04
 */
 
 #ifndef UNE_PARSER_STATE_H
@@ -17,7 +17,7 @@ typedef struct _une_parser_state {
 } une_parser_state;
 #pragma endregion une_parser_state
 
-une_parser_state une_parser_state_create(void);
+une_parser_state une_parser_state_create(une_token *tokens);
 void une_parser_state_free(une_parser_state ps);
 
 #endif /* UNE_PARSER_STATE_H */

@@ -20,11 +20,12 @@ fi
 
 #endregion Defines
 
-src="main.c "\
+src=\
+"une.c "\
+"main.c "\
 "interpreter.c "\
 "parser.c "\
 "lexer.c "\
-"types/instance.c "\
 "types/context.c "\
 "types/symbols.c "\
 "types/error.c "\

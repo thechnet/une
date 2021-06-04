@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Updated 2021-05-21
+Updated 2021-06-04
 */
 
 #include "token.h"
@@ -109,6 +109,7 @@ wchar_t *une_token_to_wcs(une_token token)
 #ifdef UNE_DEBUG
 void une_tokens_display(une_token *tokens)
 {
+  if (tokens == NULL) return;
   size_t i = 0;
   wchar_t *token_as_wcs;
   while (true) {
@@ -118,7 +119,6 @@ void une_tokens_display(une_token *tokens)
     if (tokens[i].type == UNE_TT_EOF) break;
     i++;
   }
-  wprintf(L"\n");
 }
 #endif /* UNE_DEBUG */
 #pragma endregion une_tokens_display

@@ -1,9 +1,11 @@
 /*
 main.c - Une
-Updated 2021-05-24
+Updated 2021-06-04
 */
 
 #include "une.h"
+
+#include "tools.h"
 
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_MALLOC_COUNTER)
   int malloc_counter = 0;
@@ -15,82 +17,13 @@ int main(int argc, char *argv[])
     // Prints a bar to distinguish new output from old output in the terminal.
     wprintf(UNE_COLOR_SUCCESS L"\33[7m\33[K\33[27m\33[0m\n");
   #endif
-
-  une_instance instance = une_instance_create();
   
   if (argc < 2) WERR("No input file.");
-  instance.is.context->name = str_to_wcs(argv[1]);
-  instance.ls.read_from_wcs = false;
-  instance.ls.path = str_dup(argv[1]);
   
-  #if defined(UNE_DO_LEX)
-    une_lex(&instance);
-    if (instance.ps.tokens == NULL) {
-      une_error_display(instance.error, &instance.ls, instance.is.context->name);
-      wprintf(L"\n");
-    }
-    #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
-    else {
-      une_tokens_display(instance.ps.tokens);
-      wprintf(L"\n");
-    }
-    #endif
-  #endif
-
-  une_node *ast = NULL;
-
-  #if defined(UNE_DO_PARSE)
-    if (instance.ps.tokens != NULL) {
-      ast = une_parse(&instance);
-      if (ast == NULL) {
-        une_error_display(instance.error, &instance.ls, instance.is.context->name);
-        une_node_free(ast, false);
-        wprintf(L"\n");
-      }
-      #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
-        else {
-          wchar_t *node_as_wcs = une_node_to_wcs(context->ast);
-          wprintf(node_as_wcs);
-          free(node_as_wcs);
-          wprintf(L"\n\n"); // node_as_wcs does not add a newline.
-        }
-      #endif
-    }
-  #endif
+  une_result result = une_run(true, argv[1], NULL);
+  int final = result.type == UNE_RT_INT ? result.value._int : 0;
+  une_result_free(result);
   
-  int final = 0;
-  #if defined(UNE_DO_INTERPRET)
-    if (ast != NULL) {
-      instance.is.context->variables_size = UNE_SIZE_SMALL; // FIXME: SIZE
-      instance.is.context->variables = rmalloc(
-        instance.is.context->variables_size*sizeof(*instance.is.context->variables)
-      );
-      instance.is.context->functions_size = UNE_SIZE_SMALL; // FIXME: SIZE
-      instance.is.context->functions = rmalloc(
-        instance.is.context->functions_size*sizeof(*instance.is.context->functions)
-      );
-      une_result result = une_interpret(&instance, ast);
-      instance.is.should_return = false;
-      if (result.type == UNE_RT_ERROR) {
-        une_error_display(instance.error, &instance.ls, instance.is.context->name);
-        wprintf(L"\n");
-      }
-      #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
-        else if (result.type != UNE_RT_VOID) {
-          wchar_t *return_as_wcs = une_result_to_wcs(result);
-          wprintf(L"%ls", return_as_wcs);
-          free(return_as_wcs);
-        }
-        wprintf(L"\n");
-      #endif
-      if (result.type == UNE_RT_INT) final = result.value._int;
-      une_result_free(result);
-    }
-  #endif
-  
-  une_node_free(ast, false);
-  une_instance_free(instance);
-
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_MEMORY_REPORT)
     #if defined(UNE_DEBUG) && defined(UNE_DEBUG_MALLOC_COUNTER )
       if (malloc_counter != 0) {

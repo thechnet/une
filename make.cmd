@@ -42,11 +42,11 @@ if %debug% Equ 1 (
 ::#endregion Options
 
 set src=^
+une.c ^
 main.c ^
 interpreter.c ^
 parser.c ^
 lexer.c ^
-types/instance.c ^
 types/context.c ^
 types/symbols.c ^
 types/error.c ^

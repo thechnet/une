@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Updated 2021-05-24
+Updated 2021-06-04
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -9,14 +9,13 @@ Updated 2021-05-24
 #undef UNE_DEBUG
 #define UNE_DEBUG
 
-#define UNE_DO_READ
 #define UNE_DO_LEX
 #define UNE_DO_PARSE
 #define UNE_DO_INTERPRET
 
 #ifdef UNE_DEBUG
   // #define UNE_DISPLAY_BAR
-  #define UNE_DISPLAY_TOKENS
+  // #define UNE_DISPLAY_TOKENS
   // #define UNE_DISPLAY_NODES
   #define UNE_DISPLAY_RESULT
   #define UNE_DISPLAY_MEMORY_REPORT
@@ -35,6 +34,7 @@ Updated 2021-05-24
 #include <wchar.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 // IO Number Types
 typedef int64_t une_int;

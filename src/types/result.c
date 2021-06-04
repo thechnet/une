@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Updated 2021-05-22
+Updated 2021-06-04
 */
 
 #include "result.h"
@@ -118,14 +118,15 @@ wchar_t *une_result_to_wcs(une_result result)
   
   size_t offset = swprintf(wcs, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"%ls",
                            une_result_type_to_wcs(result.type));
-  if (result.type != UNE_RT_VOID ) {
-    offset += swprintf(wcs+offset, UNE_SIZE_BIG,
-                     UNE_COLOR_HINT L": " UNE_COLOR_SUCCESS);
+  
+  if (result.type == UNE_RT_VOID || result.type == UNE_RT_ERROR) {
+    return wcs;
   }
+  
+  offset += swprintf(wcs+offset, UNE_SIZE_BIG,
+                     UNE_COLOR_HINT L": " UNE_COLOR_SUCCESS);
 
   switch (result.type) {
-    case UNE_RT_VOID: break;
-
     case UNE_RT_INT:
       swprintf(wcs+offset, UNE_SIZE_BIG, L"%lld\33[0m", result.value._int);
       break;
