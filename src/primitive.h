@@ -1,63 +1,53 @@
 /*
 primitive.h - Une
-Updated 2021-06-04
+Updated 2021-06-13
 */
 
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
 
-#undef UNE_DEBUG
-#define UNE_DEBUG
-
-#define UNE_DO_LEX
-#define UNE_DO_PARSE
-#define UNE_DO_INTERPRET
-
-#ifdef UNE_DEBUG
-  // #define UNE_DISPLAY_BAR
-  // #define UNE_DISPLAY_TOKENS
-  // #define UNE_DISPLAY_NODES
-  #define UNE_DISPLAY_RESULT
-  #define UNE_DISPLAY_MEMORY_REPORT
-
-  #define UNE_DEBUG_MALLOC_COUNTER
-
-  // #define UNE_DEBUG_LOG_INTERPRET
-  // #define UNE_DEBUG_LOG_PARSE
-  // #define UNE_DEBUG_LOG_FREE
-
-  extern int err;
-#endif
-
+/* Universal includes. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <time.h>
+#include <assert.h>
+#include <stddef.h>
 
-// IO Number Types
-typedef int64_t une_int;
-typedef double une_flt;
+/*
+*** Options.
+*/
+#define UNE_DEBUG
 
-// TCC implements a nonportable swprintf.
-#if defined(__TINYC__)
-  #define swprintf(dest, size, format, ...) swprintf((dest), (format), ##__VA_ARGS__)
-#endif
+#define UNE_DEBUG_ALLOC_COUNTER
 
-// malloc/free Counter for Debugging
-#if defined(UNE_DEBUG) && defined(UNE_DEBUG_MALLOC_COUNTER)
-  extern int malloc_counter;
-  #define malloc(size) malloc((size)); malloc_counter++;
-  #define free(memory) { free((memory)); malloc_counter--; }
-#endif
+// #define UNE_NO_LEX
+// #define UNE_NO_PARSE
+// #define UNE_NO_INTERPRET
 
-// Temporary Sizes
+// #define UNE_DISPLAY_TOKENS
+// #define UNE_DISPLAY_NODES
+#define UNE_DISPLAY_RESULT
+// #define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
+
+// #define UNE_DEBUG_LOG_INTERPRET
+// #define UNE_DEBUG_LOG_PARSE
+// #define UNE_DEBUG_LOG_FREE
+
+/*
+*** Constants.
+*/
+#define UNE_DEFAULT_CONTEXT_NAME L"<main>"
+
+/* Sizes. */
+
+
 #define UNE_SIZE_SMALL 128
 #define UNE_SIZE_MEDIUM 4096
 #define UNE_SIZE_BIG 32767
 
-// Output Color Escape Sequences
+/* Output Color Escape Sequences. */
 #define UNE_COLOR_SUCCESS L"\33[92m"
 #define UNE_COLOR_FAIL L"\33[31m"
 #define UNE_COLOR_NEUTRAL L"\33[0m"
@@ -68,54 +58,17 @@ typedef double une_flt;
 #define UNE_COLOR_NODE_DATUM_TYPE L"\33[95m"
 #define UNE_COLOR_NODE_DATUM_VALUE L"\33[35m"
 
-// Temporary Internal Error Response and Logging Tools
-#define WERR(msg, ...)\
-{\
-  wprintf(\
-    UNE_COLOR_FAIL L"%hs:%hs:%d: " msg "\33[0m\n",\
-    __FILE__, __func__, __LINE__, ##__VA_ARGS__\
-  );\
-  exit(1);\
-}
-#ifdef UNE_DEBUG
-#define LOG(msg, ...)\
-{\
-  wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%d: " msg "\33[0m\n",\
-    __FILE__, __LINE__, ##__VA_ARGS__\
-  );\
-}
-#define LOGD(num)\
-{\
-  wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%04d: %lld\33[0m\n",\
-    __FILE__, __LINE__, num\
-  );\
-}
-#define LOGC(ch)\
-{\
-  wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%04d: '%c'\33[0m\n",\
-    __FILE__, __LINE__, ch\
-  );\
-}
-#define LOGS(str)\
-{\
-  wprintf(\
-    UNE_COLOR_NEUTRAL L"\33[7m%hs:%04d: \"%ls\"\33[0m\n",\
-    __FILE__, __LINE__, str\
-  );\
-}
-#endif /* UNE_DEBUG */
+/*
+*** Types.
+*/
+typedef int64_t une_int;
+typedef double une_flt;
 
-#pragma region une_position
 typedef struct _une_position {
   size_t start;
   size_t end;
 } une_position;
-#pragma endregion une_position
 
-#pragma region une_value
 typedef union _une_value {
   une_int _int;
   une_flt _flt;
@@ -123,6 +76,55 @@ typedef union _une_value {
   void **_vpp;
   void *_vp;
 } une_value;
-#pragma endregion une_value
+
+/*
+*** Portability.
+*/
+#if defined(__TINYC__)
+#define swprintf(dest, size, format, ...) swprintf((dest), (format), ##__VA_ARGS__)
+#endif
+
+/*
+*** Tools.
+*/
+#define VERIFY_NOT_REACHED assert(false)
+
+/* Internal Error Response and Logging Tools. */
+#define __LOG(style, msg, ...) wprintf(style L"%hs:%hs:%d: " msg "\33[0m\n", __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#define LOG(msg, ...)   __LOG(UNE_COLOR_NEUTRAL,        msg, ##__VA_ARGS__)
+#define ERR(msg, ...) { __LOG(UNE_COLOR_FAIL L"\33[7m", msg, ##__VA_ARGS__); exit(1); }
+#define LOGD(num)  LOG(L"%lld", num)
+#define LOGF(num)  LOG(L"%f",   flt)
+#define LOGC(ch)   LOG(L"'%c'", ch)
+#define LOGS(wcs)  LOG(L"%ls",  wcs)
+#define LOGHS(str) LOG(L"%hs",  str)
+#if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
+#define LOGFREE(obj, str, num) LOG(L"%ls ('%ls', %lld)", obj, str, (une_int)num)
+#else
+#define LOGFREE(...)
+#endif
+#if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
+#define LOGINTERPRET(str) LOG(L"interpret: %ls", str);
+#else
+#define LOGINTERPRET(...)
+#endif
+#if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
+#define LOGPARSE(object, nt) LOG(L"%ls [%ls]", object, nt);
+#else
+#define LOGPARSE(...)
+#endif
+
+/*
+*** Miscellaneous.
+*/
+#ifndef UNE_DEBUG
+#define __une_static static
+#else
+#define __une_static
+#endif
+
+#if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
+extern int une_alloc_count;
+#endif
 
 #endif /* !UNE_PRIMITIVE_H */

@@ -1,388 +1,466 @@
 /*
 parser.c - Une
-Updated 2021-06-04
+Updated 2021-06-13
 */
 
+/* Header-specific includes. */
 #include "parser.h"
 
-#pragma region une_parse
-une_node *une_parse(une_error *error, une_parser_state *ps)
+/* Implementation-specific includes. */
+#include "tools.h"
+#include "stream.h"
+
+/*
+Public parser interface.
+*/
+
+UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token_create(__UNE_TT_none__), false);
+UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token_create(__UNE_TT_none__), false);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token);
+UNE_OSTREAM_PUSHER(push, une_node);
+
+une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:parse [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  /* Initialize une_parser_state. */
+  ps->in = une_istream_array_create((void*)tokens, 0);
+  pull(&ps->in);
+
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  return une_parse_sequence(
-    error,
-    ps,
-    UNE_NT_STMTS,
-    __UNE_TT_none__, UNE_TT_NEW, UNE_TT_EOF,
-    &une_parse_stmt
+  return une_parse_sequence(error, ps, UNE_NT_STMTS, __UNE_TT_none__, UNE_TT_NEW, UNE_TT_EOF, &une_parse_stmt);
+}
+
+/*
+Parse statement.
+*/
+__une_parser(une_parse_stmt)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  /* Skip NEW before/between statements. */
+  if (now(&ps->in).type == UNE_TT_NEW)
+    pull(&ps->in);
+  assert(now(&ps->in).type != UNE_TT_NEW);
+  
+  switch (now(&ps->in).type) {
+    case UNE_TT_LBRC:
+      return une_parse_block(error, ps);
+    case UNE_TT_DEF:
+      return une_parse_def(error, ps);
+    case UNE_TT_FOR:
+      return une_parse_for(error, ps);
+    case UNE_TT_WHILE:
+      return une_parse_while(error, ps);
+    case UNE_TT_IF:
+      return une_parse_if(error, ps);
+    case UNE_TT_CONTINUE:
+      return une_parse_continue(error, ps);
+    case UNE_TT_BREAK:
+      return une_parse_break(error, ps);
+    case UNE_TT_RETURN:
+      return une_parse_return(error, ps);
+    default:
+      return une_parse_set_expstmt(error, ps);
+  }
+
+}
+
+/*
+Parse id.
+*/
+__une_parser(une_parse_id)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  if (now(&ps->in).type != UNE_TT_ID) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+    return NULL;
+  }
+
+  une_node *id = une_node_create(UNE_NT_ID);
+  id->pos = now(&ps->in).pos;
+  id->content.value._wcs = now(&ps->in).value._wcs;
+  pull(&ps->in);
+  return id;
+}
+
+/*
+Parse block.
+*/
+__une_parser(une_parse_block)
+{
+  return une_parse_sequence(error, ps, UNE_NT_STMTS, UNE_TT_LBRC, UNE_TT_NEW, UNE_TT_RBRC, &une_parse_stmt);
+}
+
+/*
+Parse expression.
+*/
+__une_parser(une_parse_expression)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  /* Expression. */
+  une_node *exp_true = une_parse_and_or(error, ps);
+  if (exp_true == NULL || now(&ps->in).type != UNE_TT_IF)
+    return exp_true;
+
+  /* If. */
+  pull(&ps->in);
+  
+  /* Condition. */
+  une_node *cond = une_parse_and_or(error, ps);
+  if (cond == NULL) {
+    une_node_free(exp_true, false);
+    return NULL;
+  }
+  
+  /* Else. */
+  if (now(&ps->in).type != UNE_TT_ELSE) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+    une_node_free(exp_true, false);
+    une_node_free(cond, false);
+    return NULL;
+  }
+  pull(&ps->in);
+  
+  /* Expression. */
+  une_node *exp_false = une_parse_expression(error, ps);
+  if (exp_false == NULL) {
+    une_node_free(exp_true, false);
+    une_node_free(cond, false);
+    return NULL;
+  }
+  
+  une_node *cop = une_node_create(UNE_NT_COP);
+  cop->pos = (une_position){
+    .start = exp_true->pos.start,
+    .end = exp_false->pos.end
+  };
+  cop->content.branch.a = exp_true;
+  cop->content.branch.b = cond;
+  cop->content.branch.c = exp_false;
+  return cop;
+}
+
+/*
+Parse and/or.
+*/
+__une_parser(une_parse_and_or)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  return une_parse_binary_operation(error, ps,
+    UNE_R_BGN_AND_OR_TOKENS,
+    UNE_R_BGN_AND_OR_NODES,
+    UNE_R_END_AND_OR_TOKENS,
+    UNE_R_END_AND_OR_NODES,
+    &une_parse_condition,
+    &une_parse_condition
   );
 }
-#pragma endregion une_parse
 
-#pragma region une_p_peek
-static une_token une_p_peek(une_parser_state *ps)
+/*
+Parse condition.
+*/
+__une_parser(une_parse_condition)
 {
-  return ps->tokens[ps->index];
-}
-#pragma endregion une_p_peek
-
-#pragma region une_p_consume
-static void une_p_consume(une_parser_state *ps)
-{
-  ps->index++;
-}
-#pragma endregion une_p_consume
-
-#pragma region une_p_index_get
-static size_t une_p_index_get(une_parser_state *ps)
-{
-  return ps->index;
-}
-#pragma endregion une_p_index_get
-
-#pragma region une_p_index_set
-static void une_p_index_set(une_parser_state *ps, size_t index)
-{
-  ps->index = index;
-}
-#pragma endregion une_p_index_set
-
-#pragma region une_parse_sequence
-static une_node *une_parse_sequence(
-  une_error *error,
-  une_parser_state *ps,
-  une_node_type node_type,
-  une_token_type tt_begin, une_token_type tt_end_of_item, une_token_type tt_end,
-  une_node* (*parser)(une_error*, une_parser_state*)
-)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:sequence [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  // [Begin Sequence]
-  if (tt_begin != __UNE_TT_none__) {
-    if (une_p_peek(ps).type != tt_begin) {
-      *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                              _int=(int)tt_begin, _int=0);
-      return NULL;
-    }
-    une_p_consume(ps);
+  if (now(&ps->in).type == UNE_TT_NOT) {
+    LOGPARSE(L"not", une_token_to_wcs(now(&ps->in)));
+    return une_parse_unary_operation(error, ps, UNE_NT_NOT, &une_parse_condition);
   }
   
-  // [Sequence]
-  size_t pos_start = une_p_peek(ps).pos.start;
-  size_t sequence_size = UNE_SIZE_MEDIUM;
-  une_node **sequence = rmalloc(sequence_size*sizeof(*sequence));
-  size_t sequence_index = 1;
+  return une_parse_binary_operation(error, ps,
+    UNE_R_BGN_CONDITION_TOKENS,
+    UNE_R_BGN_CONDITION_NODES,
+    UNE_R_END_CONDITION_TOKENS,
+    UNE_R_END_CONDITION_NODES,
+    &une_parse_add_sub,
+    &une_parse_add_sub
+  );
+}
 
-  while (true) {
-    if (sequence_index >= sequence_size) {
-      sequence_size *= 2;
-      une_node **_sequence = rrealloc(sequence, sequence_size*sizeof(_sequence));
-      sequence = _sequence;
-    }
-    
-    // ADDITIONAL WHITESPACE
-    while (
-      une_p_peek(ps).type == tt_end_of_item ||
-      une_p_peek(ps).type == UNE_TT_NEW
-    ) une_p_consume(ps);
+/*
+Parse add/sub.
+*/
+__une_parser(une_parse_add_sub)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  return une_parse_binary_operation(error, ps,
+    UNE_R_BGN_ADD_SUB_TOKENS,
+    UNE_R_BGN_ADD_SUB_NODES,
+    UNE_R_END_ADD_SUB_TOKENS,
+    UNE_R_END_ADD_SUB_NODES,
+    &une_parse_term,
+    &une_parse_term
+  );
+}
 
-    // EXPECTED END OF SEQUENCE
-    if (une_p_peek(ps).type == tt_end) break;
+/*
+Parse term.
+*/
+__une_parser(une_parse_term)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  return une_parse_binary_operation(error, ps,
+    UNE_R_BGN_TERM_TOKENS,
+    UNE_R_BEGIN_TERM_NODES,
+    UNE_R_END_TERM_TOKENS,
+    UNE_R_END_TERM_NODES,
+    &une_parse_power,
+    &une_parse_power
+  );
+}
 
-    // UNEXPECTED END OF SEQUENCE
-    if (une_p_peek(ps).type == UNE_TT_EOF) {
-      /* This can happen if a block, list, list of parameters, or list of
-      arguments is opened at the end of the file without being closed. */
-      for (size_t i=1; i<sequence_index; i++) une_node_free(sequence[i], false);
-      free(sequence);
-      *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, une_p_peek(ps).pos,
-                              _int=(int)UNE_TT_EOF, _int=0);
-      return NULL;
-    }
+/*
+Parse power.
+*/
+__une_parser(une_parse_power)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  return une_parse_binary_operation(error, ps,
+    UNE_R_BGN_POWER_TOKENS,
+    UNE_R_BGN_POWER_NODES,
+    UNE_R_END_POWER_TOKENS,
+    UNE_R_END_POWER_NODES,
+    &une_parse_index,
+    &une_parse_power /* DOC: We parse power and not index because powers are evaluated right to left. */
+  );
+}
 
-    // PARSE ITEM
-    sequence[sequence_index] = (*parser)(error, ps);
-    if (sequence[sequence_index] == NULL) {
-      for (size_t i=1; i<sequence_index; i++) une_node_free(sequence[i], false);
-      free(sequence);
-      return NULL;
-    }
-    sequence_index++;
-    
-    // ITEM DELIMITER
-    if (
-      une_p_peek(ps).type == tt_end ||
-      une_p_peek(ps).type == tt_end_of_item ||
-      une_p_peek(ps).type == UNE_TT_NEW
-    ) continue;
-    for (size_t i=1; i<sequence_index; i++) une_node_free(sequence[i], false);
-    free(sequence);
-    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                            _int=(int)tt_end_of_item, _int=(int)tt_end);
+/*
+Parse index.
+*/
+__une_parser(une_parse_index)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  /* Base. */
+  une_node *left = une_parse_atom(error, ps);
+  if (left == NULL)
     return NULL;
+  
+  /* Index. */
+  while (now(&ps->in).type == UNE_TT_LSQB) {
+    size_t pos_start = left->pos.start;
+    pull(&ps->in);
+
+    une_node *right = une_parse_expression(error, ps);
+    if (right == NULL)
+      return NULL;
+    if (now(&ps->in).type != UNE_TT_RSQB) {
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+      return NULL;
+    }
+    
+    une_node *new_left = une_node_create(UNE_NT_GET_IDX);
+    new_left->pos = (une_position){
+      .start = pos_start,
+      .end = now(&ps->in).pos.end
+    };
+    pull(&ps->in);
+    new_left->content.branch.a = left;
+    new_left->content.branch.b = right;
+    left = new_left;
   }
-
-  // CREATE NODE
-  une_node *counter = une_node_create(UNE_NT_SIZE);
-  counter->content.value._int = sequence_index-1;
-  sequence[0] = counter;
-  une_node *node = une_node_create(node_type);
-  node->pos = (une_position){
-    .start = pos_start,
-    .end = une_p_peek(ps).pos.end
-  };
-  node->content.value._vpp = (void**)sequence;
   
-  // [End Sequence]
-  /* We don't skip EOF because it may still be needed by other functions up
-  the call chain. */
-  if (tt_end != UNE_TT_EOF) une_p_consume(ps);
-  return node;
+  return left;
 }
-#pragma endregion une_parse_sequence
 
-#pragma region une_parse_stmt
-static une_node *une_parse_stmt(une_error *error, une_parser_state *ps)
+/*
+Parse atom.
+*/
+__une_parser(une_parse_atom)
 {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:stmt [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  if (une_p_peek(ps).type == UNE_TT_NEW) une_p_consume(ps);
-  
-  switch (une_p_peek(ps).type) {
-    case UNE_TT_FOR: return une_parse_for(error, ps);
-    case UNE_TT_IF: return une_parse_if(error, ps);
-    case UNE_TT_WHILE: return une_parse_while(error, ps);
-    case UNE_TT_DEF: return une_parse_def(error, ps);
-    case UNE_TT_RETURN: return une_parse_return(error, ps);
+  switch (now(&ps->in).type) {
     
-    #pragma region Block
-    case UNE_TT_LBRC: return une_parse_sequence(
-      error,
-      ps,
-      UNE_NT_STMTS,
-      UNE_TT_LBRC, UNE_TT_NEW, UNE_TT_RBRC,
-      &une_parse_stmt
-    );
-    #pragma endregion Block
+    /* Negation. */
+    case UNE_TT_SUB:
+      LOGPARSE(L"negate", une_token_to_wcs(now(&ps->in)));
+      return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_atom);
     
-    #pragma region Break
-    case UNE_TT_BREAK: {
-      if (!ps->inside_loop) {
-        *error = UNE_ERROR_SET(UNE_ET_BREAK_OUTSIDE_LOOP, une_p_peek(ps).pos);
-        return NULL;
-      }
-      une_node *break_ = une_node_create(UNE_NT_BREAK);
-      break_->pos = une_p_peek(ps).pos;
-      une_p_consume(ps);
-      return break_;
+    /* Numbers. */
+    case UNE_TT_INT: {
+      LOGPARSE(L"int", une_token_to_wcs(now(&ps->in)));
+      une_node *num = une_node_create(UNE_NT_INT);
+      num->pos = now(&ps->in).pos;
+      num->content.value._int = now(&ps->in).value._int;
+      pull(&ps->in);
+      return num;
     }
-    #pragma endregion Break
-    
-    #pragma region Continue
-    case UNE_TT_CONTINUE: {
-      if (!ps->inside_loop) {
-        *error = UNE_ERROR_SET(UNE_ET_CONTINUE_OUTSIDE_LOOP, une_p_peek(ps).pos);
-        return NULL;
-      }
-      une_node *continue_ = une_node_create(UNE_NT_CONTINUE);
-      continue_->pos = une_p_peek(ps).pos;
-      une_p_consume(ps);
-      return continue_;
+    case UNE_TT_FLT: {
+      LOGPARSE(L"flt", une_token_to_wcs(now(&ps->in)));
+      une_node *num = une_node_create(UNE_NT_FLT);
+      num->pos = now(&ps->in).pos;
+      num->content.value._flt = now(&ps->in).value._flt;
+      pull(&ps->in);
+      return num;
     }
-    #pragma endregion Continue
     
-    #pragma region Variable Definition
+    /* String. */
+    case UNE_TT_STR: {
+      LOGPARSE(L"str", une_token_to_wcs(now(&ps->in)));
+      une_node *str = une_node_create(UNE_NT_STR);
+      str->pos = now(&ps->in).pos;
+      /* DOC: Memory Management: This shows that nodes reference tokens' WCS
+      instead of storing their own. */
+      str->content.value._wcs = now(&ps->in).value._wcs;
+      pull(&ps->in);
+      return str;
+    }
+    
+    /* Variable or function call. */
     case UNE_TT_ID: {
-      // [Id]
-      size_t token_index_before = une_p_index_get(ps); // Needed to backstep in case this is not a variable definition.
-      
-      une_node *target = une_parse_id(error, ps);
-      if (target == NULL) return NULL;
-      
-      une_node *varset = une_node_create(UNE_NT_SET);
-      varset->pos.start = target->pos.start;
-      varset->content.branch.a = target;
-      
-      // [Index]
-      if (une_p_peek(ps).type == UNE_TT_LSQB) {
-        varset->type = UNE_NT_SET_IDX;
-        une_p_consume(ps);
-        
-        une_node *position = une_parse_expression(error, ps);
-        if (position == NULL) {
-          une_node_free(varset, false);
-          return NULL;
-        }
-        varset->content.branch.b = position;
-        
-        if (une_p_peek(ps).type != UNE_TT_RSQB) {
-          une_node_free(varset, false);
-          return NULL;
-        }
-        une_p_consume(ps);
+      LOGPARSE(L"get/call", une_token_to_wcs(now(&ps->in)));
+      une_node *id = une_node_create(UNE_NT_ID);
+      id->pos = now(&ps->in).pos;
+      id->content.value._wcs = now(&ps->in).value._wcs;
+      pull(&ps->in);
+
+      if (now(&ps->in).type != UNE_TT_LPAR) {
+        LOGPARSE(L"get/call:get", une_token_to_wcs(now(&ps->in)));
+        une_node *get = une_node_create(UNE_NT_GET);
+        get->pos = id->pos;
+        get->content.branch.a = id;
+        return get;
+      }
+
+      /* Function Call. */
+      LOGPARSE(L"get/call:call", une_token_to_wcs(now(&ps->in)));
+      une_node *args = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_expression);
+      if (args == NULL) {
+        une_node_free(id, false);
+        return NULL;
       }
       
-      // [Expression]
-      if (une_p_peek(ps).type == UNE_TT_SET) {
-        une_p_consume(ps);
-        
-        une_node *expression = une_parse_expression(error, ps);
-        if (expression == NULL) {
-          une_node_free(varset, false);
-          return NULL;
-        }
-        
-        varset->pos.end = expression->pos.end;
-        if (varset->type == UNE_NT_SET_IDX) {
-          varset->content.branch.c = expression;
-        } else {
-          varset->content.branch.b = expression;
-        }
-        return varset;
-      }
-      
-      // Not a Variable Definition - Fall through to expression.
-      une_node_free(varset, false);
-      une_p_index_set(ps, token_index_before);
-      /*
-      Notice how there is no break here: If the above code ended here it means
-      the stmt is not a variable definition, leaving the only option
-      for it to be a conditional operation.
-      */
+      une_node *call = une_node_create(UNE_NT_CALL);
+      call->pos = (une_position){
+        .start = id->pos.start,
+        .end = args->pos.end
+      };
+      call->content.branch.a = id;
+      call->content.branch.b = args;
+      return call;
     }
-    #pragma endregion Variable Definition
-
-    #pragma region Expression
-    default: return une_parse_expression(error, ps);
-    #pragma endregion Expression
+    
+    /* List. */
+    case UNE_TT_LSQB:
+      LOGPARSE(L"list", une_token_to_wcs(now(&ps->in)));
+      return une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB, &une_parse_expression);
+    
+    /* Expression. */
+    case UNE_TT_LPAR: {
+      LOGPARSE(L"expression", une_token_to_wcs(now(&ps->in)));
+      pull(&ps->in);
+      une_node *expression = une_parse_expression(error, ps);
+      if (expression == NULL)
+        return NULL;
+      if (now(&ps->in).type != UNE_TT_RPAR) {
+        une_node_free(expression, false);
+        *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+        return NULL;
+      }
+      pull(&ps->in);
+      return expression;
+    }
+    
+    default:
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+      return NULL;
+  
   }
 }
-#pragma endregion une_parse_stmt
 
-#pragma region une_parse_if
-static une_node *une_parse_if(une_error *error, une_parser_state *ps)
+/*
+Parse function definition.
+*/
+__une_parser(une_parse_def)
 {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:if [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  size_t pos_start = une_p_peek(ps).pos.start;
-  
-  // [If || Elif]
-  une_p_consume(ps);
+  /* Def. */
+  size_t pos_start = now(&ps->in).pos.start;
+  pull(&ps->in);
 
-  // [Condition]
-  une_node *condition = une_parse_expression(error, ps);
-  if (condition == NULL) return NULL;
+  /* Id. */
+  une_node *name = une_parse_id(error, ps);
+  if (name == NULL)
+    return NULL;
+
+  /* Params. */
+  une_node *params = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_id);
+  if (params == NULL) {
+    une_node_free(name, false);
+    return NULL;
+  }
   
-  // [Body]
-  une_node *truebody = une_parse_stmt(error, ps);
-  if (truebody == NULL) {
-    une_node_free(condition, false);
+  /* Body. */
+  une_node *body = une_parse_stmt(error, ps);
+  if (body == NULL) {
+    une_node_free(name, false);
+    une_node_free(params, false);
     return NULL;
   }
 
-  /*
-  Whitespace. This counts for both 'elif' and 'else' because 'elif'
-  creates an entirely new if node where this stmt then removes
-  whitespace in front of 'else'.
-  */
-  size_t _token_index = une_p_index_get(ps); /* Here we skip over whitespace expecting
-                                                  an elif or else clause. If we don't
-                                                  find one, however, we have now skipped
-                                                  the whitespace that tells
-                                                  une_parse_sequence that a new command
-                                                  is starting. Therefore, we need to
-                                                  return back to this index in case there
-                                                  is no clause following the if clause.
-                                                  */
-  if (une_p_peek(ps).type == UNE_TT_NEW) une_p_consume(ps);
-
-  une_node *ifstmt = une_node_create(UNE_NT_IF);
-  ifstmt->pos.start = pos_start;
-  ifstmt->content.branch.a = condition;
-  ifstmt->content.branch.b = truebody;
-
-  // Only If Body
-  if (
-    une_p_peek(ps).type != UNE_TT_ELSE &&
-    une_p_peek(ps).type != UNE_TT_ELIF
-  ) {
-    une_p_index_set(ps, _token_index);
-    ifstmt->pos.end = truebody->pos.end;
-    return ifstmt;
-  }
-
-  // FIXME: ↑ ↓ Is there a smarter way to do this?
-  
-  // [Elif Body || Else Body]
-  une_node *falsebody;
-  if (une_p_peek(ps).type == UNE_TT_ELIF) {
-    falsebody = une_parse_if(error, ps);
-  } else {
-    une_p_consume(ps);
-    falsebody = une_parse_stmt(error, ps);
-  }
-  if (falsebody == NULL) {
-    une_node_free(ifstmt, false);
-    return NULL;
-  }
-  ifstmt->pos.end = falsebody->pos.end;
-  ifstmt->content.branch.c = falsebody;
-  return ifstmt;
+  une_node *def = une_node_create(UNE_NT_DEF);
+  def->pos = (une_position){
+    .start = pos_start,
+    .end = body->pos.end
+  };
+  def->content.branch.a = name;
+  def->content.branch.b = params;
+  def->content.branch.c = body;
+  return def;
 }
-#pragma endregion une_parse_if
 
-#pragma region une_parse_for
-static une_node *une_parse_for(une_error *error, une_parser_state *ps) {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:for [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+/*
+Parse 'for' loop.
+*/
+__une_parser(une_parse_for)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  size_t pos_start = une_p_peek(ps).pos.start;
+  size_t pos_start = now(&ps->in).pos.start;
   
-  // [For]
-  une_p_consume(ps);
+  /* For. */
+  pull(&ps->in);
   
-  // [Id]
+  /* Id. */
   une_node *counter = une_parse_id(error, ps);
-  if (counter == NULL) return NULL;
+  if (counter == NULL)
+    return NULL;
   
-  // [From]
-  if (une_p_peek(ps).type != UNE_TT_FROM) {
-    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                            _int=UNE_TT_FROM, _int=0);
+  /* From. */
+  if (now(&ps->in).type != UNE_TT_FROM) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
     une_node_free(counter, false);
     return NULL;
   }
-  une_p_consume(ps);
+  pull(&ps->in);
   
-  // [Expression]
+  /* Expression. */
   une_node *from = une_parse_expression(error, ps);
   if (from == NULL) {
     une_node_free(counter, false);
     return NULL;
   }
   
-  // [To]
-  if (une_p_peek(ps).type != UNE_TT_TILL) {
-    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                            _int=UNE_TT_TILL, _int=0);
+  /* To. */
+  if (now(&ps->in).type != UNE_TT_TILL) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
     une_node_free(counter, false);
     une_node_free(from, false);
     return NULL;
   }
-  une_p_consume(ps);
+  pull(&ps->in);
   
-  // [Expression]
+  /* Expression. */
   une_node *to = une_parse_expression(error, ps);
   if (to == NULL) {
     une_node_free(counter, false);
@@ -390,7 +468,7 @@ static une_node *une_parse_for(une_error *error, une_parser_state *ps) {
     return NULL;
   }
   
-  // [Body]
+  /* Body. */
   ps->inside_loop = true;
   une_node *body = une_parse_stmt(error, ps);
   ps->inside_loop = false;
@@ -404,7 +482,7 @@ static une_node *une_parse_for(une_error *error, une_parser_state *ps) {
   une_node *node = une_node_create(UNE_NT_FOR);
   node->pos = (une_position){
     .start = pos_start,
-    .end = ps->tokens[ps->index-1].pos.end // FIXME: Token Stream Helper Function?
+    .end = peek(&ps->in, -1).pos.end
   };
   node->content.branch.a = counter;
   node->content.branch.b = from;
@@ -412,24 +490,25 @@ static une_node *une_parse_for(une_error *error, une_parser_state *ps) {
   node->content.branch.d = body;
   return node;
 }
-#pragma endregion une_parse_for
 
-#pragma region une_parse_while
-static une_node *une_parse_while(une_error *error, une_parser_state *ps) {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:while [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+/*
+Parse 'while' loop.
+*/
+__une_parser(une_parse_while)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  size_t pos_start = une_p_peek(ps).pos.start;
+  size_t pos_start = now(&ps->in).pos.start;
   
-  // [While]
-  une_p_consume(ps);
+  /* While. */
+  pull(&ps->in);
   
-  // [Condition]
+  /* Condition. */
   une_node *condition = une_parse_expression(error, ps);
-  if (condition == NULL) return NULL;
+  if (condition == NULL)
+    return NULL;
   
-  // [Body]
+  /* Body. */
   ps->inside_loop = true;
   une_node *body = une_parse_stmt(error, ps);
   ps->inside_loop = false;
@@ -447,454 +526,126 @@ static une_node *une_parse_while(une_error *error, une_parser_state *ps) {
   node->content.branch.b = body;
   return node;
 }
-#pragma endregion une_parse_while
 
-#pragma region une_parse_def
-static une_node *une_parse_def(une_error *error, une_parser_state *ps)
+/*
+Parse 'if' statement.
+*/
+__une_parser(une_parse_if)
 {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:def [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  // [Def]
-  size_t pos_start = une_p_peek(ps).pos.start;
-  une_p_consume(ps);
+  size_t pos_start = now(&ps->in).pos.start;
+  
+  /* If || Elif. */
+  pull(&ps->in);
 
-  // [Id]
-  une_node *name = une_parse_id(error, ps);
-  if (name == NULL) return NULL;
-
-  // [Params]
-  une_node *params = une_parse_sequence(
-    error,
-    ps,
-    UNE_NT_LIST,
-    UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR,
-    &une_parse_id
-  );
-  if (params == NULL) {
-    une_node_free(name, false);
+  /* Condition. */
+  une_node *predicate = une_parse_expression(error, ps);
+  if (predicate == NULL)
     return NULL;
-  }
   
-  // [Body]
-  une_node *body = une_parse_stmt(error, ps);
-  if (body == NULL) {
-    une_node_free(name, false);
-    une_node_free(params, false);
+  /* Body. */
+  une_node *consequent = une_parse_stmt(error, ps);
+  if (consequent == NULL) {
+    une_node_free(predicate, false);
     return NULL;
   }
 
-  une_node *def = une_node_create(UNE_NT_DEF);
-  def->pos = (une_position){
-    .start = pos_start,
-    .end = body->pos.end
-  };
-  def->content.branch.a = name;
-  def->content.branch.b = params;
-  def->content.branch.c = body;
+  /* Whitespace. This counts for both 'elif' and 'else' because 'elif'
+     creates an entirely new if node where this stmt then removes
+     whitespace in front of 'else'.
+     */
+  size_t _token_index = ps->in.index; /* Here we skip over whitespace expecting
+                                         an elif or else clause. If we don't
+                                         find one, however, we have now skipped
+                                         the whitespace that tells
+                                         une_parse_sequence that a new command
+                                         is starting. Therefore, we need to
+                                         return back to this index in case there
+                                         is no clause following the if clause.
+                                         */
+  if (now(&ps->in).type == UNE_TT_NEW)
+    pull(&ps->in);
 
-  return def;
-}
-#pragma endregion une_parse_def
+  une_node *ifstmt = une_node_create(UNE_NT_IF);
+  ifstmt->pos.start = pos_start;
+  ifstmt->content.branch.a = predicate;
+  ifstmt->content.branch.b = consequent;
 
-#pragma region une_parse_expression
-static une_node *une_parse_expression(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:expression [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  /* Only If Body. */
+  if (now(&ps->in).type != UNE_TT_ELSE && now(&ps->in).type != UNE_TT_ELIF) {
+    ps->in.index = _token_index;
+    ifstmt->pos.end = consequent->pos.end;
+    return ifstmt;
+  }
   
-  // [Expression]
-  une_node *exp_true = une_parse_and_or(error, ps);
-  if (exp_true == NULL) return NULL;
-  if (une_p_peek(ps).type != UNE_TT_IF) return exp_true;
-  
-// Conditional Operation
-
-  // [If]
-  une_p_consume(ps);
-  
-  // [Condition]
-  une_node *cond = une_parse_and_or(error, ps);
-  if (cond == NULL) {
-    une_node_free(exp_true, false);
+  /* Elif Body || Else Body. */
+  une_node *alternate;
+  if (now(&ps->in).type == UNE_TT_ELIF)
+    alternate = une_parse_if(error, ps);
+  else {
+    pull(&ps->in);
+    alternate = une_parse_stmt(error, ps);
+  }
+  if (alternate == NULL) {
+    une_node_free(ifstmt, false);
     return NULL;
   }
-  
-  // [Else]
-  if (une_p_peek(ps).type != UNE_TT_ELSE) {
-    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                            _int=(int)UNE_TT_ELSE, _int=0);
-    une_node_free(exp_true, false);
-    une_node_free(cond, false);
+  ifstmt->pos.end = alternate->pos.end;
+  ifstmt->content.branch.c = alternate;
+  return ifstmt;
+}
+
+/*
+Parse continue.
+*/
+__une_parser(une_parse_continue)
+{
+  if (!ps->inside_loop) {
+    *error = UNE_ERROR_SET(UNE_ET_CONTINUE_OUTSIDE_LOOP, now(&ps->in).pos);
     return NULL;
   }
-  une_p_consume(ps);
-  
-  // [Expression]
-  une_node *exp_false = une_parse_expression(error, ps);
-  if (exp_false == NULL) {
-    une_node_free(exp_true, false);
-    une_node_free(cond, false);
+  une_node *continue_ = une_node_create(UNE_NT_CONTINUE);
+  continue_->pos = now(&ps->in).pos;
+  pull(&ps->in);
+  return continue_;
+}
+
+/*
+Parse break.
+*/
+__une_parser(une_parse_break)
+{
+  if (!ps->inside_loop) {
+    *error = UNE_ERROR_SET(UNE_ET_BREAK_OUTSIDE_LOOP, now(&ps->in).pos);
     return NULL;
   }
-  
-  une_node *cop = une_node_create(UNE_NT_COP);
-  cop->pos.start = exp_true->pos.start;
-  cop->pos.end = exp_false->pos.end;
-  cop->content.branch.a = exp_true;
-  cop->content.branch.b = cond;
-  cop->content.branch.c = exp_false;
-  return cop;
+  une_node *break_ = une_node_create(UNE_NT_BREAK);
+  break_->pos = now(&ps->in).pos;
+  pull(&ps->in);
+  return break_;
 }
-#pragma endregion une_parse_add_sub
 
-#pragma region une_parse_and_or
-static une_node *une_parse_and_or(une_error *error, une_parser_state *ps)
+/*
+Parse 'return' statement.
+*/
+__une_parser(une_parse_return)
 {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:and_or [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  return une_parse_binary_operation(
-    error,
-    ps,
-    UNE_TT_AND,
-    UNE_NT_AND,
-    UNE_TT_OR,
-    UNE_NT_OR,
-    &une_parse_condition,
-    &une_parse_condition
-  );
-}
-#pragma endregion une_parse_and_or
+  une_position pos = now(&ps->in).pos; /* If the parser finds a return
+                                            value after this, pos.end is
+                                            changed again further down. */
+  pull(&ps->in); /* Return. */
 
-#pragma region une_parse_condition
-static une_node *une_parse_condition(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:condition [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  if (une_p_peek(ps).type == UNE_TT_NOT) {
-    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-      LOG(L"parse:condition:not [%ls]", une_token_to_wcs(une_p_peek(ps)));
-    #endif
-    return une_parse_unary_operation(
-      error,
-      ps,
-      UNE_NT_NOT,
-      &une_parse_condition
-    );
-  }
-  
-  return une_parse_binary_operation(
-    error,
-    ps,
-    UNE_TT_EQU,
-    UNE_NT_EQU,
-    UNE_TT_LEQ,
-    UNE_NT_LEQ,
-    &une_parse_add_sub,
-    &une_parse_add_sub
-  );
-}
-#pragma endregion une_parse_condition
-
-#pragma region une_parse_add_sub
-static une_node *une_parse_add_sub(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:add_sub [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  return une_parse_binary_operation(
-    error,
-    ps,
-    UNE_TT_ADD,
-    UNE_NT_ADD,
-    UNE_TT_SUB,
-    UNE_NT_SUB,
-    &une_parse_term,
-    &une_parse_term
-  );
-}
-#pragma endregion une_parse_add_sub
-
-#pragma region une_parse_term
-static une_node *une_parse_term(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:term [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  return une_parse_binary_operation(
-    error,
-    ps,
-    UNE_TT_MUL,
-    UNE_NT_MUL,
-    UNE_TT_MOD,
-    UNE_NT_MOD,
-    &une_parse_power,
-    &une_parse_power
-  );
-}
-#pragma endregion une_parse_term
-
-#pragma region une_parse_power
-static une_node *une_parse_power(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:power [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  return une_parse_binary_operation(
-    error,
-    ps,
-    UNE_TT_POW,
-    UNE_NT_POW,
-    UNE_TT_POW,
-    UNE_NT_POW,
-    &une_parse_index,
-    // DOC: We parse power and not index because powers are evaluated right to left.
-    &une_parse_power
-  );
-}
-#pragma endregion une_parse_power
-
-#pragma region une_parse_index
-static une_node *une_parse_index(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:index [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  une_node *left = une_parse_atom(error, ps);
-  if (left == NULL) return NULL;
-  
-  while (une_p_peek(ps).type == UNE_TT_LSQB) {
-    size_t pos_start = left->pos.start;
-    une_p_consume(ps);
-
-    une_node *right = une_parse_expression(error, ps);
-    if (right == NULL) return NULL;
-    if (une_p_peek(ps).type != UNE_TT_RSQB) {
-      *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                              _int=(int)UNE_TT_RSQB, _int=0);
-      return NULL;
-    }
-    
-    une_node *new_left = une_node_create(UNE_NT_GET_IDX);
-    new_left->pos = (une_position){
-      .start = pos_start,
-      .end = une_p_peek(ps).pos.end
-    };
-    une_p_consume(ps);
-    new_left->content.branch.a = left;
-    new_left->content.branch.b = right;
-    left = new_left;
-  }
-  
-  return left;
-}
-#pragma endregion une_parse_index
-
-#pragma region une_parse_atom
-static une_node *une_parse_atom(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:atom [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  switch (une_p_peek(ps).type) {
-    
-    #pragma region Negate
-    case UNE_TT_SUB:
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:negate [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      return une_parse_unary_operation(
-        error,
-        ps,
-        UNE_NT_NEG,
-        &une_parse_atom
-      );
-    #pragma endregion Negate
-
-    #pragma region Int
-    case UNE_TT_INT: {
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:int [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      une_node *num = une_node_create(UNE_NT_INT);
-      num->pos = une_p_peek(ps).pos;
-      num->content.value._int = une_p_peek(ps).value._int;
-      une_p_consume(ps);
-      return num;
-    }
-    #pragma endregion Int
-    
-    #pragma region Flt
-    case UNE_TT_FLT: {
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:flt [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      une_node *num = une_node_create(UNE_NT_FLT);
-      num->pos = une_p_peek(ps).pos;
-      num->content.value._flt = une_p_peek(ps).value._flt;
-      une_p_consume(ps);
-      return num;
-    }
-    #pragma endregion Flt
-    
-    #pragma region Str
-    case UNE_TT_STR: {
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:str [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      une_node *str = une_node_create(UNE_NT_STR);
-      str->pos = une_p_peek(ps).pos;
-      /* DOC: Memory Management: This shows that nodes reference tokens' WCS
-      instead of storing their own. */
-      str->content.value._wcs = une_p_peek(ps).value._wcs;
-      une_p_consume(ps);
-      return str;
-    }
-    #pragma endregion Str
-    
-    #pragma region Get/Call
-    case UNE_TT_ID: {
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:get/call [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      une_node *id = une_node_create(UNE_NT_ID);
-      id->pos = une_p_peek(ps).pos;
-      id->content.value._wcs = une_p_peek(ps).value._wcs;
-      une_p_consume(ps);
-
-      if (une_p_peek(ps).type != UNE_TT_LPAR) {
-        #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-          LOG(L"parse:atom:get/call:get [%ls]", une_token_to_wcs(une_p_peek(ps)));
-        #endif
-        une_node *get = une_node_create(UNE_NT_GET);
-        get->pos = id->pos;
-        get->content.branch.a = id;
-        return get;
-      }
-
-      // Function Call.
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:get/call:call [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      une_node *args = une_parse_sequence(
-        error,
-        ps,
-        UNE_NT_LIST,
-        UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR,
-        &une_parse_expression
-      );
-      if (args == NULL) {
-        une_node_free(id, false);
-        return NULL;
-      }
-      
-      une_node *call = une_node_create(UNE_NT_CALL);
-      call->pos = (une_position){
-        .start = id->pos.start,
-        .end = args->pos.end
-      };
-      call->content.branch.a = id;
-      call->content.branch.b = args;
-      return call;
-    }
-    #pragma endregion Get/Call
-
-    #pragma region List
-    case UNE_TT_LSQB:
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:list [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      return une_parse_sequence(
-        error,
-        ps,
-        UNE_NT_LIST,
-        UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB,
-        &une_parse_expression
-      );
-    #pragma endregion List
-    
-    #pragma region Expression
-    case UNE_TT_LPAR: {
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-        LOG(L"parse:atom:expression [%ls]", une_token_to_wcs(une_p_peek(ps)));
-      #endif
-      une_p_consume(ps);
-      une_node *expression = une_parse_expression(error, ps);
-      if (expression == NULL) return NULL;
-      if (une_p_peek(ps).type != UNE_TT_RPAR) {
-        une_node_free(expression, false);
-        *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                                _int=(int)UNE_TT_RPAR, _int=0);
-        return NULL;
-      }
-      une_p_consume(ps);
-      return expression;
-    }
-    #pragma endregion Expression
-    
-    default: {
-      *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_TOKEN, une_p_peek(ps).pos,
-                              _int=(int)(une_p_peek(ps).type), _int=0);
-      return NULL;
-    }
-  }
-}
-#pragma endregion une_parse_atom
-
-#pragma region une_parse_id
-static une_node *une_parse_id(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:id [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  if (une_p_peek(ps).type != UNE_TT_ID) {
-    *error = UNE_ERROR_SETX(UNE_ET_EXPECTED_TOKEN, une_p_peek(ps).pos,
-                            _int=UNE_TT_ID, _int=0);
-    return NULL;
-  }
-  une_node *id = une_node_create(UNE_NT_ID);
-  id->pos = une_p_peek(ps).pos;
-  id->content.value._wcs = une_p_peek(ps).value._wcs;
-  une_p_consume(ps);
-  return id;
-}
-#pragma endregion une_parse_id
-
-#pragma region une_parse_return
-static une_node *une_parse_return(une_error *error, une_parser_state *ps)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:return [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
-  
-  une_position pos = une_p_peek(ps).pos; /* If the parser finds a return
-                                                  value after this, pos.end is
-                                                  changed again further down. */
-  une_p_consume(ps); // RETURN
-
-  // Return Value.
+  /* Return Value. */
   une_node *value = NULL; /* DOC: NULL here means no return value was specified.
                              This tells the interpreter that there is no return
                              value. */
-  if (
-    une_p_peek(ps).type != UNE_TT_NEW &&
-    une_p_peek(ps).type != UNE_TT_EOF &&
-    une_p_peek(ps).type != UNE_TT_RBRC
-  ) {
+  if (now(&ps->in).type != UNE_TT_NEW && now(&ps->in).type != UNE_TT_EOF && now(&ps->in).type != UNE_TT_RBRC) {
     value = une_parse_expression(error, ps);
-    if (value == NULL) return value; /* DOC: NULL here means an error. */
+    if (value == NULL) /* DOC: NULL here means an error. */
+      return value;
     pos.end = value->pos.end;
   }
 
@@ -903,12 +654,98 @@ static une_node *une_parse_return(une_error *error, une_parser_state *ps)
   return_->content.branch.a = value;
   return return_;
 }
-#pragma endregion une_parse_return
 
-#pragma region une_parse_binary_operation
-static une_node *une_parse_binary_operation(
-  une_error *error,
-  une_parser_state *ps,
+/*
+Parse set/expression statement.
+*/
+__une_parser(une_parse_set_expstmt)
+{
+  /* Check for variable definition. */
+  if (now(&ps->in).type == UNE_TT_ID) {
+    size_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable definition. */
+
+    une_node *target = une_parse_id(error, ps);
+    if (target == NULL)
+      return NULL;
+
+    une_node *varset = une_node_create(UNE_NT_SET);
+    varset->pos.start = target->pos.start;
+    varset->content.branch.a = target;
+
+    /* Index. */
+    if (now(&ps->in).type == UNE_TT_LSQB) {
+      varset->type = UNE_NT_SET_IDX;
+      pull(&ps->in);
+
+      une_node *position = une_parse_expression(error, ps);
+      if (position == NULL) {
+        une_node_free(varset, false);
+        return NULL;
+      }
+      varset->content.branch.b = position;
+
+      if (now(&ps->in).type != UNE_TT_RSQB) {
+        une_node_free(varset, false);
+        return NULL;
+      }
+      pull(&ps->in);
+    }
+
+    /* Expression. */
+    if (now(&ps->in).type == UNE_TT_SET) {
+      pull(&ps->in);
+
+      une_node *expression = une_parse_expression(error, ps);
+      if (expression == NULL) {
+        une_node_free(varset, false);
+        return NULL;
+      }
+
+      varset->pos.end = expression->pos.end;
+      if (varset->type == UNE_NT_SET_IDX)
+        varset->content.branch.c = expression;
+      else
+        varset->content.branch.b = expression;
+      return varset;
+    }
+
+    /* Not a Variable Definition -> Expression. */
+    une_node_free(varset, false);
+    ps->in.index = token_index_before;
+  }
+
+  return une_parse_expression(error, ps);
+}
+
+/*
+Parse unary operation.
+*/
+__une_parser(une_parse_unary_operation, une_node_type node_t, une_node* (*parse)(une_error*, une_parser_state*)
+)
+{
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  
+  size_t pos_start = now(&ps->in).pos.start;
+  
+  pull(&ps->in);
+  
+  une_node *node = (*parse)(error, ps);
+  if (node == NULL)
+    return NULL;
+  
+  une_node *unop = une_node_create(node_t);
+  unop->pos = (une_position){
+    .start = pos_start,
+    .end = node->pos.end
+  };
+  unop->content.branch.a = node;
+  return unop;
+}
+
+/*
+Parse binary operation.
+*/
+__une_parser(une_parse_binary_operation,
   une_token_type range_begin_tt,
   une_node_type range_begin_nt,
   une_token_type range_end_tt,
@@ -917,21 +754,17 @@ static une_node *une_parse_binary_operation(
   une_node* (*parse_right)(une_error*, une_parser_state*)
 )
 {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:binary_operation [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
   une_node *left = (*parse_left)(error, ps);
-  if (left == NULL) return NULL;
+  if (left == NULL)
+    return NULL;
 
-  while (
-    une_p_peek(ps).type >= range_begin_tt &&
-    une_p_peek(ps).type <= range_end_tt
-  )
+  while (now(&ps->in).type >= range_begin_tt && now(&ps->in).type <= range_end_tt)
   {
-    une_node_type type = range_begin_nt+une_p_peek(ps).type-range_begin_tt;
+    une_node_type type = range_begin_nt+now(&ps->in).type-range_begin_tt;
 
-    une_p_consume(ps);
+    pull(&ps->in);
 
     une_node *right = (*parse_right)(error, ps);
     if (right == NULL) {
@@ -951,33 +784,93 @@ static une_node *une_parse_binary_operation(
   
   return left;
 }
-#pragma endregion une_parse_binary_operation
 
-#pragma region une_parse_unary_operation
-static une_node *une_parse_unary_operation(
-  une_error *error,
-  une_parser_state *ps,
-  une_node_type node_t,
-  une_node* (*parse)(une_error*, une_parser_state*)
+/*
+Parse sequence.
+*/
+__une_parser(une_parse_sequence,
+  une_node_type node_type,
+  une_token_type tt_begin, une_token_type tt_end_of_item, une_token_type tt_end,
+  une_node* (*parser)(une_error*, une_parser_state*)
 )
 {
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-    LOG(L"parse:unary_operation [%ls]", une_token_to_wcs(une_p_peek(ps)));
-  #endif
+  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  size_t pos_start = une_p_peek(ps).pos.start;
+  /* Begin Sequence. */
+  if (tt_begin != __UNE_TT_none__) {
+    if (now(&ps->in).type != tt_begin) {
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+      return NULL;
+    }
+    pull(&ps->in);
+  }
   
-  une_p_consume(ps);
-  
-  une_node *node = (*parse)(error, ps);
-  if (node == NULL) return NULL;
-  
-  une_node *unop = une_node_create(node_t);
-  unop->pos = (une_position){
+  /* Sequence. */
+  size_t pos_start = now(&ps->in).pos.start;
+  size_t sequence_size = UNE_SIZE_MEDIUM;
+  une_node **sequence = une_malloc(sequence_size*sizeof(*sequence));
+  size_t sequence_index = 1;
+
+  while (true) {
+    if (sequence_index >= sequence_size) {
+      sequence_size *= 2;
+      sequence = une_realloc(sequence, sequence_size*sizeof(sequence));
+    }
+    
+    /* ADDITIONAL WHITESPACE. */
+    while (now(&ps->in).type == tt_end_of_item || now(&ps->in).type == UNE_TT_NEW)
+      pull(&ps->in);
+
+    /* EXPECTED END OF SEQUENCE. */
+    if (now(&ps->in).type == tt_end)
+      break;
+
+    /* UNEXPECTED END OF SEQUENCE. */
+    if (now(&ps->in).type == UNE_TT_EOF) {
+      /* This can happen if a block, list, list of parameters, or list of
+      arguments is opened at the end of the file without being closed. */
+      for (size_t i=1; i<sequence_index; i++)
+        une_node_free(sequence[i], false);
+      une_free(sequence);
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+      return NULL;
+    }
+
+    /* PARSE ITEM. */
+    sequence[sequence_index] = (*parser)(error, ps);
+    if (sequence[sequence_index] == NULL) {
+      for (size_t i=1; i<sequence_index; i++)
+        une_node_free(sequence[i], false);
+      une_free(sequence);
+      return NULL;
+    }
+    sequence_index++;
+    
+    /* ITEM DELIMITER. */
+    if (now(&ps->in).type == tt_end || now(&ps->in).type == tt_end_of_item || now(&ps->in).type == UNE_TT_NEW)
+      continue;
+    for (size_t i=1; i<sequence_index; i++)
+      une_node_free(sequence[i], false);
+    une_free(sequence);
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+    return NULL;
+  }
+
+  /* CREATE NODE. */
+  une_node *counter = une_node_create(UNE_NT_SIZE);
+  counter->content.value._int = sequence_index-1;
+  sequence[0] = counter;
+  une_node *node = une_node_create(node_type);
+  node->pos = (une_position){
     .start = pos_start,
-    .end = node->pos.end
+    .end = now(&ps->in).pos.end
   };
-  unop->content.branch.a = node;
-  return unop;
+  node->content.value._vpp = (void**)sequence;
+  
+  /* End Sequence. */
+  /* We don't skip EOF because it may still be needed by other functions up
+  the call chain. */
+  if (tt_end != UNE_TT_EOF)
+    pull(&ps->in);
+  return node;
 }
-#pragma endregion une_parse_unary_operation

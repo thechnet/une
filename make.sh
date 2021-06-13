@@ -4,25 +4,46 @@
 #region Preferences
 
 # 1, 0
-# FIXME:
+clear=1
+release=0
 debug=1
+debug_gdb=1
 
-# clang
-compiler="clang"
+# gcc, clang, tcc
+compiler="gcc"
 
 #endregion Preferences
 
-#region Defines
+#region Options
 
-if [ $debug==1 ]; then
-  UNE_DEBUG=1
+unset O
+if [ $release==1 ]; then
+  if [ $compiler=="gcc" ]; then
+    O="-O3"
+  elif [ $compiler=="clang" ]; then
+    O="-O3"
+  fi
+fi
+if [ $debug_gdb==1 ]; then
+  O=-Og
 fi
 
-#endregion Defines
+unset flags
+if [ $compiler=="clang" ]; then
+  flags="${flags} -Wno-deprecated -Wno-switch"
+fi
+if [ $debug_gdb==1 ]; then
+  flags="${flags} -g"
+fi
+# if [ $debug==1 ]; then
+#   flags="${flags} -DUNE_DEBUG"
+# fi
+
+#endregion Options
 
 src=\
-"une.c "\
 "main.c "\
+"une.c "\
 "interpreter.c "\
 "parser.c "\
 "lexer.c "\
@@ -36,11 +57,20 @@ src=\
 "types/parser_state.c "\
 "types/lexer_state.c "\
 "tools.c "\
-"builtin.c"\
+"stream.c "\
+"builtin.c"
 
 >/dev/null pushd src
-$compiler -Wno-switch $src -o ../une
+if [ $clear==1 ]; then
+  clear
+fi
+$compiler $O $flags $src -o ../une
 el=$?
 >/dev/null popd
+if [ $el==0 ]; then
+  ./une $*
+fi
+
+echo "Done."
 
 exit $el

@@ -1,482 +1,446 @@
 /*
 lexer.c - Une
-Updated 2021-06-04
+Updated 2021-06-13
 */
 
+/* Header-specific includes. */
 #include "lexer.h"
 
-#pragma region une_lex
+/* Implementation-specific includes. */
+#include <string.h>
+#include "tools.h"
+#include "stream.h"
+
+/*
+Two-character token characters.
+*/
+const wchar_t *une_2c_tokens_wc = L"==!=>=<=//**";
+
+/*
+Two-character token types.
+*/
+const une_token_type une_2c_tokens_tt[] = {
+  UNE_TT_EQU,
+  UNE_TT_NEQ,
+  UNE_TT_GEQ,
+  UNE_TT_LEQ,
+  UNE_TT_FDIV,
+  UNE_TT_POW,
+};
+
+/*
+One-character token characters.
+*/
+const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%";
+
+/*
+One-character token types.
+*/
+const une_token_type une_1c_tokens_tt[] = {
+  UNE_TT_LPAR,
+  UNE_TT_RPAR,
+  UNE_TT_LBRC,
+  UNE_TT_RBRC,
+  UNE_TT_LSQB,
+  UNE_TT_RSQB,
+  UNE_TT_SEP,
+  UNE_TT_SET,
+  UNE_TT_GTR,
+  UNE_TT_LSS,
+  UNE_TT_ADD,
+  UNE_TT_SUB,
+  UNE_TT_MUL,
+  UNE_TT_DIV,
+  UNE_TT_MOD,
+};
+
+/*
+Public lexer interface.
+*/
+
+UNE_ISTREAM_WFILE_PULLER(__une_lex_wfile_pull);
+UNE_ISTREAM_WFILE_PEEKER(__une_lex_wfile_peek)
+UNE_ISTREAM_WFILE_ACCESS(__une_lex_wfile_now);
+UNE_ISTREAM_ARRAY_PULLER_VAL(__une_lex_array_pull, wint_t, WEOF, true);
+UNE_ISTREAM_ARRAY_PEEKER_VAL(__une_lex_array_peek, wint_t, WEOF, true);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_lex_array_now, wint_t);
+UNE_OSTREAM_PUSHER(__une_lex_push, une_token);
+UNE_OSTREAM_PEEKER_REF(__une_lex_out_peek, une_token, NULL);
+
 une_token *une_lex(une_error *error, une_lexer_state *ls)
 {
+  /* Initialize une_lexer_state. */
   if (ls->read_from_file) {
-    ls->get = &une_lexer_fgetwc;
-    ls->peek = &une_lexer_fpeekwc;
-    ls->file = fopen(ls->path, "r,ccs=UTF-8");
-    if (ls->file == NULL) {
-      WERR(L"File not found");
-    }
+    ls->pull = &__une_lex_wfile_pull;
+    ls->peek = &__une_lex_wfile_peek;
+    ls->now = &__une_lex_wfile_now;
+    ls->in = une_istream_wfile_create(ls->path);
   } else {
-    ls->get = &une_lexer_sgetwc;
-    ls->peek = &une_lexer_speekwc;
+    ls->pull = &__une_lex_array_pull;
+    ls->peek = &__une_lex_array_peek;
+    ls->now = &__une_lex_array_now;
+    ls->in = une_istream_array_create((void*)ls->text, wcslen(ls->text));
   }
+  ls->pull(&ls->in);
   
-  size_t tokens_size = UNE_SIZE_MEDIUM; // FIXME: SIZE
-  une_token *tokens = rmalloc(tokens_size*sizeof(*tokens));
-  size_t tokens_index = 0;
-  if (ls->read_from_file) {
-    ls->get(ls);
-  } else {
-    ls->wc = ls->peek(ls);
-  }
+  /* Initialize token buffer. */
+  une_token *tokens = une_malloc(UNE_SIZE_MEDIUM*sizeof(*tokens)); // FIXME: Size.
+  une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_MEDIUM, sizeof(*tokens), true);
+  void (*push)(une_ostream*, une_token) = &__une_lex_push;
+  une_token *(*tkpeek)(une_ostream*, ptrdiff_t) = &__une_lex_out_peek;
   
-  while (true) {
-    if (tokens_index+1 >= tokens_size) {
-      tokens_size *= 2;
-      une_token *_tokens = rrealloc(tokens, tokens_size*sizeof(*_tokens));
-      tokens = _tokens;
-      wprintf(L"Warning: Tokens doubled\n");
-    }
-    
-    // Number
-    if (ls->wc >= L'0' && ls->wc <= L'9') {
-      une_token tk = une_lex_num(error, ls);
-      if (tk.type == __UNE_TT_none__) {
-        for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
-        free(tokens);
-        tokens = NULL;
-        break;
-      }
-      tokens[tokens_index++] = tk;
-      continue;
-    }
-    
-    // String
-    if (ls->wc == L'"') {
-      une_token tk = une_lex_str(error, ls);
-      if (tk.type == __UNE_TT_none__) {
-        for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
-        free(tokens);
-        tokens = NULL;
-        break;
-      }
-      tokens[tokens_index++] = tk;
-      continue;
-    }
-
-    // Identifier
-    if ((ls->wc >= L'a' && ls->wc <= L'z')
-    || (ls->wc >= L'A' && ls->wc <= L'Z')
-    ||  ls->wc == L'_') {
-      une_token tk = une_lex_id(error, ls);
-      if (tk.type == __UNE_TT_none__) {
-        for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
-        free(tokens);
-        tokens = NULL;
-        break;
-      }
-      tokens[tokens_index++] = tk;
-      continue;
-    }
-
-    #pragma region Grouping and Ordering (- NEW)
-    if (ls->wc == L'(') {
-      tokens[tokens_index++] = (une_token){UNE_TT_LPAR, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L')') {
-      tokens[tokens_index++] = (une_token){UNE_TT_RPAR, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L'{') {
-      tokens[tokens_index++] = (une_token){UNE_TT_LBRC, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L'}') {
-      tokens[tokens_index++] = (une_token){UNE_TT_RBRC, (une_position){ls->index, ls->index+1}, 0};
-      tokens[tokens_index++] = (une_token){UNE_TT_NEW, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L'[') {
-      tokens[tokens_index++] = (une_token){UNE_TT_LSQB, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L']') {
-      tokens[tokens_index++] = (une_token){UNE_TT_RSQB, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L',') {
-      size_t pos_start = ls->index;
-      ls->get(ls);
-      while (ls->wc == L',') ls->get(ls);
-      tokens[tokens_index++] = (une_token){
-        .type = UNE_TT_SEP,
-        .pos = (une_position){pos_start, ls->index+1},
-      };
-      continue;
-    }
-    if (ls->wc == WEOF) {
-      if (tokens_index == 0 || tokens[tokens_index-1].type != UNE_TT_NEW) {
-        tokens[tokens_index++] = (une_token){UNE_TT_NEW, (une_position){ls->index, ls->index+1}, 0};
-      }
-      tokens[tokens_index] = (une_token){UNE_TT_EOF, (une_position){ls->index, ls->index}, 0};
-      break;
-    }
-    #pragma endregion Grouping and Ordering (- NEW, EOF)
-    
-    #pragma region Operators (+ Logical Equal)
-    if (ls->wc == L'=') {
-      ls->get(ls);
-      if (ls->wc == L'=') {
-        tokens[tokens_index++] = (une_token){UNE_TT_EQU, (une_position){ls->index-1, ls->index+1}, 0};
-        ls->get(ls);
-        continue;
-      }
-      tokens[tokens_index++] = (une_token){UNE_TT_SET, (une_position){ls->index, ls->index+1}, 0};
-      continue;
-    }
-    if (ls->wc == L'+') {
-      tokens[tokens_index++] = (une_token){UNE_TT_ADD, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L'-') {
-      tokens[tokens_index++] = (une_token){UNE_TT_SUB, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    if (ls->wc == L'*') {
-      ls->get(ls);
-      if (ls->wc == L'*') {
-        tokens[tokens_index++] = (une_token){UNE_TT_POW, (une_position){ls->index-1, ls->index+1}, 0};
-        ls->get(ls);
-        continue;
-      }
-      tokens[tokens_index++] = (une_token){UNE_TT_MUL, (une_position){ls->index, ls->index+1}, 0};
-      continue;
-    }
-    if (ls->wc == L'/') {
-      ls->get(ls);
-      if (ls->wc == L'/') {
-        tokens[tokens_index++] = (une_token){UNE_TT_FDIV, (une_position){ls->index-1, ls->index+1}, 0};
-        ls->get(ls);
-        continue;
-      }
-      tokens[tokens_index++] = (une_token){UNE_TT_DIV, (une_position){ls->index, ls->index+1}, 0};
-      continue;
-    }
-    if (ls->wc == L'%') {
-      tokens[tokens_index++] = (une_token){UNE_TT_MOD, (une_position){ls->index, ls->index+1}, 0};
-      ls->get(ls);
-      continue;
-    }
-    #pragma endregion Operators (+ Logical Equal)
-
-    #pragma region Comparisons (- Logical Equal)
-    if (ls->wc == L'!') {
-      if (ls->peek(ls) == L'=') {
-        tokens[tokens_index++] = (une_token){UNE_TT_NEQ, (une_position){ls->index, ls->index+2}, 0};
-        ls->get(ls);
-        ls->get(ls);
-        continue;
-      }
-      *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->index, ls->index+1}),
-                                   _int=(int)ls->wc, _int=0);
-      for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
-      free(tokens);
+  while (ls->now(&ls->in) != WEOF) {
+    /* Check for error. */
+    if (error->type != __UNE_ET_none__) {
+      for (size_t i=0; i<out.index-1 /* Don't free __UNE_TT_none__ */; i++)
+        une_token_free(tokens[i]);
+      une_free(tokens);
       tokens = NULL;
       break;
     }
-    if (ls->wc == L'>') {
-      ls->get(ls);
-      if (ls->wc == L'=') {
-        tokens[tokens_index++] = (une_token){UNE_TT_GEQ, (une_position){ls->index-1, ls->index+1}, 0};
-        ls->get(ls);
-        continue;
-      }
-      tokens[tokens_index++] = (une_token){UNE_TT_GTR, (une_position){ls->index, ls->index+1}, 0};
+    
+    /* Skip whitespace. */
+    while (UNE_LEXER_WC_IS_SOFT_WHITESPACE(ls->now(&ls->in)))
+      ls->pull(&ls->in);
+    
+    /* Number. */
+    if (UNE_LEXER_WC_IS_DIGIT(ls->now(&ls->in))) {
+      push(&out, une_lex_num(error, ls));
       continue;
     }
-    if (ls->wc == L'<') {
-      ls->get(ls);
-      if (ls->wc == L'=') {
-        tokens[tokens_index++] = (une_token){UNE_TT_LEQ, (une_position){ls->index-1, ls->index+1}, 0};
-        ls->get(ls);
-        continue;
-      }
-      tokens[tokens_index++] = (une_token){UNE_TT_LSS, (une_position){ls->index, ls->index+1}, 0};
+    
+    /* String. */
+    if (ls->now(&ls->in) == L'"') {
+      push(&out, une_lex_str(error, ls));
       continue;
     }
-    #pragma endregion Comparisons (- Logical Equal)
 
-    #pragma region Whitespace
-    if (ls->wc == L' ' || ls->wc == L'\t') {
-      ls->get(ls);
+    /* Identifier. */
+    if (UNE_LEXER_WC_CAN_BEGIN_ID(ls->now(&ls->in))) {
+      push(&out, une_lex_id(error, ls));
       continue;
     }
-    if (ls->wc == L'\r' || ls->wc == L'\n' || ls->wc == L';') {
-      size_t idx_left = ls->index;
-      ls->get(ls);
-      while (
-        ls->wc == L' ' || ls->wc == L'\t' || ls->wc == L'\r' || ls->wc == L'\n' || ls->wc == L';'
-      ) ls->get(ls);
-      if (tokens_index == 0 || tokens[tokens_index-1].type != UNE_TT_NEW) {
-        tokens[tokens_index++] = (une_token){
-          UNE_TT_NEW, (une_position){idx_left, ls->index}, 0
-        };
-      }
-      continue;
-    }
-    #pragma endregion Whitespace
 
-    #pragma region Comment
-    if (ls->wc == L'#') {
-      while (ls->wc != WEOF && ls->wc != L'\n') ls->get(ls);
+    /* Two-character tokens. */
+    une_token tk = une_lex_2c_token(error, ls);
+    if (tk.type != __UNE_TT_none__) {
+      push(&out, tk);
       continue;
     }
-    #pragma endregion Comment
-
-    #pragma region Illegal Character
-    *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->index, ls->index+1}),
-                                 _int=(int)ls->wc, _int=0);
-    for (size_t i=0; i<tokens_index; i++) une_token_free(tokens[i]);
-    free(tokens);
-    tokens = NULL;
-    break;
-    #pragma endregion Illegal Character
+    
+    /* One-character tokens. */
+    tk = une_lex_1c_token(error, ls);
+    if (tk.type != __UNE_TT_none__) {
+      push(&out, tk);
+      if (tk.type == UNE_TT_RBRC) // FIXME: :/
+        push(&out, (une_token){
+          .type = UNE_TT_NEW,
+          .pos = tk.pos,
+        });
+      continue;
+    }
+    
+    /* NEW. */
+    if (UNE_LEXER_WC_IS_HARD_WHITESPACE(ls->now(&ls->in))) {
+      size_t idx_left = ls->in.index;
+      while (UNE_LEXER_WC_IS_WHITESPACE(ls->now(&ls->in)))
+        ls->pull(&ls->in);
+      if (out.index >= 0 && tkpeek(&out, -1)->type != UNE_TT_NEW)
+        push(&out, (une_token){
+          .type = UNE_TT_NEW,
+          .pos = (une_position){ .start = idx_left, .end = ls->in.index },
+          .value._vp = 0
+        });
+      continue;
+    }
+    
+    /* Comment. */
+    if (ls->now(&ls->in) == L'#') {
+      do
+        ls->pull(&ls->in);
+      while (ls->now(&ls->in) != WEOF && ls->now(&ls->in) != L'\n');
+      continue;
+    }
+    
+    /* Illegal character. */
+    *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+    push(&out, une_token_create(__UNE_TT_none__));
+    continue;
   }
+  if (out.index > 0 && tkpeek(&out, -1)->type != UNE_TT_NEW)
+    push(&out, (une_token){
+      .type = UNE_TT_NEW,
+      .pos = (une_position){ .start = ls->in.index, .end = ls->in.index+1 },
+      .value._vp = NULL
+    });
+  push(&out, (une_token){
+    .type = UNE_TT_EOF,
+    .pos = (une_position){ .start = ls->in.index, .end = ls->in.index },
+    .value._vp = NULL
+  });
   
-  if (ls->read_from_file) fclose(ls->file);
+  /* Wrap up. */
+  if (ls->read_from_file)
+    une_istream_wfile_free(ls->in);
+  
   return tokens;
 }
-#pragma endregion une_lex
 
-#pragma region une_lex_num
-une_token une_lex_num(une_error *error, une_lexer_state *ls)
+/*
+Lex a numeric token.
+*/
+__une_lexer(une_lex_num)
 {
+  /* Setup. */
   size_t buffer_size = UNE_SIZE_SMALL;
-  wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
+  wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
+  size_t idx_start = ls->in.index;
   
-  size_t idx_start = ls->index;
-  
-  while (ls->wc >= L'0' && ls->wc <= L'9') {
-    
-    while (ls->index-idx_start >= buffer_size-2) { // NUL || '0' NUL
+  do {
+    /* Ensure sufficient space in buffer. */
+    while (ls->in.index-idx_start+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
-      wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
-      buffer = _buffer;
+      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
     }
   
-    buffer[ls->index-idx_start] = ls->wc;
-    ls->get(ls);
+    /* Add character to buffer. */
+    buffer[ls->in.index-idx_start] = ls->now(&ls->in);
+    ls->pull(&ls->in);
+  } while (UNE_LEXER_WC_IS_DIGIT(ls->now(&ls->in)));
   
-  }
-  
-  // Integer
-  if (ls->wc != L'.') {
-    buffer[ls->index-idx_start] = L'\0';
+  if (ls->now(&ls->in) != L'.') {
+    /* Return integer. */
+    buffer[ls->in.index-idx_start] = L'\0';
     une_token tk = (une_token){
       .type = UNE_TT_INT,
-      .pos = (une_position){idx_start, ls->index},
+      .pos = (une_position){idx_start, ls->in.index},
       .value._int = wcs_to_une_int(buffer),
     };
-    free(buffer);
+    une_free(buffer);
     return tk;
   }
   
-  // Floating Point Number
-  buffer[ls->index-idx_start] = ls->wc;
-  ls->get(ls);
+  /* Try to lex floating point number. */
   
-  size_t idx_before_decimals = ls->index;
+  buffer[ls->in.index-idx_start] = ls->now(&ls->in);
+  ls->pull(&ls->in);
   
-  while (ls->wc >= L'0' && ls->wc <= L'9') {
-    
-    if (ls->index-idx_start >= buffer_size-2) { // NUL || '0' NUL
+  size_t idx_before_decimals = ls->in.index;
+  
+  while (ls->now(&ls->in) >= L'0' && ls->now(&ls->in) <= L'9') {
+    /* Ensure sufficient space in buffer. */
+    if (ls->in.index-idx_start+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
-      wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
-      buffer = _buffer;
+      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
     }
   
-    buffer[ls->index-idx_start] = ls->wc;
-    ls->get(ls);
-  
+    /* Add character to buffer. */
+    buffer[ls->in.index-idx_start] = ls->now(&ls->in);
+    ls->pull(&ls->in);
   }
   
-  if (ls->index == idx_before_decimals) {
-    *error = UNE_ERROR_SETX(UNE_ET_UNEXPECTED_CHARACTER,
-                            ((une_position){ls->index, ls->index+1}),
-                            _int=(une_int)ls->wc, _int=0);
-    return (une_token){.type = __UNE_TT_none__};
+  /* No digits after decimal point. */
+  if (ls->in.index == idx_before_decimals) {
+    *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+    une_free(buffer);
+    return une_token_create(__UNE_TT_none__);
   }
   
-  buffer[ls->index-idx_start] = L'\0';
+  /* Return floating point number. */
+  buffer[ls->in.index-idx_start] = L'\0';
   une_token tk = (une_token){
     .type = UNE_TT_FLT,
-    .pos = (une_position){idx_start, ls->index},
+    .pos = (une_position){idx_start, ls->in.index},
     .value._flt = wcs_to_une_flt(buffer),
   };
-  free(buffer);
+  une_free(buffer);
   return tk;
 }
-#pragma endregion une_lex_num
 
-#pragma region une_lex_str
-une_token une_lex_str(une_error *error, une_lexer_state *ls)
+/*
+Lex a string token.
+*/
+__une_lexer(une_lex_str)
 {
+  /* Setup. */
   size_t buffer_size = UNE_SIZE_MEDIUM;
-  wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
-  
-  size_t idx_start = ls->index;
+  wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
+  size_t idx_start = ls->in.index;
   bool escape = false;
   size_t buffer_index = 0;
   
   while (true) {
-    if (buffer_index >= buffer_size-1) { // NUL
+    /* Ensure sufficient space in string buffer. */
+    if (buffer_index+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
-      wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
-      buffer = _buffer;
+      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
     }
     
-    ls->get(ls);
+    ls->pull(&ls->in);
     
-    if (ls->wc == WEOF) {
-      *error = UNE_ERROR_SET(UNE_ET_UNTERMINATED_STRING, ((une_position){ls->index, ls->index+1}));
-      return (une_token){.type = __UNE_TT_none__};
+    /* Ignore carriage return. */
+    if (ls->now(&ls->in) == L'\r')
+      continue;
+    
+    /* Premature end of stream. */
+    if (ls->now(&ls->in) == WEOF) {
+      *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+      une_free(buffer);
+      return une_token_create(__UNE_TT_none__);
     }
     
-    if (ls->wc == L'\r') continue;
-    
+    /* Escaped characters. */
     if (escape) {
       escape = false;
-      switch (ls->wc) {
+      switch (ls->now(&ls->in)) {
         case L'\\':
         case L'"':
-          buffer[buffer_index++] = ls->wc;
+          buffer[buffer_index++] = ls->now(&ls->in);
           continue;
         case L'n':
           buffer[buffer_index++] = L'\n';
           continue;
-        case L'\n': continue;
+        case L'\n':
+          continue;
         default: {
-          *error = UNE_ERROR_SET(UNE_ET_CANT_ESCAPE_CHAR, ((une_position){ls->index, ls->index+1}));
-          return (une_token){.type = __UNE_TT_none__};
+          *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+          une_free(buffer);
+          return une_token_create(__UNE_TT_none__);
         }
       }
     }
     
-    if (ls->wc == L'\\') {
+    /* Schedule escaped character. */
+    if (ls->now(&ls->in) == L'\\') {
       escape = true;
       continue;
     }
     
-    if (ls->wc == L'"') {
-      ls->get(ls);
+    /* End of string. */
+    if (ls->now(&ls->in) == L'"') {
+      ls->pull(&ls->in);
       break;
     }
     
-    buffer[buffer_index++] = ls->wc;
+    /* Add character to string buffer. */
+    buffer[buffer_index++] = ls->now(&ls->in);
   }
   
   buffer[buffer_index] = L'\0';
   return (une_token){
     .type = UNE_TT_STR,
-    .pos = (une_position){idx_start, ls->index},
-    // DOC: Memory Management: This is where strings referenced during tokenization and parsing are constructed.
+    .pos = (une_position){idx_start, ls->in.index},
+    /* DOC: Memory Management: This is where strings referenced during tokenization and parsing are constructed. */
     .value._wcs = buffer,
   };
 }
-#pragma endregion une_lex_str
 
-#pragma region une_lex_id
-une_token une_lex_id (une_error *error, une_lexer_state *ls)
+/*
+Lex an id token.
+*/
+__une_lexer(une_lex_id)
 {
+  /* Setup. */
   size_t buffer_size = UNE_SIZE_MEDIUM;
-  wchar_t *buffer = rmalloc(buffer_size*sizeof(*buffer));
-  
-  size_t idx_start = ls->index;
+  wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
+  size_t idx_start = ls->in.index;
   bool escape = false;
   size_t buffer_index = 0;
   
-  while ((ls->wc >= L'a' && ls->wc <= L'z')
-  || (ls->wc >= L'A' && ls->wc <= L'Z')
-  || (ls->wc >= L'0' && ls->wc <= L'9')
-  ||  ls->wc == L'_') {
-    
-    if (buffer_index >= buffer_size-1) { // NUL
+  while (UNE_LEXER_WC_CAN_BE_IN_ID(ls->now(&ls->in))) {
+    /* Ensure sufficient space in string buffer. */
+    if (buffer_index >= buffer_size-1) { /* NUL. */
       buffer_size *= 2;
-      wchar_t *_buffer = rrealloc(buffer, buffer_size*sizeof(*_buffer));
-      buffer = _buffer;
+      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
     }
     
-    buffer[buffer_index++] = ls->wc;
-    
-    ls->get(ls);
+    /* Add character to string buffer. */
+    buffer[buffer_index++] = ls->now(&ls->in);
+    ls->pull(&ls->in);
   }
   
   buffer[buffer_index] = L'\0';
   
+  /* Construct keyword or string token. */
   une_token tk;
-  
-       if (!wcscmp(buffer, L"if"))       tk.type = UNE_TT_IF;
-  else if (!wcscmp(buffer, L"elif"))     tk.type = UNE_TT_ELIF;
-  else if (!wcscmp(buffer, L"else"))     tk.type = UNE_TT_ELSE;
-  else if (!wcscmp(buffer, L"for"))      tk.type = UNE_TT_FOR;
-  else if (!wcscmp(buffer, L"from"))     tk.type = UNE_TT_FROM;
-  else if (!wcscmp(buffer, L"till"))       tk.type = UNE_TT_TILL;
-  else if (!wcscmp(buffer, L"while"))    tk.type = UNE_TT_WHILE;
-  else if (!wcscmp(buffer, L"def"))      tk.type = UNE_TT_DEF;
-  else if (!wcscmp(buffer, L"return"))   tk.type = UNE_TT_RETURN;
-  else if (!wcscmp(buffer, L"break"))    tk.type = UNE_TT_BREAK;
-  else if (!wcscmp(buffer, L"continue")) tk.type = UNE_TT_CONTINUE;
-  else if (!wcscmp(buffer, L"and"))      tk.type = UNE_TT_AND;
-  else if (!wcscmp(buffer, L"or"))       tk.type = UNE_TT_OR;
-  else if (!wcscmp(buffer, L"not"))      tk.type = UNE_TT_NOT;
+  if (!wcscmp(buffer, L"if"))
+    tk.type = UNE_TT_IF;
+  else if (!wcscmp(buffer, L"elif"))
+    tk.type = UNE_TT_ELIF;
+  else if (!wcscmp(buffer, L"else"))
+    tk.type = UNE_TT_ELSE;
+  else if (!wcscmp(buffer, L"for"))
+    tk.type = UNE_TT_FOR;
+  else if (!wcscmp(buffer, L"from"))
+    tk.type = UNE_TT_FROM;
+  else if (!wcscmp(buffer, L"till"))
+    tk.type = UNE_TT_TILL;
+  else if (!wcscmp(buffer, L"while"))
+    tk.type = UNE_TT_WHILE;
+  else if (!wcscmp(buffer, L"def"))
+    tk.type = UNE_TT_DEF;
+  else if (!wcscmp(buffer, L"return"))
+    tk.type = UNE_TT_RETURN;
+  else if (!wcscmp(buffer, L"break"))
+    tk.type = UNE_TT_BREAK;
+  else if (!wcscmp(buffer, L"continue"))
+    tk.type = UNE_TT_CONTINUE;
+  else if (!wcscmp(buffer, L"and"))
+    tk.type = UNE_TT_AND;
+  else if (!wcscmp(buffer, L"or"))
+    tk.type = UNE_TT_OR;
+  else if (!wcscmp(buffer, L"not"))
+    tk.type = UNE_TT_NOT;
   else {
     tk.type = UNE_TT_ID;
     tk.value._wcs = buffer;
   }
+  if (tk.type != UNE_TT_ID)
+    une_free(buffer);
   
-  if (tk.type != UNE_TT_ID) free(buffer);
-  
-  tk.pos = (une_position){idx_start, ls->index};
+  tk.pos = (une_position){ .start = idx_start, .end = ls->in.index };
   return tk;
 }
-#pragma endregion une_lex_id
 
-#pragma region une_lexer_fgetwc
-void une_lexer_fgetwc(une_lexer_state *ls)
+/*
+Attempt to lex a two-character token.
+*/
+__une_lexer(une_lex_2c_token)
 {
-  ls->index++;
-  ls->wc = fgetwc(ls->file);
+  size_t i = 0;
+  while (true) {
+    if (une_2c_tokens_wc[i] == L'\0')
+      return une_token_create(__UNE_TT_none__);
+    if (une_2c_tokens_wc[i] == ls->now(&ls->in) && ls->peek(&ls->in, 1) == une_2c_tokens_wc[i+1]) {
+      ls->pull(&ls->in);
+      ls->pull(&ls->in);
+      return (une_token){
+        .type = une_2c_tokens_tt[i/2],
+        .pos = (une_position){ .start = ls->in.index-2, .end = ls->in.index },
+        .value._vp = 0
+      };
+    }
+    i += 2;
+  }
 }
-#pragma endregion une_lexer_fgetwc
 
-#pragma region une_lexer_sgetwc
-void une_lexer_sgetwc(une_lexer_state *ls)
+/*
+Attempt to lex a one-character token.
+*/
+__une_lexer(une_lex_1c_token)
 {
-  ls->wc = ls->text[++ls->index];
-  if (ls->wc == L'\0') ls->wc = WEOF;
+  size_t i = 0;
+  while (true) {
+    if (une_1c_tokens_wc[i] == L'\0')
+      return une_token_create(__UNE_TT_none__);
+    if (une_1c_tokens_wc[i] == ls->now(&ls->in)) {
+      ls->pull(&ls->in);
+      return (une_token){
+        .type = une_1c_tokens_tt[i],
+        .pos = (une_position){ .start = ls->in.index-1, .end = ls->in.index },
+        .value._vp = 0
+      };
+    }
+    i++;
+  }
 }
-#pragma endregion une_lexer_sgetwc
-
-#pragma region une_lexer_fpeekwc
-wint_t une_lexer_fpeekwc(une_lexer_state *ls)
-{
-  return ungetwc(fgetwc(ls->file), ls->file);
-}
-#pragma endregion une_lexer_fpeekwc
-
-#pragma region une_lexer_speekwc
-wint_t une_lexer_speekwc(une_lexer_state *ls)
-{
-  wint_t wc = ls->text[ls->index+1];
-  if (wc == L'\0') return WEOF;
-  return wc;
-}
-#pragma endregion une_lexer_speekwc

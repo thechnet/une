@@ -5,3 +5,6 @@ tests
 desktop.ini
 *.exe
 *.exe.stackdump
+.DS_Store
+*.dSYM
+une

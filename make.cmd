@@ -1,10 +1,10 @@
 :: Make Une
-@echo off
-setlocal enableDelayedExpansion
+@echo off & setlocal enableDelayedExpansion
 
 ::#region Preferences
 
 :: 1, 0
+set clear=1
 set release=0
 set debug=1
 set debug_gdb=1
@@ -35,15 +35,15 @@ if %compiler% Equ clang (
 if %debug_gdb% Equ 1 (
   set "flags=!flags! -g"
 )
-if %debug% Equ 1 (
-  set "flags=!flags! -DUNE_DEBUG"
-)
+@REM if %debug% Equ 1 (
+@REM   set "flags=!flags! -DUNE_DEBUG"
+@REM )
 
 ::#endregion Options
 
 set src=^
-une.c ^
 main.c ^
+une.c ^
 interpreter.c ^
 parser.c ^
 lexer.c ^
@@ -57,11 +57,20 @@ types/interpreter_state.c ^
 types/parser_state.c ^
 types/lexer_state.c ^
 tools.c ^
+stream.c ^
 builtin.c
 
 pushd src
+if %clear% Equ 1 (
+  cls
+)
 %compiler% %O% %flags% %src% -o ../une.exe
 set el=%errorlevel%
 popd
+if %el% Equ 0 (
+  une %*
+)
+
+echo Done.
 
 exit /b %el%

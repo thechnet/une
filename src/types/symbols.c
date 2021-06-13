@@ -1,30 +1,33 @@
 /*
 symbols.c - Une
-Updated 2021-04-29
+Updated 2021-06-13
 */
 
+/* Header-specific includes. */
 #include "symbols.h"
 
-#pragma region une_variable_free
+/* Implementation-specific includes. */
+#include "../tools.h"
+
+/*
+Free all members of a une_variable.
+*/
 void une_variable_free(une_variable variable)
 {
-  free(variable.name);
+  LOGFREE(L"une_variable", variable.name, 0);
+  une_free(variable.name);
   une_result_free(variable.content);
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-    wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Variable: %ls\n", __FILE__, __FUNCTION__, __LINE__, variable.name);
-  #endif
 }
-#pragma endregion une_variable_free
 
-#pragma region une_function_free
+/*
+Free all members of a une_function.
+*/
 void une_function_free(une_function function)
 {
-  free(function.name);
-  for(size_t i=0; i<function.params_count; i++) free(function.params[i]);
-  free(function.params);
+  LOGFREE(L"une_function", function.name, 0);
+  une_free(function.name);
+  for (size_t i=0; i<function.params_count; i++)
+    une_free(function.params[i]);
+  une_free(function.params);
   une_node_free(function.body, true);
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-    wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Function: %ls\n", __FILE__, __FUNCTION__, __LINE__, function.name);
-  #endif
 }
-#pragma endregion une_function_free

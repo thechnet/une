@@ -1,374 +1,146 @@
 /*
 error.c - Une
-Updated 2021-06-04
+Updated 2021-06-13
 */
 
+/* Header-specific includes. */
 #include "error.h"
 
-#pragma region une_error_value_to_wcs
-wchar_t *une_error_value_to_wcs(une_error_type type, une_value *values)
+/* Implementation-specific includes. */
+#include "../stream.h"
+
+/*
+Error message table.
+*/
+const wchar_t *une_error_message_table[] = {
+  L"No error defined!",
+  L"Illegal character.",
+  L"Syntax error.",
+  L"Cannot break outside loop.",
+  L"Cannot continue outside loop.",
+  L"Cannot assign to litersal.",
+  L"Variable not defined.",
+  L"Operation not supported.",
+  L"Comparison not supported.",
+  L"Type not indexable.",
+  L"Cannot set index of type.",
+  L"Index type not supported.",
+  L"Index out of range.",
+  L"Zero division.",
+  L"Unreal number.",
+  L"Function already defined.",
+  L"Function not defined.",
+  L"Wrong number of arguments.",
+  L"Unexpected argument type.",
+  L"Unknown error!",
+};
+
+/*
+Initialize a une_error struct.
+*/
+une_error une_error_create(void)
 {
-  wchar_t *wcs = rmalloc(UNE_SIZE_MEDIUM*sizeof(*wcs));
-  switch (type) {
-    case __UNE_ET_none__:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"No error defined!");
-      break;
-    
-    case UNE_ET_EXPECTED_TOKEN: {
-      int offset = swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected token: %ls",
-                            une_token_type_to_wcs((une_token_type)values[0]._int));
-      if (values[1]._wcs != NULL) {
-        swprintf(wcs+offset, UNE_SIZE_MEDIUM, L" or %ls",
-                 une_token_type_to_wcs((une_token_type)values[1]._int));
-      }
-      break; }
-    
-    case UNE_ET_UNEXPECTED_TOKEN:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Unexpected token: %ls",
-               une_token_type_to_wcs((une_token_type)values[0]._int));
-      break;
-    
-    case UNE_ET_UNEXPECTED_CHARACTER:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Unexpected character: '%lc'",
-               (wchar_t)values[0]._int);
-      break;
-    
-    case UNE_ET_INCOMPLETE_FLOAT:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected digit after '.'");
-      break;
-    
-    case UNE_ET_ADD:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot add %ls to %ls",
-               une_result_type_to_wcs((une_result_type)values[1]._int),
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_SUB:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot subtract %ls from %ls",
-               une_result_type_to_wcs((une_result_type)values[1]._int),
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_MUL:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot multiply %ls by %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int),
-               une_result_type_to_wcs((une_result_type)values[1]._int));
-      break;
-    
-    case UNE_ET_DIV:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot divide %ls by %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int),
-               une_result_type_to_wcs((une_result_type)values[1]._int));
-      break;
-    
-    case UNE_ET_FDIV:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot floor divide %ls by %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int),
-               une_result_type_to_wcs((une_result_type)values[1]._int));
-      break;
-    
-    case UNE_ET_MOD:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot get modulus of %ls and %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int),
-               une_result_type_to_wcs((une_result_type)values[1]._int));
-      break;
-    
-    case UNE_ET_NEG:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot negate %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_POW:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot get %ls to the power of %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int),
-               une_result_type_to_wcs((une_result_type)values[1]._int));
-      break;
-    
-    case UNE_ET_ZERO_DIVISION:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot divide by zero");
-      break;
-    
-    case UNE_ET_COMPARISON:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot compare %ls and %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int),
-               une_result_type_to_wcs((une_result_type)values[1]._int));
-      break;
-    
-    case UNE_ET_NOT_INDEXABLE:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot get index of %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_SET_NOT_INDEXABLE:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot set index of %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_NOT_INDEX_TYPE:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot use %ls as index",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_INDEX_OUT_OF_RANGE:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Index %d is out of range", values[0]._int);
-      break;
-    
-    case UNE_ET_SET:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot assign value to %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_GET:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Variable '%ls' does not exist", values[0]._wcs);
-      break;
-    
-    case UNE_ET_FOR:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot use %ls as range value",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-    
-    case UNE_ET_BREAK_OUTSIDE_LOOP:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot break outside loop");
-      break;
-    
-    case UNE_ET_CONTINUE_OUTSIDE_LOOP:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot continue outside loop");
-      break;
-    
-    case UNE_ET_UNTERMINATED_STRING:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected string termination");
-      break;
-    
-    case UNE_ET_CANT_ESCAPE_CHAR:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot escape character: '%lc'",
-               (wchar_t)values[0]._int);
-      break;
-    
-    case UNE_ET_UNREAL_NUMBER:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Operation returns unreal number");
-      break;
-    
-    case UNE_ET_SET_NO_ID:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot set index of literal %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-
-    case UNE_ET_DEF:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Function '%ls' already defined", values[0]._wcs);
-      break;
-
-    case UNE_ET_CALL:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Function '%ls' not defined", values[0]._wcs);
-      break;
-
-    case UNE_ET_CALL_ARGS:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected %lld arguments, got %lld",
-                 values[0]._int, values[1]._int);
-      break;
-
-    case UNE_ET_EXPECTED_RESULT_TYPE: {
-      int offset = swprintf(wcs, UNE_SIZE_MEDIUM, L"Expected %ls",
-                            une_result_type_to_wcs((une_result_type)values[0]._int));
-      if (values[1]._wcs != NULL) {
-        swprintf(wcs+offset, UNE_SIZE_MEDIUM, L" or %ls",
-                 une_result_type_to_wcs((une_result_type)values[1]._int));
-      }
-      break; }
-
-    case UNE_ET_PRINT_VOID:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot print VOID");
-      break;
-    
-    case UNE_ET_CONVERSION:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot convert %ls to %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int),
-               une_result_type_to_wcs((une_result_type)values[1]._int));
-      break;
-    
-    case UNE_ET_GETLEN:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Cannot get length of %ls",
-               une_result_type_to_wcs((une_result_type)values[0]._int));
-      break;
-
-    default:
-      swprintf(wcs, UNE_SIZE_MEDIUM, L"Unknown error!");
-      break;
-  }
-  return wcs;
+  return (une_error){
+    .pos = (une_position){
+      .start = 0,
+      .end = 0
+    },
+    .type = __UNE_ET_none__,
+    .line = 0,
+    .file = NULL
+  };
 }
-#pragma endregion une_error_value_to_wcs
 
-#pragma region une_error_display
-void une_error_display(
-  une_error *error,
-  une_lexer_state *ls,
-  une_parser_state *ps,
-  une_interpreter_state *is
-)
+/*
+Get error message for error type.
+*/
+__une_static const wchar_t *une_error_type_to_wcs(une_error_type type)
 {
+  /* Ensure error type is within bounds. */
+  if (!UNE_ERROR_TYPE_IS_VALID(type))
+    type = __UNE_ET_max__;
+
+  return une_error_message_table[type];
+}
+
+/*
+Display error.
+*/
+
+UNE_ISTREAM_ARRAY_PULLER_VAL(__une_error_display_array_pull, wint_t, WEOF, true);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_error_display_array_now, wint_t);
+UNE_ISTREAM_WFILE_PULLER(__une_error_display_wfile_pull);
+UNE_ISTREAM_WFILE_ACCESS(__une_error_display_wfile_now);
+
+void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_state *is)
+{
+  /* Setup. */
   int line = 1;
   size_t line_begin = 0;
   size_t line_end = 0;
   size_t pos_start = error->pos.start;
   size_t pos_end = error->pos.end;
   bool location_found = false;
+  une_istream text;
+  wint_t (*pull)(une_istream*);
+  wint_t (*now)(une_istream*);
   if (ls->read_from_file) {
-    // FIXME:? Finding a solution to this might also remove
-    // the need for the lexer state to be passed as a pointer.
-    ls->text = file_read(ls->path, true);
+    text = une_istream_wfile_create(ls->path);
+    pull = &__une_error_display_wfile_pull;
+    now = &__une_error_display_wfile_now;
+  } else {
+    text = une_istream_array_create((void*)ls->text, wcslen(ls->text));
+    pull = &__une_error_display_array_pull;
+    now = &__une_error_display_array_now;
   }
-  for (size_t i=0; i<wcslen(ls->text)+1 /* Catch '\0' */ ; i++) {
-    if (i == pos_start) location_found = true;
-    if (location_found && (ls->text[i] == L'\n' || ls->text[i] == L'\0')) {
-      line_end = i;
+
+  /* Find error position in file. */
+  assert(pos_start != pos_end);
+  while (pull(&text) != WEOF) {
+    if (text.index == pos_start)
+      location_found = true;
+    if (location_found && now(&text) == L'\n')
       break;
-    }
-    if (ls->text[i] == L'\n') {
+    if (now(&text) == L'\n') {
       line++;
-      line_begin = i+1;
+      line_begin = text.index+1;
     }
   }
-  wprintf(UNE_COLOR_NEUTRAL L"\33[1mFile %ls, Line %d (%hs @ %d):\33[0m"
-          UNE_COLOR_NEUTRAL L"\n%.*ls\n",
-          is->context->name, line, error->__file__, error->__line__,
-          line_end-line_begin, ls->text+line_begin);
-  wprintf(L"\33[%dC%ls\33[1m" UNE_COLOR_FAIL,
-          pos_start-line_begin, (pos_start-line_begin > 0) ? L"" : L"\33[D");
-  if (pos_start > pos_end) WERR(L"pos_start > pos_end\n"); // DEBUG: For debugging only.
-  for (int i=0; i<pos_end-pos_start; i++) {
+  line_end = text.index;
+  
+  /* Print location of error. */
+  wprintf(UNE_COLOR_NEUTRAL L"\33[1mFile %ls, Line %d", is->context->name, line);
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+  wprintf(L" (%hs @ %d)", error->file, error->line);
+  #endif
+  wprintf(L":\n" UNE_COLOR_NEUTRAL);
+
+  /* Print text at location. */
+  if (ls->read_from_file)
+    une_istream_wfile_reset(&text);
+  else
+    une_istream_array_reset(&text);
+  while (text.index+1 < (ptrdiff_t)line_begin)
+    pull(&text);
+  while (text.index+1 < (ptrdiff_t)line_end)
+    wprintf(L"%c", pull(&text));
+  wprintf(L"\n");
+
+  /* Underline error position within line. */
+  wprintf(L"\33[%dC%ls\33[1m" UNE_COLOR_FAIL, pos_start-line_begin, (pos_start-line_begin > 0) ? L"" : L"\33[D");
+  for (int i=0; i<pos_end-pos_start; i++)
     wprintf(L"~");
-  }
-  wchar_t *error_info_as_wcs = une_error_value_to_wcs(error->type, error->values);
-  wprintf(UNE_COLOR_FAIL L"\33[1m\n%ls\n\n\33[0m" UNE_COLOR_HINT
-          L"pos_start: %d\npos_end: %d\nline_begin: %d\nline_end: %d\33[0m\n\n",
-          error_info_as_wcs,
-          pos_start, pos_end, line_begin, line_end); // DEBUG: For debugging only.
-  if (ls->read_from_file) {
-    // FIXME:? Finding a solution to this might also remove
-    // the need for the lexer state to be passed as a pointer.
-    free(ls->text);
-  }
-  free(error_info_as_wcs);
+  
+  /* Print error message. */
+  const wchar_t *error_info_as_wcs = une_error_type_to_wcs(error->type);
+  wprintf(UNE_COLOR_FAIL L"\33[1m\n%ls\33[0m\n", error_info_as_wcs);
+
+  /* Print more detailed information. */
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+  wprintf(UNE_COLOR_HINT L"\npos_start: %d\npos_end: %d\nline_begin: %d\nline_end: %d\33[0m\n\n", pos_start, pos_end, line_begin, line_end);
+  #endif
+  
+  /* Wrap up. */
+  if (ls->read_from_file)
+    une_istream_wfile_free(text);
 }
-#pragma endregion une_error_display
-
-#pragma region une_error_free
-void une_error_free(une_error error)
-{
-  // It's possible for une_error to contain pointers to allocated memory
-  // that's used to provide details for an error message.
-  // An example of this is the UNE_ET_GET (see une_interpret_get).
-  switch (error.type) {
-    case __UNE_ET_none__:
-    case UNE_ET_EXPECTED_TOKEN:
-    case UNE_ET_UNEXPECTED_TOKEN:
-    case UNE_ET_UNEXPECTED_CHARACTER:
-    case UNE_ET_INCOMPLETE_FLOAT:
-    case UNE_ET_ADD:
-    case UNE_ET_SUB:
-    case UNE_ET_MUL:
-    case UNE_ET_DIV:
-    case UNE_ET_FDIV:
-    case UNE_ET_MOD:
-    case UNE_ET_NEG:
-    case UNE_ET_POW:
-    case UNE_ET_ZERO_DIVISION:
-    case UNE_ET_COMPARISON:
-    case UNE_ET_NOT_INDEXABLE:
-    case UNE_ET_NOT_INDEX_TYPE:
-    case UNE_ET_INDEX_OUT_OF_RANGE:
-    case UNE_ET_SET:
-    case UNE_ET_SET_NOT_INDEXABLE:
-    case UNE_ET_UNREAL_NUMBER:
-    case UNE_ET_SET_NO_ID:
-    case UNE_ET_CALL_ARGS:
-    case UNE_ET_EXPECTED_RESULT_TYPE:
-    case UNE_ET_PRINT_VOID:
-    case UNE_ET_CONVERSION:
-    case UNE_ET_GETLEN:
-    case UNE_ET_UNTERMINATED_STRING:
-    case UNE_ET_BREAK_OUTSIDE_LOOP:
-    case UNE_ET_CONTINUE_OUTSIDE_LOOP:
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Error: %d\n", __FILE__, __FUNCTION__, __LINE__, error.type);
-      #endif
-      break;
-    
-    case UNE_ET_GET:
-    case UNE_ET_CALL:
-      free(error.values[0]._wcs);
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-        wprintf(UNE_COLOR_HINT L"%hs:%hs:%d:" UNE_COLOR_NEUTRAL L" Error: %d\n", __FILE__, __FUNCTION__, __LINE__, error.type);
-      #endif
-      break;
-    
-    default: WERR(L"Unhandled error type %lld in une_error_free()!", error.type);
-  }
-}
-#pragma endregion une_error_free
-
-#pragma region une_error_create
-une_error une_error_create(void)
-{
-  return (une_error){
-    .pos = (une_position){
-      .start =0,
-      .end = 0
-    },
-    .type = __UNE_ET_none__,
-    .values[0]._vp = NULL,
-    .values[1]._vp = NULL,
-    .__line__ = 0,
-    .__file__ = NULL
-  };
-}
-#pragma endregion une_error_create
-
-#pragma region une_error_copy
-une_error une_error_copy(une_error src)
-{
-  une_error dest;
-  dest.type = src.type;
-  dest.pos = src.pos;
-  dest.__line__ = src.__line__;
-  dest.__file__ = src.__file__;
-
-  switch (src.type) {
-    case __UNE_ET_none__:
-    case UNE_ET_EXPECTED_TOKEN:
-    case UNE_ET_UNEXPECTED_TOKEN:
-    case UNE_ET_UNEXPECTED_CHARACTER:
-    case UNE_ET_INCOMPLETE_FLOAT:
-    case UNE_ET_ADD:
-    case UNE_ET_SUB:
-    case UNE_ET_MUL:
-    case UNE_ET_DIV:
-    case UNE_ET_FDIV:
-    case UNE_ET_MOD:
-    case UNE_ET_NEG:
-    case UNE_ET_POW:
-    case UNE_ET_ZERO_DIVISION:
-    case UNE_ET_COMPARISON:
-    case UNE_ET_NOT_INDEXABLE:
-    case UNE_ET_NOT_INDEX_TYPE:
-    case UNE_ET_INDEX_OUT_OF_RANGE:
-    case UNE_ET_SET:
-    case UNE_ET_UNREAL_NUMBER:
-    case UNE_ET_SET_NO_ID:
-    case UNE_ET_CALL_ARGS:
-    case UNE_ET_GETLEN:
-      dest.values[0]._int = src.values[0]._int;
-      dest.values[1]._int = src.values[1]._int;
-      break;
-    
-    case UNE_ET_GET:
-    case UNE_ET_CALL:
-      dest.values[0]._wcs = wcs_dup(src.values[0]._wcs);
-      break;
-    
-    default: WERR(L"Unhandled error type %lld in une_error_copy()!", src.type);
-  }
-
-  return dest;
-}
-#pragma endregion une_error_copy
