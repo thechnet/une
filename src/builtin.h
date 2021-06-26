@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2021-06-09
+Modified 2021-06-26
 */
 
 #ifndef UNE_BUILTIN_H
@@ -23,6 +23,11 @@ typedef enum _une_builtin_type {
   UNE_BIF_TO_STR,
   UNE_BIF_GET_LEN,
   UNE_BIF_SLEEP,
+  UNE_BIF_CHR,
+  UNE_BIF_ORD,
+  UNE_BIF_READ,
+  UNE_BIF_WRITE,
+  UNE_BIF_INPUT,
   __UNE_BIF_max__,
 } une_builtin_type;
 
@@ -44,5 +49,10 @@ __une_builtin_fn(une_builtin_to_flt,  une_result result);
 __une_builtin_fn(une_builtin_to_str,  une_result result);
 __une_builtin_fn(une_builtin_get_len, une_result result);
 __une_builtin_fn(une_builtin_sleep,   une_result result);
+__une_builtin_fn(une_builtin_chr,     une_result result);
+__une_builtin_fn(une_builtin_ord,     une_result result);
+__une_builtin_fn(une_builtin_read,    une_result result);
+__une_builtin_fn(une_builtin_write,   une_result file, une_position pos2, une_result text);
+__une_builtin_fn(une_builtin_input,   une_result result);
 
 #endif /* UNE_BUILTIN_H */

@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Updated 2021-06-13
+Updated 2021-06-26
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -38,14 +38,20 @@ Updated 2021-06-13
 /*
 *** Constants.
 */
-#define UNE_DEFAULT_CONTEXT_NAME L"<main>"
+#define UNE_DEFAULT_CONTEXT_NAME L"<stdin>"
 
 /* Sizes. */
-
-
-#define UNE_SIZE_SMALL 128
-#define UNE_SIZE_MEDIUM 4096
-#define UNE_SIZE_BIG 32767
+#define UNE_SIZE_NUM_LEN 32 /* Lexing, representing. */
+#define UNE_SIZE_STR_LEN 4096 /* Lexing. */
+#define UNE_SIZE_ID_LEN 32 /* Lexing. */
+#define UNE_SIZE_VARIABLE_BUF 32 /* Context. */
+#define UNE_SIZE_FUNCTION_BUF 16 /* Context. */
+#define UNE_SIZE_TOKEN_BUF 4096 /* Lexing. */
+#define UNE_SIZE_SEQUENCE 256 /* Parsing. */
+#define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
+#define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
+#define UNE_SIZE_FILE_BUFFER 4096 /* une_file_read. */
+#define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
 
 /* Output Color Escape Sequences. */
 #define UNE_COLOR_SUCCESS L"\33[92m"

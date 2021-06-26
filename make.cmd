@@ -28,7 +28,7 @@ if %debug_gdb% Equ 1 (
   set O=-Og
 )
 
-set flags=
+set "flags=-Wall"
 if %compiler% Equ clang (
   set "flags=!flags! -Wno-deprecated"
 )

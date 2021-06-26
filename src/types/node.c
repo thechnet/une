@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Updated 2021-06-13
+Updated 2021-06-26
 */
 
 /* Header-specific includes. */
@@ -219,7 +219,7 @@ __une_static const wchar_t *une_node_type_to_wcs(une_node_type type)
 /*
 Returns a string representation of a une_node.
 This function is not dynamic and will cause a buffer overflow
-if the returned array is longer than UNE_SIZE_MEDIUM. This could
+if the returned array is longer than UNE_SIZE_NODE_AS_WCS. This could
 realistically happen, were this function used in a real-world
 environment, but since it is only used for debugging, I'm
 leaving this vulnerability in here.
@@ -228,7 +228,7 @@ leaving this vulnerability in here.
 wchar_t *une_node_to_wcs(une_node *node)
 {
   /* Create output buffer. */
-  wchar_t *buffer = une_malloc(UNE_SIZE_BIG*sizeof(*buffer));
+  wchar_t *buffer = une_malloc(UNE_SIZE_NODE_AS_WCS*sizeof(*buffer));
   if (node == NULL) {
     wcscpy(buffer, UNE_COLOR_HINT L"NULL" UNE_COLOR_NEUTRAL);
     return buffer;
@@ -245,59 +245,59 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_STMTS: {
       UNE_UNPACK_NODE_LIST(node, list, list_size);
       if (list_size == 0) {
-        swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_HINT L"NO STMTS" UNE_COLOR_NEUTRAL);
+        swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_HINT L"NO STMTS" UNE_COLOR_NEUTRAL);
         break;
       }
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
-      size_t offset = swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"{%ls", node_as_wcs);
+      size_t offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"{%ls", node_as_wcs);
       une_free(node_as_wcs);
       for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
-        offset += swprintf(buffer+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"\n%ls", node_as_wcs);
+        offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"\n%ls", node_as_wcs);
         une_free(node_as_wcs);
       }
-      swprintf(buffer+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"}");
+      swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"}");
       break;
     }
     case UNE_NT_LIST: {
       UNE_UNPACK_NODE_LIST(node, list, list_size);
       if (list_size == 0) {
-        swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"[]");
+        swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"[]");
         break;
       }
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
-      int offset = swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"[%ls", node_as_wcs);
+      int offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"[%ls", node_as_wcs);
       une_free(node_as_wcs);
       for (int i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
-        offset += swprintf(buffer+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L", %ls", node_as_wcs);
+        offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L", %ls", node_as_wcs);
         une_free(node_as_wcs);
       }
-      swprintf(buffer+offset, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"]");
+      swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"]");
       break;
     }
   
     /* Numbers. */
     case UNE_NT_INT:
     case UNE_NT_SIZE:
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
         UNE_COLOR_NODE_DATUM_VALUE L"%lld" UNE_COLOR_NEUTRAL,
         une_node_type_to_wcs(node->type), node->content.value._int);
       break;
     case UNE_NT_FLT:
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
         UNE_COLOR_NODE_DATUM_VALUE L"%.3f" UNE_COLOR_NEUTRAL,
         une_node_type_to_wcs(node->type), node->content.value._flt);
       break;
     
     /* Strings. */
     case UNE_NT_STR:
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
         UNE_COLOR_NODE_DATUM_VALUE L"\"%ls" UNE_COLOR_NODE_DATUM_VALUE L"\"" UNE_COLOR_NEUTRAL,
         une_node_type_to_wcs(node->type), node->content.value._wcs);
       break;
     case UNE_NT_ID:
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_NEUTRAL L":"
         UNE_COLOR_NODE_DATUM_VALUE L"%ls" UNE_COLOR_NEUTRAL,
         une_node_type_to_wcs(node->type), node->content.value._wcs);
       break;
@@ -305,7 +305,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     /* Nullary operations. */
     case UNE_NT_BREAK:
     case UNE_NT_CONTINUE: {
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NODE_BRANCH_TYPE L"%ls" UNE_COLOR_NEUTRAL,
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_BRANCH_TYPE L"%ls" UNE_COLOR_NEUTRAL,
         une_node_type_to_wcs(node->type));
       break;
     }
@@ -316,7 +316,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_GET:
     case UNE_NT_RETURN: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L")", une_node_type_to_wcs(node->type), branch1);
       une_free(branch1);
       break;
@@ -344,7 +344,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_SET: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
         une_node_type_to_wcs(node->type), branch1, branch2);
       une_free(branch1);
@@ -360,7 +360,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
       wchar_t *branch3 = une_node_to_wcs(node->content.branch.c);
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
         une_node_type_to_wcs(node->type), branch1, branch2, branch3);
       une_free(branch1);
@@ -375,7 +375,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
       wchar_t *branch3 = une_node_to_wcs(node->content.branch.c);
       wchar_t *branch4 = une_node_to_wcs(node->content.branch.d);
-      swprintf(buffer, UNE_SIZE_BIG, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
+      swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L", %ls"
         UNE_COLOR_NEUTRAL L")", une_node_type_to_wcs(node->type), branch1, branch2, branch3, branch4);
       une_free(branch1);

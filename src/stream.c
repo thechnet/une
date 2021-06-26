@@ -1,6 +1,6 @@
 /*
 stream.c - Une
-Modified 2021-06-13
+Modified 2021-06-26
 */
 
 /* Header-specific includes. */
@@ -15,6 +15,7 @@ Initialize an array une_istream struct.
 une_istream une_istream_array_create(void *array, size_t size)
 {
   return (une_istream){
+    .has_reached_end = false,
     .index = -1,
     .data.array = {
       .array = array,
@@ -59,6 +60,7 @@ Reset an array une_istream.
 */
 void une_istream_array_reset(une_istream *istream)
 {
+  istream->has_reached_end = false;
   istream->index = -1;
 }
 
@@ -67,6 +69,7 @@ Reset a wfile une_istream.
 */
 void une_istream_wfile_reset(une_istream *istream)
 {
+  istream->has_reached_end = false;
   istream->index = -1;
   rewind(istream->data.wfile.file);
 }

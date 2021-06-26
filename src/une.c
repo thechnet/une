@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-06-13
+Modified 2021-06-26
 */
 
 /* Header-specific includes. */
@@ -54,7 +54,8 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #endif
   
   /* Interpret. */
-  une_context *context = une_context_create(UNE_DEFAULT_CONTEXT_NAME, UNE_SIZE_SMALL, UNE_SIZE_SMALL); // FIXME: Size.
+  wchar_t *context_name = ls.read_from_file ? str_to_wcs(path) : UNE_DEFAULT_CONTEXT_NAME;
+  une_context *context = une_context_create(context_name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
   une_interpreter_state is = une_interpreter_state_create(context);
   une_result result = une_result_create(UNE_RT_VOID);
   #ifndef UNE_NO_INTERPRET
@@ -68,10 +69,15 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     putwc(L'\n', stdout);
   }
   #endif
+  une_free(context_name);
   
   /* Wrap up. */
-  if (tokens == NULL || ast == NULL || result.type == UNE_RT_ERROR)
-    une_error_display(&error, &ls, &is);
+  if (tokens == NULL || ast == NULL || result.type == UNE_RT_ERROR) {
+    if (error.type != __UNE_ET_none__)
+      une_error_display(&error, &ls, &is);
+    else
+      ERR(L"Expected error, but error undefined. Check UNE_NO_*.");
+  }
   une_context_free(context);
   une_node_free(ast, false);
   une_tokens_free(tokens);

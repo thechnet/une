@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Updated 2021-06-09
+Updated 2021-06-26
 */
 
 /* Import public Une interface. */
@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
     ERR("No input file.");
   
   une_result result = une_run(true, argv[1], NULL);
+  //une_result result = une_run(false, NULL, L"+");
   int final = result.type == UNE_RT_INT ? (int)result.value._int : 0;
   une_result_free(result);
   

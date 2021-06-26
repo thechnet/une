@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Updated 2021-06-13
+Updated 2021-06-26
 */
 
 /* Header-specific includes. */
@@ -125,7 +125,7 @@ __une_static const wchar_t *une_token_type_to_wcs(une_token_type type)
 /*
 Return a text representation of a une_token.
 This function is not dynamic and will cause a buffer overflow
-if the returned array is longer than UNE_SIZE_MEDIUM. This could
+if the returned array is longer than UNE_SIZE_TOKEN_AS_WCS. This could
 realistically happen, were this function used in a real-world
 environment, but since it is only used for debugging, I'm
 leaving this vulnerability in here.
@@ -134,7 +134,7 @@ leaving this vulnerability in here.
 __une_static wchar_t *une_token_to_wcs(une_token token)
 {
   /* Write token type. */
-  wchar_t *str = une_malloc(UNE_SIZE_MEDIUM*sizeof(*str));
+  wchar_t *str = une_malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));
   wcscpy(str, UNE_COLOR_TOKEN_TYPE);
   wcscat(str, une_token_type_to_wcs(token.type));
   wcscat(str, UNE_COLOR_NEUTRAL);
@@ -144,18 +144,18 @@ __une_static wchar_t *une_token_to_wcs(une_token token)
     
     /* Numbers. */
     case UNE_TT_INT:
-      swprintf(str+wcslen(str), UNE_SIZE_MEDIUM, L":" UNE_COLOR_TOKEN_VALUE L"%lld" UNE_COLOR_NEUTRAL, token.value._int);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%lld" UNE_COLOR_NEUTRAL, token.value._int);
       break;
     case UNE_TT_FLT:
-      swprintf(str+wcslen(str), UNE_SIZE_MEDIUM, L":" UNE_COLOR_TOKEN_VALUE L"%.3f" UNE_COLOR_NEUTRAL, token.value._flt);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%.3f" UNE_COLOR_NEUTRAL, token.value._flt);
       break;
     
     /* Strings. */
     case UNE_TT_STR:
-      swprintf(str+wcslen(str), UNE_SIZE_MEDIUM, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" UNE_COLOR_NEUTRAL, token.value._wcs);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" UNE_COLOR_NEUTRAL, token.value._wcs);
       break;
     case UNE_TT_ID:
-      swprintf(str+wcslen(str), UNE_SIZE_MEDIUM, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_NEUTRAL, token.value._wcs);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_NEUTRAL, token.value._wcs);
       break;
     
   }

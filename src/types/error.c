@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-06-13
+Updated 2021-06-26
 */
 
 /* Header-specific includes. */
@@ -32,6 +32,8 @@ const wchar_t *une_error_message_table[] = {
   L"Function not defined.",
   L"Wrong number of arguments.",
   L"Unexpected argument type.",
+  L"File not found.",
+  L"Encoding error.",
   L"Unknown error!",
 };
 
@@ -68,7 +70,7 @@ Display error.
 */
 
 UNE_ISTREAM_ARRAY_PULLER_VAL(__une_error_display_array_pull, wint_t, WEOF, true);
-UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_error_display_array_now, wint_t);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_error_display_array_now, wint_t, WEOF, true);
 UNE_ISTREAM_WFILE_PULLER(__une_error_display_wfile_pull);
 UNE_ISTREAM_WFILE_ACCESS(__une_error_display_wfile_now);
 
@@ -84,6 +86,11 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   une_istream text;
   wint_t (*pull)(une_istream*);
   wint_t (*now)(une_istream*);
+  const wchar_t *error_info_as_wcs; /* Predeclare to allow label jump. */
+
+  if (error->type == UNE_ET_FILE_NOT_FOUND && error->pos.start == 0 && error->pos.end == 0)
+    goto skip_preview;
+
   if (ls->read_from_file) {
     text = une_istream_wfile_create(ls->path);
     pull = &__une_error_display_wfile_pull;
@@ -103,7 +110,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
       break;
     if (now(&text) == L'\n') {
       line++;
-      line_begin = text.index+1;
+      line_begin = text.index;
     }
   }
   line_end = text.index;
@@ -127,13 +134,16 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   wprintf(L"\n");
 
   /* Underline error position within line. */
-  wprintf(L"\33[%dC%ls\33[1m" UNE_COLOR_FAIL, pos_start-line_begin, (pos_start-line_begin > 0) ? L"" : L"\33[D");
+  wprintf(L"\33[%dC%ls\33[1m" UNE_COLOR_FAIL, pos_start-line_begin-(line==1?0:1), (pos_start-line_begin > 0) ? L"" : L"\33[D");
   for (int i=0; i<pos_end-pos_start; i++)
     wprintf(L"~");
-  
+  wprintf(L"\n");
+
+  skip_preview:
+
   /* Print error message. */
-  const wchar_t *error_info_as_wcs = une_error_type_to_wcs(error->type);
-  wprintf(UNE_COLOR_FAIL L"\33[1m\n%ls\33[0m\n", error_info_as_wcs);
+  error_info_as_wcs = une_error_type_to_wcs(error->type);
+  wprintf(UNE_COLOR_FAIL L"\33[1m%ls\33[0m\n", error_info_as_wcs);
 
   /* Print more detailed information. */
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)

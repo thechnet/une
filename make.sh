@@ -28,7 +28,7 @@ if [ $debug_gdb==1 ]; then
   O=-Og
 fi
 
-unset flags
+flags="-Wall"
 if [ $compiler=="clang" ]; then
   flags="${flags} -Wno-deprecated -Wno-switch"
 fi

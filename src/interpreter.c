@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Updated 2021-06-13
+Updated 2021-06-26
 */
 
 /* Header-specific includes. */
@@ -86,7 +86,7 @@ Call user-defined function.
 __une_static une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args)
 {
   /* Create function context. */
-  une_context *context = une_context_create(fn->name, UNE_SIZE_SMALL, UNE_SIZE_SMALL); // FIXME: Size.
+  une_context *context = une_context_create(fn->name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
   context->parent = is->context;
   is->context = context;
 
@@ -124,6 +124,16 @@ __une_static une_result une_interpret_call_builtin(une_error *error, une_interpr
       return une_builtin_get_len(error, is, arg_nodes[1]->pos, args[0]);
     case UNE_BIF_SLEEP:
       return une_builtin_sleep(error, is, arg_nodes[1]->pos, args[0]);
+    case UNE_BIF_CHR:
+      return une_builtin_chr(error, is, arg_nodes[1]->pos, args[0]);
+    case UNE_BIF_ORD:
+      return une_builtin_ord(error, is, arg_nodes[1]->pos, args[0]);
+    case UNE_BIF_READ:
+      return une_builtin_read(error, is, arg_nodes[1]->pos, args[0]);
+    case UNE_BIF_WRITE:
+      return une_builtin_write(error, is, arg_nodes[1]->pos, args[0], arg_nodes[2]->pos, args[1]);
+    case UNE_BIF_INPUT:
+      return une_builtin_input(error, is, arg_nodes[1]->pos, args[0]);
   }
   
   VERIFY_NOT_REACHED;

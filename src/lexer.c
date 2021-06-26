@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Updated 2021-06-13
+Updated 2021-06-26
 */
 
 /* Header-specific includes. */
@@ -63,7 +63,7 @@ UNE_ISTREAM_WFILE_PEEKER(__une_lex_wfile_peek)
 UNE_ISTREAM_WFILE_ACCESS(__une_lex_wfile_now);
 UNE_ISTREAM_ARRAY_PULLER_VAL(__une_lex_array_pull, wint_t, WEOF, true);
 UNE_ISTREAM_ARRAY_PEEKER_VAL(__une_lex_array_peek, wint_t, WEOF, true);
-UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_lex_array_now, wint_t);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_lex_array_now, wint_t, WEOF, true);
 UNE_OSTREAM_PUSHER(__une_lex_push, une_token);
 UNE_OSTREAM_PEEKER_REF(__une_lex_out_peek, une_token, NULL);
 
@@ -74,6 +74,12 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     ls->pull = &__une_lex_wfile_pull;
     ls->peek = &__une_lex_wfile_peek;
     ls->now = &__une_lex_wfile_now;
+    FILE *file = fopen(ls->path, "r,ccs=UTF-8");
+    if (file == NULL) {
+      *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, ((une_position){ .start=0, .end=0 }));
+      return NULL;
+    }
+    fclose(file);
     ls->in = une_istream_wfile_create(ls->path);
   } else {
     ls->pull = &__une_lex_array_pull;
@@ -84,8 +90,8 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   ls->pull(&ls->in);
   
   /* Initialize token buffer. */
-  une_token *tokens = une_malloc(UNE_SIZE_MEDIUM*sizeof(*tokens)); // FIXME: Size.
-  une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_MEDIUM, sizeof(*tokens), true);
+  une_token *tokens = une_malloc(UNE_SIZE_TOKEN_BUF*sizeof(*tokens));
+  une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_TOKEN_BUF, sizeof(*tokens), true);
   void (*push)(une_ostream*, une_token) = &__une_lex_push;
   une_token *(*tkpeek)(une_ostream*, ptrdiff_t) = &__une_lex_out_peek;
   
@@ -132,7 +138,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     tk = une_lex_1c_token(error, ls);
     if (tk.type != __UNE_TT_none__) {
       push(&out, tk);
-      if (tk.type == UNE_TT_RBRC) // FIXME: :/
+      if (tk.type == UNE_TT_RBRC)
         push(&out, (une_token){
           .type = UNE_TT_NEW,
           .pos = tk.pos,
@@ -175,7 +181,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     });
   push(&out, (une_token){
     .type = UNE_TT_EOF,
-    .pos = (une_position){ .start = ls->in.index, .end = ls->in.index },
+    .pos = (une_position){ .start = ls->in.index, .end = ls->in.index+1 },
     .value._vp = NULL
   });
   
@@ -192,7 +198,7 @@ Lex a numeric token.
 __une_lexer(une_lex_num)
 {
   /* Setup. */
-  size_t buffer_size = UNE_SIZE_SMALL;
+  size_t buffer_size = UNE_SIZE_NUM_LEN;
   wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
   size_t idx_start = ls->in.index;
   
@@ -263,7 +269,7 @@ Lex a string token.
 __une_lexer(une_lex_str)
 {
   /* Setup. */
-  size_t buffer_size = UNE_SIZE_MEDIUM;
+  size_t buffer_size = UNE_SIZE_STR_LEN;
   wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
   size_t idx_start = ls->in.index;
   bool escape = false;
@@ -341,10 +347,9 @@ Lex an id token.
 __une_lexer(une_lex_id)
 {
   /* Setup. */
-  size_t buffer_size = UNE_SIZE_MEDIUM;
+  size_t buffer_size = UNE_SIZE_ID_LEN;
   wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
   size_t idx_start = ls->in.index;
-  bool escape = false;
   size_t buffer_index = 0;
   
   while (UNE_LEXER_WC_CAN_BE_IN_ID(ls->now(&ls->in))) {

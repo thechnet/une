@@ -1,6 +1,6 @@
 /*
 stream.h - Une
-Modified 2021-06-13
+Modified 2021-06-26
 */
 
 #ifndef UNE_STREAM_H
@@ -13,6 +13,7 @@ Modified 2021-06-13
 Holds information for retrieving data from an array or wide-character file.
 */
 typedef struct _une_istream {
+  bool has_reached_end;
   ptrdiff_t index;
   union {
     struct {
@@ -55,8 +56,13 @@ Pull the next item from an array une_istream by value.
 #define UNE_ISTREAM_ARRAY_PULLER_VAL(__id, __type, __error_value, __verify_position)\
   __une_static __type __id(une_istream *istream)\
   {\
-    if (__verify_position && !une_istream_array_verify_position(istream, 1))\
+    if (__verify_position && !une_istream_array_verify_position(istream, 1)) {\
+      if (!istream->has_reached_end) {\
+        istream->has_reached_end = true;\
+        istream->index++;\
+      }\
       return __error_value;\
+    }\
     istream->index++;\
     return __UNE_ISTREAM_ARRAY_ITEM(istream, __type, 0);\
   }
@@ -67,8 +73,13 @@ Pull the next item from an array une_istream by reference.
 #define UNE_ISTREAM_ARRAY_PULLER_REF(__id, __type, __error_value, __verify_position)\
   __une_static __type* __id(une_istream *istream)\
   {\
-    if (__verify_position && !une_istream_array_verify_position(istream, 1))\
+    if (__verify_position && !une_istream_array_verify_position(istream, 1)) {\
+      if (!istream->has_reached_end) {\
+        istream->has_reached_end = true;\
+        istream->index++;\
+      }\
       return __error_value;\
+    }\
     istream->index++;\
     return &__UNE_ISTREAM_ARRAY_ITEM(istream, __type, 0);\
   }
@@ -98,18 +109,22 @@ Peek an item in an array une_istream by reference.
 /*
 Access the current item in an array une_istream by value.
 */
-#define UNE_ISTREAM_ARRAY_ACCESS_VAL(__id, __type)\
-  static inline __type __id(une_istream *istream)\
+#define UNE_ISTREAM_ARRAY_ACCESS_VAL(__id, __type, __error_value, __verify_position)\
+  __une_static __type __id(une_istream *istream)\
   {\
+    if (__verify_position && istream->has_reached_end)\
+      return __error_value;\
     return __UNE_ISTREAM_ARRAY_ITEM(istream, __type, 0);\
   }
 
 /*
 Access the current item in an array une_istream by reference.
 */
-#define UNE_ISTREAM_ARRAY_ACCESS_REF(__id, __type)\
-  static inline __type* __id(une_istream *istream)\
+#define UNE_ISTREAM_ARRAY_ACCESS_REF(__id, __type, __error_value, __verify_position)\
+  __une_static __type* __id(une_istream *istream)\
   {\
+    if (__verify_position && istream->has_reached_end)\
+      return __error_value;\
     return &__UNE_ISTREAM_ARRAY_ITEM(istream, __type, 0);\
   }
 
