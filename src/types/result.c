@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Updated 2021-06-13
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -52,7 +52,7 @@ une_result une_result_copy(une_result src)
     
     /* Heap data. */
     case UNE_RT_STR:
-      dest.value._wcs = wcs_dup(src.value._wcs);
+      dest.value._wcs = une_wcsdup(src.value._wcs);
       break;
     
     /* List. */
@@ -131,6 +131,8 @@ const wchar_t *une_result_type_to_wcs(une_result_type type)
 
 /*
 Print a text representation of a une_result.
+une_result does not have a *_to_wcs function because these functions can end in a buffer overflow.
+As une_result needs to be representable in release builds, it instead has a *_represent function.
 */
 void une_result_represent(une_result result)
 {
@@ -209,7 +211,7 @@ une_int une_result_is_true(une_result result)
       return ((une_result*)result.value._vp)[0].value._int == 0 ? 0 : 1;
   }
   
-  VERIFY_NOT_REACHED;
+  UNE_VERIFY_NOT_REACHED;
 }
 
 /*
@@ -243,8 +245,8 @@ une_int une_results_are_equal(une_result left, une_result right)
     return 1;
   }
   
-  /* Illegal Comparison. */
-  return -1;
+  /* Different types; not equal. */
+  return 0;
 }
 
 /*

@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-06-26
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -54,8 +54,10 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #endif
   
   /* Interpret. */
-  wchar_t *context_name = ls.read_from_file ? str_to_wcs(path) : UNE_DEFAULT_CONTEXT_NAME;
+  wchar_t *context_name = ls.read_from_file ? une_str_to_wcs(path) : UNE_DEFAULT_CONTEXT_NAME;
   une_context *context = une_context_create(context_name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
+  if (ls.read_from_file)
+    une_free(context_name);
   une_interpreter_state is = une_interpreter_state_create(context);
   une_result result = une_result_create(UNE_RT_VOID);
   #ifndef UNE_NO_INTERPRET
@@ -63,13 +65,6 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     result = une_interpret(&error, &is, ast);
   putwc(L'\n', stdout);
   #endif
-  #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
-  if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
-    une_result_represent(result);
-    putwc(L'\n', stdout);
-  }
-  #endif
-  une_free(context_name);
   
   /* Wrap up. */
   if (tokens == NULL || ast == NULL || result.type == UNE_RT_ERROR) {

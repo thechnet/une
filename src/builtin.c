@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-06-26
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -9,6 +9,9 @@ Modified 2021-06-26
 /* Implementation-specific includes. */
 #include "tools.h"
 #include <time.h>
+#include "une.h"
+#include <sys/stat.h>
+#include "stream.h"
 
 /*
 Get the une_builtin_type from a string containing a built-in function name.
@@ -37,6 +40,12 @@ const une_builtin_type une_builtin_wcs_to_type(wchar_t *name)
     return UNE_BIF_WRITE;
   if (wcscmp(name, L"input") == 0)
     return UNE_BIF_INPUT;
+  if (wcscmp(name, L"script") == 0)
+    return UNE_BIF_SCRIPT;
+  if (wcscmp(name, L"exist") == 0)
+    return UNE_BIF_EXIST;
+  if (wcscmp(name, L"split") == 0)
+    return UNE_BIF_SPLIT;
   return __UNE_BIF_none__;
 }
 
@@ -68,6 +77,12 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
       return 2;
     case UNE_BIF_INPUT:
       return 1;
+    case UNE_BIF_SCRIPT:
+      return 1;
+    case UNE_BIF_EXIST:
+      return 1;
+    case UNE_BIF_SPLIT:
+      return 2;
     default:
       ERR(L"Unhandled type %d", type);
   }
@@ -80,7 +95,7 @@ __une_builtin_fn(une_builtin_print, une_result result)
 {
   /* Ensure une_result_type is data type. */
   if (!UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -107,12 +122,12 @@ __une_builtin_fn(une_builtin_to_int, une_result result)
     case UNE_RT_STR:
       return (une_result){
         .type = UNE_RT_INT,
-        .value._int = wcs_to_une_int(result.value._wcs)
+        .value._int = une_wcs_to_une_int(result.value._wcs)
       };
   }
   
   /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+  *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
   return une_result_create(UNE_RT_ERROR);
 }
 
@@ -133,12 +148,12 @@ __une_builtin_fn(une_builtin_to_flt, une_result result)
     case UNE_RT_STR:
       return (une_result){
         .type = UNE_RT_FLT,
-        .value._flt = wcs_to_une_flt(result.value._wcs)
+        .value._flt = une_wcs_to_une_flt(result.value._wcs)
       };
   }
   
   /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+  *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
   return une_result_create(UNE_RT_ERROR);
 }
 
@@ -170,7 +185,7 @@ __une_builtin_fn(une_builtin_to_str, une_result result)
   }
   
   /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+  *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
   return une_result_create(UNE_RT_ERROR);
 }
 
@@ -196,7 +211,7 @@ __une_builtin_fn(une_builtin_get_len, une_result result)
   }
   
   /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+  *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
   return une_result_create(UNE_RT_ERROR);
 }
 
@@ -207,7 +222,7 @@ __une_builtin_fn(une_builtin_sleep, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_INT. */
   if (result.type != UNE_RT_INT) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
     return une_result_create(UNE_RT_ERROR);
   }
   
@@ -228,7 +243,7 @@ __une_builtin_fn(une_builtin_chr, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_INT. */
   if (result.type != UNE_RT_INT) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -246,7 +261,7 @@ __une_builtin_fn(une_builtin_ord, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR and is only one character long. */
   if (result.type != UNE_RT_STR || wcslen(result.value._wcs) != 1) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -262,12 +277,12 @@ __une_builtin_fn(une_builtin_read, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR. */
   if (result.type != UNE_RT_STR) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
     return une_result_create(UNE_RT_ERROR);
   }
   
   /* Read file. */
-  char *path = wcs_to_str(result.value._wcs);
+  char *path = une_wcs_to_str(result.value._wcs);
   if (path == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
     return une_result_create(UNE_RT_ERROR);
@@ -289,16 +304,16 @@ __une_builtin_fn(une_builtin_write, une_result file, une_position pos2, une_resu
 {
   /* Ensure input une_result_types are UNE_RT_STR. */
   if (file.type != UNE_RT_STR) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
     return une_result_create(UNE_RT_ERROR);
   }
   if (text.type != UNE_RT_STR) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos2);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos2);
     return une_result_create(UNE_RT_ERROR);
   }
 
   /* Create file. */
-  char *path = wcs_to_str(file.value._wcs);
+  char *path = une_wcs_to_str(file.value._wcs);
   if (path == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
     return une_result_create(UNE_RT_ERROR);
@@ -323,7 +338,7 @@ __une_builtin_fn(une_builtin_input, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR. */
   if (result.type != UNE_RT_STR) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_UNEXPECTED_ARG_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -340,4 +355,133 @@ __une_builtin_fn(une_builtin_input, une_result result)
   wcscpy(str.value._wcs, instr);
   une_free(instr);
   return str;
+}
+
+/*
+Run an external Une script.
+*/
+__une_builtin_fn(une_builtin_script, une_result result)
+{
+  /* Ensure input une_result_type is UNE_RT_STR. */
+  if (result.type != UNE_RT_STR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+
+  /* Run script. */
+  une_result out;
+  char *path = une_wcs_to_str(result.value._wcs);
+  FILE *check = fopen(path, "r,ccs=UTF-8");
+  if (check == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
+    out = une_result_create(UNE_RT_ERROR);
+  } else {
+    fclose(check);
+    out = une_run(true, path, NULL);
+  }
+  une_free(path);
+  return out;
+}
+
+/*
+Check if a file or directory exists.
+*/
+__une_builtin_fn(une_builtin_exist, une_result result)
+{
+  /* Ensure input une_result_type is UNE_RT_STR. */
+  if (result.type != UNE_RT_STR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+
+  /* Check if file or folder exists. */
+  char *path = une_wcs_to_str(result.value._wcs);
+  struct stat sstat;
+  int res = stat(path, &sstat);
+  une_free(path);
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = !res
+  };
+}
+
+/* Split a string into a list of substrings. */
+UNE_OSTREAM_PUSHER(__une_builtin_split_push, une_result);
+__une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_result delims)
+{
+  /* Ensure input une_result_types are UNE_RT_STR and UNE_RT_LIST, where each member is of type UNE_RT_STR. */
+  if (string.type != UNE_RT_STR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  if (delims.type != UNE_RT_LIST || ((une_result*)delims.value._vp)[0].value._int == 0) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos2);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  UNE_UNPACK_RESULT_LIST(delims, delims_p, delims_len);
+  UNE_FOR_RESULT_LIST_ITEM(i, delims_len) {
+    if (delims_p[i].type != UNE_RT_STR || wcslen(delims_p[i].value._wcs) <= 0) {
+      *error = UNE_ERROR_SET(UNE_ET_TYPE, pos2);
+      return une_result_create(UNE_RT_ERROR);
+    }
+  }
+
+  /* Setup. */
+  size_t tokens_amt = 0;
+  une_result *tokens = une_malloc((UNE_SIZE_BIF_SPLIT_TKS+1)*sizeof(*tokens));
+  une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_BIF_SPLIT_TKS+1, sizeof(*tokens), true);
+  void (*push)(une_ostream*, une_result) = &__une_builtin_split_push;
+  push(&out, une_result_create(UNE_RT_SIZE));
+  /* Cache delimiter lengths for performance. */
+  size_t *delim_lens = une_malloc(delims_len*sizeof(*delim_lens));
+  for (size_t i=0; i<delims_len; i++)
+    delim_lens[i] = wcslen(delims_p[i+1].value._wcs);
+  wchar_t *wcs = string.value._wcs;
+  size_t wcs_len = wcslen(wcs);
+  size_t last_token_end = 0;
+  int left_for_match = 0;
+
+  /* Create tokens. */
+  for (size_t i=0; i<wcs_len; i++) { /* For each character. */
+    for (size_t delim=0; delim<delims_len; delim++) { /* For each delimiter. */
+      left_for_match = delim_lens[delim];
+      for (size_t delim_i=0; delim_i<delim_lens[delim]; delim_i++) { /* For each character in the delimiter. */
+        if (i+delim_i >= wcs_len || wcs[i+delim_i] != delims_p[delim+1].value._wcs[delim_i])
+          break;
+        left_for_match--;
+      }
+      if (left_for_match != 0 && i+1 == wcs_len) { /* Special case for end of string. */
+        i++;
+        left_for_match = 0;
+      }
+      if (left_for_match == 0) { /* All characters have been matched. */
+        size_t last_token_end_cpy = last_token_end;
+        size_t substr_len = i-last_token_end_cpy;
+        i += delim_lens[delim]-1 /* Compensate for next i++. */;
+        last_token_end = i+1; /* last_token_end is not incremented next loop. */
+        /* Break if there was no token before this delimiter. */
+        if (substr_len == 0)
+          break;
+        /* Create substring. */
+        wchar_t *substr = une_malloc((substr_len+1)*sizeof(*substr));
+        wmemcpy(substr, wcs+last_token_end_cpy, substr_len);
+        substr[substr_len] = L'\0';
+        /* Push substring. */
+        push(&out, (une_result){
+          .type = UNE_RT_STR,
+          .value._wcs = substr
+        });
+        tokens_amt++;
+        break;
+      }
+    }
+  }
+
+  /* Wrap up. */
+  une_free(delim_lens);
+  tokens[0].value._int = tokens_amt;
+  return (une_result){
+    .type = UNE_RT_LIST,
+    .value._vp = (void*)tokens
+  };
 }

@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -56,7 +56,7 @@ Convert a wchar_t string into a une_int integer.
 This function does no error-checking and should only be used in a setting where
 we already know the string is an integer number.
 */
-une_int wcs_to_une_int(wchar_t *str)
+une_int une_wcs_to_une_int(wchar_t *str)
 {
   une_int out = 0;
   for (size_t i=0; str[i] != L'\0'; i++) {
@@ -72,7 +72,7 @@ Convert a wchar_t string into a une_flt floating point number.
 This function does no error-checking and should only be used in a setting where
 we already know the string is a floating point number.
 */
-une_flt wcs_to_une_flt(wchar_t *str)
+une_flt une_wcs_to_une_flt(wchar_t *str)
 {
   une_flt out = 0;
   for (int var=1, i=0; str[i] != L'\0'; i++) {
@@ -92,7 +92,7 @@ une_flt wcs_to_une_flt(wchar_t *str)
 /*
 Create a wchar_t string from a char string.
 */
-wchar_t *str_to_wcs(char *str)
+wchar_t *une_str_to_wcs(char *str)
 {
   size_t len = strlen(str);
   wchar_t *wcs = une_malloc((len+1)*sizeof(*wcs));
@@ -103,11 +103,11 @@ wchar_t *str_to_wcs(char *str)
 /*
 Create a char string from a wchar_t string.
 */
-char *wcs_to_str(wchar_t *wcs)
+char *une_wcs_to_str(wchar_t *wcs)
 {
-  size_t len = wcslen(wcs);
-  char *str = une_malloc((len+1)*sizeof(*str));
-  wcstombs(str, wcs, len);
+  size_t size = wcslen(wcs)+1 /* NUL. */;
+  char *str = une_malloc(size*sizeof(*str));
+  wcstombs(str, wcs, size);
   if (errno == EILSEQ) {
     une_free(str);
     return NULL;
@@ -117,28 +117,28 @@ char *wcs_to_str(wchar_t *wcs)
 
 /*
 Duplicate a char string.
+This function exists as a workaround to the standard strdup behaving slightly different than desired.
 */
-char *str_dup(char *src)
+char *une_strdup(char *src)
 {
   if (src == NULL)
     return NULL;
-  size_t len = strlen(src);
-  char *new = une_malloc((len+1)*sizeof(*new));
-  strcpy(new, src);
-  return new;
+  size_t size = strlen(src)+1;
+  char *new = une_malloc(size*sizeof(*new));
+  return memcpy(new, src, size);
 }
 
 /*
 Duplicate a wchar_t string.
+This function exists as a workaround to the standard wcsdup behaving slightly different than desired.
 */
-wchar_t *wcs_dup(wchar_t *src)
+wchar_t *une_wcsdup(wchar_t *src)
 {
   if (src == NULL)
     return NULL;
-  size_t len = wcslen(src);
-  wchar_t *new = une_malloc((len+1)*sizeof(*new));
-  wcscpy(new, src);
-  return new;
+  size_t size = wcslen(src)+1;
+  wchar_t *new = une_malloc(size*sizeof(*new));
+  return wmemcpy(new, src, size);
 }
 
 /*
@@ -146,11 +146,11 @@ Opens a UTF-8 file at 'path' and returns its text contents as wchar_t string.
 */
 wchar_t *une_file_read(char *path)
 {
-  size_t text_size = UNE_SIZE_FILE_BUFFER;
-  wchar_t *text = une_malloc(text_size*sizeof(*text));
   FILE *f = fopen(path, "r,ccs=UTF-8");
   if (f == NULL)
     return NULL;
+  size_t text_size = UNE_SIZE_FILE_BUFFER;
+  wchar_t *text = une_malloc(text_size*sizeof(*text));
   size_t cursor = 0;
   wint_t c; /* DOC: Can represent any Unicode character + WEOF (!).
                This is important when using fgetwc(), as otherwise,

@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -29,7 +29,7 @@ Updated 2021-06-26
 // #define UNE_DISPLAY_TOKENS
 // #define UNE_DISPLAY_NODES
 #define UNE_DISPLAY_RESULT
-// #define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
+#define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
 
 // #define UNE_DEBUG_LOG_INTERPRET
 // #define UNE_DEBUG_LOG_PARSE
@@ -52,6 +52,7 @@ Updated 2021-06-26
 #define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FILE_BUFFER 4096 /* une_file_read. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
+#define UNE_SIZE_BIF_SPLIT_TKS 16 /* une_buitlin_split. */
 
 /* Output Color Escape Sequences. */
 #define UNE_COLOR_SUCCESS L"\33[92m"
@@ -93,7 +94,7 @@ typedef union _une_value {
 /*
 *** Tools.
 */
-#define VERIFY_NOT_REACHED assert(false)
+#define UNE_VERIFY_NOT_REACHED assert(false)
 
 /* Internal Error Response and Logging Tools. */
 #define __LOG(style, msg, ...) wprintf(style L"%hs:%hs:%d: " msg "\33[0m\n", __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);

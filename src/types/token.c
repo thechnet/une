@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -27,9 +27,9 @@ const wchar_t *une_token_table[] = {
   L";",
   L"EOF",
   L"=",
-  L"not",
-  L"and",
-  L"or",
+  L"!",
+  L"&&",
+  L"||",
   L"==",
   L"!=",
   L">",
@@ -54,6 +54,7 @@ const wchar_t *une_token_table[] = {
   L"continue",
   L"break",
   L"return",
+  L"global",
 };
 
 /*

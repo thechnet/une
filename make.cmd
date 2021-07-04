@@ -9,7 +9,7 @@ set release=0
 set debug=1
 set debug_gdb=1
 
-:: gcc, clang, tcc
+:: gcc, clang
 set compiler=gcc
 
 ::#endregion Preferences
@@ -24,16 +24,13 @@ if %release% Equ 1 (
     set O=-O3
   )
 )
-if %debug_gdb% Equ 1 (
-  set O=-Og
-)
 
 set "flags=-Wall"
 if %compiler% Equ clang (
   set "flags=!flags! -Wno-deprecated"
 )
 if %debug_gdb% Equ 1 (
-  set "flags=!flags! -g"
+  set "flags=!flags! -g -Wno-switch"
 )
 @REM if %debug% Equ 1 (
 @REM   set "flags=!flags! -DUNE_DEBUG"
@@ -67,8 +64,10 @@ if %clear% Equ 1 (
 %compiler% %O% %flags% %src% -o ../une.exe
 set el=%errorlevel%
 popd
-if %el% Equ 0 (
-  une %*
+if "%*" nEq "" (
+  if %el% Equ 0 (
+    une %*
+  )
 )
 
 echo Done.

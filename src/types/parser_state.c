@@ -1,6 +1,6 @@
 /*
 parser_state.c - Une
-Modified 2021-06-13
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -12,7 +12,7 @@ Initialize a une_parser_state struct.
 une_parser_state une_parser_state_create(void)
 {
   return (une_parser_state){
-    .inside_loop = false,
+    .loop_level = 0,
     .in = (une_istream){ 0 },
     .pull = NULL,
     .peek = NULL,

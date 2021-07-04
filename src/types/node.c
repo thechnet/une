@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -104,7 +104,7 @@ une_node *une_node_copy(une_node *src)
     /* Heap data. */
     case UNE_NT_STR:
     case UNE_NT_ID:
-      dest->content.value._wcs = wcs_dup(src->content.value._wcs);
+      dest->content.value._wcs = une_wcsdup(src->content.value._wcs);
       break;
     
     /* List. */
@@ -123,7 +123,10 @@ une_node *une_node_copy(une_node *src)
       dest->content.branch.a = une_node_copy(src->content.branch.a);
       dest->content.branch.b = une_node_copy(src->content.branch.b);
       dest->content.branch.c = une_node_copy(src->content.branch.c);
-      dest->content.branch.d = une_node_copy(src->content.branch.d);
+      if (src->type == UNE_NT_SET || src->type == UNE_NT_SET_IDX)
+        dest->content.branch.d = src->content.branch.d;
+      else
+        dest->content.branch.d = une_node_copy(src->content.branch.d);
       break;
   
   }
@@ -182,7 +185,8 @@ void une_node_free(une_node *node, bool free_wcs)
       une_node_free(node->content.branch.a, free_wcs);
       une_node_free(node->content.branch.b, free_wcs);
       une_node_free(node->content.branch.c, free_wcs);
-      une_node_free(node->content.branch.d, free_wcs);
+      if (node->type != UNE_NT_SET && node->type != UNE_NT_SET_IDX)
+        une_node_free(node->content.branch.d, free_wcs);
       LOGFREE(L"une_node", une_node_type_to_wcs(node->type), node->type);
       break;
   

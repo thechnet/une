@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -13,12 +13,10 @@ Updated 2021-06-26
 /*
 Public parser interface.
 */
-
 UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token_create(__UNE_TT_none__), false);
 UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token_create(__UNE_TT_none__), false);
 UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token_create(__UNE_TT_none__), false);
 UNE_OSTREAM_PUSHER(push, une_node);
-
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 {
   /* Initialize une_parser_state. */
@@ -469,9 +467,9 @@ __une_parser(une_parse_for)
   }
   
   /* Body. */
-  ps->inside_loop = true;
+  ps->loop_level++;
   une_node *body = une_parse_stmt(error, ps);
-  ps->inside_loop = false;
+  ps->loop_level--;
   if (body == NULL) {
     une_node_free(counter, false);
     une_node_free(from, false);
@@ -509,9 +507,9 @@ __une_parser(une_parse_while)
     return NULL;
   
   /* Body. */
-  ps->inside_loop = true;
+  ps->loop_level++;
   une_node *body = une_parse_stmt(error, ps);
-  ps->inside_loop = false;
+  ps->loop_level--;
   if (body == NULL) {
     une_node_free(condition, false);
     return NULL;
@@ -601,7 +599,7 @@ Parse continue.
 */
 __une_parser(une_parse_continue)
 {
-  if (!ps->inside_loop) {
+  if (ps->loop_level == 0) {
     *error = UNE_ERROR_SET(UNE_ET_CONTINUE_OUTSIDE_LOOP, now(&ps->in).pos);
     return NULL;
   }
@@ -616,7 +614,7 @@ Parse break.
 */
 __une_parser(une_parse_break)
 {
-  if (!ps->inside_loop) {
+  if (ps->loop_level == 0) {
     *error = UNE_ERROR_SET(UNE_ET_BREAK_OUTSIDE_LOOP, now(&ps->in).pos);
     return NULL;
   }
@@ -660,6 +658,13 @@ Parse set/expression statement.
 */
 __une_parser(une_parse_set_expstmt)
 {
+  /* Check for global variable definition. */
+  bool global = false;
+  if (now(&ps->in).type == UNE_TT_GLOBAL) {
+    pull(&ps->in);
+    global = true;
+  }
+  
   /* Check for variable definition. */
   if (now(&ps->in).type == UNE_TT_ID) {
     size_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable definition. */
@@ -670,6 +675,7 @@ __une_parser(une_parse_set_expstmt)
 
     une_node *varset = une_node_create(UNE_NT_SET);
     varset->pos.start = target->pos.start;
+    varset->content.branch.d = (une_node*)global;
     varset->content.branch.a = target;
 
     /* Index. */
@@ -797,6 +803,7 @@ __une_parser(une_parse_sequence,
   LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
   /* Begin Sequence. */
+  size_t pos_start = now(&ps->in).pos.start;
   if (tt_begin != __UNE_TT_none__) {
     if (now(&ps->in).type != tt_begin) {
       *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
@@ -806,7 +813,6 @@ __une_parser(une_parse_sequence,
   }
   
   /* Sequence. */
-  size_t pos_start = now(&ps->in).pos.start;
   size_t sequence_size = UNE_SIZE_SEQUENCE;
   une_node **sequence = une_malloc(sequence_size*sizeof(*sequence));
   size_t sequence_index = 1;

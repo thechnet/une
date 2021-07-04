@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -14,7 +14,7 @@ Updated 2021-06-26
 /*
 Two-character token characters.
 */
-const wchar_t *une_2c_tokens_wc = L"==!=>=<=//**";
+const wchar_t *une_2c_tokens_wc = L"==!=>=<=//**&&||";
 
 /*
 Two-character token types.
@@ -26,12 +26,14 @@ const une_token_type une_2c_tokens_tt[] = {
   UNE_TT_LEQ,
   UNE_TT_FDIV,
   UNE_TT_POW,
+  UNE_TT_AND,
+  UNE_TT_OR,
 };
 
 /*
 One-character token characters.
 */
-const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%";
+const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%!";
 
 /*
 One-character token types.
@@ -52,6 +54,7 @@ const une_token_type une_1c_tokens_tt[] = {
   UNE_TT_MUL,
   UNE_TT_DIV,
   UNE_TT_MOD,
+  UNE_TT_NOT,
 };
 
 /*
@@ -95,10 +98,17 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   void (*push)(une_ostream*, une_token) = &__une_lex_push;
   une_token *(*tkpeek)(une_ostream*, ptrdiff_t) = &__une_lex_out_peek;
   
+  // LOGS((wchar_t*)ls->in.data.array.array);
+  // wint_t ch = ls->now(&ls->in);
+  // ch = ((wchar_t*)ls->in.data.array.array)[0];
+  // wchar_t ch = (wint_t)L'r';
+  // assert(ch == L'r');
+  // exit(0);
+  
   while (ls->now(&ls->in) != WEOF) {
     /* Check for error. */
     if (error->type != __UNE_ET_none__) {
-      for (size_t i=0; i<out.index-1 /* Don't free __UNE_TT_none__ */; i++)
+      for (ptrdiff_t i=0; i<out.index-1 /* Don't free __UNE_TT_none__ */; i++)
         une_token_free(tokens[i]);
       une_free(tokens);
       tokens = NULL;
@@ -220,7 +230,7 @@ __une_lexer(une_lex_num)
     une_token tk = (une_token){
       .type = UNE_TT_INT,
       .pos = (une_position){idx_start, ls->in.index},
-      .value._int = wcs_to_une_int(buffer),
+      .value._int = une_wcs_to_une_int(buffer),
     };
     une_free(buffer);
     return tk;
@@ -257,7 +267,7 @@ __une_lexer(une_lex_num)
   une_token tk = (une_token){
     .type = UNE_TT_FLT,
     .pos = (une_position){idx_start, ls->in.index},
-    .value._flt = wcs_to_une_flt(buffer),
+    .value._flt = une_wcs_to_une_flt(buffer),
   };
   une_free(buffer);
   return tk;
@@ -390,12 +400,10 @@ __une_lexer(une_lex_id)
     tk.type = UNE_TT_BREAK;
   else if (!wcscmp(buffer, L"continue"))
     tk.type = UNE_TT_CONTINUE;
-  else if (!wcscmp(buffer, L"and"))
-    tk.type = UNE_TT_AND;
-  else if (!wcscmp(buffer, L"or"))
-    tk.type = UNE_TT_OR;
   else if (!wcscmp(buffer, L"not"))
     tk.type = UNE_TT_NOT;
+  else if (!wcscmp(buffer, L"global"))
+    tk.type = UNE_TT_GLOBAL;
   else {
     tk.type = UNE_TT_ID;
     tk.value._wcs = buffer;

@@ -2,41 +2,16 @@
 
 def char_upper(char)
 {
-  if char == "a" return "A"
-  if char == "b" return "B"
-  if char == "c" return "C"
-  if char == "d" return "D"
-  if char == "e" return "E"
-  if char == "f" return "F"
-  if char == "g" return "G"
-  if char == "h" return "H"
-  if char == "i" return "I"
-  if char == "j" return "J"
-  if char == "k" return "K"
-  if char == "l" return "L"
-  if char == "m" return "M"
-  if char == "n" return "N"
-  if char == "o" return "O"
-  if char == "p" return "P"
-  if char == "q" return "Q"
-  if char == "r" return "R"
-  if char == "s" return "S"
-  if char == "t" return "T"
-  if char == "u" return "U"
-  if char == "v" return "V"
-  if char == "w" return "W"
-  if char == "x" return "X"
-  if char == "y" return "Y"
-  if char == "z" return "Z"
-  return char
+  if ord(char) < ord("a") || ord(char) > ord("z")
+    return char
+  return chr(ord(char)+ord("A")-ord("a"))
 }
 
 def upper(string, length)
 {
   out = ""
-  for i from 0 till length {
+  for i from 0 till length
     out = out + char_upper(string[i])
-  }
   return out
 }
 

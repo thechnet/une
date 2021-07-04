@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -18,22 +18,17 @@ const wchar_t *une_error_message_table[] = {
   L"Syntax error.",
   L"Cannot break outside loop.",
   L"Cannot continue outside loop.",
-  L"Cannot assign to litersal.",
+  L"Cannot assign to literal.",
   L"Variable not defined.",
-  L"Operation not supported.",
-  L"Comparison not supported.",
-  L"Type not indexable.",
-  L"Cannot set index of type.",
-  L"Index type not supported.",
   L"Index out of range.",
   L"Zero division.",
   L"Unreal number.",
   L"Function already defined.",
   L"Function not defined.",
   L"Wrong number of arguments.",
-  L"Unexpected argument type.",
   L"File not found.",
   L"Encoding error.",
+  L"Type conflict.",
   L"Unknown error!",
 };
 
@@ -139,6 +134,10 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
     wprintf(L"~");
   wprintf(L"\n");
 
+  /* Close text stream. */
+  if (ls->read_from_file)
+    une_istream_wfile_free(text);
+  
   skip_preview:
 
   /* Print error message. */
@@ -150,7 +149,4 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   wprintf(UNE_COLOR_HINT L"\npos_start: %d\npos_end: %d\nline_begin: %d\nline_end: %d\33[0m\n\n", pos_start, pos_end, line_begin, line_end);
   #endif
   
-  /* Wrap up. */
-  if (ls->read_from_file)
-    une_istream_wfile_free(text);
 }

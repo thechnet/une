@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Updated 2021-06-26
+Updated 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -73,7 +73,7 @@ __une_interpreter(une_interpret_as, une_result_type type)
 {
   une_result result = une_interpret(error, is, node);
   if (result.type != type && result.type != UNE_RT_ERROR) {
-    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     une_result_free(result);
     result = une_result_create(UNE_RT_ERROR);
   }
@@ -134,9 +134,15 @@ __une_static une_result une_interpret_call_builtin(une_error *error, une_interpr
       return une_builtin_write(error, is, arg_nodes[1]->pos, args[0], arg_nodes[2]->pos, args[1]);
     case UNE_BIF_INPUT:
       return une_builtin_input(error, is, arg_nodes[1]->pos, args[0]);
+    case UNE_BIF_SCRIPT:
+      return une_builtin_script(error, is, arg_nodes[1]->pos, args[0]);
+    case UNE_BIF_EXIST:
+      return une_builtin_exist(error, is, arg_nodes[1]->pos, args[0]);
+    case UNE_BIF_SPLIT:
+      return une_builtin_split(error, is, arg_nodes[1]->pos, args[0], arg_nodes[2]->pos, args[1]);
   }
   
-  VERIFY_NOT_REACHED;
+  UNE_VERIFY_NOT_REACHED;
 }
 
 /*
@@ -204,7 +210,7 @@ __une_interpreter(une_interpret_str)
   /* DOC: Memory Management: Here we can see that results DUPLICATE strings. */
   return (une_result){
     .type = UNE_RT_STR,
-    .value._wcs = wcs_dup(node->content.value._wcs)
+    .value._wcs = une_wcsdup(node->content.value._wcs)
   };
 }
 
@@ -350,7 +356,7 @@ __une_interpreter(une_interpret_equ)
   
   /* Return error if the results can't be compared, otherwise return the result of the comparison. */
   if (is_equal == -1) {
-    *error = UNE_ERROR_SET(UNE_ET_COMPARISON_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     return une_result_create(UNE_RT_ERROR);
   }
   return (une_result){
@@ -412,7 +418,7 @@ __une_interpreter(une_interpret_gtr)
   
   /* Illegal Comparison. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_COMPARISON_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -462,7 +468,7 @@ __une_interpreter(une_interpret_geq)
   
   /* Illegal Comparison. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_COMPARISON_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -512,7 +518,7 @@ __une_interpreter(une_interpret_lss)
   
   /* Illegal Comparison. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_COMPARISON_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -562,7 +568,7 @@ __une_interpreter(une_interpret_leq)
   
   /* Illegal Comparison. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_COMPARISON_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -614,7 +620,7 @@ __une_interpreter(une_interpret_add)
 
   /* Error. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -658,7 +664,7 @@ __une_interpreter(une_interpret_sub)
 
   /* Error. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -734,7 +740,7 @@ __une_interpreter(une_interpret_mul)
 
   /* Error. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -788,7 +794,7 @@ __une_interpreter(une_interpret_div)
 
   /* Error. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -837,7 +843,7 @@ __une_interpreter(une_interpret_fdiv)
 
   /* Error. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -881,7 +887,7 @@ __une_interpreter(une_interpret_mod)
 
   /* Error. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -925,7 +931,7 @@ __une_interpreter(une_interpret_pow)
   
   /* Error. */
   else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
 
@@ -958,7 +964,7 @@ __une_interpreter(une_interpret_neg)
     result.type = UNE_RT_FLT;
     result.value._flt = -center.value._flt;
   } else {
-    *error = UNE_ERROR_SET(UNE_ET_OPERATION_NOT_SUPPORTED, node->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     result.type = UNE_RT_ERROR;
   }
   
@@ -977,11 +983,16 @@ __une_interpreter(une_interpret_set)
   if (result.type == UNE_RT_ERROR)
     return result;
 
-  /* Get variable name. */
+  /* Get variable name and global. */
+  bool global = (bool)node->content.branch.d;
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
-  /* Find or create variable *in current context*. */
-  une_variable *var = une_variable_find_or_create(is->context, name);
+  /* Find (global) or create (local) the variable. */
+  une_variable *var;
+  if (global)
+    var = une_variable_find_or_create_global(is->context, name);
+  else
+    var = une_variable_find_or_create(is->context, name);
   
   /* Populate variable. */
   une_result_free(var->content);
@@ -995,17 +1006,22 @@ Interpret a UNE_NT_SET_IDX une_node.
 */
 __une_interpreter(une_interpret_set_idx)
 {
-  /* Get name of list. */
+  /* Get name of list and global. */
+  bool global = (bool)node->content.branch.d;
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
   /* Find list in all contexts. */
-  une_variable *var = une_variable_find_global(is->context, name);
+  une_variable *var;
+  if (global)
+    var = une_variable_find_global(is->context, name);
+  else
+    var = une_variable_find(is->context, name);
   if (var == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_VARIABLE_NOT_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
   if (var->content.type != UNE_RT_LIST) {
-    *error = UNE_ERROR_SET(UNE_ET_INDEX_CANNOT_SET, node->content.branch.a->pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
   UNE_UNPACK_RESULT_LIST(var->content, list, list_size);
@@ -1090,7 +1106,7 @@ __une_interpreter(une_interpret_get_idx)
     /* Type not indexable. */
     default:
       une_result_free(base);
-      *error = UNE_ERROR_SET(UNE_ET_INDEX_CANNOT_GET, node->pos);
+      *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
       return une_result_create(UNE_RT_VOID);
   
   }
@@ -1119,7 +1135,7 @@ __une_interpreter(une_interpret_def)
   UNE_UNPACK_NODE_LIST(node->content.branch.b, params_n, params_count);
   wchar_t **params = une_malloc(params_count*sizeof(*params));
   for (size_t i=0; i<params_count; i++)
-    params[i] = wcs_dup(params_n[i+1]->content.value._wcs);
+    params[i] = une_wcsdup(params_n[i+1]->content.value._wcs);
   une_node *body = une_node_copy(node->content.branch.c);
 
   /* Define function. */
@@ -1307,8 +1323,9 @@ Interpret a UNE_NT_RETURN une_node.
 */
 __une_interpreter(une_interpret_return)
 {
-  is->should_return = true;
   if (node->content.branch.a == NULL)
     return une_result_create(UNE_RT_VOID);
-  return une_interpret(error, is, node->content.branch.a);
+  une_result result = une_interpret(error, is, node->content.branch.a);
+  is->should_return = true;
+  return result;
 }

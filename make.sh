@@ -9,7 +9,7 @@ release=0
 debug=1
 debug_gdb=1
 
-# gcc, clang, tcc
+# gcc, clang
 compiler="gcc"
 
 #endregion Preferences
@@ -24,16 +24,13 @@ if [ $release==1 ]; then
     O="-O3"
   fi
 fi
-if [ $debug_gdb==1 ]; then
-  O=-Og
-fi
 
 flags="-Wall"
 if [ $compiler=="clang" ]; then
   flags="${flags} -Wno-deprecated -Wno-switch"
 fi
 if [ $debug_gdb==1 ]; then
-  flags="${flags} -g"
+  flags="${flags} -g -Wno-switch"
 fi
 # if [ $debug==1 ]; then
 #   flags="${flags} -DUNE_DEBUG"
@@ -67,8 +64,10 @@ fi
 $compiler $O $flags $src -o ../une
 el=$?
 >/dev/null popd
-if [ $el==0 ]; then
-  ./une $*
+if [ "$*"!="" ]; then
+  if [ $el==0 ]; then
+    ./une $*
+  fi
 fi
 
 echo "Done."

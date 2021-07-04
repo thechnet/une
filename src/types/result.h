@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Updated 2021-06-09
+Updated 2021-07-05
 */
 
 #ifndef UNE_RESULT_H
@@ -48,7 +48,7 @@ Unpack a une_result list into its name and size.
 #define UNE_UNPACK_RESULT_LIST(listresult, listname, listsize)\
   une_result *listname = (une_result*)listresult.value._vp;\
   assert(listname != NULL);\
-  size_t listsize = listname[0].value._int;
+  size_t listsize = listname[0].value._int
 
 /*
 Iterate over every item in a une_result list.

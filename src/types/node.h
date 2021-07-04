@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Updated 2021-06-13
+Updated 2021-07-05
 */
 
 #ifndef UNE_NODE_H
@@ -119,14 +119,14 @@ Unpack a une_node list into its name and size.
 #define UNE_UNPACK_NODE_LIST(listnode, listname, listsize)\
   une_node **listname = (une_node**)listnode->content.value._vpp;\
   assert(listname != NULL);\
-  size_t listsize = listname[0]->content.value._int;
+  size_t listsize = listname[0]->content.value._int
 
 /*
 Unpack a une_node string into its string pointer and size.
 */
 #define UNE_UNPACK_NODE_STR(strnode, strname, strsize)\
   wchar_t *strname = strnode.value._wcs;\
-  size_t strsize = wcslen(strname);
+  size_t strsize = wcslen(strname)
 
 /*
 Iterate over every item in a une_node list.

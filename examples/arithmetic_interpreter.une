@@ -1,0 +1,141 @@
+# Une Arithmetic Interpreter
+
+ERR = 0.0
+TKS = "+-*/()"
+NUM = 0
+ADD = 1; SUB = 2
+MUL = 3; DIV = 4
+LPAR = 5; RPAR = 6
+NEG = 7
+END = 8
+
+def is_digit(character)
+{
+  if ord(character) >= ord("0") && ord(character) <= ord("9")
+    return 1
+  return 0
+}
+
+def tokenize(string)
+{
+  tokens = []
+  i = 0
+  string_len = len(string)
+  while i<string_len {
+    if is_digit(string[i]) {
+      num = ""
+      while i<string_len && is_digit(string[i]) {
+        num = num+string[i]
+        i = i+1
+      }
+      tokens = tokens+[[NUM, int(num)]]
+      continue
+    }
+    match = 0
+    for j from 0 till len(TKS) {
+      if string[i] == TKS[j] {
+        tokens = tokens+[[j+1]]
+        match = 1
+        i = i+1
+        break
+      }
+    }
+    if match
+      continue
+    print("Expected number or '('")
+    return ERR
+  }
+  tokens = tokens+[[END]]
+  return tokens
+}
+
+def parse_atom()
+{
+  if tokens[tokens_idx][0] == SUB {
+    global tokens_idx = tokens_idx+1
+    atom = parse_atom()
+    if atom == 0.0
+      return atom
+    return [NEG, atom]
+  }
+  if tokens[tokens_idx][0] == NUM {
+    global tokens_idx = tokens_idx+1
+    return tokens[tokens_idx-1]
+  }
+  if tokens[tokens_idx][0] == LPAR {
+    global tokens_idx = tokens_idx+1
+    exp = parse_exp()
+    if exp == ERR
+      return exp
+    if not tokens[tokens_idx][0] == RPAR {
+      print("Expected ')'")
+      return ERR
+    }
+    global tokens_idx = tokens_idx+1
+    return exp
+  }
+  print("Expected number or '('")
+  return ERR
+}
+
+def parse_term()
+{
+  left = parse_atom()
+  if left == ERR
+    return left
+  while tokens[tokens_idx][0] == MUL || tokens[tokens_idx][0] == DIV {
+    op = tokens[tokens_idx][0]
+    global tokens_idx = tokens_idx+1
+    right = parse_atom()
+    if right == ERR
+      return right
+    left = [op, left, right]
+  }
+  return left
+}
+
+def parse_exp()
+{
+  left = parse_term()
+  if left == ERR
+    return left
+  while tokens[tokens_idx][0] == ADD || tokens[tokens_idx][0] == SUB {
+    op = tokens[tokens_idx][0]
+    global tokens_idx = tokens_idx+1
+    right = parse_term()
+    if right == ERR
+      return right
+    left = [op, left, right]
+  }
+  return left
+}
+
+def interpret(node)
+{
+  if node[0] == NUM
+    return node[1]
+  if node[0] == ADD
+    return interpret(node[1])+interpret(node[2])
+  if node[0] == SUB
+    return interpret(node[1])-interpret(node[2])
+  if node[0] == MUL
+    return interpret(node[1])*interpret(node[2])
+  if node[0] == DIV
+    return interpret(node[1])//interpret(node[2])
+  if node[0] == NEG
+    return -interpret(node[1])
+}
+
+def run(expression)
+{
+  tokens = tokenize(expression)
+  if tokens == ERR
+    return tokens
+  tokens_idx = 0
+  ast = parse_exp()
+  if ast == ERR
+    return ast
+  return interpret(ast)
+}
+
+print(run("1+2*3"))
