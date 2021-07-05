@@ -1,7 +1,9 @@
 # Factorial Calculator
 
-def factorial(num)
-  return num if num <= 2 else num * factorial(num - 1)
+def fac(num)
+{
+  return num <= 2 ? num : num*fac(num-1)
+}
 
 num = 10
-print(str(num) + "! = " + str(factorial(num)))
+print(str(num)+"! = "+str(fac(num)))

@@ -7,14 +7,12 @@ def char_upper(char)
   return chr(ord(char)+ord("A")-ord("a"))
 }
 
-def upper(string, length)
+def upper(string)
 {
   out = ""
-  for i from 0 till length
+  for i from 0 till len(string)
     out = out + char_upper(string[i])
   return out
 }
 
-input = "abcdefghijklmnopqrstuvwxyz012356789"
-
-print(upper(input, len(input)))
+print(upper("abcdefghijklmnopqrstuvwxyz012356789"))

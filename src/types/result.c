@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */

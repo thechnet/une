@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -211,7 +211,7 @@ une_node **une_node_list_create(size_t size)
 Get node name from node type.
 */
 #ifdef UNE_DEBUG
-__une_static const wchar_t *une_node_type_to_wcs(une_node_type type)
+/*__une_static*/ const wchar_t *une_node_type_to_wcs(une_node_type type)
 {
   /* Ensure une_node_type is valid. */
   UNE_VERIFY_NODE_TYPE(type);

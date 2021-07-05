@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -13,9 +13,9 @@ Updated 2021-07-05
 /*
 Public parser interface.
 */
-UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token_create(__UNE_TT_none__), false);
-UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token_create(__UNE_TT_none__), false);
-UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token_create(__UNE_TT_none__), false);
+UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token, une_token_create(__UNE_TT_none__), false);
+UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token, une_token_create(__UNE_TT_none__), false);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token, une_token_create(__UNE_TT_none__), false);
 UNE_OSTREAM_PUSHER(push, une_node);
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 {
@@ -97,26 +97,26 @@ __une_parser(une_parse_expression)
 {
   LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
   
-  /* Expression. */
-  une_node *exp_true = une_parse_and_or(error, ps);
-  if (exp_true == NULL || now(&ps->in).type != UNE_TT_IF)
-    return exp_true;
-
-  /* If. */
-  pull(&ps->in);
-  
   /* Condition. */
   une_node *cond = une_parse_and_or(error, ps);
-  if (cond == NULL) {
-    une_node_free(exp_true, false);
+  if (cond == NULL || now(&ps->in).type != UNE_TT_QMARK)
+    return cond;
+
+  /* ?. */
+  pull(&ps->in);
+  
+  /* Expression. */
+  une_node *exp_true = une_parse_and_or(error, ps);
+  if (exp_true == NULL) {
+    une_node_free(cond, false);
     return NULL;
   }
   
-  /* Else. */
-  if (now(&ps->in).type != UNE_TT_ELSE) {
+  /* :. */
+  if (now(&ps->in).type != UNE_TT_COLON) {
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
-    une_node_free(exp_true, false);
     une_node_free(cond, false);
+    une_node_free(exp_true, false);
     return NULL;
   }
   pull(&ps->in);
@@ -134,8 +134,8 @@ __une_parser(une_parse_expression)
     .start = exp_true->pos.start,
     .end = exp_false->pos.end
   };
-  cop->content.branch.a = exp_true;
-  cop->content.branch.b = cond;
+  cop->content.branch.a = cond;
+  cop->content.branch.b = exp_true;
   cop->content.branch.c = exp_false;
   return cop;
 }

@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Updated 2021-06-09
+Modified 2021-07-05
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -23,17 +23,17 @@ Updated 2021-06-09
 Interpreter function template.
 */
 #define __une_interpreter(__id, ...)\
-  __une_static une_result (__id)(une_error *error, une_interpreter_state *is, une_node *node, ##__VA_ARGS__)
+  /*__une_static*/ une_result (__id)(une_error *error, une_interpreter_state *is, une_node *node, ##__VA_ARGS__)
 
 une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *node);
 
 __une_interpreter(une_interpret_as, une_result_type type);
 
-__une_static une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args);
-__une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes);
+/*__une_static*/ une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args);
+/*__une_static*/ une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes);
 
-__une_static une_result une_interpret_get_idx_list(une_result list, une_int index);
-__une_static une_result une_interpret_get_idx_str (une_result str,  une_int index);
+/*__une_static*/ une_result une_interpret_get_idx_list(une_result list, une_int index);
+/*__une_static*/ une_result une_interpret_get_idx_str (une_result str,  une_int index);
 
 __une_interpreter(une_interpret_int);
 __une_interpreter(une_interpret_flt);

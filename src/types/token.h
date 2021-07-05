@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 #ifndef UNE_TOKEN_H
@@ -66,6 +66,8 @@ typedef enum _une_token_type {
   UNE_TT_BREAK,
   UNE_TT_RETURN,
   UNE_TT_GLOBAL,
+  UNE_TT_QMARK,
+  UNE_TT_COLON,
   __UNE_TT_max__,
 } une_token_type;
 
@@ -100,11 +102,11 @@ void une_token_free(une_token token);
 void une_tokens_free(une_token *tokens);
 
 #ifdef UNE_DEBUG
-__une_static const wchar_t *une_token_type_to_wcs(une_token_type type);
+/*__une_static*/ const wchar_t *une_token_type_to_wcs(une_token_type type);
 #endif /* UNE_DEBUG */
 
 #ifdef UNE_DEBUG
-__une_static wchar_t *une_token_to_wcs(une_token token);
+/*__une_static*/ wchar_t *une_token_to_wcs(une_token token);
 #endif /* UNE_DEBUG */
 
 #ifdef UNE_DEBUG

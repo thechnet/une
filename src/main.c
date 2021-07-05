@@ -1,36 +1,50 @@
 /*
 main.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Import public Une interface. */
 #include "une.h"
 int une_alloc_count = 0;
 
+/* Implementation-specific includes. */
+#include <string.h>
+#include "tools.h"
+
 /* Implementation-specific macros. */
 #define UNE_E(msg) L"\33[31m\33[7m" msg L"\n\33[0m"
-#define UNE_S_FILE L"No input file."
-#define UNE_I_FILE 1
-#define UNE_RUN_FILE
-
-#ifndef UNE_RUN_FILE
-#include "tools.h"
-#endif
+#define UNE_S_INPUT L"Missing input file or string."
+#define UNE_C_INPUT 1
 
 int main(int argc, char *argv[])
 {
   if (argc < 2) {
-    wprintf(UNE_E(UNE_S_FILE));
-    return UNE_I_FILE;
+    wprintf(UNE_E(UNE_S_INPUT));
+    return UNE_C_INPUT;
   }
   
-  #ifdef UNE_RUN_FILE
-  une_result result = une_run(true, argv[1], NULL);
-  #else
-  une_result result = une_run(false, NULL, L"return 1");
-  #endif
+  bool read_from_file = true;
+  
+  if (strcmp(argv[1],UNE_STDIN_SWITCH) == 0) {
+    if (argc < 3) {
+      wprintf(UNE_E(UNE_S_INPUT));
+      return UNE_C_INPUT;
+    }
+    read_from_file = false;
+  }
+  
+  une_result result;
+  
+  if (read_from_file)
+    result = une_run(read_from_file, argv[1], NULL);
+  else {
+    wchar_t *wcs = une_str_to_wcs(argv[2]);
+    result = une_run(read_from_file, NULL, wcs);
+    une_free(wcs);
+  }
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
+    putwc(L'\n', stdout);
     une_result_represent(result);
     putwc(L'\n', stdout);
   }
@@ -41,8 +55,6 @@ int main(int argc, char *argv[])
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
   if (une_alloc_count != 0)
     wprintf(UNE_COLOR_FAIL L"%d memory location(s) not freed.\33[0m\n", une_alloc_count);
-  else
-    wprintf(UNE_COLOR_SUCCESS L"All memory locations freed.\33[0m\n");
   #endif
   
   return final;

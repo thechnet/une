@@ -54,7 +54,7 @@ def parse_atom()
   if tokens[tokens_idx][0] == SUB {
     global tokens_idx = tokens_idx+1
     atom = parse_atom()
-    if atom == 0.0
+    if atom == ERR
       return atom
     return [NEG, atom]
   }
@@ -67,14 +67,14 @@ def parse_atom()
     exp = parse_exp()
     if exp == ERR
       return exp
-    if not tokens[tokens_idx][0] == RPAR {
+    if tokens[tokens_idx][0] != RPAR {
       print("Expected ')'")
       return ERR
     }
     global tokens_idx = tokens_idx+1
     return exp
   }
-  print("Expected number or '('")
+  print("Expected number, '-', or '('")
   return ERR
 }
 
@@ -138,4 +138,6 @@ def run(expression)
   return interpret(ast)
 }
 
-print(run("1+2*3"))
+result = run("1+2*3")
+if result != ERR
+  print(result)

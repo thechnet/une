@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Updated 2021-06-13
+Modified 2021-07-05
 */
 
 #ifndef UNE_LEXER_H
@@ -49,7 +49,7 @@ Condition to check if a character is any kind of whitespace.
 /*
 Lexer function template.
 */
-#define __une_lexer(__id) __une_static une_token (__id)(une_error *error, une_lexer_state *ls)
+#define __une_lexer(__id) /*__une_static*/ une_token (__id)(une_error *error, une_lexer_state *ls)
 
 une_token* une_lex(une_error*, une_lexer_state*);
 

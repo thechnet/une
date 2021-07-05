@@ -1,17 +1,18 @@
 # BMI Calculator
 
 def bmi(height, weight)
+{
   return weight/height**2
+}
 
 def is_overweight(bmi)
 {
-  if bmi < 25 {
+  if bmi < 25
     return "Not overweight."
-  } elif bmi == 25 {
+  elif bmi == 25
     return "Barely, but not overweight."
-  } else {
+  else
     return "Overweight."
-  }
 }
 
 print(is_overweight(bmi(1.80, 70)))

@@ -22,3 +22,7 @@ Some demo programs can be found in [examples](examples).
 ```
 ./une <script>
 ```
+
+# Visual Studio Code Language Support
+
+If you're using Visual Studio Code, make sure to install [the Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une) to get syntax highlighting and general language support. The repository for the extension can be found [here](https://github.com/thechnet/une-vscode).

@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -51,7 +51,7 @@ une_error une_error_create(void)
 /*
 Get error message for error type.
 */
-__une_static const wchar_t *une_error_type_to_wcs(une_error_type type)
+/*__une_static*/ const wchar_t *une_error_type_to_wcs(une_error_type type)
 {
   /* Ensure error type is within bounds. */
   if (!UNE_ERROR_TYPE_IS_VALID(type))
@@ -64,8 +64,8 @@ __une_static const wchar_t *une_error_type_to_wcs(une_error_type type)
 Display error.
 */
 
-UNE_ISTREAM_ARRAY_PULLER_VAL(__une_error_display_array_pull, wint_t, WEOF, true);
-UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_error_display_array_now, wint_t, WEOF, true);
+UNE_ISTREAM_ARRAY_PULLER_VAL(__une_error_display_array_pull, wint_t, wchar_t, WEOF, true);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_error_display_array_now, wint_t, wchar_t, WEOF, true);
 UNE_ISTREAM_WFILE_PULLER(__une_error_display_wfile_pull);
 UNE_ISTREAM_WFILE_ACCESS(__une_error_display_wfile_now);
 

@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -33,7 +33,7 @@ const une_token_type une_2c_tokens_tt[] = {
 /*
 One-character token characters.
 */
-const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%!";
+const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%!?:";
 
 /*
 One-character token types.
@@ -55,6 +55,8 @@ const une_token_type une_1c_tokens_tt[] = {
   UNE_TT_DIV,
   UNE_TT_MOD,
   UNE_TT_NOT,
+  UNE_TT_QMARK,
+  UNE_TT_COLON,
 };
 
 /*
@@ -64,9 +66,9 @@ Public lexer interface.
 UNE_ISTREAM_WFILE_PULLER(__une_lex_wfile_pull);
 UNE_ISTREAM_WFILE_PEEKER(__une_lex_wfile_peek)
 UNE_ISTREAM_WFILE_ACCESS(__une_lex_wfile_now);
-UNE_ISTREAM_ARRAY_PULLER_VAL(__une_lex_array_pull, wint_t, WEOF, true);
-UNE_ISTREAM_ARRAY_PEEKER_VAL(__une_lex_array_peek, wint_t, WEOF, true);
-UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_lex_array_now, wint_t, WEOF, true);
+UNE_ISTREAM_ARRAY_PULLER_VAL(__une_lex_array_pull, wint_t, wchar_t, WEOF, true);
+UNE_ISTREAM_ARRAY_PEEKER_VAL(__une_lex_array_peek, wint_t, wchar_t, WEOF, true);
+UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_lex_array_now, wint_t, wchar_t, WEOF, true);
 UNE_OSTREAM_PUSHER(__une_lex_push, une_token);
 UNE_OSTREAM_PEEKER_REF(__une_lex_out_peek, une_token, NULL);
 
@@ -400,8 +402,6 @@ __une_lexer(une_lex_id)
     tk.type = UNE_TT_BREAK;
   else if (!wcscmp(buffer, L"continue"))
     tk.type = UNE_TT_CONTINUE;
-  else if (!wcscmp(buffer, L"not"))
-    tk.type = UNE_TT_NOT;
   else if (!wcscmp(buffer, L"global"))
     tk.type = UNE_TT_GLOBAL;
   else {

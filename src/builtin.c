@@ -18,6 +18,8 @@ Get the une_builtin_type from a string containing a built-in function name.
 */
 const une_builtin_type une_builtin_wcs_to_type(wchar_t *name)
 {
+  if (wcscmp(name, L"put") == 0)
+    return UNE_BIF_PUT;
   if (wcscmp(name, L"print") == 0)
     return UNE_BIF_PRINT;
   if (wcscmp(name, L"int") == 0)
@@ -55,6 +57,8 @@ Get the number of parameters required by a built-in function.
 const une_int une_builtin_get_num_of_params(une_builtin_type type)
 {
   switch (type) {
+    case UNE_BIF_PUT:
+      return 1;
     case UNE_BIF_PRINT:
       return 1;
     case UNE_BIF_TO_INT:
@@ -91,7 +95,7 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
 /*
 Print a text representation of a une_result.
 */
-__une_builtin_fn(une_builtin_print, une_result result)
+__une_builtin_fn(une_builtin_put, une_result result)
 {
   /* Ensure une_result_type is data type. */
   if (!UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
@@ -101,6 +105,20 @@ __une_builtin_fn(une_builtin_print, une_result result)
 
   /* Print text representation. */
   une_result_represent(result);
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Print a text representation of a une_result, always adding a newline at the end.
+*/
+__une_builtin_fn(une_builtin_print, une_result result)
+{
+  une_result put_result = une_builtin_put(error, is, pos, result);
+  if (put_result.type == UNE_RT_ERROR)
+    return put_result;
+  
+  putwc(L'\n', stdout);
   
   return une_result_create(UNE_RT_VOID);
 }

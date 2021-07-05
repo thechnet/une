@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -83,7 +83,7 @@ __une_interpreter(une_interpret_as, une_result_type type)
 /*
 Call user-defined function.
 */
-__une_static une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args)
+/*__une_static*/ une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args)
 {
   /* Create function context. */
   une_context *context = une_context_create(fn->name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
@@ -109,9 +109,11 @@ __une_static une_result une_interpret_call_def(une_error *error, une_interpreter
 /*
 Call built-in function.
 */
-__une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes)
+/*__une_static*/ une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes)
 {
   switch (type) {
+    case UNE_BIF_PUT:
+      return une_builtin_put(error, is, arg_nodes[1]->pos, args[0]);
     case UNE_BIF_PRINT:
       return une_builtin_print(error, is, arg_nodes[1]->pos, args[0]);
     case UNE_BIF_TO_INT:
@@ -148,7 +150,7 @@ __une_static une_result une_interpret_call_builtin(une_error *error, une_interpr
 /*
 Retrieve an item in a UNE_RT_LIST une_result.
 */
-__une_static une_result une_interpret_get_idx_list(une_result list, une_int index)
+/*__une_static*/ une_result une_interpret_get_idx_list(une_result list, une_int index)
 {
   UNE_UNPACK_RESULT_LIST(list, list_p, list_size);
 
@@ -162,7 +164,7 @@ __une_static une_result une_interpret_get_idx_list(une_result list, une_int inde
 /*
 Retrieve a character in a UNE_RT_STR une_result.
 */
-__une_static une_result une_interpret_get_idx_str(une_result str, une_int index)
+/*__une_static*/ une_result une_interpret_get_idx_str(une_result str, une_int index)
 {
   UNE_UNPACK_NODE_STR(str, string, string_size);
 
@@ -270,7 +272,7 @@ Interpret a UNE_NT_COP une_node.
 __une_interpreter(une_interpret_cop)
 {
   /* Evaluate condition. */
-  une_result condition = une_interpret(error, is, node->content.branch.b);
+  une_result condition = une_interpret(error, is, node->content.branch.a);
   if (condition.type == UNE_RT_ERROR)
     return condition;
   
@@ -280,7 +282,7 @@ __une_interpreter(une_interpret_cop)
 
   /* Evaluate correct branch. */
   if (is_true)
-    return une_interpret(error, is, node->content.branch.a);
+    return une_interpret(error, is, node->content.branch.b);
   return une_interpret(error, is, node->content.branch.c);
 }
 

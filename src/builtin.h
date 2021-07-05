@@ -17,6 +17,7 @@ The type of built-in function.
 */
 typedef enum _une_builtin_type {
   __UNE_BIF_none__,
+  UNE_BIF_PUT,
   UNE_BIF_PRINT,
   UNE_BIF_TO_INT,
   UNE_BIF_TO_FLT,
@@ -46,6 +47,7 @@ Built-in function template.
 const une_builtin_type une_builtin_wcs_to_type(wchar_t *name);
 const une_int une_builtin_get_num_of_params(une_builtin_type type);
 
+__une_builtin_fn(une_builtin_put,     une_result result);
 __une_builtin_fn(une_builtin_print,   une_result result);
 __une_builtin_fn(une_builtin_to_int,  une_result result);
 __une_builtin_fn(une_builtin_to_flt,  une_result result);

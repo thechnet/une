@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -18,7 +18,7 @@ Updated 2021-07-05
 /*
 *** Options.
 */
-#define UNE_DEBUG
+// #define UNE_DEBUG
 
 #define UNE_DEBUG_ALLOC_COUNTER
 
@@ -28,8 +28,8 @@ Updated 2021-07-05
 
 // #define UNE_DISPLAY_TOKENS
 // #define UNE_DISPLAY_NODES
-#define UNE_DISPLAY_RESULT
-#define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
+// #define UNE_DISPLAY_RESULT
+// #define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
 
 // #define UNE_DEBUG_LOG_INTERPRET
 // #define UNE_DEBUG_LOG_PARSE
@@ -39,6 +39,7 @@ Updated 2021-07-05
 *** Constants.
 */
 #define UNE_DEFAULT_CONTEXT_NAME L"<stdin>"
+#define UNE_STDIN_SWITCH "-s"
 
 /* Sizes. */
 #define UNE_SIZE_NUM_LEN 32 /* Lexing, representing. */
@@ -124,11 +125,11 @@ typedef union _une_value {
 /*
 *** Miscellaneous.
 */
-#ifndef UNE_DEBUG
+/*#ifndef UNE_DEBUG
 #define __une_static static
 #else
 #define __une_static
-#endif
+#endif*/
 
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
 extern int une_alloc_count;

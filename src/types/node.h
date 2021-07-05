@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 #ifndef UNE_NODE_H
@@ -147,7 +147,7 @@ void une_node_free(une_node *node, bool free_wcs);
 une_node **une_node_list_create(size_t size);
 
 #ifdef UNE_DEBUG
-__une_static const wchar_t *une_node_type_to_wcs(une_node_type type);
+/*__une_static*/ const wchar_t *une_node_type_to_wcs(une_node_type type);
 #endif /* UNE_DEBUG */
 
 #ifdef UNE_DEBUG

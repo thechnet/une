@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Updated 2021-07-05
+Modified 2021-07-05
 */
 
 /* Header-specific includes. */
@@ -55,6 +55,8 @@ const wchar_t *une_token_table[] = {
   L"break",
   L"return",
   L"global",
+  L"?",
+  L":",
 };
 
 /*
@@ -115,7 +117,7 @@ void une_tokens_free(une_token *tokens)
 /*
 Return a text representation of a une_token_type.
 */
-__une_static const wchar_t *une_token_type_to_wcs(une_token_type type)
+/*__une_static*/ const wchar_t *une_token_type_to_wcs(une_token_type type)
 {
   /* Ensure une_token_type is valid. */
   UNE_VERIFY_TOKEN_TYPE(type);
@@ -132,7 +134,7 @@ environment, but since it is only used for debugging, I'm
 leaving this vulnerability in here.
 */
 #ifdef UNE_DEBUG
-__une_static wchar_t *une_token_to_wcs(une_token token)
+/*__une_static*/ wchar_t *une_token_to_wcs(une_token token)
 {
   /* Write token type. */
   wchar_t *str = une_malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));

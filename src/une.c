@@ -63,7 +63,6 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #ifndef UNE_NO_INTERPRET
   if (ast != NULL)
     result = une_interpret(&error, &is, ast);
-  putwc(L'\n', stdout);
   #endif
   
   /* Wrap up. */
