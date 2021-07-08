@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -58,7 +58,7 @@ Allocate, initialize, and return a une_node struct pointer.
 une_node *une_node_create(une_node_type type)
 {
   /* Allocate new une_node. */
-  une_node *node = une_malloc(sizeof(*node));
+  une_node *node = malloc(sizeof(*node));
   
   /* Initialize new une_node. */
   *node = (une_node){
@@ -162,7 +162,7 @@ void une_node_free(une_node *node, bool free_wcs)
       We don't normally free the WCS pointers because they are pointing at data stored in the tokens,
       which may still be needed after the parse. This memory is freed alongside the tokens. */
       if (free_wcs)
-        une_free(node->content.value._wcs);
+        free(node->content.value._wcs);
       LOGFREE(L"une_node", une_node_type_to_wcs(node->type), node->type);
       break;
     
@@ -175,7 +175,7 @@ void une_node_free(une_node *node, bool free_wcs)
       size_t list_size = list[0]->content.value._int;
       UNE_FOR_NODE_LIST_INDEX(i, list_size)
         une_node_free(list[i], free_wcs);
-      une_free(list);
+      free(list);
       LOGFREE(L"une_node", une_node_type_to_wcs(node->type), node->type);
       break;
     }
@@ -193,7 +193,7 @@ void une_node_free(une_node *node, bool free_wcs)
   }
   
   /* Free une_node. */
-  une_free(node);
+  free(node);
 }
 
 /*
@@ -201,7 +201,7 @@ Create a une_node list buffer.
 */
 une_node **une_node_list_create(size_t size)
 {
-  une_node **nodepp = une_malloc((size+1)*sizeof(*nodepp));
+  une_node **nodepp = malloc((size+1)*sizeof(*nodepp));
   nodepp[0] = une_node_create(UNE_NT_SIZE);
   nodepp[0]->content.value._int = size;
   return nodepp;
@@ -210,15 +210,13 @@ une_node **une_node_list_create(size_t size)
 /*
 Get node name from node type.
 */
-#ifdef UNE_DEBUG
-/*__une_static*/ const wchar_t *une_node_type_to_wcs(une_node_type type)
+UNE_D(__une_static const wchar_t *une_node_type_to_wcs(une_node_type type)
 {
   /* Ensure une_node_type is valid. */
   UNE_VERIFY_NODE_TYPE(type);
   
   return une_node_table[type-1];
-}
-#endif /* UNE_DEBUG */
+})
 
 /*
 Returns a string representation of a une_node.
@@ -228,11 +226,10 @@ realistically happen, were this function used in a real-world
 environment, but since it is only used for debugging, I'm
 leaving this vulnerability in here.
 */
-#ifdef UNE_DEBUG
-wchar_t *une_node_to_wcs(une_node *node)
+UNE_D(wchar_t *une_node_to_wcs(une_node *node)
 {
   /* Create output buffer. */
-  wchar_t *buffer = une_malloc(UNE_SIZE_NODE_AS_WCS*sizeof(*buffer));
+  wchar_t *buffer = malloc(UNE_SIZE_NODE_AS_WCS*sizeof(*buffer));
   if (node == NULL) {
     wcscpy(buffer, UNE_COLOR_HINT L"NULL" UNE_COLOR_NEUTRAL);
     return buffer;
@@ -254,11 +251,11 @@ wchar_t *une_node_to_wcs(une_node *node)
       }
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
       size_t offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"{%ls", node_as_wcs);
-      une_free(node_as_wcs);
+      free(node_as_wcs);
       for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"\n%ls", node_as_wcs);
-        une_free(node_as_wcs);
+        free(node_as_wcs);
       }
       swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"}");
       break;
@@ -271,11 +268,11 @@ wchar_t *une_node_to_wcs(une_node *node)
       }
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
       int offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"[%ls", node_as_wcs);
-      une_free(node_as_wcs);
+      free(node_as_wcs);
       for (int i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L", %ls", node_as_wcs);
-        une_free(node_as_wcs);
+        free(node_as_wcs);
       }
       swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"]");
       break;
@@ -322,7 +319,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L")", une_node_type_to_wcs(node->type), branch1);
-      une_free(branch1);
+      free(branch1);
       break;
     }
 
@@ -351,8 +348,8 @@ wchar_t *une_node_to_wcs(une_node *node)
       swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
         une_node_type_to_wcs(node->type), branch1, branch2);
-      une_free(branch1);
-      une_free(branch2);
+      free(branch1);
+      free(branch2);
       break;
     }
     
@@ -367,9 +364,9 @@ wchar_t *une_node_to_wcs(une_node *node)
       swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L")",
         une_node_type_to_wcs(node->type), branch1, branch2, branch3);
-      une_free(branch1);
-      une_free(branch2);
-      une_free(branch3);
+      free(branch1);
+      free(branch2);
+      free(branch3);
       break;
     }
     
@@ -382,15 +379,14 @@ wchar_t *une_node_to_wcs(une_node *node)
       swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NEUTRAL L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         UNE_COLOR_NEUTRAL L" %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L", %ls" UNE_COLOR_NEUTRAL L", %ls"
         UNE_COLOR_NEUTRAL L")", une_node_type_to_wcs(node->type), branch1, branch2, branch3, branch4);
-      une_free(branch1);
-      une_free(branch2);
-      une_free(branch3);
-      une_free(branch4);
+      free(branch1);
+      free(branch2);
+      free(branch3);
+      free(branch4);
       break;
     }
   
   }
   
   return buffer;
-}
-#endif /* UNE_DEBUG */
+})

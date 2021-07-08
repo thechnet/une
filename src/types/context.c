@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -15,16 +15,16 @@ Allocates, initializes, and returns a pointer to a une_context struct.
 une_context *une_context_create(wchar_t *name, size_t variables_size, size_t functions_size)
 {
   /* Allocate une_context. */
-  une_context *context = une_malloc(sizeof(*context));
+  une_context *context = malloc(sizeof(*context));
   
   /* Initialize une_context. */
   *context = (une_context){
     .name = une_wcsdup(name),
     .parent = NULL,
-    .variables = une_malloc(variables_size*sizeof(*context->variables)),
+    .variables = malloc(variables_size*sizeof(*context->variables)),
     .variables_size = variables_size,
     .variables_count = 0,
-    .functions = une_malloc(functions_size*sizeof(*context->functions)),
+    .functions = malloc(functions_size*sizeof(*context->functions)),
     .functions_size = functions_size,
     .functions_count = 0,
   };
@@ -41,20 +41,20 @@ void une_context_free(une_context *context)
   if (context->variables != NULL) {
     for (size_t i=0; i<context->variables_count; i++)
       une_variable_free(context->variables[i]);
-    une_free(context->variables);
+    free(context->variables);
   }
   
   /* Free une_function buffer. */
   if (context->functions != NULL) {
     for (size_t i=0; i<context->functions_count; i++)
       une_function_free(context->functions[i]);
-    une_free(context->functions);
+    free(context->functions);
   }
   
   /* Free context name. */
-  une_free(context->name);
+  free(context->name);
   
-  une_free(context);
+  free(context);
   
   LOGFREE(L"une_context", L"", 0);
 }
@@ -67,7 +67,7 @@ __une_variable_itf(une_variable_create)
   /* Ensure sufficient space in une_variable buffer. */
   if (context->variables_count >= context->variables_size) {
     context->variables_size *= 2;
-    context->variables = une_realloc(context->variables, context->variables_size*sizeof(*context->variables));
+    context->variables = realloc(context->variables, context->variables_size*sizeof(*context->variables));
   }
   
   /* Initialize une_variable. */
@@ -150,7 +150,7 @@ __une_function_itf(une_function_create)
   /* Ensure sufficient space in une_function buffer. */
   if (context->functions_count >= context->functions_size) {
     context->functions_size *= 2;
-    context->functions = une_realloc(context->functions, context->functions_size*sizeof(*context->functions));
+    context->functions = realloc(context->functions, context->functions_size*sizeof(*context->functions));
   }
   
   /* Initialize une_function. */

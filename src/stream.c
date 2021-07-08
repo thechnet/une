@@ -1,6 +1,6 @@
 /*
 stream.c - Une
-Modified 2021-06-26
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -51,7 +51,7 @@ une_istream une_istream_wfile_create(char *path)
     }
   };
   if (istream.data.wfile.file == NULL)
-    ERR(L"File not found.");
+    fail(L"File not found.");
   return istream;
 }
 
@@ -103,7 +103,7 @@ bool une_ostream_verify_position(une_ostream *ostream, ptrdiff_t offset)
     if (!ostream->allow_resize)
       return false;
     ostream->array_size *= 2;
-    ostream->array = une_realloc(ostream->array, ostream->array_size*ostream->item_size);
+    ostream->array = realloc(ostream->array, ostream->array_size*ostream->item_size);
   }
   return true;
 }

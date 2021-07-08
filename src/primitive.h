@@ -1,26 +1,15 @@
 /*
 primitive.h - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
 
-/* Universal includes. */
-#include <stdio.h>
-#include <stdlib.h>
-#include <wchar.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <stddef.h>
-
 /*
 *** Options.
 */
-// #define UNE_DEBUG
-
-#define UNE_DEBUG_ALLOC_COUNTER
+#define UNE_DEBUG_MEMDBG
 
 // #define UNE_NO_LEX
 // #define UNE_NO_PARSE
@@ -34,6 +23,21 @@ Modified 2021-07-05
 // #define UNE_DEBUG_LOG_INTERPRET
 // #define UNE_DEBUG_LOG_PARSE
 // #define UNE_DEBUG_LOG_FREE
+
+/* Universal includes. */
+#include <stdio.h>
+#include <stdlib.h>
+#include <wchar.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <assert.h>
+#include <stddef.h>
+#define LOGGING_WIDE
+#define LOGGING_ID "une"
+#include "util/logging.h"
+#ifdef UNE_DEBUG_MEMDBG
+#include "util/memdbg.h"
+#endif
 
 /*
 *** Constants.
@@ -98,26 +102,18 @@ typedef union _une_value {
 #define UNE_VERIFY_NOT_REACHED assert(false)
 
 /* Internal Error Response and Logging Tools. */
-#define __LOG(style, msg, ...) wprintf(style L"%hs:%hs:%d: " msg "\33[0m\n", __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__);
-#define LOG(msg, ...)   __LOG(UNE_COLOR_NEUTRAL,        msg, ##__VA_ARGS__)
-#define ERR(msg, ...) { __LOG(UNE_COLOR_FAIL L"\33[7m", msg, ##__VA_ARGS__); exit(1); }
-#define LOGD(num)  LOG(L"%lld", num)
-#define LOGF(num)  LOG(L"%f",   flt)
-#define LOGC(ch)   LOG(L"'%c'", ch)
-#define LOGS(wcs)  LOG(L"%ls",  wcs)
-#define LOGHS(str) LOG(L"%hs",  str)
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-#define LOGFREE(obj, str, num) LOG(L"%ls ('%ls', %lld)", obj, str, (une_int)num)
+#define LOGFREE(obj, str, num) log(L"%ls ('%ls', %lld)", obj, str, (une_int)num)
 #else
 #define LOGFREE(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
-#define LOGINTERPRET(str) LOG(L"interpret: %ls", str);
+#define LOGINTERPRET(str) log(L"interpret: %ls", str);
 #else
 #define LOGINTERPRET(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-#define LOGPARSE(object, nt) LOG(L"%ls [%ls]", object, nt);
+#define LOGPARSE(object, nt) log(L"%ls [%ls]", object, nt);
 #else
 #define LOGPARSE(...)
 #endif
@@ -125,14 +121,12 @@ typedef union _une_value {
 /*
 *** Miscellaneous.
 */
-/*#ifndef UNE_DEBUG
+#ifndef UNE_DEBUG
 #define __une_static static
+#define UNE_D(object)
 #else
 #define __une_static
-#endif*/
-
-#if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
-extern int une_alloc_count;
+#define UNE_D(object) object
 #endif
 
 #endif /* !UNE_PRIMITIVE_H */

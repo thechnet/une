@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2021-07-05
+Modified 2021-07-06
 */
 
 #ifndef UNE_PARSER_H
@@ -21,7 +21,7 @@ Modified 2021-07-05
 Parser function template.
 */
 #define __une_parser(__id, ...)\
-  /*__une_static*/ une_node *(__id)(une_error *error, une_parser_state *ps, ##__VA_ARGS__)
+  __une_static une_node *(__id)(une_error *error, une_parser_state *ps, ##__VA_ARGS__)
 
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens);
 

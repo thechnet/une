@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -83,7 +83,7 @@ __une_interpreter(une_interpret_as, une_result_type type)
 /*
 Call user-defined function.
 */
-/*__une_static*/ une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args)
+__une_static une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args)
 {
   /* Create function context. */
   une_context *context = une_context_create(fn->name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
@@ -109,7 +109,7 @@ Call user-defined function.
 /*
 Call built-in function.
 */
-/*__une_static*/ une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes)
+__une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes)
 {
   switch (type) {
     case UNE_BIF_PUT:
@@ -150,7 +150,7 @@ Call built-in function.
 /*
 Retrieve an item in a UNE_RT_LIST une_result.
 */
-/*__une_static*/ une_result une_interpret_get_idx_list(une_result list, une_int index)
+__une_static une_result une_interpret_get_idx_list(une_result list, une_int index)
 {
   UNE_UNPACK_RESULT_LIST(list, list_p, list_size);
 
@@ -164,7 +164,7 @@ Retrieve an item in a UNE_RT_LIST une_result.
 /*
 Retrieve a character in a UNE_RT_STR une_result.
 */
-/*__une_static*/ une_result une_interpret_get_idx_str(une_result str, une_int index)
+__une_static une_result une_interpret_get_idx_str(une_result str, une_int index)
 {
   UNE_UNPACK_NODE_STR(str, string, string_size);
 
@@ -172,7 +172,7 @@ Retrieve a character in a UNE_RT_STR une_result.
   if (index < 0 || index >= string_size)
     return une_result_create(UNE_RT_ERROR);
 
-  wchar_t *substring = une_malloc(2*sizeof(*substring));
+  wchar_t *substring = malloc(2*sizeof(*substring));
   substring[0] = string[index];
   substring[1] = L'\0';
 
@@ -233,7 +233,7 @@ __une_interpreter(une_interpret_list)
       une_result result = une_result_copy(result_list[i]);
       for (size_t j=0; j<=i; j++)
         une_result_free(result_list[j]);
-      une_free(result_list);
+      free(result_list);
       return result;
     }
   }
@@ -1135,7 +1135,9 @@ __une_interpreter(une_interpret_def)
 
   /* Copy contents. */
   UNE_UNPACK_NODE_LIST(node->content.branch.b, params_n, params_count);
-  wchar_t **params = une_malloc(params_count*sizeof(*params));
+  wchar_t **params = NULL;
+  if (params_count > 0)
+    params = malloc(params_count*sizeof(*params));
   for (size_t i=0; i<params_count; i++)
     params[i] = une_wcsdup(params_n[i+1]->content.value._wcs);
   une_node *body = une_node_copy(node->content.branch.c);
@@ -1183,13 +1185,15 @@ __une_interpreter(une_interpret_call)
   }
 
   /* Interpret arguments. */
-  une_result *args = une_malloc(args_count*sizeof(*args));
+  une_result *args = NULL;
+  if (args_count > 0)
+    args = malloc(args_count*sizeof(*args));
   for (size_t i=0; i<args_count; i++) {
     une_result temp = une_interpret(error, is, args_n[i+1]);
     if (temp.type == UNE_RT_ERROR) {
       for (size_t j=0; j<i; j++)
         une_result_free(args[j]);
-      une_free(args);
+      free(args);
       return temp;
     }
     args[i] = temp;
@@ -1203,7 +1207,8 @@ __une_interpreter(une_interpret_call)
     result = une_interpret_call_def(error, is, fn, args);
   for (size_t i=0; i<num_of_params; i++)
     une_result_free(args[i]);
-  une_free(args);
+  if (args != NULL)
+    free(args);
   return result;
 }
 

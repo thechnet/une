@@ -7,7 +7,7 @@
 clear=1
 release=0
 debug=1
-debug_gdb=1
+debug_gdb=0
 
 # gcc, clang
 compiler="gcc"
@@ -17,24 +17,26 @@ compiler="gcc"
 #region Options
 
 unset O
-if [ $release==1 ]; then
+if [ $release -eq 1 ]; then
   if [ $compiler=="gcc" ]; then
-    O="-O3"
+    O="-O3 "
   elif [ $compiler=="clang" ]; then
-    O="-O3"
+    O="-O3 "
   fi
 fi
 
-flags="-Wall"
+flags="-Wall "
 if [ $compiler=="clang" ]; then
-  flags="${flags} -Wno-deprecated -Wno-switch"
+  flags="${flags}-Wno-deprecated -Wno-switch "
 fi
-if [ $debug_gdb==1 ]; then
-  flags="${flags} -g -Wno-switch"
+if [ $debug_gdb -eq 1 ]; then
+  flags="${flags}-g3 "
 fi
-# if [ $debug==1 ]; then
-#   flags="${flags} -DUNE_DEBUG"
-# fi
+if [ $debug -eq 1 ]; then
+  flags="${flags}-DUNE_DEBUG "
+else
+  flags="${flags}-Wno-unused-function "
+fi
 
 #endregion Options
 
@@ -55,21 +57,22 @@ src=\
 "types/lexer_state.c "\
 "tools.c "\
 "stream.c "\
-"builtin.c"
+"builtin.c "\
+"util/memdbg.c"
 
 >/dev/null pushd src
 if [ $clear==1 ]; then
   clear
 fi
-$compiler $O $flags $src -o ../une
+$compiler $O$flags$src -o ../une
 el=$?
 >/dev/null popd
-if [ "$*"!="" ]; then
-  if [ $el==0 ]; then
+if [ -n "$*" ]; then
+  if [ $el -eq 0 ]; then
     ./une $*
   fi
 fi
 
-echo "Done."
+echo $'\e[35m'"$compiler $O$flags"$'\e[0m'
 
 exit $el

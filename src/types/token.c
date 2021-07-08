@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -84,7 +84,7 @@ void une_token_free(une_token token)
     
     case UNE_TT_ID:
     case UNE_TT_STR:
-      une_free(token.value._wcs);
+      free(token.value._wcs);
       break;
   
   }
@@ -111,13 +111,13 @@ void une_tokens_free(une_token *tokens)
   }
   
   /* Free list. */
-  une_free(tokens);
+  free(tokens);
 }
 
 /*
 Return a text representation of a une_token_type.
 */
-/*__une_static*/ const wchar_t *une_token_type_to_wcs(une_token_type type)
+__une_static const wchar_t *une_token_type_to_wcs(une_token_type type)
 {
   /* Ensure une_token_type is valid. */
   UNE_VERIFY_TOKEN_TYPE(type);
@@ -133,11 +133,10 @@ realistically happen, were this function used in a real-world
 environment, but since it is only used for debugging, I'm
 leaving this vulnerability in here.
 */
-#ifdef UNE_DEBUG
-/*__une_static*/ wchar_t *une_token_to_wcs(une_token token)
+UNE_D(__une_static wchar_t *une_token_to_wcs(une_token token)
 {
   /* Write token type. */
-  wchar_t *str = une_malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));
+  wchar_t *str = malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));
   wcscpy(str, UNE_COLOR_TOKEN_TYPE);
   wcscat(str, une_token_type_to_wcs(token.type));
   wcscat(str, UNE_COLOR_NEUTRAL);
@@ -164,14 +163,12 @@ leaving this vulnerability in here.
   }
   
   return str;
-}
-#endif /* UNE_DEBUG */
+})
 
 /*
 Display the text representations of each item in a list of une_tokens.
 */
-#ifdef UNE_DEBUG
-void une_tokens_display(une_token *tokens)
+UNE_D(void une_tokens_display(une_token *tokens)
 {
   /* Ensure list of tokens exists. */
   if (tokens == NULL)
@@ -183,10 +180,9 @@ void une_tokens_display(une_token *tokens)
   while (true) {
     token_as_wcs = une_token_to_wcs(tokens[i]);
     wprintf(L"%ls ", token_as_wcs);
-    une_free(token_as_wcs);
+    free(token_as_wcs);
     if (tokens[i].type == UNE_TT_EOF)
       break;
     i++;
   }
-}
-#endif /* UNE_DEBUG */
+})

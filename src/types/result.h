@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2021-07-05
+Modified 2021-07-07
 */
 
 #ifndef UNE_RESULT_H
@@ -79,7 +79,7 @@ Verify une_result_type.
 */
 #define UNE_VERIFY_RESULT_TYPE(type)\
   if (!UNE_RESULT_TYPE_IS_VALID(type))\
-    ERR(L"Invalid une_result_type %lld.", type);
+    fail(L"Invalid une_result_type %lld.", type);
 
 une_result une_result_create(une_result_type type);
 une_result une_result_copy(une_result src);

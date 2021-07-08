@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -88,7 +88,7 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
     case UNE_BIF_SPLIT:
       return 2;
     default:
-      ERR(L"Unhandled type %d", type);
+      fail(L"Unhandled type %d", type);
   }
 }
 
@@ -183,7 +183,7 @@ __une_builtin_fn(une_builtin_to_str, une_result result)
   /* Convert une_result. */
   switch (result.type) {
     case UNE_RT_INT: {
-      wchar_t *out = une_malloc(UNE_SIZE_NUM_LEN*sizeof(*out));
+      wchar_t *out = malloc(UNE_SIZE_NUM_LEN*sizeof(*out));
       swprintf(out, UNE_SIZE_NUM_LEN, L"%lld", result.value._int);
       return (une_result){
         .type = UNE_RT_STR,
@@ -191,7 +191,7 @@ __une_builtin_fn(une_builtin_to_str, une_result result)
       };
     }
     case UNE_RT_FLT: {
-      wchar_t *out = une_malloc(UNE_SIZE_NUM_LEN*sizeof(*out));
+      wchar_t *out = malloc(UNE_SIZE_NUM_LEN*sizeof(*out));
       swprintf(out, UNE_SIZE_NUM_LEN, L"%f", result.value._flt);
       return (une_result){
         .type = UNE_RT_STR,
@@ -266,7 +266,7 @@ __une_builtin_fn(une_builtin_chr, une_result result)
   }
 
   une_result chr = une_result_create(UNE_RT_STR);
-  chr.value._wcs = une_malloc(2*sizeof(*chr.value._wcs));
+  chr.value._wcs = malloc(2*sizeof(*chr.value._wcs));
   chr.value._wcs[0] = (wchar_t)result.value._int;
   chr.value._wcs[1] = L'\0';
   return chr;
@@ -307,7 +307,7 @@ __une_builtin_fn(une_builtin_read, une_result result)
   }
   une_result str = une_result_create(UNE_RT_STR);
   str.value._wcs = une_file_read(path);
-  une_free(path);
+  free(path);
   if (str.value._wcs == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
     return une_result_create(UNE_RT_ERROR);
@@ -337,7 +337,7 @@ __une_builtin_fn(une_builtin_write, une_result file, une_position pos2, une_resu
     return une_result_create(UNE_RT_ERROR);
   }
   FILE *fp = fopen(path, "w,ccs=UTF-8");
-  une_free(path);
+  free(path);
   if (fp == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
     return une_result_create(UNE_RT_ERROR);
@@ -362,16 +362,16 @@ __une_builtin_fn(une_builtin_input, une_result result)
 
   /* Get string. */
   une_result_represent(result);
-  wchar_t *instr = une_malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*instr));
+  wchar_t *instr = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*instr));
   fgetws(instr, UNE_SIZE_FGETWS_BUFFER, stdin);
   size_t len = wcslen(instr);
   instr[--len] = L'\0'; /* Remove trailing newline. */
 
   /* Return result. */
   une_result str = une_result_create(UNE_RT_STR);
-  str.value._wcs = une_malloc(len*sizeof(*str.value._wcs));
+  str.value._wcs = malloc(len*sizeof(*str.value._wcs));
   wcscpy(str.value._wcs, instr);
-  une_free(instr);
+  free(instr);
   return str;
 }
 
@@ -397,7 +397,7 @@ __une_builtin_fn(une_builtin_script, une_result result)
     fclose(check);
     out = une_run(true, path, NULL);
   }
-  une_free(path);
+  free(path);
   return out;
 }
 
@@ -416,7 +416,7 @@ __une_builtin_fn(une_builtin_exist, une_result result)
   char *path = une_wcs_to_str(result.value._wcs);
   struct stat sstat;
   int res = stat(path, &sstat);
-  une_free(path);
+  free(path);
   return (une_result){
     .type = UNE_RT_INT,
     .value._int = !res
@@ -446,12 +446,12 @@ __une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_re
 
   /* Setup. */
   size_t tokens_amt = 0;
-  une_result *tokens = une_malloc((UNE_SIZE_BIF_SPLIT_TKS+1)*sizeof(*tokens));
+  une_result *tokens = malloc((UNE_SIZE_BIF_SPLIT_TKS+1)*sizeof(*tokens));
   une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_BIF_SPLIT_TKS+1, sizeof(*tokens), true);
   void (*push)(une_ostream*, une_result) = &__une_builtin_split_push;
   push(&out, une_result_create(UNE_RT_SIZE));
   /* Cache delimiter lengths for performance. */
-  size_t *delim_lens = une_malloc(delims_len*sizeof(*delim_lens));
+  size_t *delim_lens = malloc(delims_len*sizeof(*delim_lens));
   for (size_t i=0; i<delims_len; i++)
     delim_lens[i] = wcslen(delims_p[i+1].value._wcs);
   wchar_t *wcs = string.value._wcs;
@@ -481,7 +481,7 @@ __une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_re
         if (substr_len == 0)
           break;
         /* Create substring. */
-        wchar_t *substr = une_malloc((substr_len+1)*sizeof(*substr));
+        wchar_t *substr = malloc((substr_len+1)*sizeof(*substr));
         wmemcpy(substr, wcs+last_token_end_cpy, substr_len);
         substr[substr_len] = L'\0';
         /* Push substring. */
@@ -496,7 +496,7 @@ __une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_re
   }
 
   /* Wrap up. */
-  une_free(delim_lens);
+  free(delim_lens);
   tokens[0].value._int = tokens_amt;
   return (une_result){
     .type = UNE_RT_LIST,

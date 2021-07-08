@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -814,13 +814,13 @@ __une_parser(une_parse_sequence,
   
   /* Sequence. */
   size_t sequence_size = UNE_SIZE_SEQUENCE;
-  une_node **sequence = une_malloc(sequence_size*sizeof(*sequence));
+  une_node **sequence = malloc(sequence_size*sizeof(*sequence));
   size_t sequence_index = 1;
 
   while (true) {
     if (sequence_index >= sequence_size) {
       sequence_size *= 2;
-      sequence = une_realloc(sequence, sequence_size*sizeof(sequence));
+      sequence = realloc(sequence, sequence_size*sizeof(sequence));
     }
     
     /* ADDITIONAL WHITESPACE. */
@@ -837,7 +837,7 @@ __une_parser(une_parse_sequence,
       arguments is opened at the end of the file without being closed. */
       for (size_t i=1; i<sequence_index; i++)
         une_node_free(sequence[i], false);
-      une_free(sequence);
+      free(sequence);
       *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
       return NULL;
     }
@@ -847,7 +847,7 @@ __une_parser(une_parse_sequence,
     if (sequence[sequence_index] == NULL) {
       for (size_t i=1; i<sequence_index; i++)
         une_node_free(sequence[i], false);
-      une_free(sequence);
+      free(sequence);
       return NULL;
     }
     sequence_index++;
@@ -857,7 +857,7 @@ __une_parser(une_parse_sequence,
       continue;
     for (size_t i=1; i<sequence_index; i++)
       une_node_free(sequence[i], false);
-    une_free(sequence);
+    free(sequence);
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
     return NULL;
   }

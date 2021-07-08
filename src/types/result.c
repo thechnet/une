@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -89,7 +89,7 @@ void une_result_free(une_result result)
     /* Heap data. */
     case UNE_RT_STR:
       LOGFREE(L"une_result", une_result_type_to_wcs(result.type), result.type);
-      une_free(result.value._wcs);
+      free(result.value._wcs);
       break;
     
     /* List. */
@@ -98,7 +98,7 @@ void une_result_free(une_result result)
       UNE_UNPACK_RESULT_LIST(result, list, list_size);
       UNE_FOR_RESULT_LIST_INDEX(i, list_size)
         une_result_free(list[i]);
-      une_free(list);
+      free(list);
       break;
     }
   
@@ -110,7 +110,7 @@ Return a list of uninitialized une_results.
 */
 une_result *une_result_list_create(size_t items)
 {
-  une_result *list = une_malloc((items+1)*sizeof(*list));
+  une_result *list = malloc((items+1)*sizeof(*list));
   list[0] = (une_result){
     .type = UNE_RT_SIZE,
     .value._int = items
@@ -138,7 +138,7 @@ void une_result_represent(une_result result)
 {
   #ifndef UNE_DEBUG
   if (!UNE_RESULT_TYPE_IS_DATA_TYPE(result.type))
-    ERR(L"Cannot represent non-data result.");
+    fail(L"Cannot represent non-data result.");
   #endif
 
   switch (result.type) {
@@ -283,7 +283,7 @@ une_result une_result_strs_add(une_result left, une_result right)
   size_t right_size = wcslen(right.value._wcs);
 
   /* Create new string. */
-  wchar_t *new = une_malloc((left_size+right_size+1)*sizeof(*new));
+  wchar_t *new = malloc((left_size+right_size+1)*sizeof(*new));
 
   /* Populate new string. */
   wmemcpy(new, left.value._wcs, left_size);
@@ -327,7 +327,7 @@ une_result une_result_str_mul(une_result str, une_int count)
   size_t str_size = wcslen(str.value._wcs);
 
   /* Create new string. */
-  wchar_t *new = une_malloc((count*str_size+1)*sizeof(*new));
+  wchar_t *new = malloc((count*str_size+1)*sizeof(*new));
 
   /* Populate new string. */
   for (size_t i=0; i<count; i++)

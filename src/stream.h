@@ -1,6 +1,6 @@
 /*
 stream.h - Une
-Modified 2021-07-05
+Modified 2021-07-07
 */
 
 #ifndef UNE_STREAM_H
@@ -54,7 +54,7 @@ The current item in an array une_istream, with an optional offset.
 Pull the next item from an array une_istream by value.
 */
 #define UNE_ISTREAM_ARRAY_PULLER_VAL(__id, __type, __cast_type, __error_value, __verify_position)\
-  /*__une_static*/ __type __id(une_istream *istream)\
+  __une_static __type __id(une_istream *istream)\
   {\
     if (__verify_position && !une_istream_array_verify_position(istream, 1)) {\
       if (!istream->has_reached_end) {\
@@ -71,7 +71,7 @@ Pull the next item from an array une_istream by value.
 Pull the next item from an array une_istream by reference.
 */
 #define UNE_ISTREAM_ARRAY_PULLER_REF(__id, __type, __cast_type, __error_value, __verify_position)\
-  /*__une_static*/ __type* __id(une_istream *istream)\
+  __une_static __type* __id(une_istream *istream)\
   {\
     if (__verify_position && !une_istream_array_verify_position(istream, 1)) {\
       if (!istream->has_reached_end) {\
@@ -88,7 +88,7 @@ Pull the next item from an array une_istream by reference.
 Peek an item in an array une_istream by value.
 */
 #define UNE_ISTREAM_ARRAY_PEEKER_VAL(__id, __type, __cast_type, __error_value, __verify_position)\
-  /*__une_static*/ __type __id(une_istream *istream, ptrdiff_t offset)\
+  __une_static __type __id(une_istream *istream, ptrdiff_t offset)\
   {\
     if (__verify_position && !une_istream_array_verify_position(istream, offset))\
       return __error_value;\
@@ -99,7 +99,7 @@ Peek an item in an array une_istream by value.
 Peek an item in an array une_istream by reference.
 */
 #define UNE_ISTREAM_ARRAY_PEEKER_REF(__id, __type, __cast_type, __error_value, __verify_position)\
-  /*__une_static*/ __type* __id(une_istream *istream, ptrdiff_t offset)\
+  __une_static __type* __id(une_istream *istream, ptrdiff_t offset)\
   {\
     if (__verify_position && !une_istream_array_verify_position(istream, offset))\
       return __error_value;\
@@ -110,7 +110,7 @@ Peek an item in an array une_istream by reference.
 Access the current item in an array une_istream by value.
 */
 #define UNE_ISTREAM_ARRAY_ACCESS_VAL(__id, __type, __cast_type, __error_value, __verify_position)\
-  /*__une_static*/ __type __id(une_istream *istream)\
+  __une_static __type __id(une_istream *istream)\
   {\
     if (__verify_position && istream->has_reached_end)\
       return __error_value;\
@@ -121,7 +121,7 @@ Access the current item in an array une_istream by value.
 Access the current item in an array une_istream by reference.
 */
 #define UNE_ISTREAM_ARRAY_ACCESS_REF(__id, __type, __cast_type, __error_value, __verify_position)\
-  /*__une_static*/ __type* __id(une_istream *istream)\
+  __une_static __type* __id(une_istream *istream)\
   {\
     if (__verify_position && istream->has_reached_end)\
       return __error_value;\
@@ -140,7 +140,7 @@ The current item in a wfile une_istream.
 Pull the next item from a wfile une_istream.
 */
 #define UNE_ISTREAM_WFILE_PULLER(__id)\
-  /*__une_static*/ wint_t __id(une_istream *istream)\
+  __une_static wint_t __id(une_istream *istream)\
   {\
     if (__UNE_ISTREAM_WFILE_ITEM(istream) != WEOF)\
       istream->index++;\
@@ -152,7 +152,7 @@ Pull the next item from a wfile une_istream.
 Peek an item in a wfile une_istream.
 */
 #define UNE_ISTREAM_WFILE_PEEKER(__id)\
-  /*__une_static*/ wint_t __id(une_istream *istream, ptrdiff_t offset)\
+  __une_static wint_t __id(une_istream *istream, ptrdiff_t offset)\
   {\
     wint_t wc_tmp = fgetwc(istream->data.wfile.file);\
     wint_t wc = wc_tmp;\
@@ -183,7 +183,7 @@ The current item in a une_ostream, with an optional offset.
 Push an item to a une_ostream.
 */
 #define UNE_OSTREAM_PUSHER(__id, __type)\
-  /*__une_static*/ void __id(une_ostream *ostream, __type item)\
+  __une_static void __id(une_ostream *ostream, __type item)\
   {\
     assert(une_ostream_verify_position(ostream, 1));\
     ostream->index++;\
@@ -194,7 +194,7 @@ Push an item to a une_ostream.
 Peek an item in a une_ostream by value.
 */
 #define UNE_OSTREAM_PEEKER_VAL(__id, __type, __error_value)\
-  /*__une_static*/ __type __id(une_ostream *ostream, ptrdiff_t offset)\
+  __une_static __type __id(une_ostream *ostream, ptrdiff_t offset)\
   {\
     if (!une_ostream_verify_position(ostream, offset+1))\
       return __error_value;\
@@ -205,7 +205,7 @@ Peek an item in a une_ostream by value.
 Peek an item in a une_ostream by reference.
 */
 #define UNE_OSTREAM_PEEKER_REF(__id, __type, __error_value)\
-  /*__une_static*/ __type* __id(une_ostream *ostream, ptrdiff_t offset)\
+  __une_static __type* __id(une_ostream *ostream, ptrdiff_t offset)\
   {\
     if (!une_ostream_verify_position(ostream, offset+1))\
       return __error_value;\

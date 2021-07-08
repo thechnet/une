@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2021-07-05
+Modified 2021-07-07
 */
 
 #ifndef UNE_TOKEN_H
@@ -95,22 +95,14 @@ Verify une_token_type.
 */
 #define UNE_VERIFY_TOKEN_TYPE(type)\
   if (!UNE_TOKEN_TYPE_IS_VALID(type))\
-    ERR(L"Invalid une_token_type %lld.", type);
+    fail(L"Invalid une_token_type %lld.", type);
 
 une_token une_token_create(une_token_type type);
 void une_token_free(une_token token);
 void une_tokens_free(une_token *tokens);
 
-#ifdef UNE_DEBUG
-/*__une_static*/ const wchar_t *une_token_type_to_wcs(une_token_type type);
-#endif /* UNE_DEBUG */
-
-#ifdef UNE_DEBUG
-/*__une_static*/ wchar_t *une_token_to_wcs(une_token token);
-#endif /* UNE_DEBUG */
-
-#ifdef UNE_DEBUG
-void une_tokens_display(une_token *tokens);
-#endif /* UNE_DEBUG */
+UNE_D(__une_static const wchar_t *une_token_type_to_wcs(une_token_type type);)
+UNE_D(__une_static wchar_t *une_token_to_wcs(une_token token);)
+UNE_D(void une_tokens_display(une_token *tokens);)
 
 #endif /* !UNE_TOKEN_H */

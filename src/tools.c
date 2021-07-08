@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -9,47 +9,6 @@ Modified 2021-07-05
 /* Implementation-specific includes. */
 #include <string.h>
 #include <errno.h>
-
-/*
-Attempt to allocate memory and crash immediately on fail.
-*/
-void *une_malloc(size_t size)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
-  une_alloc_count++;
-  #endif
-  void *p = malloc(size);
-  if (p == NULL)
-    ERR(L"Out of memory.");
-  return p;
-}
-
-/*
-Attempt to reallocate memory and crash immediately on fail.
-*/
-void *une_realloc(void *memory, size_t new_size)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
-  une_alloc_count++;
-  #endif
-  assert(memory != NULL);
-  void *p = realloc(memory, new_size);
-  if (p == NULL)
-    ERR(L"Out of memory.");
-  return p;
-}
-
-/*
-Free memory.
-*/
-void une_free(void *memory)
-{
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
-  une_alloc_count--;
-  #endif
-  assert(memory != NULL);
-  free(memory);
-}
 
 /*
 Convert a wchar_t string into a une_int integer.
@@ -95,7 +54,7 @@ Create a wchar_t string from a char string.
 wchar_t *une_str_to_wcs(char *str)
 {
   size_t len = strlen(str);
-  wchar_t *wcs = une_malloc((len+1)*sizeof(*wcs));
+  wchar_t *wcs = malloc((len+1)*sizeof(*wcs));
   swprintf(wcs, (len+1)*sizeof(*wcs), L"%hs", str);
   return wcs;
 }
@@ -106,10 +65,10 @@ Create a char string from a wchar_t string.
 char *une_wcs_to_str(wchar_t *wcs)
 {
   size_t size = wcslen(wcs)+1 /* NUL. */;
-  char *str = une_malloc(size*sizeof(*str));
+  char *str = malloc(size*sizeof(*str));
   wcstombs(str, wcs, size);
   if (errno == EILSEQ) {
-    une_free(str);
+    free(str);
     return NULL;
   }
   return str;
@@ -124,7 +83,7 @@ char *une_strdup(char *src)
   if (src == NULL)
     return NULL;
   size_t size = strlen(src)+1;
-  char *new = une_malloc(size*sizeof(*new));
+  char *new = malloc(size*sizeof(*new));
   return memcpy(new, src, size);
 }
 
@@ -137,7 +96,7 @@ wchar_t *une_wcsdup(wchar_t *src)
   if (src == NULL)
     return NULL;
   size_t size = wcslen(src)+1;
-  wchar_t *new = une_malloc(size*sizeof(*new));
+  wchar_t *new = malloc(size*sizeof(*new));
   return wmemcpy(new, src, size);
 }
 
@@ -150,7 +109,7 @@ wchar_t *une_file_read(char *path)
   if (f == NULL)
     return NULL;
   size_t text_size = UNE_SIZE_FILE_BUFFER;
-  wchar_t *text = une_malloc(text_size*sizeof(*text));
+  wchar_t *text = malloc(text_size*sizeof(*text));
   size_t cursor = 0;
   wint_t c; /* DOC: Can represent any Unicode character + WEOF (!).
                This is important when using fgetwc(), as otherwise,
@@ -162,7 +121,7 @@ wchar_t *une_file_read(char *path)
       continue;
     if (cursor >= text_size-1) { /* NUL. */
       text_size *= 2;
-      wchar_t *_text = une_realloc(text, text_size *sizeof(*_text));
+      wchar_t *_text = realloc(text, text_size *sizeof(*_text));
       text = _text;
     }
     if (c == WEOF)

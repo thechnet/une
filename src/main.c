@@ -1,11 +1,10 @@
 /*
 main.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Import public Une interface. */
 #include "une.h"
-int une_alloc_count = 0;
 
 /* Implementation-specific includes. */
 #include <string.h>
@@ -40,7 +39,7 @@ int main(int argc, char *argv[])
   else {
     wchar_t *wcs = une_str_to_wcs(argv[2]);
     result = une_run(read_from_file, NULL, wcs);
-    une_free(wcs);
+    free(wcs);
   }
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
@@ -51,11 +50,6 @@ int main(int argc, char *argv[])
   #endif
   int final = result.type == UNE_RT_INT ? (int)result.value._int : 0;
   une_result_free(result);
-  
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_ALLOC_COUNTER)
-  if (une_alloc_count != 0)
-    wprintf(UNE_COLOR_FAIL L"%d memory location(s) not freed.\33[0m\n", une_alloc_count);
-  #endif
   
   return final;
 }

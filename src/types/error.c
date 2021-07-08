@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-07-05
+Modified 2021-07-06
 */
 
 /* Header-specific includes. */
@@ -51,7 +51,7 @@ une_error une_error_create(void)
 /*
 Get error message for error type.
 */
-/*__une_static*/ const wchar_t *une_error_type_to_wcs(une_error_type type)
+__une_static const wchar_t *une_error_type_to_wcs(une_error_type type)
 {
   /* Ensure error type is within bounds. */
   if (!UNE_ERROR_TYPE_IS_VALID(type))

@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Modified 2021-07-05
+Modified 2021-07-07
 */
 
 #ifndef UNE_LEXER_H
@@ -17,7 +17,7 @@ Modified 2021-07-05
 */
 
 /*
-Condition to check whether a character be in a number.
+Condition to check whether a character can be in a number.
 */
 #define UNE_LEXER_WC_IS_DIGIT(wc) (wc >= L'0' && wc <= L'9')
 
@@ -49,7 +49,7 @@ Condition to check if a character is any kind of whitespace.
 /*
 Lexer function template.
 */
-#define __une_lexer(__id) /*__une_static*/ une_token (__id)(une_error *error, une_lexer_state *ls)
+#define __une_lexer(__id) __une_static une_token (__id)(une_error *error, une_lexer_state *ls)
 
 une_token* une_lex(une_error*, une_lexer_state*);
 

@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -95,7 +95,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   ls->pull(&ls->in);
   
   /* Initialize token buffer. */
-  une_token *tokens = une_malloc(UNE_SIZE_TOKEN_BUF*sizeof(*tokens));
+  une_token *tokens = malloc(UNE_SIZE_TOKEN_BUF*sizeof(*tokens));
   une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_TOKEN_BUF, sizeof(*tokens), true);
   void (*push)(une_ostream*, une_token) = &__une_lex_push;
   une_token *(*tkpeek)(une_ostream*, ptrdiff_t) = &__une_lex_out_peek;
@@ -112,7 +112,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     if (error->type != __UNE_ET_none__) {
       for (ptrdiff_t i=0; i<out.index-1 /* Don't free __UNE_TT_none__ */; i++)
         une_token_free(tokens[i]);
-      une_free(tokens);
+      free(tokens);
       tokens = NULL;
       break;
     }
@@ -211,14 +211,14 @@ __une_lexer(une_lex_num)
 {
   /* Setup. */
   size_t buffer_size = UNE_SIZE_NUM_LEN;
-  wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
+  wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
   size_t idx_start = ls->in.index;
   
   do {
     /* Ensure sufficient space in buffer. */
     while (ls->in.index-idx_start+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
-      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
+      buffer = realloc(buffer, buffer_size*sizeof(*buffer));
     }
   
     /* Add character to buffer. */
@@ -234,7 +234,7 @@ __une_lexer(une_lex_num)
       .pos = (une_position){idx_start, ls->in.index},
       .value._int = une_wcs_to_une_int(buffer),
     };
-    une_free(buffer);
+    free(buffer);
     return tk;
   }
   
@@ -249,7 +249,7 @@ __une_lexer(une_lex_num)
     /* Ensure sufficient space in buffer. */
     if (ls->in.index-idx_start+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
-      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
+      buffer = realloc(buffer, buffer_size*sizeof(*buffer));
     }
   
     /* Add character to buffer. */
@@ -260,7 +260,7 @@ __une_lexer(une_lex_num)
   /* No digits after decimal point. */
   if (ls->in.index == idx_before_decimals) {
     *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
-    une_free(buffer);
+    free(buffer);
     return une_token_create(__UNE_TT_none__);
   }
   
@@ -271,7 +271,7 @@ __une_lexer(une_lex_num)
     .pos = (une_position){idx_start, ls->in.index},
     .value._flt = une_wcs_to_une_flt(buffer),
   };
-  une_free(buffer);
+  free(buffer);
   return tk;
 }
 
@@ -282,7 +282,7 @@ __une_lexer(une_lex_str)
 {
   /* Setup. */
   size_t buffer_size = UNE_SIZE_STR_LEN;
-  wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
+  wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
   size_t idx_start = ls->in.index;
   bool escape = false;
   size_t buffer_index = 0;
@@ -291,7 +291,7 @@ __une_lexer(une_lex_str)
     /* Ensure sufficient space in string buffer. */
     if (buffer_index+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
-      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
+      buffer = realloc(buffer, buffer_size*sizeof(*buffer));
     }
     
     ls->pull(&ls->in);
@@ -303,7 +303,7 @@ __une_lexer(une_lex_str)
     /* Premature end of stream. */
     if (ls->now(&ls->in) == WEOF) {
       *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
-      une_free(buffer);
+      free(buffer);
       return une_token_create(__UNE_TT_none__);
     }
     
@@ -322,7 +322,7 @@ __une_lexer(une_lex_str)
           continue;
         default: {
           *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
-          une_free(buffer);
+          free(buffer);
           return une_token_create(__UNE_TT_none__);
         }
       }
@@ -360,7 +360,7 @@ __une_lexer(une_lex_id)
 {
   /* Setup. */
   size_t buffer_size = UNE_SIZE_ID_LEN;
-  wchar_t *buffer = une_malloc(buffer_size*sizeof(*buffer));
+  wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
   size_t idx_start = ls->in.index;
   size_t buffer_index = 0;
   
@@ -368,7 +368,7 @@ __une_lexer(une_lex_id)
     /* Ensure sufficient space in string buffer. */
     if (buffer_index >= buffer_size-1) { /* NUL. */
       buffer_size *= 2;
-      buffer = une_realloc(buffer, buffer_size*sizeof(*buffer));
+      buffer = realloc(buffer, buffer_size*sizeof(*buffer));
     }
     
     /* Add character to string buffer. */
@@ -409,7 +409,7 @@ __une_lexer(une_lex_id)
     tk.value._wcs = buffer;
   }
   if (tk.type != UNE_TT_ID)
-    une_free(buffer);
+    free(buffer);
   
   tk.pos = (une_position){ .start = idx_start, .end = ls->in.index };
   return tk;

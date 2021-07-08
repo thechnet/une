@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2021-07-05
+Modified 2021-07-08
 */
 
 #ifndef UNE_TOOLS_H
@@ -12,10 +12,6 @@ Modified 2021-07-05
 /*
 *** Interface.
 */
-
-void *une_malloc(size_t size);
-void *une_realloc(void *memory, size_t new_size);
-void une_free(void *memory);
 
 une_int une_wcs_to_une_int(wchar_t *str);
 une_flt une_wcs_to_une_flt(wchar_t *str);

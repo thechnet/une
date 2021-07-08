@@ -17,10 +17,10 @@ Some demo programs can be found in [examples](examples).
 - Edit either `make.cmd` or `make.sh` (depending on which system you're on) and make sure `compiler` points to an up-to-date C compiler (I recommend GCC or Clang).
 - Run `make.cmd` or `make.sh` from within the repository.
 
-2. Run a script:
+2. Run a program:
 
 ```
-./une <script>
+une {<script>|-s <string>}
 ```
 
 # Visual Studio Code Language Support

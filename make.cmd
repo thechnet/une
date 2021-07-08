@@ -19,22 +19,24 @@ set compiler=gcc
 set O=
 if %release% Equ 1 (
   if %compiler% Equ gcc (
-    set O=-O3
+    set "O=-O3 "
   ) else if %compiler% Equ clang (
-    set O=-O3
+    set "O=-O3 "
   )
 )
 
-set "flags=-Wall"
+set "flags=-Wall "
 if %compiler% Equ clang (
-  set "flags=!flags! -Wno-deprecated"
+  set "flags=!flags!-Wno-deprecated -Wno-switch "
 )
 if %debug_gdb% Equ 1 (
-  set "flags=!flags! -g -Wno-switch"
+  set "flags=!flags!-g3 "
 )
-@REM if %debug% Equ 1 (
-@REM   set "flags=!flags! -DUNE_DEBUG"
-@REM )
+if %debug% Equ 1 (
+  set "flags=!flags!-DUNE_DEBUG "
+) else (
+  set "flags=!flags!-Wno-unused-function "
+)
 
 ::#endregion Options
 
@@ -55,13 +57,14 @@ types/parser_state.c ^
 types/lexer_state.c ^
 tools.c ^
 stream.c ^
-builtin.c
+builtin.c ^
+util/memdbg.c
 
 pushd src
 if %clear% Equ 1 (
   cls
 )
-%compiler% %O% %flags% %src% -o ../une.exe
+%compiler% %O%%flags%%src% -o ../une.exe
 set el=%errorlevel%
 popd
 if "%*" nEq "" (
@@ -70,6 +73,6 @@ if "%*" nEq "" (
   )
 )
 
-echo Done.
+echo ␛[35m%compiler% %O%%flags%␛[0m
 
 exit /b %el%

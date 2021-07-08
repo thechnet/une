@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2021-07-05
+Modified 2021-07-07
 */
 
 #ifndef UNE_NODE_H
@@ -104,14 +104,14 @@ Verify une_node_type.
 */
 #define UNE_VERIFY_NODE_TYPE(type)\
   if (!UNE_NODE_TYPE_IS_VALID(type))\
-    ERR(L"Invalid une_node_type %lld.", type);
+    fail(L"Invalid une_node_type %lld.", type);
 
 /*
 Verify une_node_type can be looked up in interpreter lookup table.
 */
 #define UNE_VERIFY_LUT_NODE_TYPE(type)\
   if (!UNE_NODE_TYPE_IS_IN_LUT(type))\
-    ERR(L"une_node_type can't be looked up.");
+    fail(L"une_node_type can't be looked up.");
 
 /*
 Unpack a une_node list into its name and size.
@@ -146,12 +146,7 @@ void une_node_free(une_node *node, bool free_wcs);
 
 une_node **une_node_list_create(size_t size);
 
-#ifdef UNE_DEBUG
-/*__une_static*/ const wchar_t *une_node_type_to_wcs(une_node_type type);
-#endif /* UNE_DEBUG */
-
-#ifdef UNE_DEBUG
-wchar_t *une_node_to_wcs(une_node *node);
-#endif /* UNE_DEBUG */
+UNE_D(__une_static const wchar_t *une_node_type_to_wcs(une_node_type type);)
+UNE_D(wchar_t *une_node_to_wcs(une_node *node);)
 
 #endif /* !UNE_NODE_H */
