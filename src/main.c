@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 /* Import public Une interface. */
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   }
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
-    putwc(L'\n', stdout);
+    wprintf(L"\nRESULT:");
     une_result_represent(result);
     putwc(L'\n', stdout);
   }

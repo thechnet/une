@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 /* Header-specific includes. */
@@ -19,7 +19,7 @@ une_context *une_context_create(wchar_t *name, size_t variables_size, size_t fun
   
   /* Initialize une_context. */
   *context = (une_context){
-    .name = une_wcsdup(name),
+    .name = wcsdup(name),
     .parent = NULL,
     .variables = malloc(variables_size*sizeof(*context->variables)),
     .variables_size = variables_size,
@@ -74,7 +74,7 @@ __une_variable_itf(une_variable_create)
   une_variable *var = &((context->variables)[context->variables_count]);
   (context->variables_count)++;
   *var = (une_variable){
-    .name = une_wcsdup(name),
+    .name = wcsdup(name),
     .content = une_result_create(UNE_RT_VOID) /* Don'use __UNE_RT_none__ because this will be freed using une_result_free. */
   };
   
@@ -157,7 +157,7 @@ __une_function_itf(une_function_create)
   une_function *var = &((context->functions)[context->functions_count]);
   (context->functions_count)++;
   *var = (une_function){
-    .name = une_wcsdup(name),
+    .name = wcsdup(name),
     .params_count = 0,
     .params = NULL,
     .body = NULL

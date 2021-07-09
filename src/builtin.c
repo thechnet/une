@@ -336,7 +336,7 @@ __une_builtin_fn(une_builtin_write, une_result file, une_position pos2, une_resu
     *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
     return une_result_create(UNE_RT_ERROR);
   }
-  FILE *fp = fopen(path, "w,ccs=UTF-8");
+  FILE *fp = fopen(path, UNE_FOPEN_WFLAGS);
   free(path);
   if (fp == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
@@ -389,7 +389,7 @@ __une_builtin_fn(une_builtin_script, une_result result)
   /* Run script. */
   une_result out;
   char *path = une_wcs_to_str(result.value._wcs);
-  FILE *check = fopen(path, "r,ccs=UTF-8");
+  FILE *check = fopen(path, UNE_FOPEN_RFLAGS);
   if (check == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
     out = une_result_create(UNE_RT_ERROR);

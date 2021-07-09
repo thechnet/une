@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 /* Header-specific includes. */
@@ -75,37 +75,11 @@ char *une_wcs_to_str(wchar_t *wcs)
 }
 
 /*
-Duplicate a char string.
-This function exists as a workaround to the standard strdup behaving slightly different than desired.
-*/
-char *une_strdup(char *src)
-{
-  if (src == NULL)
-    return NULL;
-  size_t size = strlen(src)+1;
-  char *new = malloc(size*sizeof(*new));
-  return memcpy(new, src, size);
-}
-
-/*
-Duplicate a wchar_t string.
-This function exists as a workaround to the standard wcsdup behaving slightly different than desired.
-*/
-wchar_t *une_wcsdup(wchar_t *src)
-{
-  if (src == NULL)
-    return NULL;
-  size_t size = wcslen(src)+1;
-  wchar_t *new = malloc(size*sizeof(*new));
-  return wmemcpy(new, src, size);
-}
-
-/*
 Opens a UTF-8 file at 'path' and returns its text contents as wchar_t string.
 */
 wchar_t *une_file_read(char *path)
 {
-  FILE *f = fopen(path, "r,ccs=UTF-8");
+  FILE *f = fopen(path, UNE_FOPEN_RFLAGS);
   if (f == NULL)
     return NULL;
   size_t text_size = UNE_SIZE_FILE_BUFFER;

@@ -67,8 +67,8 @@ if %clear% Equ 1 (
 %compiler% %O%%flags%%src% -o ../une.exe
 set el=%errorlevel%
 popd
-if "%*" nEq "" (
-  if %el% Equ 0 (
+if %el% Equ 0 (
+  if "%*" nEq "" (
     une %*
   )
 )

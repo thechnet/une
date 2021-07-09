@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 /* Header-specific includes. */
@@ -212,7 +212,7 @@ __une_interpreter(une_interpret_str)
   /* DOC: Memory Management: Here we can see that results DUPLICATE strings. */
   return (une_result){
     .type = UNE_RT_STR,
-    .value._wcs = une_wcsdup(node->content.value._wcs)
+    .value._wcs = wcsdup(node->content.value._wcs)
   };
 }
 
@@ -1139,7 +1139,7 @@ __une_interpreter(une_interpret_def)
   if (params_count > 0)
     params = malloc(params_count*sizeof(*params));
   for (size_t i=0; i<params_count; i++)
-    params[i] = une_wcsdup(params_n[i+1]->content.value._wcs);
+    params[i] = wcsdup(params_n[i+1]->content.value._wcs);
   une_node *body = une_node_copy(node->content.branch.c);
 
   /* Define function. */

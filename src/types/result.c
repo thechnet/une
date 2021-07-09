@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 /* Header-specific includes. */
@@ -52,7 +52,7 @@ une_result une_result_copy(une_result src)
     
     /* Heap data. */
     case UNE_RT_STR:
-      dest.value._wcs = une_wcsdup(src.value._wcs);
+      dest.value._wcs = wcsdup(src.value._wcs);
       break;
     
     /* List. */

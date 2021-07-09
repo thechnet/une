@@ -17,8 +17,8 @@ Modified 2021-07-08
 
 // #define UNE_DISPLAY_TOKENS
 // #define UNE_DISPLAY_NODES
-// #define UNE_DISPLAY_RESULT
-// #define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
+#define UNE_DISPLAY_RESULT
+#define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
 
 // #define UNE_DEBUG_LOG_INTERPRET
 // #define UNE_DEBUG_LOG_PARSE
@@ -35,7 +35,7 @@ Modified 2021-07-08
 #define LOGGING_WIDE
 #define LOGGING_ID "une"
 #include "util/logging.h"
-#ifdef UNE_DEBUG_MEMDBG
+#if defined(UNE_DEBUG) && defined(UNE_DEBUG_MEMDBG)
 #include "util/memdbg.h"
 #endif
 
@@ -44,6 +44,8 @@ Modified 2021-07-08
 */
 #define UNE_DEFAULT_CONTEXT_NAME L"<stdin>"
 #define UNE_STDIN_SWITCH "-s"
+#define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
+#define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
 
 /* Sizes. */
 #define UNE_SIZE_NUM_LEN 32 /* Lexing, representing. */

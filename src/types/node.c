@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 /* Header-specific includes. */
@@ -104,7 +104,7 @@ une_node *une_node_copy(une_node *src)
     /* Heap data. */
     case UNE_NT_STR:
     case UNE_NT_ID:
-      dest->content.value._wcs = une_wcsdup(src->content.value._wcs);
+      dest->content.value._wcs = wcsdup(src->content.value._wcs);
       break;
     
     /* List. */

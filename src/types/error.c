@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-07-06
+Modified 2021-07-08
 */
 
 /* Header-specific includes. */
@@ -14,7 +14,7 @@ Error message table.
 */
 const wchar_t *une_error_message_table[] = {
   L"No error defined!",
-  L"Illegal character.",
+  L"Unexpected character.",
   L"Syntax error.",
   L"Cannot break outside loop.",
   L"Cannot continue outside loop.",

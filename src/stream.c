@@ -46,7 +46,7 @@ une_istream une_istream_wfile_create(char *path)
   une_istream istream = (une_istream){
     .index = -1,
     .data.wfile = {
-      .file = fopen(path, "r,ccs=UTF-8"),
+      .file = fopen(path, UNE_FOPEN_RFLAGS),
       .wchar = L'\0'
     }
   };

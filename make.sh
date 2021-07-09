@@ -67,8 +67,8 @@ fi
 $compiler $O$flags$src -o ../une
 el=$?
 >/dev/null popd
-if [ -n "$*" ]; then
-  if [ $el -eq 0 ]; then
+if [ $el -eq 0 ]; then
+  if [ -n "$*" ]; then
     ./une $*
   fi
 fi

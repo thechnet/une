@@ -1,6 +1,6 @@
 /*
 logging.h - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 #ifndef LOGGING_H
@@ -32,7 +32,8 @@ Modified 2021-07-08
 #define __LOGGING_STYLE_WARN "\33[33m\33[1m"
 #define __LOGGING_STYLE_FAIL "\33[31m\33[1m"
 #define __LOGGING_STYLE_OUT "\33[37m\33[7m"
-#define __LOGGING_WHERE __LOGGING_PRIHS ":%d: "
+#define LOGGING_WHERE __LOGGING_PRIHS ":%d"
+#define __LOGGING_WHERE LOGGING_WHERE ": "
 
 /* Message prefix. */
 #ifndef LOGGING_ID

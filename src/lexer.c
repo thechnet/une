@@ -79,7 +79,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     ls->pull = &__une_lex_wfile_pull;
     ls->peek = &__une_lex_wfile_peek;
     ls->now = &__une_lex_wfile_now;
-    FILE *file = fopen(ls->path, "r,ccs=UTF-8");
+    FILE *file = fopen(ls->path, UNE_FOPEN_RFLAGS);
     if (file == NULL) {
       *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, ((une_position){ .start=0, .end=0 }));
       return NULL;
@@ -100,20 +100,29 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   void (*push)(une_ostream*, une_token) = &__une_lex_push;
   une_token *(*tkpeek)(une_ostream*, ptrdiff_t) = &__une_lex_out_peek;
   
-  // LOGS((wchar_t*)ls->in.data.array.array);
-  // wint_t ch = ls->now(&ls->in);
-  // ch = ((wchar_t*)ls->in.data.array.array)[0];
-  // wchar_t ch = (wint_t)L'r';
-  // assert(ch == L'r');
-  // exit(0);
-  
-  while (ls->now(&ls->in) != WEOF) {
+  while (true) {
     /* Check for error. */
     if (error->type != __UNE_ET_none__) {
-      for (ptrdiff_t i=0; i<out.index-1 /* Don't free __UNE_TT_none__ */; i++)
+      for (ptrdiff_t i=0; i<out.index; i++) /* This doesn't try to free __UNE_TT_none__ because out.index points to the index of the last item added. */
         une_token_free(tokens[i]);
       free(tokens);
       tokens = NULL;
+      break;
+    }
+    
+    /* Expected end of file. */
+    if (ls->now(&ls->in) == WEOF) {
+      if (out.index > 0 && tkpeek(&out, -1)->type != UNE_TT_NEW)
+        push(&out, (une_token){
+          .type = UNE_TT_NEW,
+          .pos = (une_position){ .start = ls->in.index, .end = ls->in.index+1 },
+          .value._vp = NULL
+        });
+      push(&out, (une_token){
+        .type = UNE_TT_EOF,
+        .pos = (une_position){ .start = ls->in.index, .end = ls->in.index+1 },
+        .value._vp = NULL
+      });
       break;
     }
     
@@ -185,17 +194,6 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     push(&out, une_token_create(__UNE_TT_none__));
     continue;
   }
-  if (out.index > 0 && tkpeek(&out, -1)->type != UNE_TT_NEW)
-    push(&out, (une_token){
-      .type = UNE_TT_NEW,
-      .pos = (une_position){ .start = ls->in.index, .end = ls->in.index+1 },
-      .value._vp = NULL
-    });
-  push(&out, (une_token){
-    .type = UNE_TT_EOF,
-    .pos = (une_position){ .start = ls->in.index, .end = ls->in.index+1 },
-    .value._vp = NULL
-  });
   
   /* Wrap up. */
   if (ls->read_from_file)
@@ -240,7 +238,7 @@ __une_lexer(une_lex_num)
   
   /* Try to lex floating point number. */
   
-  buffer[ls->in.index-idx_start] = ls->now(&ls->in);
+  buffer[ls->in.index-idx_start] = ls->now(&ls->in); /* '.'. */
   ls->pull(&ls->in);
   
   size_t idx_before_decimals = ls->in.index;
@@ -259,7 +257,7 @@ __une_lexer(une_lex_num)
   
   /* No digits after decimal point. */
   if (ls->in.index == idx_before_decimals) {
-    *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){ls->in.index, ls->in.index+1}));
     free(buffer);
     return une_token_create(__UNE_TT_none__);
   }
