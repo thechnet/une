@@ -25,9 +25,10 @@ if %release% Equ 1 (
   )
 )
 
-set "flags=-Wall "
+:: -Wextra (-Wshadow?)
+set "flags=-pedantic -Wall -Wno-switch "
 if %compiler% Equ clang (
-  set "flags=!flags!-Wno-deprecated -Wno-switch "
+  set "flags=!flags!-Wno-deprecated "
 )
 if %debug_gdb% Equ 1 (
   set "flags=!flags!-g3 "
@@ -73,6 +74,6 @@ if %el% Equ 0 (
   )
 )
 
-echo ␛[35m%compiler% %O%%flags%␛[0m
+echo [35m%compiler% %O%%flags%[0m
 
 exit /b %el%

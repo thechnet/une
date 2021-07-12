@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-07-09
+Modified 2021-07-11
 */
 
 /* Header-specific includes. */
@@ -101,8 +101,10 @@ __une_static une_result une_interpret_call_def(une_error *error, une_interpreter
   is->should_return = false;
 
   /* Return to parent context. */
-  is->context = context->parent;
-  une_context_free(context);
+  if (result.type != UNE_RT_ERROR) {
+    is->context = context->parent;
+    une_context_free(context);
+  }
   return result;
 }
 

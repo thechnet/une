@@ -1,6 +1,6 @@
 /*
 memdbg_internal.h - Une
-Modified 2021-07-09
+Modified 2021-07-11
 */
 
 #ifndef MEMDBG_INTERNAL_H
@@ -22,7 +22,7 @@ Holds information for an allocation.
 typedef struct _memdbg_allocation {
   char *file;
   int line;
-  void *memory;
+  char *memory;
   size_t size;
   bool padding_not_intact;
 } memdbg_allocation;
@@ -37,6 +37,7 @@ void *memdbg_realloc(char *file, int line, void *memory, size_t size);
 void memdbg_free(char *file, int line, void *memory);
 
 void __memdbg_allocations_padding_check(char *file, int line);
+void *__memdbg_array_check(char *file, int line, char* array, size_t array_size, size_t item_size, int index);
 void __memdbg_conclude(void);
 
 char *__memdbg_strdup(char *file, int line, char *str);

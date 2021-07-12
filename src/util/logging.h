@@ -1,6 +1,6 @@
 /*
 logging.h - Une
-Modified 2021-07-09
+Modified 2021-07-12
 */
 
 #ifndef LOGGING_H
@@ -10,8 +10,10 @@ Modified 2021-07-09
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef LOGGING_WIDE
+#define ESCSEQ_WIDE
 #include <wchar.h>
 #endif
+#include "escseq.h"
 
 /* Character-width differences. */
 #ifdef LOGGING_WIDE
@@ -27,11 +29,11 @@ Modified 2021-07-09
 #endif
 
 /* Format. */
-#define __LOGGING_STYLE_INFO "\33[34m"
-#define __LOGGING_STYLE_SUCCESS "\33[32m"
-#define __LOGGING_STYLE_WARN "\33[33m\33[1m"
-#define __LOGGING_STYLE_FAIL "\33[31m\33[1m"
-#define __LOGGING_STYLE_OUT "\33[37m\33[7m"
+#define __LOGGING_STYLE_INFO FGBLUE
+#define __LOGGING_STYLE_SUCCESS FGGREEN
+#define __LOGGING_STYLE_WARN FGYELLOW BOLD
+#define __LOGGING_STYLE_FAIL FGRED BOLD
+#define __LOGGING_STYLE_OUT FGWHITE INVERT
 #define LOGGING_WHERE __LOGGING_PRIHS ":%d"
 #define __LOGGING_WHERE LOGGING_WHERE ": "
 

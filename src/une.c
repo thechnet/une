@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-07-08
+Modified 2021-07-11
 */
 
 /* Header-specific includes. */
@@ -72,7 +72,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     else
       fail(L"Expected error, but error undefined. Check UNE_NO_*.");
   }
-  une_context_free(context);
+  une_context_free(is.context);
   une_node_free(ast, false);
   une_tokens_free(tokens);
   return result;

@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-07-08
+Modified 2021-07-11
 */
 
 /* Header-specific includes. */
@@ -424,7 +424,7 @@ __une_builtin_fn(une_builtin_exist, une_result result)
 }
 
 /* Split a string into a list of substrings. */
-UNE_OSTREAM_PUSHER(__une_builtin_split_push, une_result);
+UNE_OSTREAM_PUSHER(__une_builtin_split_push, une_result)
 __une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_result delims)
 {
   /* Ensure input une_result_types are UNE_RT_STR and UNE_RT_LIST, where each member is of type UNE_RT_STR. */

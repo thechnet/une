@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-07-09
+Modified 2021-07-12
 */
 
 /* Header-specific includes. */
@@ -144,19 +144,19 @@ void une_result_represent(une_result result)
   switch (result.type) {
     
     case UNE_RT_INT:
-      wprintf(UNE_COLOR_NEUTRAL L"%lld", result.value._int);
+      wprintf(RESET L"%lld", result.value._int);
       break;
     
     case UNE_RT_FLT:
-      wprintf(UNE_COLOR_NEUTRAL L"%.3f", result.value._flt);
+      wprintf(RESET L"%.3f", result.value._flt);
       break;
     
     case UNE_RT_STR:
-      wprintf(UNE_COLOR_NEUTRAL L"%ls", result.value._wcs);
+      wprintf(RESET L"%ls", result.value._wcs);
       break;
     
     case UNE_RT_LIST:
-      wprintf(UNE_COLOR_NEUTRAL L"[", stdout);
+      wprintf(RESET L"[", stdout);
       UNE_UNPACK_RESULT_LIST(result, list, list_size);
       UNE_FOR_RESULT_LIST_ITEM(i, list_size) {
         if (list[i].type == UNE_RT_STR)

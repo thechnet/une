@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-07-08
+Modified 2021-07-09
 */
 
 /* Header-specific includes. */
@@ -13,10 +13,10 @@ Modified 2021-07-08
 /*
 Public parser interface.
 */
-UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token, une_token_create(__UNE_TT_none__), false);
-UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token, une_token_create(__UNE_TT_none__), false);
-UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token, une_token_create(__UNE_TT_none__), false);
-UNE_OSTREAM_PUSHER(push, une_node);
+UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token, une_token_create(__UNE_TT_none__), false)
+UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token, une_token_create(__UNE_TT_none__), false)
+UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token, une_token_create(__UNE_TT_none__), false)
+UNE_OSTREAM_PUSHER(push, une_node)
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 {
   /* Initialize une_parser_state. */

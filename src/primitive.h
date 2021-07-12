@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-07-08
+Modified 2021-07-12
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -24,6 +24,8 @@ Modified 2021-07-08
 // #define UNE_DEBUG_LOG_PARSE
 // #define UNE_DEBUG_LOG_FREE
 
+/* TO TOGGLE ESCAPE SEQUENCES, SEE ESCSEQ.H. */
+
 /* Universal includes. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,12 +34,18 @@ Modified 2021-07-08
 #include <stdbool.h>
 #include <assert.h>
 #include <stddef.h>
+
+#define ESCSEQ_WIDE
+#include "util/escseq.h"
+
 #define LOGGING_WIDE
 #define LOGGING_ID "une"
 #include "util/logging.h"
+
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_MEMDBG)
-#include "util/memdbg.h"
+#define MEMDBG_ENABLE
 #endif
+#include "util/memdbg.h"
 
 /*
 *** Constants.
@@ -60,17 +68,18 @@ Modified 2021-07-08
 #define UNE_SIZE_FILE_BUFFER 4096 /* une_file_read. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
 #define UNE_SIZE_BIF_SPLIT_TKS 16 /* une_buitlin_split. */
+#define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH 8 /* une_error_display. */
 
 /* Output Color Escape Sequences. */
-#define UNE_COLOR_SUCCESS L"\33[92m"
-#define UNE_COLOR_FAIL L"\33[31m"
-#define UNE_COLOR_NEUTRAL L"\33[0m"
-#define UNE_COLOR_HINT L"\33[90m"
-#define UNE_COLOR_TOKEN_TYPE L"\33[93m"
-#define UNE_COLOR_TOKEN_VALUE L"\33[92m"
-#define UNE_COLOR_NODE_BRANCH_TYPE L"\33[96m"
-#define UNE_COLOR_NODE_DATUM_TYPE L"\33[95m"
-#define UNE_COLOR_NODE_DATUM_VALUE L"\33[35m"
+#define UNE_COLOR_SUCCESS FGGREEN
+#define UNE_COLOR_FAIL BOLD FGRED
+#define UNE_COLOR_HINT FGBLACK
+#define UNE_COLOR_TOKEN_TYPE FGYELLOW
+#define UNE_COLOR_TOKEN_VALUE FGGREEN
+#define UNE_COLOR_NODE_BRANCH_TYPE FGCYAN
+#define UNE_COLOR_NODE_DATUM_TYPE FGMAGENTA
+#define UNE_COLOR_NODE_DATUM_VALUE BOLD FGMAGENTA
+#define UNE_COLOR_RESULT_TYPE FGBLUE
 
 /*
 *** Types.

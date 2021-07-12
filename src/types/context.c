@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-07-09
+Modified 2021-07-11
 */
 
 /* Header-specific includes. */
@@ -54,7 +54,10 @@ void une_context_free(une_context *context)
   /* Free context name. */
   free(context->name);
   
+  une_context *parent = context->parent;
   free(context);
+  if (parent != NULL)
+    une_context_free(parent);
   
   LOGFREE(L"une_context", L"", 0);
 }

@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2021-07-08
+Modified 2021-07-12
 */
 
 /* Header-specific includes. */
@@ -139,25 +139,25 @@ UNE_D(__une_static wchar_t *une_token_to_wcs(une_token token)
   wchar_t *str = malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));
   wcscpy(str, UNE_COLOR_TOKEN_TYPE);
   wcscat(str, une_token_type_to_wcs(token.type));
-  wcscat(str, UNE_COLOR_NEUTRAL);
+  wcscat(str, RESET);
   
   /* Write token value if it exists. */
   switch (token.type) {
     
     /* Numbers. */
     case UNE_TT_INT:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%lld" UNE_COLOR_NEUTRAL, token.value._int);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%lld" RESET, token.value._int);
       break;
     case UNE_TT_FLT:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%.3f" UNE_COLOR_NEUTRAL, token.value._flt);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%.3f" RESET, token.value._flt);
       break;
     
     /* Strings. */
     case UNE_TT_STR:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" UNE_COLOR_NEUTRAL, token.value._wcs);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" RESET, token.value._wcs);
       break;
     case UNE_TT_ID:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_NEUTRAL, token.value._wcs);
+      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, token.value._wcs);
       break;
     
   }

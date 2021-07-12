@@ -1,6 +1,6 @@
 /*
 stream.c - Une
-Modified 2021-07-08
+Modified 2021-07-11
 */
 
 /* Header-specific includes. */
@@ -71,6 +71,7 @@ void une_istream_wfile_reset(une_istream *istream)
 {
   istream->has_reached_end = false;
   istream->index = -1;
+  istream->data.wfile.wchar = L'\0';
   rewind(istream->data.wfile.file);
 }
 

@@ -25,9 +25,10 @@ if [ $release -eq 1 ]; then
   fi
 fi
 
-flags="-Wall "
+# -Wextra (-Wshadow?)
+flags="-pedantic -Wall -Wno-switch "
 if [ $compiler=="clang" ]; then
-  flags="${flags}-Wno-deprecated -Wno-switch "
+  flags="${flags}-Wno-deprecated "
 fi
 if [ $debug_gdb -eq 1 ]; then
   flags="${flags}-g3 "

@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-07-09
+Modified 2021-07-12
 */
 
 /* Import public Une interface. */
@@ -11,7 +11,7 @@ Modified 2021-07-09
 #include "tools.h"
 
 /* Implementation-specific macros. */
-#define UNE_E(msg) L"\33[31m\33[7m" msg L"\n\33[0m"
+#define UNE_E(msg) UNE_COLOR_FAIL msg L"\n" RESET
 #define UNE_S_INPUT L"Missing input file or string."
 #define UNE_C_INPUT 1
 
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
   
   bool read_from_file = true;
   
-  if (strcmp(argv[1],UNE_STDIN_SWITCH) == 0) {
+  if (strcmp(argv[1], UNE_STDIN_SWITCH) == 0) {
     if (argc < 3) {
       wprintf(UNE_E(UNE_S_INPUT));
       return UNE_C_INPUT;
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   }
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
-    wprintf(L"\nRESULT:");
+    wprintf(UNE_COLOR_RESULT_TYPE L"\nRESULT: ");
     une_result_represent(result);
     putwc(L'\n', stdout);
   }
