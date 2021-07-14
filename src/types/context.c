@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-07-11
+Modified 2021-07-14
 */
 
 /* Header-specific includes. */
@@ -33,7 +33,20 @@ une_context *une_context_create(wchar_t *name, size_t variables_size, size_t fun
 }
 
 /*
-Frees a une_context struct and its owned members.
+Frees all une_contexts, starting at youngest_child and up to, but not including, parent.
+*/
+void une_context_free_children(une_context *parent, une_context *youngest_child)
+{
+  une_context *context = youngest_child;
+  while (context != parent) {
+    une_context *older_context = context->parent;
+    une_context_free(context);
+    context = older_context;
+  }
+}
+
+/*
+Frees a une_context and its owned members.
 */
 void une_context_free(une_context *context)
 {
@@ -53,11 +66,8 @@ void une_context_free(une_context *context)
   
   /* Free context name. */
   free(context->name);
-  
-  une_context *parent = context->parent;
+
   free(context);
-  if (parent != NULL)
-    une_context_free(parent);
   
   LOGFREE(L"une_context", L"", 0);
 }

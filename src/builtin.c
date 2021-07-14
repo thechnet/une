@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-07-11
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -24,7 +24,7 @@ const une_builtin_type une_builtin_wcs_to_type(wchar_t *name)
     return UNE_BIF_PRINT;
   if (wcscmp(name, L"int") == 0)
     return UNE_BIF_TO_INT;
-  if (wcscmp(name, L"float") == 0)
+  if (wcscmp(name, L"flt") == 0)
     return UNE_BIF_TO_FLT;
   if (wcscmp(name, L"str") == 0)
     return UNE_BIF_TO_STR;
@@ -87,9 +87,9 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
       return 1;
     case UNE_BIF_SPLIT:
       return 2;
-    default:
-      fail(L"Unhandled type %d", type);
   }
+  
+  UNE_VERIFY_NOT_REACHED;
 }
 
 /*
@@ -97,12 +97,6 @@ Print a text representation of a une_result.
 */
 __une_builtin_fn(une_builtin_put, une_result result)
 {
-  /* Ensure une_result_type is data type. */
-  if (!UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-
   /* Print text representation. */
   une_result_represent(result);
   
@@ -114,9 +108,7 @@ Print a text representation of a une_result, always adding a newline at the end.
 */
 __une_builtin_fn(une_builtin_print, une_result result)
 {
-  une_result put_result = une_builtin_put(error, is, pos, result);
-  if (put_result.type == UNE_RT_ERROR)
-    return put_result;
+  une_builtin_put(error, is, pos, result);
   
   putwc(L'\n', stdout);
   
@@ -369,7 +361,7 @@ __une_builtin_fn(une_builtin_input, une_result result)
 
   /* Return result. */
   une_result str = une_result_create(UNE_RT_STR);
-  str.value._wcs = malloc(len*sizeof(*str.value._wcs));
+  str.value._wcs = malloc((len+1)*sizeof(*str.value._wcs));
   wcscpy(str.value._wcs, instr);
   free(instr);
   return str;
@@ -389,6 +381,10 @@ __une_builtin_fn(une_builtin_script, une_result result)
   /* Run script. */
   une_result out;
   char *path = une_wcs_to_str(result.value._wcs);
+  if (path == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
   FILE *check = fopen(path, UNE_FOPEN_RFLAGS);
   if (check == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
@@ -414,6 +410,10 @@ __une_builtin_fn(une_builtin_exist, une_result result)
 
   /* Check if file or folder exists. */
   char *path = une_wcs_to_str(result.value._wcs);
+  if (path == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
   struct stat sstat;
   int res = stat(path, &sstat);
   free(path);
@@ -448,6 +448,7 @@ __une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_re
   size_t tokens_amt = 0;
   une_result *tokens = malloc((UNE_SIZE_BIF_SPLIT_TKS+1)*sizeof(*tokens));
   une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_BIF_SPLIT_TKS+1, sizeof(*tokens), true);
+  tokens = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_result) = &__une_builtin_split_push;
   push(&out, une_result_create(UNE_RT_SIZE));
   /* Cache delimiter lengths for performance. */
@@ -497,6 +498,7 @@ __une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_re
 
   /* Wrap up. */
   free(delim_lens);
+  tokens = (une_result*)out.array; /* Reobtain up-to-date pointer. */
   tokens[0].value._int = tokens_amt;
   return (une_result){
     .type = UNE_RT_LIST,

@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-07-09
+Modified 2021-07-14
 */
 
 /* Header-specific includes. */
@@ -53,9 +53,13 @@ Create a wchar_t string from a char string.
 */
 wchar_t *une_str_to_wcs(char *str)
 {
-  size_t len = strlen(str);
-  wchar_t *wcs = malloc((len+1)*sizeof(*wcs));
-  swprintf(wcs, (len+1)*sizeof(*wcs), L"%hs", str);
+  size_t size = strlen(str)+1 /* NUL. */;
+  wchar_t *wcs = malloc(size*sizeof(*wcs));
+  mbstowcs(wcs, str, size);
+  if (errno == EILSEQ) {
+    free(wcs);
+    return NULL;
+  }
   return wcs;
 }
 
@@ -95,8 +99,7 @@ wchar_t *une_file_read(char *path)
       continue;
     if (cursor >= text_size-1) { /* NUL. */
       text_size *= 2;
-      wchar_t *_text = realloc(text, text_size *sizeof(*_text));
-      text = _text;
+      text = realloc(text, text_size *sizeof(*text));
     }
     if (c == WEOF)
       break;

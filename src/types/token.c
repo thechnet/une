@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2021-07-12
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -14,7 +14,7 @@ Token name table.
 */
 const wchar_t *une_token_table[] = {
   L"int",
-  L"float",
+  L"flt",
   L"id",
   L"str",
   L"(",
@@ -104,8 +104,9 @@ void une_tokens_free(une_token *tokens)
   /* Free each token. */
   size_t i = 0;
   while (true) {
+    une_token_type token_type = tokens[i].type;
     une_token_free(tokens[i]);
-    if (tokens[i].type == UNE_TT_EOF)
+    if (token_type == UNE_TT_EOF)
       break;
     i++;
   }
@@ -133,42 +134,50 @@ realistically happen, were this function used in a real-world
 environment, but since it is only used for debugging, I'm
 leaving this vulnerability in here.
 */
-UNE_D(__une_static wchar_t *une_token_to_wcs(une_token token)
+#ifdef UNE_DEBUG
+__une_static wchar_t *une_token_to_wcs(une_token token)
 {
   /* Write token type. */
   wchar_t *str = malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));
-  wcscpy(str, UNE_COLOR_TOKEN_TYPE);
-  wcscat(str, une_token_type_to_wcs(token.type));
-  wcscat(str, RESET);
+  size_t str_len = 0;
+  str_len += swprintf(str, UNE_SIZE_TOKEN_AS_WCS, UNE_COLOR_TOKEN_TYPE);
+  
+  /* Ensure une_token_type is valid. */
+  UNE_VERIFY_TOKEN_TYPE(token.type);
+  str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L"%ls", une_token_type_to_wcs(token.type));
+  str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, RESET);
   
   /* Write token value if it exists. */
   switch (token.type) {
     
     /* Numbers. */
     case UNE_TT_INT:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%lld" RESET, token.value._int);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%lld" RESET, token.value._int);
       break;
     case UNE_TT_FLT:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%.3f" RESET, token.value._flt);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%.3f" RESET, token.value._flt);
       break;
     
     /* Strings. */
     case UNE_TT_STR:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" RESET, token.value._wcs);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" RESET, token.value._wcs);
       break;
     case UNE_TT_ID:
-      swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, token.value._wcs);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, token.value._wcs);
       break;
     
   }
   
+  assert(str_len < UNE_SIZE_TOKEN_AS_WCS);
   return str;
-})
+}
+#endif /* UNE_DEBUG */
 
 /*
 Display the text representations of each item in a list of une_tokens.
 */
-UNE_D(void une_tokens_display(une_token *tokens)
+#ifdef UNE_DEBUG
+void une_tokens_display(une_token *tokens)
 {
   /* Ensure list of tokens exists. */
   if (tokens == NULL)
@@ -185,4 +194,5 @@ UNE_D(void une_tokens_display(une_token *tokens)
       break;
     i++;
   }
-})
+}
+#endif /* UNE_DEBUG */

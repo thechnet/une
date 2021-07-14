@@ -7,7 +7,7 @@
 set clear=1
 set release=0
 set debug=1
-set debug_gdb=1
+set debug_gdb=0
 
 :: gcc, clang
 set compiler=gcc
@@ -71,6 +71,7 @@ popd
 if %el% Equ 0 (
   if "%*" nEq "" (
     une %*
+    set el=!errorlevel!
   )
 )
 

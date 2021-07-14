@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-07-12
+Modified 2021-07-14
 */
 
 /* Header-specific includes. */
@@ -14,11 +14,11 @@ Modified 2021-07-12
 Result name table.
 */
 const wchar_t *une_result_table[] = {
-  L"VOID",
   L"ERROR",
   L"CONTINUE",
   L"BREAK",
-  L"SIZE"
+  L"SIZE",
+  L"VOID",
   L"INT",
   L"FLT",
   L"STR",
@@ -121,6 +121,7 @@ une_result *une_result_list_create(size_t items)
 /*
 Return a text representation of a une_result_type.
 */
+#ifdef UNE_DEBUG
 const wchar_t *une_result_type_to_wcs(une_result_type type)
 {
   /* Ensure valid une_result_type. */
@@ -128,6 +129,7 @@ const wchar_t *une_result_type_to_wcs(une_result_type type)
   
   return une_result_table[type-1];
 }
+#endif /* UNE_DEBUG */
 
 /*
 Print a text representation of a une_result.
@@ -136,10 +138,7 @@ As une_result needs to be representable in release builds, it instead has a *_re
 */
 void une_result_represent(une_result result)
 {
-  #ifndef UNE_DEBUG
-  if (!UNE_RESULT_TYPE_IS_DATA_TYPE(result.type))
-    fail(L"Cannot represent non-data result.");
-  #endif
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
 
   switch (result.type) {
     
@@ -200,6 +199,8 @@ Return 1 if the une_result is considered 'true', otherwise 0.
 */
 une_int une_result_is_true(une_result result)
 {
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
+  
   switch (result.type) {
     case UNE_RT_INT:
       return result.value._int == 0 ? 0 : 1;
@@ -211,7 +212,7 @@ une_int une_result_is_true(une_result result)
       return ((une_result*)result.value._vp)[0].value._int == 0 ? 0 : 1;
   }
   
-  UNE_VERIFY_NOT_REACHED;
+  return 0;
 }
 
 /*
@@ -305,7 +306,7 @@ une_result une_result_list_mul(une_result list, une_int count)
   UNE_UNPACK_RESULT_LIST(list, list_p, list_size);
 
   /* Create new list. */
-  une_result *new = une_result_list_create(count*list_size+1);
+  une_result *new = une_result_list_create(count*list_size);
 
   /* Populate new list. */
   for (size_t i=0; i<count; i++)

@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-07-12
+Modified 2021-07-15
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -10,6 +10,8 @@ Modified 2021-07-12
 *** Options.
 */
 #define UNE_DEBUG_MEMDBG
+#define UNE_DEBUG_SIZE 1
+#define UNE_DEBUG_RETURN_ERROR_TYPE
 
 // #define UNE_NO_LEX
 // #define UNE_NO_PARSE
@@ -56,6 +58,10 @@ Modified 2021-07-12
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
 
 /* Sizes. */
+#define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
+#define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
+#define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
+#if !defined(UNE_DEBUG) || !defined(UNE_DEBUG_SIZE)
 #define UNE_SIZE_NUM_LEN 32 /* Lexing, representing. */
 #define UNE_SIZE_STR_LEN 4096 /* Lexing. */
 #define UNE_SIZE_ID_LEN 32 /* Lexing. */
@@ -63,12 +69,21 @@ Modified 2021-07-12
 #define UNE_SIZE_FUNCTION_BUF 16 /* Context. */
 #define UNE_SIZE_TOKEN_BUF 4096 /* Lexing. */
 #define UNE_SIZE_SEQUENCE 256 /* Parsing. */
-#define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
-#define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FILE_BUFFER 4096 /* une_file_read. */
-#define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
 #define UNE_SIZE_BIF_SPLIT_TKS 16 /* une_buitlin_split. */
 #define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH 8 /* une_error_display. */
+#else
+#define UNE_SIZE_NUM_LEN UNE_DEBUG_SIZE
+#define UNE_SIZE_STR_LEN UNE_DEBUG_SIZE
+#define UNE_SIZE_ID_LEN UNE_DEBUG_SIZE
+#define UNE_SIZE_VARIABLE_BUF UNE_DEBUG_SIZE
+#define UNE_SIZE_FUNCTION_BUF UNE_DEBUG_SIZE
+#define UNE_SIZE_TOKEN_BUF UNE_DEBUG_SIZE
+#define UNE_SIZE_SEQUENCE UNE_DEBUG_SIZE
+#define UNE_SIZE_FILE_BUFFER UNE_DEBUG_SIZE
+#define UNE_SIZE_BIF_SPLIT_TKS UNE_DEBUG_SIZE
+#define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH UNE_DEBUG_SIZE
+#endif
 
 /* Output Color Escape Sequences. */
 #define UNE_COLOR_SUCCESS FGGREEN
@@ -114,17 +129,17 @@ typedef union _une_value {
 
 /* Internal Error Response and Logging Tools. */
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-#define LOGFREE(obj, str, num) log(L"%ls ('%ls', %lld)", obj, str, (une_int)num)
+#define LOGFREE(obj, str, num) out(L"%ls ('%ls', %lld)", obj, str, (une_int)num)
 #else
 #define LOGFREE(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
-#define LOGINTERPRET(str) log(L"interpret: %ls", str);
+#define LOGINTERPRET(str) out(L"interpret: %ls", str);
 #else
 #define LOGINTERPRET(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-#define LOGPARSE(object, nt) log(L"%ls [%ls]", object, nt);
+#define LOGPARSE(object, nt) out(L"%ls [%ls]", object, nt);
 #else
 #define LOGPARSE(...)
 #endif
@@ -134,10 +149,8 @@ typedef union _une_value {
 */
 #ifndef UNE_DEBUG
 #define __une_static static
-#define UNE_D(object)
 #else
 #define __une_static
-#define UNE_D(object) object
 #endif
 
 #endif /* !UNE_PRIMITIVE_H */

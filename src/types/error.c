@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-07-12
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -13,23 +13,21 @@ Modified 2021-07-12
 Error message table.
 */
 const wchar_t *une_error_message_table[] = {
-  L"No error defined!",
-  L"Unexpected character.",
+  L"No error defined! (Internal Error)",
   L"Syntax error.",
-  L"Cannot break outside loop.",
-  L"Cannot continue outside loop.",
+  L"Break outside loop.",
+  L"Continue outside loop.",
   L"Cannot assign to literal.",
-  L"Variable not defined.",
+  L"Symbol not defined.",
   L"Index out of range.",
   L"Zero division.",
   L"Unreal number.",
   L"Function already defined.",
-  L"Function not defined.",
   L"Wrong number of arguments.",
   L"File not found.",
   L"Encoding error.",
-  L"Type conflict.",
-  L"Unknown error!",
+  L"Type error.",
+  L"Unknown error! (Internal Error)",
 };
 
 /*
@@ -92,6 +90,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   /* Get context traceback. */
   une_context **contexts = malloc(UNE_SIZE_EXPECTED_TRACEBACK_DEPTH*sizeof(*contexts));
   une_ostream s_contexts = une_ostream_create((void*)contexts, UNE_SIZE_EXPECTED_TRACEBACK_DEPTH, sizeof(*contexts), true);
+  contexts = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_context*) = &__une_error_display_ctx_push;
   une_context *current_context = is->context;
   while (current_context != NULL) {
@@ -129,6 +128,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   wprintf(L" (%hs @ %d)", error->file, error->line);
   #endif
   wprintf(L":" RESET L"\n" RESET);
+  contexts = (une_context**)s_contexts.array; /* Reobtain up-to-date pointer. */
   for (size_t i=s_contexts.index; i>0; i--)
     wprintf(BOLD L"(In %ls)" RESET L"\n", contexts[i-1]->name);
   free(contexts);

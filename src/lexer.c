@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-07-09
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -97,22 +97,24 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   /* Initialize token buffer. */
   une_token *tokens = malloc(UNE_SIZE_TOKEN_BUF*sizeof(*tokens));
   une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_TOKEN_BUF, sizeof(*tokens), true);
+  tokens = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_token) = &__une_lex_push;
   une_token *(*tkpeek)(une_ostream*, ptrdiff_t) = &__une_lex_out_peek;
   
   while (true) {
     /* Check for error. */
     if (error->type != __UNE_ET_none__) {
+      tokens = (une_token*)out.array; /* Reobtain up-to-date pointer. */
       for (ptrdiff_t i=0; i<out.index; i++) /* This doesn't try to free __UNE_TT_none__ because out.index points to the index of the last item added. */
         une_token_free(tokens[i]);
       free(tokens);
-      tokens = NULL;
+      out.array = NULL; /* The ostream pointer is always up-to-date. */
       break;
     }
     
     /* Expected end of file. */
     if (ls->now(&ls->in) == WEOF) {
-      if (out.index > 0 && tkpeek(&out, -1)->type != UNE_TT_NEW)
+      if (out.index > -1 && tkpeek(&out, -1)->type != UNE_TT_NEW)
         push(&out, (une_token){
           .type = UNE_TT_NEW,
           .pos = (une_position){ .start = ls->in.index, .end = ls->in.index+1 },
@@ -190,7 +192,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     }
     
     /* Illegal character. */
-    *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){ls->in.index, ls->in.index+1}));
     push(&out, une_token_create(__UNE_TT_none__));
     continue;
   }
@@ -199,6 +201,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   if (ls->read_from_file)
     une_istream_wfile_free(ls->in);
   
+  tokens = (une_token*)out.array; /* Reobtain up-to-date pointer. */
   return tokens;
 }
 
@@ -300,7 +303,7 @@ __une_lexer(une_lex_str)
     
     /* Premature end of stream. */
     if (ls->now(&ls->in) == WEOF) {
-      *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){ls->in.index, ls->in.index+1}));
       free(buffer);
       return une_token_create(__UNE_TT_none__);
     }
@@ -319,7 +322,7 @@ __une_lexer(une_lex_str)
         case L'\n':
           continue;
         default: {
-          *error = UNE_ERROR_SET(UNE_ET_UNEXPECTED_CHARACTER, ((une_position){ls->in.index, ls->in.index+1}));
+          *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){ls->in.index, ls->in.index+1}));
           free(buffer);
           return une_token_create(__UNE_TT_none__);
         }

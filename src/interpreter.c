@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-07-11
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -86,13 +86,13 @@ Call user-defined function.
 __une_static une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args)
 {
   /* Create function context. */
-  une_context *context = une_context_create(fn->name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
-  context->parent = is->context;
-  is->context = context;
+  une_context *parent = is->context;
+  is->context = une_context_create(fn->name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
+  is->context->parent = parent;
 
   /* Define parameters. */
   for (size_t i=0; i<fn->params_count; i++) {
-    une_variable *var = une_variable_create(context, fn->params[i]);
+    une_variable *var = une_variable_create(is->context, fn->params[i]);
     var->content = une_result_copy(args[i]);
   }
 
@@ -102,8 +102,8 @@ __une_static une_result une_interpret_call_def(une_error *error, une_interpreter
 
   /* Return to parent context. */
   if (result.type != UNE_RT_ERROR) {
-    is->context = context->parent;
-    une_context_free(context);
+    une_context_free_children(parent, is->context);
+    is->context = parent;
   }
   return result;
 }
@@ -358,11 +358,6 @@ __une_interpreter(une_interpret_equ)
   une_result_free(left);
   une_result_free(right);
   
-  /* Return error if the results can't be compared, otherwise return the result of the comparison. */
-  if (is_equal == -1) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
   return (une_result){
     .type = UNE_RT_INT,
     .value._int = is_equal
@@ -1021,7 +1016,7 @@ __une_interpreter(une_interpret_set_idx)
   else
     var = une_variable_find(is->context, name);
   if (var == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_VARIABLE_NOT_DEFINED, node->content.branch.a->pos);
+    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
   if (var->content.type != UNE_RT_LIST) {
@@ -1062,7 +1057,7 @@ __une_interpreter(une_interpret_get)
   /* Find variable in all contexts. */
   une_variable *var = une_variable_find_global(is->context, name);
   if (var == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_VARIABLE_NOT_DEFINED, node->content.branch.a->pos);
+    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -1173,7 +1168,7 @@ __une_interpreter(une_interpret_call)
   else {
     fn = une_function_find_global(is->context, name);
     if (fn == NULL) {
-      *error = UNE_ERROR_SET(UNE_ET_FUNCTION_NOT_DEFINED, node->content.branch.a->pos);
+      *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
       return une_result_create(UNE_RT_ERROR);
     }
     num_of_params = fn->params_count;
@@ -1182,7 +1177,7 @@ __une_interpreter(une_interpret_call)
   /* Get arguments and compare number of arguments to number of parameters. */
   UNE_UNPACK_NODE_LIST(node->content.branch.b, args_n, args_count);
   if (args_count != num_of_params) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ARGC, node->content.branch.b->pos);
+    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ARG_COUNT, node->content.branch.b->pos);
     return une_result_create(UNE_RT_ERROR);
   }
 

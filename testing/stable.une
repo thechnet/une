@@ -1,0 +1,157 @@
+# cop
+1.1 ? 1 : 0
+"str" ? 1 : 0
+[1] ? 1 : 0
+1.0 == 1 ? "yes" : "no"
+1.0 != 1.0 ? "yes" : "no"
+[1] == [1, 2] ? "yes" : "no"
+[1, 0] == [!1, 0] ? "yes" : "no"
+
+# builtin
+print(1.1) # represent result
+print("str")
+print([1])
+print([1, "str"])
+int(1)
+int(1.0)
+flt(1)
+flt(1.0)
+flt("1.0")
+str(1)
+str(1.1)
+str("str")
+len([1, 2, 3])
+sleep(1)
+chr(65)
+write("script.une", "return 46")
+input("Input > ")
+script("script.une")
+exist("script.une")
+split("1.2.3", ["."])
+put("put\n")
+
+# gtr
+2>1
+2>1.0
+2.0>1
+2.0>1.0
+"string">"str"
+[1,2,3]>[1,2]
+
+# geq
+1>=1
+1>=1.0
+1.0>=1
+1.0>=1.0
+"str">="str"
+[1,2]>=[1,2]
+
+# lss
+2<1
+2<1.0
+2.0<1
+2.0<1.0
+"string"<"str"
+[1,2,3]<[1,2]
+
+# leq
+1<=1
+1<=1.0
+1.0<=1
+1.0<=1.0
+"str"<="str"
+[1,2]<=[1,2]
+
+# add
+1+1
+1+1.0
+1.0+1
+1.0+1.0
+"str"+"str"
+[1]+[2]
+
+# sub
+1-1
+1-1.0
+1.0-1
+1.0-1.0
+
+# mul
+1*1
+1*1.0
+1.0*1
+1.0*1.0
+2*"str"
+"str"*2
+2*[1]
+[1]*2
+
+# div
+1/1
+1/1.0
+1.0/1
+1.0/1.0
+
+# fdiv
+1//1
+1//1.0
+1.0//1
+1.0//1.0
+
+# mod
+1%1
+1%1.0
+1.0%1
+1.0%1.0
+
+# pow
+1**1
+1**1.0
+1.0**1
+1.0**1.0
+
+# neg
+-1
+-1.0
+
+# set
+a=[0,2,3]
+global b=[0,2,3]
+
+# set_idx
+a[0]=1
+global b[0]=1
+
+# get
+a
+
+# get_idx
+[0][0]
+"str"[0]
+
+# def
+def fn1(arg) { return arg }
+def fn2() { return }
+
+# call, return
+fn1(1)
+fn2()
+
+# for, break, continue
+for i from 0 till 3 i
+for i from 3 till 0 continue
+for i from 0 till 0 i
+for i from 0 till 0 break
+
+# while
+i=3
+while i>0 i=i-1
+while i>0 break
+
+# if
+if 1 {1}
+if 0 {0}
+if 1 {1} elif 0 {0} else {0}
+if 0 {0} elif 1 {1} else {0}
+if 0 {0} elif 0 {0} else {1}
+if 0 {0} elif 0 {0} else {0}

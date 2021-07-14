@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-07-11
+Modified 2021-07-14
 */
 
 /* Header-specific includes. */
@@ -325,9 +325,9 @@ static inline int memdbg_current_second(void)
       memdbg_init();\
     __memdbg_allocations_padding_check(file, line);\
     if (memory_ == NULL)\
-      fail_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
+      info_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
     if (memdbg_allocation_find(memory_) == memdbg_allocations_size)\
-      fail_at(file, line, MEMDBG_MSG_UNOWNED_MEM);\
+      info_at(file, line, MEMDBG_MSG_UNOWNED_MEM);\
     type_ memory_new = call_;\
     size_t size = (newsize_)*sizeof(*memory_new);\
     memory_new = realloc(memory_new, size+MEMDBG_PADDING_SIZE);\
@@ -348,9 +348,9 @@ static inline int memdbg_current_second(void)
     if (memdbg_allocations == NULL)\
       memdbg_init();\
     if (memory_ == NULL)\
-      fail_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
+      info_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
     if (memdbg_allocation_find(memory_) == memdbg_allocations_size)\
-      fail_at(file, line, MEMDBG_MSG_UNOWNED_MEM);\
+      info_at(file, line, MEMDBG_MSG_UNOWNED_MEM);\
     type_ return_value = call_;\
     __memdbg_allocations_padding_check(file, line);\
     return return_value;\

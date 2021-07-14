@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2021-07-05
+Modified 2021-07-14
 */
 
 #ifndef UNE_CONTEXT_H
@@ -39,6 +39,7 @@ Function interface function template.
 #define __une_function_itf(__id) une_function *(__id)(une_context *context, wchar_t *name)
 
 une_context *une_context_create(wchar_t *name, size_t variables_size, size_t functions_size);
+void une_context_free_children(une_context *parent, une_context *youngest_child);
 void une_context_free(une_context *context);
 
 __une_variable_itf(une_variable_create);

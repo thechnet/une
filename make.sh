@@ -6,7 +6,7 @@
 # 1, 0
 clear=1
 release=0
-debug=1
+debug=0
 debug_gdb=0
 
 # gcc, clang
@@ -71,6 +71,7 @@ el=$?
 if [ $el -eq 0 ]; then
   if [ -n "$*" ]; then
     ./une $*
+    el=$?
   fi
 fi
 

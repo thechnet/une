@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-07-11
+Modified 2021-07-14
 */
 
 /* Header-specific includes. */
@@ -72,8 +72,20 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     else
       fail(L"Expected error, but error undefined. Check UNE_NO_*.");
   }
-  une_context_free(is.context);
+  #ifdef UNE_DEBUG_RETURN_ERROR_TYPE
+  une_error_type error_type = error.type;
+  #endif /* UNE_DEBUG_RETURN_ERROR_TYPE */
+  une_context_free_children(NULL, is.context);
   une_node_free(ast, false);
   une_tokens_free(tokens);
+  #ifdef UNE_DEBUG_RETURN_ERROR_TYPE
+  if (error.type != __UNE_ET_none__) {
+    warn(L"Returning error type instead of result.");
+    return (une_result){
+      .type = UNE_RT_INT,
+      .value._int = (une_int)error_type
+    };
+  }
+  #endif /* UNE_DEBUG_RETURN_ERROR_TYPE */
   return result;
 }
