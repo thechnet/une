@@ -7,10 +7,9 @@ Modified 2021-07-15
 #include "builtin.h"
 
 /* Implementation-specific includes. */
-#include "tools.h"
 #include <time.h>
+#include "tools.h"
 #include "une.h"
-#include <sys/stat.h>
 #include "stream.h"
 
 /*
@@ -129,11 +128,17 @@ __une_builtin_fn(une_builtin_to_int, une_result result)
         .type = UNE_RT_INT,
         .value._int = (une_int)result.value._flt
       };
-    case UNE_RT_STR:
+    case UNE_RT_STR: {
+      une_int int_;
+      if (!une_wcs_to_une_int(result.value._wcs, &int_)) {
+        *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
+        return une_result_create(UNE_RT_ERROR);
+      }
       return (une_result){
         .type = UNE_RT_INT,
-        .value._int = une_wcs_to_une_int(result.value._wcs)
+        .value._flt = int_
       };
+    }
   }
   
   /* Illegal input une_result_type. */
@@ -155,11 +160,17 @@ __une_builtin_fn(une_builtin_to_flt, une_result result)
       };
     case UNE_RT_FLT:
       return une_result_copy(result);
-    case UNE_RT_STR:
+    case UNE_RT_STR: {
+      une_flt flt;
+      if (!une_wcs_to_une_flt(result.value._wcs, &flt)) {
+        *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
+        return une_result_create(UNE_RT_ERROR);
+      }
       return (une_result){
         .type = UNE_RT_FLT,
-        .value._flt = une_wcs_to_une_flt(result.value._wcs)
+        .value._flt = flt
       };
+    }
   }
   
   /* Illegal input une_result_type. */
@@ -291,19 +302,23 @@ __une_builtin_fn(une_builtin_read, une_result result)
     return une_result_create(UNE_RT_ERROR);
   }
   
-  /* Read file. */
+  /* Check if file exists. */
   char *path = une_wcs_to_str(result.value._wcs);
   if (path == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
     return une_result_create(UNE_RT_ERROR);
   }
-  une_result str = une_result_create(UNE_RT_STR);
-  str.value._wcs = une_file_read(path);
-  free(path);
-  if (str.value._wcs == NULL) {
+  if (!une_file_exists(path)) {
+    free(path);
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
     return une_result_create(UNE_RT_ERROR);
   }
+  
+  /* Read file. */
+  une_result str = une_result_create(UNE_RT_STR);
+  str.value._wcs = une_file_read(path);
+  assert(str.value._wcs != NULL);
+  free(path);
   return str;
 }
 
@@ -378,21 +393,20 @@ __une_builtin_fn(une_builtin_script, une_result result)
     return une_result_create(UNE_RT_ERROR);
   }
 
-  /* Run script. */
-  une_result out;
+  /* Check if file exists. */
   char *path = une_wcs_to_str(result.value._wcs);
   if (path == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
     return une_result_create(UNE_RT_ERROR);
   }
-  FILE *check = fopen(path, UNE_FOPEN_RFLAGS);
-  if (check == NULL) {
+  if (!une_file_exists(path)) {
+    free(path);
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
-    out = une_result_create(UNE_RT_ERROR);
-  } else {
-    fclose(check);
-    out = une_run(true, path, NULL);
+    return une_result_create(UNE_RT_ERROR);
   }
+
+  /* Run script. */
+  une_result out = une_run(true, path, NULL);
   free(path);
   return out;
 }
@@ -414,12 +428,11 @@ __une_builtin_fn(une_builtin_exist, une_result result)
     *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
     return une_result_create(UNE_RT_ERROR);
   }
-  struct stat sstat;
-  int res = stat(path, &sstat);
+  bool exists = une_file_or_folder_exists(path);
   free(path);
   return (une_result){
     .type = UNE_RT_INT,
-    .value._int = !res
+    .value._int = (une_int)exists
   };
 }
 

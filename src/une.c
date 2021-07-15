@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-07-14
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -24,6 +24,14 @@ Run a Une program.
 */
 une_result une_run(bool read_from_file, char *path, wchar_t *text)
 {
+  /* Warnings */
+  #ifdef UNE_DEBUG_SIZE
+  warn("UNE_DEBUG_SIZE enabled.");
+  #endif /* UNE_DEBUG_SIZE */
+  #ifdef UNE_RETURN_ERROR_TYPE
+  warn("UNE_RETURN_ERROR_TYPE enabled.");
+  #endif /* UNE_RETURN_ERROR_TYPE */
+  
   /* Setup. */
   une_error error = une_error_create();
   
@@ -67,25 +75,21 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   
   /* Wrap up. */
   if (tokens == NULL || ast == NULL || result.type == UNE_RT_ERROR) {
-    if (error.type != __UNE_ET_none__)
-      une_error_display(&error, &ls, &is);
-    else
-      fail(L"Expected error, but error undefined. Check UNE_NO_*.");
+    assert(error.type != __UNE_ET_none__);
+    une_error_display(&error, &ls, &is);
   }
-  #ifdef UNE_DEBUG_RETURN_ERROR_TYPE
+  #ifdef UNE_RETURN_ERROR_TYPE
   une_error_type error_type = error.type;
-  #endif /* UNE_DEBUG_RETURN_ERROR_TYPE */
+  #endif /* UNE_RETURN_ERROR_TYPE */
   une_context_free_children(NULL, is.context);
   une_node_free(ast, false);
   une_tokens_free(tokens);
-  #ifdef UNE_DEBUG_RETURN_ERROR_TYPE
-  if (error.type != __UNE_ET_none__) {
-    warn(L"Returning error type instead of result.");
+  #ifdef UNE_RETURN_ERROR_TYPE
+  if (error.type != __UNE_ET_none__)
     return (une_result){
       .type = UNE_RT_INT,
       .value._int = (une_int)error_type
     };
-  }
-  #endif /* UNE_DEBUG_RETURN_ERROR_TYPE */
+  #endif /* UNE_RETURN_ERROR_TYPE */
   return result;
 }

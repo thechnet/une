@@ -1,6 +1,6 @@
 /*
 stream.c - Une
-Modified 2021-07-11
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -50,8 +50,7 @@ une_istream une_istream_wfile_create(char *path)
       .wchar = L'\0'
     }
   };
-  if (istream.data.wfile.file == NULL)
-    fail(L"File not found.");
+  assert(istream.data.wfile.file != NULL);
   return istream;
 }
 

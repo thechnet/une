@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-07-14
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -9,43 +9,28 @@ Modified 2021-07-14
 /* Implementation-specific includes. */
 #include <string.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 /*
 Convert a wchar_t string into a une_int integer.
-This function does no error-checking and should only be used in a setting where
-we already know the string is an integer number.
 */
-une_int une_wcs_to_une_int(wchar_t *str)
+bool une_wcs_to_une_int(wchar_t *wcs, une_int* dest)
 {
-  une_int out = 0;
-  for (size_t i=0; str[i] != L'\0'; i++) {
-    if (str[i] < L'0' || str[i] > L'9')
-      return 0;
-    out = 10 * out + str[i] - L'0';
-  }
-  return out;
+  wchar_t *wcs_end = wcs+wcslen(wcs);
+  wchar_t *int_end;
+  *dest = wcstoll(wcs, &int_end, 10);
+  return int_end == wcs_end ? true : false;
 }
 
 /*
-Convert a wchar_t string into a une_flt floating point number.
-This function does no error-checking and should only be used in a setting where
-we already know the string is a floating point number.
+Convert a wchar_t string into a une_flt floating pointer number.
 */
-une_flt une_wcs_to_une_flt(wchar_t *str)
+bool une_wcs_to_une_flt(wchar_t *wcs, une_flt* dest)
 {
-  une_flt out = 0;
-  for (int var=1, i=0; str[i] != L'\0'; i++) {
-    if ((str[i] < L'0' || str[i] > L'9') /* Not a digit. */ && (str[i] != L'.' || var != 1))
-      return 0; /* Second dot. */
-    if (var != 1)
-      var *= 10;
-    if (str[i] == L'.') {
-      var *= 10;
-      i++;
-    }
-    out = (var != 1 ? 1 : 10) * out + ((double)(str[i] - L'0')) / var;
-  }
-  return out;
+  wchar_t *wcs_end = wcs+wcslen(wcs);
+  wchar_t *flt_end;
+  *dest = wcstod(wcs, &flt_end);
+  return flt_end == wcs_end ? true : false;
 }
 
 /*
@@ -79,7 +64,27 @@ char *une_wcs_to_str(wchar_t *wcs)
 }
 
 /*
-Opens a UTF-8 file at 'path' and returns its text contents as wchar_t string.
+Check if a file exists.
+*/
+bool une_file_exists(char *path)
+{
+  struct stat path_stat;
+  int does_not_exist = stat(path, &path_stat);
+  return (does_not_exist || S_ISDIR(path_stat.st_mode)) ? false : true;
+}
+
+/*
+Check if a file or folder exists.
+*/
+bool une_file_or_folder_exists(char *path)
+{
+  struct stat path_stat;
+  int does_not_exist = stat(path, &path_stat);
+  return does_not_exist ? false : true;
+}
+
+/*
+Open a UTF-8 file at 'path' and return its text contents as wchar_t string.
 */
 wchar_t *une_file_read(char *path)
 {

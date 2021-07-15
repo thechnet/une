@@ -25,7 +25,7 @@ const wchar_t *une_error_message_table[] = {
   L"Function already defined.",
   L"Wrong number of arguments.",
   L"File not found.",
-  L"Encoding error.",
+  L"Encoding or conversion error.",
   L"Type error.",
   L"Unknown error! (Internal Error)",
 };

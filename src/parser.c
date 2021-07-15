@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-07-14
+Modified 2021-07-15
 */
 
 /* Header-specific includes. */
@@ -252,6 +252,8 @@ __une_parser(une_parse_index)
     if (right == NULL)
       return NULL;
     if (now(&ps->in).type != UNE_TT_RSQB) {
+      une_node_free(right, false);
+      une_node_free(left, false);
       *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
       return NULL;
     }
@@ -450,7 +452,7 @@ __une_parser(une_parse_for)
     return NULL;
   }
   
-  /* To. */
+  /* Till. */
   if (now(&ps->in).type != UNE_TT_TILL) {
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
     une_node_free(counter, false);
@@ -693,6 +695,7 @@ __une_parser(une_parse_set_expstmt)
 
       if (now(&ps->in).type != UNE_TT_RSQB) {
         une_node_free(varset, false);
+        *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
         return NULL;
       }
       pull(&ps->in);

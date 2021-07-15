@@ -6,7 +6,7 @@
 # 1, 0
 clear=1
 release=0
-debug=0
+debug=1
 debug_gdb=0
 
 # gcc, clang

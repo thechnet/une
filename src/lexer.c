@@ -230,10 +230,12 @@ __une_lexer(une_lex_num)
   if (ls->now(&ls->in) != L'.') {
     /* Return integer. */
     buffer[ls->in.index-idx_start] = L'\0';
+    une_int int_;
+    assert(une_wcs_to_une_int(buffer, &int_));
     une_token tk = (une_token){
       .type = UNE_TT_INT,
       .pos = (une_position){idx_start, ls->in.index},
-      .value._int = une_wcs_to_une_int(buffer),
+      .value._int = int_
     };
     free(buffer);
     return tk;
@@ -267,10 +269,12 @@ __une_lexer(une_lex_num)
   
   /* Return floating point number. */
   buffer[ls->in.index-idx_start] = L'\0';
+  une_flt flt;
+  assert(une_wcs_to_une_flt(buffer, &flt));
   une_token tk = (une_token){
     .type = UNE_TT_FLT,
     .pos = (une_position){idx_start, ls->in.index},
-    .value._flt = une_wcs_to_une_flt(buffer),
+    .value._flt = flt
   };
   free(buffer);
   return tk;

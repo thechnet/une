@@ -9,9 +9,9 @@ Modified 2021-07-15
 /*
 *** Options.
 */
+#define UNE_RETURN_ERROR_TYPE
 #define UNE_DEBUG_MEMDBG
 #define UNE_DEBUG_SIZE 1
-#define UNE_DEBUG_RETURN_ERROR_TYPE
 
 // #define UNE_NO_LEX
 // #define UNE_NO_PARSE
@@ -61,7 +61,7 @@ Modified 2021-07-15
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
 #define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
-#if !defined(UNE_DEBUG) || !defined(UNE_DEBUG_SIZE)
+#if !defined(UNE_DEBUG_SIZE)
 #define UNE_SIZE_NUM_LEN 32 /* Lexing, representing. */
 #define UNE_SIZE_STR_LEN 4096 /* Lexing. */
 #define UNE_SIZE_ID_LEN 32 /* Lexing. */

@@ -1,6 +1,6 @@
 /*
 memdbg.h - Une
-Modified 2021-07-11
+Modified 2021-07-15
 */
 
 #ifndef MEMDBG_H
@@ -32,17 +32,11 @@ implementation from mapping to themselves.
 #undef memset
 #define memset(str, c, n) __memdbg_memset(__FILE__, __LINE__, str, c, n);
 
-#else
+#else /* MEMDBG_ENABLE */
 
 #define padchk(memory)
 #define ARR(arr, idx) arr[idx]
 
-#endif
-
-/*
-(UNFINISHED, DO NOT USE) Regular expression to convert array notation to ARR() notation:
-Find: \b((?<!\w\s)|return )((?:[_a-zA-Z]\w*(?:\s*(?:\.|->)\s*[_a-zA-Z]\w*)*\s*\[.+?\]\s*(?:\.|->)\s*)*)(?:([_a-zA-Z]\w*(?:\s*(?:\.|->)\s*[_a-zA-Z]\w*)*)\s*\[(.+?)\])
-Replace: $1ARR($2$3, $4)
-*/
+#endif /* !MEMDBG_ENABLE */
 
 #endif /* !MEMDBG_H */
