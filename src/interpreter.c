@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-07-15
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -58,8 +58,7 @@ Public interpreter interface.
 */
 une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *node)
 {
-  /* Assert une_node_type can be looked up. */
-  UNE_VERIFY_LUT_NODE_TYPE(node->type);
+  assert(UNE_NODE_TYPE_IS_IN_LUT(node->type));
   
   LOGINTERPRET(une_node_type_to_wcs(node->type));
   
@@ -113,6 +112,7 @@ Call built-in function.
 */
 __une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes)
 {
+  assert(UNE_BUILTIN_TYPE_IS_VALID(type));
   switch (type) {
     case UNE_BIF_PUT:
       return une_builtin_put(error, is, arg_nodes[1]->pos, args[0]);
@@ -143,10 +143,9 @@ __une_static une_result une_interpret_call_builtin(une_error *error, une_interpr
     case UNE_BIF_EXIST:
       return une_builtin_exist(error, is, arg_nodes[1]->pos, args[0]);
     case UNE_BIF_SPLIT:
+    default:
       return une_builtin_split(error, is, arg_nodes[1]->pos, args[0], arg_nodes[2]->pos, args[1]);
   }
-  
-  UNE_VERIFY_NOT_REACHED;
 }
 
 /*
@@ -1106,7 +1105,7 @@ __une_interpreter(une_interpret_get_idx)
     default:
       une_result_free(base);
       *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-      return une_result_create(UNE_RT_VOID);
+      return une_result_create(UNE_RT_ERROR);
   
   }
 

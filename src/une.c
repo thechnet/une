@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-07-15
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -25,23 +25,23 @@ Run a Une program.
 une_result une_run(bool read_from_file, char *path, wchar_t *text)
 {
   /* Warnings */
-  #ifdef UNE_DEBUG_SIZE
-  warn("UNE_DEBUG_SIZE enabled.");
-  #endif /* UNE_DEBUG_SIZE */
-  #ifdef UNE_RETURN_ERROR_TYPE
-  warn("UNE_RETURN_ERROR_TYPE enabled.");
-  #endif /* UNE_RETURN_ERROR_TYPE */
+  #ifdef UNE_DEBUG_SIZES
+  warn("UNE_DEBUG_SIZES enabled.");
+  #endif
+  #ifdef UNE_DEBUG_REPORT
+  warn("UNE_DEBUG_REPORT enabled.");
+  #endif
   
   /* Setup. */
   une_error error = une_error_create();
   
   /* Lex. */
   une_lexer_state ls = une_lexer_state_create(read_from_file, path, text);
-  #ifndef UNE_NO_LEX
-  une_token *tokens = une_lex(&error, &ls);
-  #else
   une_token *tokens = NULL;
+  #ifndef UNE_NO_LEX
+  tokens = une_lex(&error, &ls);
   #endif
+  
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
   une_tokens_display(tokens);
   wprintf(L"\n\n");
@@ -54,6 +54,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   if (tokens != NULL)
     ast = une_parse(&error, &ps, tokens);
   #endif
+  
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
   wchar_t *node_as_wcs = une_node_to_wcs(ast);
   wprintf(node_as_wcs);
@@ -66,11 +67,14 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   une_context *context = une_context_create(context_name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
   if (ls.read_from_file)
     free(context_name);
+  
   une_interpreter_state is = une_interpreter_state_create(context);
-  une_result result = une_result_create(UNE_RT_VOID);
+  une_result result = une_result_create(UNE_RT_ERROR);
   #ifndef UNE_NO_INTERPRET
   if (ast != NULL)
     result = une_interpret(&error, &is, ast);
+  #else
+  result = une_result_create(UNE_RT_VOID);
   #endif
   
   /* Wrap up. */
@@ -78,18 +82,20 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     assert(error.type != __UNE_ET_none__);
     une_error_display(&error, &ls, &is);
   }
-  #ifdef UNE_RETURN_ERROR_TYPE
-  une_error_type error_type = error.type;
-  #endif /* UNE_RETURN_ERROR_TYPE */
+  
   une_context_free_children(NULL, is.context);
   une_node_free(ast, false);
   une_tokens_free(tokens);
-  #ifdef UNE_RETURN_ERROR_TYPE
-  if (error.type != __UNE_ET_none__)
+  
+  #ifdef UNE_DEBUG_REPORT
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(result);
     return (une_result){
-      .type = UNE_RT_INT,
-      .value._int = (une_int)error_type
+      .type = UNE_RT_ERROR,
+      .value._int = (une_int)error.type+UNE_DEBUG_REPORT_ERROR_TYPE_OFFSET
     };
-  #endif /* UNE_RETURN_ERROR_TYPE */
+  }
+  #endif /* UNE_DEBUG_REPORT */
+  
   return result;
 }

@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2021-07-14
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -213,8 +213,7 @@ Get node name from node type.
 #ifdef UNE_DEBUG
 __une_static const wchar_t *une_node_type_to_wcs(une_node_type type)
 {
-  /* Ensure une_node_type is valid. */
-  UNE_VERIFY_NODE_TYPE(type);
+  assert(UNE_NODE_TYPE_IS_VALID(type));
   
   return une_node_table[type-1];
 }
@@ -241,8 +240,7 @@ wchar_t *une_node_to_wcs(une_node *node)
   }
   buffer[0] = L'\0';
   
-  /* Ensure une_node_type is valid. */
-  UNE_VERIFY_NODE_TYPE(node->type);
+  assert(UNE_NODE_TYPE_IS_VALID(node->type));
   
   /* Populate output buffer. */
   switch (node->type) {
@@ -287,12 +285,12 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_INT:
     case UNE_NT_SIZE:
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" RESET L":"
-        UNE_COLOR_NODE_DATUM_VALUE L"%lld" RESET,
+        UNE_COLOR_NODE_DATUM_VALUE UNE_PRINTF_UNE_INT RESET,
         une_node_type_to_wcs(node->type), node->content.value._int);
       break;
     case UNE_NT_FLT:
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" RESET L":"
-        UNE_COLOR_NODE_DATUM_VALUE L"%.3f" RESET,
+        UNE_COLOR_NODE_DATUM_VALUE UNE_PRINTF_UNE_FLT RESET,
         une_node_type_to_wcs(node->type), node->content.value._flt);
       break;
     

@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Modified 2021-07-07
+Modified 2021-07-17
 */
 
 #ifndef UNE_LEXER_H
@@ -11,6 +11,7 @@ Modified 2021-07-07
 #include "types/error.h"
 #include "types/lexer_state.h"
 #include "types/token.h"
+#include "tools.h"
 
 /*
 *** Interface.

@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-07-15
+Modified 2021-07-17
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -9,9 +9,9 @@ Modified 2021-07-15
 /*
 *** Options.
 */
-#define UNE_RETURN_ERROR_TYPE
 #define UNE_DEBUG_MEMDBG
-#define UNE_DEBUG_SIZE 1
+#define UNE_DEBUG_SIZES
+#define UNE_DEBUG_REPORT
 
 // #define UNE_NO_LEX
 // #define UNE_NO_PARSE
@@ -56,13 +56,20 @@ Modified 2021-07-15
 #define UNE_STDIN_SWITCH "-s"
 #define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
+#define UNE_DEBUG_SIZES_SIZE 1
+#define UNE_DEBUG_REPORT_FILE_RETURN "une_report_return.txt"
+#define UNE_DEBUG_REPORT_FILE_STATUS "une_report_status.txt"
+#define UNE_DEBUG_REPORT_ERROR_TYPE_OFFSET 10
+#define UNE_PRINTF_UNE_FLT L"%.3f"
+#define UNE_PRINTF_UNE_INT L"%lld"
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
 #define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
-#if !defined(UNE_DEBUG_SIZE)
-#define UNE_SIZE_NUM_LEN 32 /* Lexing, representing. */
+#define UNE_SIZE_NUM_TO_STR_LEN 32 /* Representing. */
+#if !defined(UNE_DEBUG_SIZES)
+#define UNE_SIZE_NUM_LEN 32 /* Lexing. */
 #define UNE_SIZE_STR_LEN 4096 /* Lexing. */
 #define UNE_SIZE_ID_LEN 32 /* Lexing. */
 #define UNE_SIZE_VARIABLE_BUF 32 /* Context. */
@@ -73,16 +80,16 @@ Modified 2021-07-15
 #define UNE_SIZE_BIF_SPLIT_TKS 16 /* une_buitlin_split. */
 #define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH 8 /* une_error_display. */
 #else
-#define UNE_SIZE_NUM_LEN UNE_DEBUG_SIZE
-#define UNE_SIZE_STR_LEN UNE_DEBUG_SIZE
-#define UNE_SIZE_ID_LEN UNE_DEBUG_SIZE
-#define UNE_SIZE_VARIABLE_BUF UNE_DEBUG_SIZE
-#define UNE_SIZE_FUNCTION_BUF UNE_DEBUG_SIZE
-#define UNE_SIZE_TOKEN_BUF UNE_DEBUG_SIZE
-#define UNE_SIZE_SEQUENCE UNE_DEBUG_SIZE
-#define UNE_SIZE_FILE_BUFFER UNE_DEBUG_SIZE
-#define UNE_SIZE_BIF_SPLIT_TKS UNE_DEBUG_SIZE
-#define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH UNE_DEBUG_SIZE
+#define UNE_SIZE_NUM_LEN UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_STR_LEN UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_ID_LEN UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_VARIABLE_BUF UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_FUNCTION_BUF UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_TOKEN_BUF UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_SEQUENCE UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_FILE_BUFFER UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_BIF_SPLIT_TKS UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH UNE_DEBUG_SIZES_SIZE
 #endif
 
 /* Output Color Escape Sequences. */
@@ -123,11 +130,8 @@ typedef union _une_value {
 #endif
 
 /*
-*** Tools.
+*** Logging.
 */
-#define UNE_VERIFY_NOT_REACHED assert(false)
-
-/* Internal Error Response and Logging Tools. */
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
 #define LOGFREE(obj, str, num) out(L"%ls ('%ls', %lld)", obj, str, (une_int)num)
 #else

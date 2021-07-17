@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2021-07-14
+Modified 2021-07-17
 */
 
 #ifndef UNE_NODE_H
@@ -98,20 +98,6 @@ Condition to check whether une_node_type is in interpreter lookup table.
 */
 #define UNE_NODE_TYPE_IS_IN_LUT(type)\
   (type >= UNE_R_BGN_LUT_NODES && type <= UNE_R_END_LUT_NODES)
-
-/*
-Verify une_node_type.
-*/
-#define UNE_VERIFY_NODE_TYPE(type)\
-  if (!UNE_NODE_TYPE_IS_VALID(type))\
-    fail(L"Invalid une_node_type %lld.", type);
-
-/*
-Verify une_node_type can be looked up in interpreter lookup table.
-*/
-#define UNE_VERIFY_LUT_NODE_TYPE(type)\
-  if (!UNE_NODE_TYPE_IS_IN_LUT(type))\
-    fail(L"une_node_type can't be looked up.");
 
 /*
 Unpack a une_node list into its name and size.

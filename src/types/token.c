@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2021-07-15
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -76,8 +76,7 @@ Free all members of a une_token.
 */
 void une_token_free(une_token token)
 {
-  /* Ensure valid une_token_type. */
-  UNE_VERIFY_TOKEN_TYPE(token.type);
+  assert(UNE_TOKEN_TYPE_IS_VALID(token.type));
   
   /* Free members. */
   switch (token.type) {
@@ -120,8 +119,7 @@ Return a text representation of a une_token_type.
 */
 __une_static const wchar_t *une_token_type_to_wcs(une_token_type type)
 {
-  /* Ensure une_token_type is valid. */
-  UNE_VERIFY_TOKEN_TYPE(type);
+  assert(UNE_TOKEN_TYPE_IS_VALID(type));
   
   return une_token_table[type-1];
 }
@@ -142,8 +140,7 @@ __une_static wchar_t *une_token_to_wcs(une_token token)
   size_t str_len = 0;
   str_len += swprintf(str, UNE_SIZE_TOKEN_AS_WCS, UNE_COLOR_TOKEN_TYPE);
   
-  /* Ensure une_token_type is valid. */
-  UNE_VERIFY_TOKEN_TYPE(token.type);
+  assert(UNE_TOKEN_TYPE_IS_VALID(token.type));
   str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L"%ls", une_token_type_to_wcs(token.type));
   str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, RESET);
   
@@ -152,10 +149,10 @@ __une_static wchar_t *une_token_to_wcs(une_token token)
     
     /* Numbers. */
     case UNE_TT_INT:
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%lld" RESET, token.value._int);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE UNE_PRINTF_UNE_INT RESET, token.value._int);
       break;
     case UNE_TT_FLT:
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%.3f" RESET, token.value._flt);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE UNE_PRINTF_UNE_FLT RESET, token.value._flt);
       break;
     
     /* Strings. */

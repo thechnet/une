@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-07-15
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -79,12 +79,10 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     ls->pull = &__une_lex_wfile_pull;
     ls->peek = &__une_lex_wfile_peek;
     ls->now = &__une_lex_wfile_now;
-    FILE *file = fopen(ls->path, UNE_FOPEN_RFLAGS);
-    if (file == NULL) {
+    if (!une_file_exists(ls->path)) {
       *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, ((une_position){ .start=0, .end=0 }));
       return NULL;
     }
-    fclose(file);
     ls->in = une_istream_wfile_create(ls->path);
   } else {
     ls->pull = &__une_lex_array_pull;

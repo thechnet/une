@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-07-14
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -12,6 +12,7 @@ Modified 2021-07-14
 #include <assert.h>
 #include <limits.h>
 #include <time.h>
+#include "escseq.h"
 #define LOGGING_WIDE
 #define LOGGING_ID "memdbg"
 #include "logging.h"
@@ -24,11 +25,16 @@ Modified 2021-07-14
 #define MEMDBG_MSG_REALLOC_SIZE "Size smaller or same."
 #define MEMDBG_MSG_ATEXIT "atexit failed. Call __memdbg_conclude manually."
 #define MEMDBG_MSG_RECEIVING_NULL "Receiving NULL pointer."
+#define MEMDBG_MSG_RETURNING_NULL "Returning NULL pointer."
 #define MEMDBG_MSG_PADDING "Padding not intact."
 #define MEMDBG_MSG_PADDING_AT "Padding not intact at " LOGGING_WHERE "."
 #define MEMDBG_MSG_OUT_OF_MEMORY "Out of memory."
 #define MEMDBG_MSG_UNOWNED_MEM "Unowned memory."
 #define MEMDBG_MSG_INDEX_OUT_OF_RANGE "Index out of range. (%d of #%zu)"
+#define MEMDBG_MSG_SIGNAL "signal failed. Not catching signals."
+#define MEMDBG_MSG_SIGFPE "Arithmetic error."
+#define MEMDBG_MSG_SIGILL "Illegal instruction."
+#define MEMDBG_MSG_SIGSEGV "Segmentation fault."
 
 /* Globals. */
 char memdbg_padding[MEMDBG_PADDING_SIZE];
@@ -38,12 +44,14 @@ size_t memdbg_allocations_count;
 size_t memdbg_malloc_count;
 size_t memdbg_realloc_count;
 size_t memdbg_free_count;
+size_t memdbg_alert_count;
 size_t memdbg_current_total_size;
 size_t memdbg_max_total_size;
 
 /* Private Function Declarations. */
 static void memdbg_init(void);
 static inline void memdbg_allocation_add(memdbg_allocation allocation);
+static inline void memdbg_allocation_remove(memdbg_allocation *allocation);
 static inline size_t memdbg_allocation_find(void *memory);
 static inline memdbg_allocation memdbg_allocation_reset(void);
 static inline void memdbg_allocation_padding_set(memdbg_allocation allocation);
@@ -60,17 +68,21 @@ void *memdbg_malloc(char* file, int line, size_t size)
   if (memdbg_allocations == NULL)
     memdbg_init();
   __memdbg_allocations_padding_check(file, line);
-  if (size == 0)
+  if (size == 0) {
+    memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_SIZE_0);
+  }
   void *memory = malloc(size+MEMDBG_PADDING_SIZE);
-  if (memory == NULL)
+  if (memory == NULL) {
+    memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_OUT_OF_MEMORY " (malloc %zu+%zu b)", size, MEMDBG_PADDING_SIZE);
+  }
   memdbg_allocation_add((memdbg_allocation){
     .file = file,
     .line = line,
     .memory = memory,
     .size = size,
-    .padding_not_intact = false
+    .check_padding = true
   });
   return memory;
 }
@@ -94,20 +106,29 @@ void *memdbg_realloc(char* file, int line, void *memory, size_t size)
     memdbg_init();
   __memdbg_allocations_padding_check(file, line);
   if (memory == NULL) {
+    memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_RECEIVING_NULL);
     return memdbg_malloc(file, line, size);
   }
-  if (size == 0)
+  if (size == 0) {
+    memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_SIZE_0);
+  }
   size_t index = memdbg_allocation_find(memory);
-  if (index == memdbg_allocations_size)
+  if (index == memdbg_allocations_size) {
+    memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_UNOWNED_MEM);
-  if (size <= memdbg_allocations[index].size)
+  }
+  if (size <= memdbg_allocations[index].size) {
+    memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_REALLOC_SIZE);
+  }
   memdbg_allocation_padding_clear(memdbg_allocations[index]);
   void *memory_new = realloc(memory, size+MEMDBG_PADDING_SIZE);
-  if (memory_new == NULL)
+  if (memory_new == NULL) {
+    memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_OUT_OF_MEMORY " (realloc %zu+%zu b)", size, MEMDBG_PADDING_SIZE);
+  }
   memdbg_current_total_size += size - memdbg_allocations[index].size;
   if (memdbg_current_total_size > memdbg_max_total_size)
     memdbg_max_total_size = memdbg_current_total_size;
@@ -126,17 +147,18 @@ void memdbg_free(char* file, int line, void *memory)
   if (memdbg_allocations == NULL)
     memdbg_init();
   __memdbg_allocations_padding_check(file, line);
-  if (memory == NULL)
+  if (memory == NULL) {
+    memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_FREE_NULLPTR);
+  }
   size_t index = memdbg_allocation_find(memory);
-  if (index == memdbg_allocations_size)
+  if (index == memdbg_allocations_size) {
+    memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_UNOWNED_MEM);
+  }
   memdbg_allocation_padding_clear(memdbg_allocations[index]);
   free(memory);
-  memdbg_current_total_size -= memdbg_allocations[index].size;
-  memdbg_allocations[index] = memdbg_allocation_reset();
-  memdbg_free_count++;
-  memdbg_allocations_count--;
+  memdbg_allocation_remove(&memdbg_allocations[index]);
 }
 
 /****** Self-Initialization and Self-Destruction. ******/
@@ -158,12 +180,20 @@ static void memdbg_init(void)
   memdbg_current_total_size = 0;
   memdbg_max_total_size = 0;
   memdbg_allocations = malloc(memdbg_allocations_size*sizeof(*memdbg_allocations));
-  if (memdbg_allocations == NULL)
+  if (memdbg_allocations == NULL) {
+    memdbg_alert_count++;
     fail(MEMDBG_MSG_OUT_OF_MEMORY " (memdbg_init %zu b)", memdbg_allocations_size*sizeof(*memdbg_allocations));
+  }
   for (size_t i=0; i<memdbg_allocations_size; i++)
     memdbg_allocations[i] = memdbg_allocation_reset();
-  if (atexit(&__memdbg_conclude) != 0)
+  if (atexit(&__memdbg_conclude) != 0) {
+    memdbg_alert_count++;
     warn(MEMDBG_MSG_ATEXIT);
+  }
+  if (signal(SIGFPE, &__memdbg_signal_handler) == SIG_ERR || signal(SIGILL, &__memdbg_signal_handler) == SIG_ERR || signal(SIGSEGV, &__memdbg_signal_handler) == SIG_ERR) {
+    memdbg_alert_count++;
+    warn(MEMDBG_MSG_SIGNAL);
+  }
 }
 
 /*
@@ -177,6 +207,7 @@ void __memdbg_conclude(void)
     for (size_t i=0; i<memdbg_allocations_size; i++)
       if (memdbg_allocations[i].memory != NULL) {
         all_memory_freed = false;
+        memdbg_alert_count++;
         warn_at(memdbg_allocations[i].file, memdbg_allocations[i].line, MEMDBG_MSG_NOT_FREED);
       }
     free(memdbg_allocations);
@@ -192,6 +223,7 @@ void __memdbg_conclude(void)
   info("reallocs: %lld", memdbg_realloc_count);
   info("index size: %lld", memdbg_allocations_size);
   info("peak usage: %.3f kb", (double)memdbg_max_total_size/1000);
+  info("alerts: %lld", memdbg_alert_count);
   #endif
 }
 
@@ -205,9 +237,10 @@ void __memdbg_allocations_padding_check(char *file, int line)
   if (memdbg_allocations == NULL)
     memdbg_init();
   for (size_t i=0; i<memdbg_allocations_size; i++)
-    if (memdbg_allocations[i].memory != NULL && !memdbg_allocations[i].padding_not_intact)
+    if (memdbg_allocations[i].memory != NULL && memdbg_allocations[i].check_padding)
       if (memcmp(memdbg_allocations[i].memory+memdbg_allocations[i].size, memdbg_padding, MEMDBG_PADDING_SIZE) != 0) {
-        memdbg_allocations[i].padding_not_intact = true;
+        memdbg_allocations[i].check_padding = false;
+        memdbg_alert_count++;
         if (file == NULL)
           warn_at(memdbg_allocations[i].file, memdbg_allocations[i].line, MEMDBG_MSG_PADDING);
         else
@@ -220,8 +253,10 @@ Check if 'idx' is a valid index into array 'arr'.
 */
 void *__memdbg_array_check(char *file, int line, char* array, size_t array_size, size_t item_size, int index)
 {
-  if (array == NULL)
+  if (array == NULL) {
+    memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_RECEIVING_NULL);
+  }
   assert(array_size != 0);
   assert(item_size != 0);
   bool is_stack_array = false;
@@ -233,10 +268,36 @@ void *__memdbg_array_check(char *file, int line, char* array, size_t array_size,
     items_count = array_size/item_size;
   else
     items_count = memdbg_allocations[allocations_index].size/item_size;
-  if (index < 0 || index >= items_count)
+  if (index < 0 || index >= items_count) {
+    memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_INDEX_OUT_OF_RANGE, index, items_count);
+  }
   return &array[index*item_size];
 }
+
+/*
+Handle signals.
+*/
+void __memdbg_signal_handler(int signum)
+{
+  char *msg;
+  switch (signum) {
+    case SIGFPE:
+      msg = __LOGGING_STYLE_FAIL __LOGGING_ID MEMDBG_MSG_SIGFPE RESET "\n";
+      break;
+    case SIGILL:
+      msg = __LOGGING_STYLE_FAIL __LOGGING_ID MEMDBG_MSG_SIGILL RESET "\n";
+      break;
+    case SIGSEGV:
+      msg = __LOGGING_STYLE_FAIL __LOGGING_ID MEMDBG_MSG_SIGSEGV RESET "\n";
+      break;
+    default:
+      assert(false);
+  }
+  write(STDOUT_FILENO, msg, strlen(msg)+1);
+  abort();
+}
+
 
 /****** Inline Functions. ******/
 
@@ -250,7 +311,7 @@ static inline memdbg_allocation memdbg_allocation_reset(void)
     .line = 0,
     .memory = NULL,
     .size = 0,
-    .padding_not_intact = false
+    .check_padding = true
   };
 }
 
@@ -291,18 +352,32 @@ static inline void memdbg_allocation_add(memdbg_allocation allocation)
   if (index == memdbg_allocations_size) {
     memdbg_allocations_size *= 2;
     memdbg_allocations = realloc(memdbg_allocations, memdbg_allocations_size*sizeof(*memdbg_allocations));
-    if (memdbg_allocations == NULL)
+    if (memdbg_allocations == NULL) {
+      memdbg_alert_count++;
       fail(MEMDBG_MSG_OUT_OF_MEMORY " (memdbg_allocation_add %zu b)", memdbg_allocations_size*sizeof(*memdbg_allocations));
+    }
     for (size_t i=index; i<memdbg_allocations_size; i++)
       memdbg_allocations[i] = memdbg_allocation_reset();
   }
   memdbg_allocations[index] = allocation;
-  memdbg_allocation_padding_set(memdbg_allocations[index]);
+  if (memdbg_allocations[index].check_padding)
+    memdbg_allocation_padding_set(memdbg_allocations[index]);
   memdbg_current_total_size += memdbg_allocations[index].size;
   if (memdbg_current_total_size > memdbg_max_total_size)
     memdbg_max_total_size = memdbg_current_total_size;
   memdbg_allocations_count++;
   memdbg_malloc_count++;
+}
+
+/*
+Remove a memdbg_allocation from the index.
+*/
+static inline void memdbg_allocation_remove(memdbg_allocation *allocation)
+{
+  memdbg_current_total_size -= allocation->size;
+  *allocation = memdbg_allocation_reset();
+  memdbg_free_count++;
+  memdbg_allocations_count--;
 }
 
 /*
@@ -318,7 +393,40 @@ static inline int memdbg_current_second(void)
 *** Wrappers.
 */
 
-#define memdbg_wrap_allocator(type_, name_, params_, memory_, call_, newsize_)\
+#define memdbg_wrap_allocator(type_, name_, params_, memory_, call_, newsize_, check_incoming_memory_, enable_padding_)\
+  type_ __memdbg_##name_ params_\
+  {\
+    if (memdbg_allocations == NULL)\
+      memdbg_init();\
+    __memdbg_allocations_padding_check(file, line);\
+    if (check_incoming_memory_ && memory_ == NULL)\
+      info_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
+    if (check_incoming_memory_ && memdbg_allocation_find(memory_) == memdbg_allocations_size)\
+      info_at(file, line, MEMDBG_MSG_UNOWNED_MEM);\
+    type_ memory_new = call_;\
+    if (memory_new == NULL) {\
+      info_at(file, line, MEMDBG_MSG_RETURNING_NULL);\
+      return memory_new;\
+    }\
+    size_t size = (newsize_)*sizeof(*memory_new);\
+    if (enable_padding_) {\
+      memory_new = realloc(memory_new, size+MEMDBG_PADDING_SIZE);\
+      if (memory_new == NULL) {\
+        memdbg_alert_count++;\
+        fail(MEMDBG_MSG_OUT_OF_MEMORY " (" #name_ " %zu+%zu b)", size, MEMDBG_PADDING_SIZE);\
+      }\
+    }\
+    memdbg_allocation_add((memdbg_allocation){\
+      .memory = (char*)memory_new,\
+      .size = size,\
+      .file = file,\
+      .line = line,\
+      .check_padding = enable_padding_\
+    });\
+    return memory_new;\
+  }
+
+#define memdbg_wrap_deallocator(type_, name_, params_, memory_, call_, enable_padding_)\
   type_ __memdbg_##name_ params_\
   {\
     if (memdbg_allocations == NULL)\
@@ -326,20 +434,15 @@ static inline int memdbg_current_second(void)
     __memdbg_allocations_padding_check(file, line);\
     if (memory_ == NULL)\
       info_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
-    if (memdbg_allocation_find(memory_) == memdbg_allocations_size)\
+    size_t index = memdbg_allocation_find(memory_);\
+    if (index == memdbg_allocations_size)\
       info_at(file, line, MEMDBG_MSG_UNOWNED_MEM);\
-    type_ memory_new = call_;\
-    size_t size = (newsize_)*sizeof(*memory_new);\
-    memory_new = realloc(memory_new, size+MEMDBG_PADDING_SIZE);\
-    if (memory_new == NULL)\
-      fail(MEMDBG_MSG_OUT_OF_MEMORY " (" #name_ " %zu+%zu b)", size, MEMDBG_PADDING_SIZE);\
-    memdbg_allocation_add((memdbg_allocation){\
-      .memory = (char*)memory_new,\
-      .size = size,\
-      .file = file,\
-      .line = line\
-    });\
-    return memory_new;\
+    else if (enable_padding_)\
+      memdbg_allocation_padding_clear(memdbg_allocations[index]);\
+    type_ return_value = call_;\
+    if (index != memdbg_allocations_size)\
+      memdbg_allocation_remove(&memdbg_allocations[index]);\
+    return return_value;\
   }
 
 #define memdbg_wrap_function(type_, name_, params_, memory_, call_)\
@@ -358,15 +461,23 @@ static inline int memdbg_current_second(void)
 
 memdbg_wrap_allocator\
   (char*, strdup, (char *file, int line, char *str),\
-  str, strdup(str), strlen(memory_new)+1)
+  str, strdup(str), strlen(memory_new)+1, true, true)
 
 memdbg_wrap_allocator\
   (char*, strndup, (char *file, int line, char *str, size_t n),\
-  str, strndup(str, n), n+1)
+  str, strndup(str, n), n+1, true, true)
 
 memdbg_wrap_allocator\
   (wchar_t*, wcsdup, (char *file, int line, wchar_t *wcs),\
-  wcs, wcsdup(wcs), wcslen(memory_new)+1)
+  wcs, wcsdup(wcs), wcslen(memory_new)+1, true, true)
+
+memdbg_wrap_allocator\
+  (FILE*, fopen, (char *file, int line, char *path, char *mode),\
+  path, fopen(path, mode), 1, false, false)
+
+memdbg_wrap_deallocator\
+  (int, fclose, (char *file, int line, FILE *fp),\
+  fp, fclose(fp), false)
 
 memdbg_wrap_function\
   (void*, __memdbg_memset, (char *file, int line, void *str, int c, size_t n),\

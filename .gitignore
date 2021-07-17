@@ -9,3 +9,5 @@ desktop.ini
 *.dSYM
 une
 obj
+une_report_*
+test.py.*

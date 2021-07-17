@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2021-07-14
+Modified 2021-07-17
 */
 
 #ifndef UNE_TOKEN_H
@@ -89,13 +89,6 @@ Condition to check whether a une_token_type is valid.
 */
 #define UNE_TOKEN_TYPE_IS_VALID(type)\
   (type > __UNE_TT_none__ && type < __UNE_TT_max__)
-
-/*
-Verify une_token_type.
-*/
-#define UNE_VERIFY_TOKEN_TYPE(type)\
-  if (!UNE_TOKEN_TYPE_IS_VALID(type))\
-    fail(L"Invalid une_token_type %lld.", type);
 
 une_token une_token_create(une_token_type type);
 void une_token_free(une_token token);

@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-07-15
+Modified 2021-07-17
 */
 
 /* Import public Une interface. */
@@ -11,50 +11,106 @@ Modified 2021-07-15
 #include "tools.h"
 
 /* Implementation-specific macros. */
-#define UNE_E(msg) UNE_COLOR_FAIL msg RESET L"\n"
-#define UNE_S_INPUT L"Missing or invalid input file or string."
-#define UNE_C_INPUT 1
+#define UNE_ERROR(msg) UNE_COLOR_FAIL msg RESET L"\n"
+#define UNE_MESSAGE_INPUT L"Missing or invalid input file or string."
+#define UNE_ERROR_INPUT 1
 
 int main(int argc, char *argv[])
 {
-  if (argc < 2) {
-    wprintf(UNE_E(UNE_S_INPUT));
-    return UNE_C_INPUT;
-  }
+  une_result result;
+  bool read_from_file;
   
-  bool read_from_file = true;
+  if (argc < 2) {
+    result = (une_result){
+      .type = UNE_RT_ERROR,
+      .value._int = UNE_ERROR_INPUT
+    };
+    goto end;
+  }
   
   if (strcmp(argv[1], UNE_STDIN_SWITCH) == 0) {
     if (argc < 3) {
-      wprintf(UNE_E(UNE_S_INPUT));
-      return UNE_C_INPUT;
+      result = (une_result){
+        .type = UNE_RT_ERROR,
+        .value._int = UNE_ERROR_INPUT
+      };
+      goto end;
     }
     read_from_file = false;
-  }
-  
-  une_result result;
+  } else
+    read_from_file = true;
   
   if (read_from_file)
     result = une_run(read_from_file, argv[1], NULL);
   else {
     wchar_t *wcs = une_str_to_wcs(argv[2]);
     if (wcs == NULL) {
-      wprintf(UNE_E(UNE_S_INPUT));
-      return UNE_C_INPUT;
+      result = (une_result){
+        .type = UNE_RT_ERROR,
+        .value._int = UNE_ERROR_INPUT
+      };
+      goto end;
     }
     result = une_run(read_from_file, NULL, wcs);
     free(wcs);
   }
+  
+  end:
+  
+  /* main Error. */
+  if (result.type == UNE_RT_ERROR && result.value._vp != NULL)
+    wprintf(UNE_ERROR(UNE_MESSAGE_INPUT));
+  
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (result.type != UNE_RT_ERROR) {
     assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
     wprintf(UNE_COLOR_RESULT_TYPE L"\n%ls" RESET ": ", une_result_type_to_wcs(result.type));
-    une_result_represent(result);
+    une_result_represent(stdout, result);
     putwc(L'\n', stdout);
   }
   #endif
-  int final = result.type == UNE_RT_INT ? (int)result.value._int : 0;
+  
+  #ifdef UNE_DEBUG_REPORT
+  FILE *report_return = fopen(UNE_DEBUG_REPORT_FILE_RETURN, UNE_FOPEN_WFLAGS);
+  assert(report_return != NULL);
+  if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type))
+    une_result_represent(report_return, result);
+  else if (result.type == UNE_RT_ERROR)
+    fwprintf(report_return, UNE_PRINTF_UNE_INT, result.value._int);
+  fclose(report_return);
+  #endif /* UNE_DEBUG_REPORT */
+  
+  int final;
+  if (result.type == UNE_RT_INT)
+    final = (int)result.value._int;
+  else if (result.type == UNE_RT_VOID)
+    final = 0;
+  else
+    final = UNE_ERROR_INPUT;
   une_result_free(result);
+  
+  #ifdef UNE_DEBUG_REPORT
+  FILE *report_status = fopen(UNE_DEBUG_REPORT_FILE_STATUS, UNE_FOPEN_WFLAGS);
+  assert(report_status != NULL);
+  #ifdef MEMDBG_ENABLE
+  extern size_t memdbg_allocations_count;
+  extern size_t memdbg_alert_count;
+  #endif /* MEMDBG_ENABLE */
+  fwprintf(
+    report_status,
+    L"result_type:%d\n"
+    #ifdef MEMDBG_ENABLE
+    L"alloc_count:%d\n"
+    L"alert_count:%d\n"
+    #endif /* MEMDBG_ENABLE */
+    , (int)result.type
+    #ifdef MEMDBG_ENABLE
+    , memdbg_allocations_count-1 /* FILE *report_status */,
+    memdbg_alert_count
+    #endif /* MEMDBG_ENABLE */
+  );
+  fclose(report_status);
+  #endif /* UNE_DEBUG_REPORT */
   
   return final;
 }

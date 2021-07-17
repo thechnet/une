@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2021-07-14
+Modified 2021-07-17
 */
 
 #ifndef UNE_RESULT_H
@@ -74,13 +74,6 @@ Condition to check whether une_result_type is data type.
 #define UNE_RESULT_TYPE_IS_DATA_TYPE(type)\
   (type >= UNE_R_BGN_DATA_RESULT_TYPES && type <= UNE_R_END_DATA_RESULT_TYPES)
 
-/*
-Verify une_result_type.
-*/
-#define UNE_VERIFY_RESULT_TYPE(type)\
-  if (!UNE_RESULT_TYPE_IS_VALID(type))\
-    fail(L"Invalid une_result_type %lld.", type);
-
 une_result une_result_create(une_result_type type);
 une_result une_result_copy(une_result src);
 void une_result_free(une_result result);
@@ -90,7 +83,7 @@ une_result *une_result_list_create(size_t size);
 #ifdef UNE_DEBUG
 const wchar_t *une_result_type_to_wcs(une_result_type result_type);
 #endif /* UNE_DEBUG */
-void une_result_represent(une_result result);
+void une_result_represent(FILE *file, une_result result);
 
 une_int une_result_is_true(une_result result);
 une_int une_results_are_equal(une_result left, une_result right);

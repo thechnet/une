@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2021-07-05
+Modified 2021-07-17
 */
 
 #ifndef UNE_BUILTIN_H
@@ -38,6 +38,12 @@ typedef enum _une_builtin_type {
 /*
 *** Interface.
 */
+
+/*
+Condition to check whether une_builtin_type is valid.
+*/
+#define UNE_BUILTIN_TYPE_IS_VALID(type)\
+  (type > __UNE_BIF_none__ && type < __UNE_BIF_max__)
 
 /*
 Built-in function template.

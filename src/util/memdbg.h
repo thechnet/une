@@ -1,6 +1,6 @@
 /*
 memdbg.h - Une
-Modified 2021-07-15
+Modified 2021-07-16
 */
 
 #ifndef MEMDBG_H
@@ -28,6 +28,8 @@ implementation from mapping to themselves.
 #define strdup(str) __memdbg_strdup(__FILE__, __LINE__, str)
 #define strndup(str, n) __memdbg_strndup(__FILE__, __LINE__, str, n)
 #define wcsdup(wcs) __memdbg_wcsdup(__FILE__, __LINE__, wcs)
+#define fopen(path, mode) __memdbg_fopen(__FILE__, __LINE__, path, mode)
+#define fclose(fp) __memdbg_fclose(__FILE__, __LINE__, fp)
 
 #undef memset
 #define memset(str, c, n) __memdbg_memset(__FILE__, __LINE__, str, c, n);

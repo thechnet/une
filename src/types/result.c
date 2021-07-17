@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-07-14
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -41,8 +41,7 @@ Return a duplicate une_result.
 */
 une_result une_result_copy(une_result src)
 {
-  /* Ensure valid une_result_type. */
-  UNE_VERIFY_RESULT_TYPE(src.type);
+  assert(UNE_RESULT_TYPE_IS_VALID(src.type));
   
   /* Create destination une_result. */
   une_result dest = une_result_create(src.type);
@@ -80,8 +79,7 @@ Free all members of a une_result.
 */
 void une_result_free(une_result result)
 {
-  /* Ensure valid une_result_type. */
-  UNE_VERIFY_RESULT_TYPE(result.type);
+  assert(UNE_RESULT_TYPE_IS_VALID(result.type));
   
   /* Free members. */
   switch (result.type) {
@@ -124,8 +122,7 @@ Return a text representation of a une_result_type.
 #ifdef UNE_DEBUG
 const wchar_t *une_result_type_to_wcs(une_result_type type)
 {
-  /* Ensure valid une_result_type. */
-  UNE_VERIFY_RESULT_TYPE(type);
+  assert(UNE_RESULT_TYPE_IS_VALID(type));
   
   return une_result_table[type-1];
 }
@@ -136,58 +133,58 @@ Print a text representation of a une_result.
 une_result does not have a *_to_wcs function because these functions can end in a buffer overflow.
 As une_result needs to be representable in release builds, it instead has a *_represent function.
 */
-void une_result_represent(une_result result)
+void une_result_represent(FILE *file, une_result result)
 {
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
 
   switch (result.type) {
     
     case UNE_RT_INT:
-      wprintf(RESET L"%lld", result.value._int);
+      fwprintf(file, UNE_PRINTF_UNE_INT, result.value._int);
       break;
     
     case UNE_RT_FLT:
-      wprintf(RESET L"%.3f", result.value._flt);
+      fwprintf(file, UNE_PRINTF_UNE_FLT, result.value._flt);
       break;
     
     case UNE_RT_STR:
-      wprintf(RESET L"%ls", result.value._wcs);
+      fwprintf(file, L"%ls", result.value._wcs);
       break;
     
     case UNE_RT_LIST:
-      wprintf(RESET L"[", stdout);
+      fwprintf(file, L"[");
       UNE_UNPACK_RESULT_LIST(result, list, list_size);
       UNE_FOR_RESULT_LIST_ITEM(i, list_size) {
         if (list[i].type == UNE_RT_STR)
-          putwc(L'"', stdout);
-        une_result_represent(list[i]);
+          putwc(L'"', file);
+        une_result_represent(file, list[i]);
         if (list[i].type == UNE_RT_STR)
-          putwc(L'"', stdout);
+          putwc(L'"', file);
         if (i < list_size)
-          wprintf(L", ");
+          fwprintf(file, L", ");
       }
-      putwc(L']', stdout);
+      putwc(L']', file);
+      break;
+    
+    case UNE_RT_VOID:
+      fwprintf(file, L"VOID");
       break;
     
     #ifdef UNE_DEBUG
-    case UNE_RT_VOID:
-      wprintf(L"VOID");
-      break;
-    
     case UNE_RT_ERROR:
-      wprintf(L"ERROR");
+      fwprintf(file, L"ERROR");
       break;
     
     case UNE_RT_CONTINUE:
-      wprintf(L"CONTINUE");
+      fwprintf(file, L"CONTINUE");
       break;
     
     case UNE_RT_BREAK:
-      wprintf(L"BREAK");
+      fwprintf(file, L"BREAK");
       break;
     
     case UNE_RT_SIZE:
-      wprintf(L"SIZE");
+      fwprintf(file, L"SIZE");
       break;
     #endif
     

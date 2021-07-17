@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-07-15
+Modified 2021-07-17
 */
 
 /* Header-specific includes. */
@@ -55,40 +55,14 @@ Get the number of parameters required by a built-in function.
 */
 const une_int une_builtin_get_num_of_params(une_builtin_type type)
 {
+  assert(UNE_BUILTIN_TYPE_IS_VALID(type));
   switch (type) {
-    case UNE_BIF_PUT:
-      return 1;
-    case UNE_BIF_PRINT:
-      return 1;
-    case UNE_BIF_TO_INT:
-      return 1;
-    case UNE_BIF_TO_FLT:
-      return 1;
-    case UNE_BIF_TO_STR:
-      return 1;
-    case UNE_BIF_GET_LEN:
-      return 1;
-    case UNE_BIF_SLEEP:
-      return 1;
-    case UNE_BIF_CHR:
-      return 1;
-    case UNE_BIF_ORD:
-      return 1;
-    case UNE_BIF_READ:
-      return 1;
     case UNE_BIF_WRITE:
-      return 2;
-    case UNE_BIF_INPUT:
-      return 1;
-    case UNE_BIF_SCRIPT:
-      return 1;
-    case UNE_BIF_EXIST:
-      return 1;
     case UNE_BIF_SPLIT:
       return 2;
+    default:
+      return 1;
   }
-  
-  UNE_VERIFY_NOT_REACHED;
 }
 
 /*
@@ -97,7 +71,7 @@ Print a text representation of a une_result.
 __une_builtin_fn(une_builtin_put, une_result result)
 {
   /* Print text representation. */
-  une_result_represent(result);
+  une_result_represent(stdout, result);
   
   return une_result_create(UNE_RT_VOID);
 }
@@ -136,7 +110,7 @@ __une_builtin_fn(une_builtin_to_int, une_result result)
       }
       return (une_result){
         .type = UNE_RT_INT,
-        .value._flt = int_
+        .value._int = int_
       };
     }
   }
@@ -186,16 +160,16 @@ __une_builtin_fn(une_builtin_to_str, une_result result)
   /* Convert une_result. */
   switch (result.type) {
     case UNE_RT_INT: {
-      wchar_t *out = malloc(UNE_SIZE_NUM_LEN*sizeof(*out));
-      swprintf(out, UNE_SIZE_NUM_LEN, L"%lld", result.value._int);
+      wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
+      swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_INT, result.value._int);
       return (une_result){
         .type = UNE_RT_STR,
         .value._wcs = out
       };
     }
     case UNE_RT_FLT: {
-      wchar_t *out = malloc(UNE_SIZE_NUM_LEN*sizeof(*out));
-      swprintf(out, UNE_SIZE_NUM_LEN, L"%f", result.value._flt);
+      wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
+      swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_FLT, result.value._flt);
       return (une_result){
         .type = UNE_RT_STR,
         .value._wcs = out
@@ -368,7 +342,7 @@ __une_builtin_fn(une_builtin_input, une_result result)
   }
 
   /* Get string. */
-  une_result_represent(result);
+  une_result_represent(stdout, result);
   wchar_t *instr = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*instr));
   fgetws(instr, UNE_SIZE_FGETWS_BUFFER, stdin);
   size_t len = wcslen(instr);
