@@ -58,11 +58,13 @@ src=\
 "types/lexer_state.c "\
 "tools.c "\
 "stream.c "\
-"builtin.c "\
-"util/memdbg.c"
+"builtin.c"
+if [ $debug -eq 1 ]; then
+  src+=" util/memdbg.c"
+fi
 
 >/dev/null pushd src
-if [ $clear==1 ]; then
+if [ $clear -eq 1 ]; then
   clear
 fi
 $compiler $O$flags$src -o ../une

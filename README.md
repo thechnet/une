@@ -13,17 +13,18 @@ Some demo programs can be found in [examples](examples).
 
 ## How do I run Une?
 
-1. Build the executable:
+- Build the executable:
 
-- Download this repository.
-- Run `make.sh` from within the repository.  
-  (Ensure `compiler` points to either GCC or Clang.)
+  - Download this repository.
 
-2. Run a script:
+  - Run `make.sh` from within the repository.  
+    (Ensure `compiler` points to either GCC or Clang.)
 
-```
-une {<script>|-s <string>}
-```
+- Run a script:
+
+  ```
+  une {<script>|-s <string>}
+  ```
 
 ## Visual Studio Code Language Support
 
