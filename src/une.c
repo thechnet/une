@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-07-17
+Modified 2021-07-19
 */
 
 /* Header-specific includes. */
@@ -31,6 +31,15 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #ifdef UNE_DEBUG_REPORT
   warn("UNE_DEBUG_REPORT enabled.");
   #endif
+  #ifdef UNE_NO_LEX
+  warn("UNE_NO_LEX enabled.");
+  #endif
+  #ifdef UNE_NO_PARSE
+  warn("UNE_NO_PARSE enabled.");
+  #endif
+  #ifdef UNE_NO_INTERPRET
+  warn("UNE_NO_INTERPRET enabled.");
+  #endif
   
   /* Setup. */
   une_error error = une_error_create();
@@ -48,9 +57,9 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #endif
   
   /* Parse. */
-  une_parser_state ps = une_parser_state_create();
   une_node *ast = NULL;
   #ifndef UNE_NO_PARSE
+  une_parser_state ps = une_parser_state_create();
   if (tokens != NULL)
     ast = une_parse(&error, &ps, tokens);
   #endif
@@ -78,7 +87,18 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #endif
   
   /* Wrap up. */
-  if (tokens == NULL || ast == NULL || result.type == UNE_RT_ERROR) {
+  if (
+    #ifndef UNE_NO_LEX
+    tokens == NULL ||
+    #endif
+    #ifndef UNE_NO_PARSE
+    ast == NULL ||
+    #endif
+    #ifndef UNE_NO_INTERPRET
+    result.type == UNE_RT_ERROR ||
+    #endif
+    false
+  ) {
     assert(error.type != __UNE_ET_none__);
     une_error_display(&error, &ls, &is);
   }

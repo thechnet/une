@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-07-17
+Modified 2021-07-21
 */
 
 /* Import public Une interface. */
@@ -10,30 +10,22 @@ Modified 2021-07-17
 #include <string.h>
 #include "tools.h"
 
-/* Implementation-specific macros. */
-#define UNE_ERROR(msg) UNE_COLOR_FAIL msg RESET L"\n"
-#define UNE_MESSAGE_INPUT L"Missing or invalid input file or string."
-#define UNE_ERROR_INPUT 1
+#define UNE_MAIN_ERROR 1
 
 int main(int argc, char *argv[])
 {
   une_result result;
   bool read_from_file;
+  bool main_error = false;
   
   if (argc < 2) {
-    result = (une_result){
-      .type = UNE_RT_ERROR,
-      .value._int = UNE_ERROR_INPUT
-    };
+    main_error = true;
     goto end;
   }
   
   if (strcmp(argv[1], UNE_STDIN_SWITCH) == 0) {
     if (argc < 3) {
-      result = (une_result){
-        .type = UNE_RT_ERROR,
-        .value._int = UNE_ERROR_INPUT
-      };
+      main_error = true;
       goto end;
     }
     read_from_file = false;
@@ -45,10 +37,7 @@ int main(int argc, char *argv[])
   else {
     wchar_t *wcs = une_str_to_wcs(argv[2]);
     if (wcs == NULL) {
-      result = (une_result){
-        .type = UNE_RT_ERROR,
-        .value._int = UNE_ERROR_INPUT
-      };
+      main_error = true;
       goto end;
     }
     result = une_run(read_from_file, NULL, wcs);
@@ -58,8 +47,13 @@ int main(int argc, char *argv[])
   end:
   
   /* main Error. */
-  if (result.type == UNE_RT_ERROR && result.value._vp != NULL)
-    wprintf(UNE_ERROR(UNE_MESSAGE_INPUT));
+  if (main_error) {
+    wprintf(UNE_COLOR_FAIL L"Missing or invalid input file or string." RESET L"\n");
+    result = (une_result){
+      .type = UNE_RT_ERROR,
+      .value._int = UNE_MAIN_ERROR
+    };
+  }
   
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (result.type != UNE_RT_ERROR) {
@@ -83,10 +77,10 @@ int main(int argc, char *argv[])
   int final;
   if (result.type == UNE_RT_INT)
     final = (int)result.value._int;
-  else if (result.type == UNE_RT_VOID)
-    final = 0;
+  else if (result.type == UNE_RT_ERROR)
+    final = UNE_MAIN_ERROR;
   else
-    final = UNE_ERROR_INPUT;
+    final = 0;
   une_result_free(result);
   
   #ifdef UNE_DEBUG_REPORT

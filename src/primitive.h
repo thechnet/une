@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-07-17
+Modified 2021-07-19
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -10,8 +10,8 @@ Modified 2021-07-17
 *** Options.
 */
 #define UNE_DEBUG_MEMDBG
-#define UNE_DEBUG_SIZES
-#define UNE_DEBUG_REPORT
+// #define UNE_DEBUG_SIZES
+// #define UNE_DEBUG_REPORT
 
 // #define UNE_NO_LEX
 // #define UNE_NO_PARSE
