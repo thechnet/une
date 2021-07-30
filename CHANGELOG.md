@@ -400,7 +400,7 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.5.7...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.5.8...HEAD
 
 <!-- Releases -->
 [0.5.8]: https://github.com/thechnet/une/compare/v0.5.7...v0.5.8
