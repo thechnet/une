@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-07-15
+Modified 2021-07-25
 */
 
 /* Header-specific includes. */
@@ -14,7 +14,7 @@ Modified 2021-07-15
 /*
 Convert a wchar_t string into a une_int integer.
 */
-bool une_wcs_to_une_int(wchar_t *wcs, une_int* dest)
+bool une_wcs_to_une_int(wchar_t *wcs, une_int *dest)
 {
   wchar_t *wcs_end = wcs+wcslen(wcs);
   wchar_t *int_end;
@@ -25,7 +25,7 @@ bool une_wcs_to_une_int(wchar_t *wcs, une_int* dest)
 /*
 Convert a wchar_t string into a une_flt floating pointer number.
 */
-bool une_wcs_to_une_flt(wchar_t *wcs, une_flt* dest)
+bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest)
 {
   wchar_t *wcs_end = wcs+wcslen(wcs);
   wchar_t *flt_end;

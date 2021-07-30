@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-07-17
+Modified 2021-07-26
 */
 
 /* Header-specific includes. */
@@ -1122,9 +1122,8 @@ __une_interpreter(une_interpret_def)
   /* Get function name. */
   wchar_t *name = node->content.branch.a->content.value._wcs;
   
-  /* Check if function already exists *in current context*. */
-  une_function *fn = une_function_find(is->context, name);
-  if (fn != NULL) {
+  /* Check if function built-in or already exists *in current context*. */
+  if (une_builtin_wcs_to_type(name) != __UNE_BIF_none__ || une_function_find(is->context, name) != NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ALREADY_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
@@ -1139,7 +1138,7 @@ __une_interpreter(une_interpret_def)
   une_node *body = une_node_copy(node->content.branch.c);
 
   /* Define function. */
-  fn = une_function_create(is->context, name);
+  une_function *fn = une_function_create(is->context, name);
   fn->params_count = params_count;
   fn->params = params;
   fn->body = body;
@@ -1233,11 +1232,12 @@ __une_interpreter(une_interpret_for)
     step = 1;
   else
     step = -1;
-
-  /* Get loop variable name. */
+  
+  /* Get loop variable. */
   wchar_t *id = node->content.branch.a->content.value._wcs;
   une_variable *var = une_variable_find_or_create(is->context, id); /* We only check the *local* variables. */
-
+  
+  /* Loop. */
   for (une_int i=from; i!=till; i+=step) {
     une_result_free(var->content);
     var->content = (une_result){
@@ -1247,13 +1247,13 @@ __une_interpreter(une_interpret_for)
     result = une_interpret(error, is, node->content.branch.d);
     if (result.type == UNE_RT_ERROR || is->should_return)
       return result;
-    if (result.type == UNE_RT_BREAK)
-      break;
-    if (i+step != till)
+    if (result.type == UNE_RT_BREAK) {
       une_result_free(result);
+      break;
+    }
+    une_result_free(result);
   }
   
-  une_result_free(result);
   return une_result_create(UNE_RT_VOID);
 }
 

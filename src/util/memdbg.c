@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-07-17
+Modified 2021-07-30
 */
 
 /* Header-specific includes. */
@@ -63,7 +63,7 @@ static inline int memdbg_current_second(void);
 /*
 Allocates memory.
 */
-void *memdbg_malloc(char* file, int line, size_t size)
+void *memdbg_malloc(char *file, int line, size_t size)
 {
   if (memdbg_allocations == NULL)
     memdbg_init();
@@ -90,7 +90,7 @@ void *memdbg_malloc(char* file, int line, size_t size)
 /*
 Allocates memory and initializes it to 0.
 */
-void *memdbg_calloc(char* file, int line, size_t count, size_t size)
+void *memdbg_calloc(char *file, int line, size_t count, size_t size)
 {
   void *memory = memdbg_malloc(file, line, count*size);
   memset(memory, 0, count*size);
@@ -100,7 +100,7 @@ void *memdbg_calloc(char* file, int line, size_t count, size_t size)
 /*
 Reallocates memory.
 */
-void *memdbg_realloc(char* file, int line, void *memory, size_t size)
+void *memdbg_realloc(char *file, int line, void *memory, size_t size)
 {
   if (memdbg_allocations == NULL)
     memdbg_init();
@@ -142,7 +142,7 @@ void *memdbg_realloc(char* file, int line, void *memory, size_t size)
 /*
 Frees memory.
 */
-void memdbg_free(char* file, int line, void *memory)
+void memdbg_free(char *file, int line, void *memory)
 {
   if (memdbg_allocations == NULL)
     memdbg_init();
@@ -150,6 +150,7 @@ void memdbg_free(char* file, int line, void *memory)
   if (memory == NULL) {
     memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_FREE_NULLPTR);
+    return;
   }
   size_t index = memdbg_allocation_find(memory);
   if (index == memdbg_allocations_size) {
@@ -251,7 +252,7 @@ void __memdbg_allocations_padding_check(char *file, int line)
 /*
 Check if 'idx' is a valid index into array 'arr'.
 */
-void *__memdbg_array_check(char *file, int line, char* array, size_t array_size, size_t item_size, int index)
+void *__memdbg_array_check(char *file, int line, char *array, size_t array_size, size_t item_size, int index)
 {
   if (array == NULL) {
     memdbg_alert_count++;

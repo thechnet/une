@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2021-07-17
+Modified 2021-07-28
 */
 
 #ifndef UNE_TOKEN_H
@@ -13,11 +13,13 @@ Modified 2021-07-17
 Type of une_token.
 */
 typedef enum _une_token_type {
-  __UNE_TT_none__,
+  __UNE_TT_none__, /* Undefined token type. */
+  
   UNE_TT_INT,
   UNE_TT_FLT,
   UNE_TT_ID,
   UNE_TT_STR,
+  
   UNE_TT_LPAR,
   UNE_TT_RPAR,
   UNE_TT_LBRC,
@@ -68,6 +70,7 @@ typedef enum _une_token_type {
   UNE_TT_GLOBAL,
   UNE_TT_QMARK,
   UNE_TT_COLON,
+  
   __UNE_TT_max__,
 } une_token_type;
 

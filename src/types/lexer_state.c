@@ -1,6 +1,6 @@
 /*
 lexer_state.c - Une
-Modified 2021-06-13
+Modified 2021-07-25
 */
 
 /* Header-specific includes. */
@@ -9,7 +9,7 @@ Modified 2021-06-13
 /*
 Initialize a une_lexer_state struct.
 */
-une_lexer_state une_lexer_state_create(bool read_from_file, char* path, wchar_t* text)
+une_lexer_state une_lexer_state_create(bool read_from_file, char *path, wchar_t *text)
 {
   return (une_lexer_state){
     .read_from_file = read_from_file,

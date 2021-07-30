@@ -4,7 +4,7 @@
 
 ## What is Une?
 
-Une is an **unfinished, unpolished, and *very* simple** interpreted programming language written in pure C as part of my Gymnasium Matura paper.
+Une */juːn/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my Gymnasium Matura paper.
 
 ## What can Une do?
 
@@ -13,17 +13,18 @@ Some demo programs can be found in [examples](examples).
 
 ## How do I run Une?
 
-1. Build the executable:
+- Build the executable:
 
-- Download this repository.
-- Edit either `make.cmd` or `make.sh` (depending on which system you're on) and make sure `compiler` points to an up-to-date C toolchain (I recommend GCC or Clang).
-- Run `make.cmd` or `make.sh` from within the repository.
+  - Download this repository.
 
-2. Run a program:
+  - Run `make.sh` from within the repository.  
+    (Ensure `compiler` points to either GCC or Clang.)
 
-```
-une {<script>|-s <string>}
-```
+- Run a script:
+
+  ```
+  une {<script>|-s <string>}
+  ```
 
 ## Visual Studio Code Language Support
 

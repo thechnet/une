@@ -1,6 +1,6 @@
 /*
 memdbg_internal.h - Une
-Modified 2021-07-17
+Modified 2021-07-25
 */
 
 #ifndef MEMDBG_INTERNAL_H
@@ -39,7 +39,7 @@ void *memdbg_realloc(char *file, int line, void *memory, size_t size);
 void memdbg_free(char *file, int line, void *memory);
 
 void __memdbg_allocations_padding_check(char *file, int line);
-void *__memdbg_array_check(char *file, int line, char* array, size_t array_size, size_t item_size, int index);
+void *__memdbg_array_check(char *file, int line, char *array, size_t array_size, size_t item_size, int index);
 void __memdbg_conclude(void);
 void __memdbg_signal_handler(int signum);
 

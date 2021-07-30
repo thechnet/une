@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2021-07-06
+Modified 2021-07-25
 */
 
 #ifndef UNE_PARSER_H
@@ -47,7 +47,7 @@ __une_parser(une_parse_set_expstmt);
 
 __une_parser(une_parse_unary_operation,
   une_node_type node_t,
-  une_node* (*parse)(une_error*, une_parser_state*)
+  une_node *(*parse)(une_error*, une_parser_state*)
 );
 
 __une_parser(une_parse_binary_operation,
@@ -55,8 +55,8 @@ __une_parser(une_parse_binary_operation,
   une_node_type range_begin_nt,
   une_token_type range_end_tt,
   une_node_type range_end_nt,
-  une_node* (*parse_left)(une_error*, une_parser_state*),
-  une_node* (*parse_right)(une_error*, une_parser_state*)
+  une_node *(*parse_left)(une_error*, une_parser_state*),
+  une_node *(*parse_right)(une_error*, une_parser_state*)
 );
 
 __une_parser(une_parse_sequence,
@@ -64,7 +64,7 @@ __une_parser(une_parse_sequence,
   une_token_type tt_begin,
   une_token_type tt_end_of_item,
   une_token_type tt_end,
-  une_node* (*parser)(une_error*, une_parser_state*)
+  une_node *(*parser)(une_error*, une_parser_state*)
 );
 
 #endif /* !UNE_PARSER_H */

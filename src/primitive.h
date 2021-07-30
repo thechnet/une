@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-07-17
+Modified 2021-07-26
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -10,8 +10,8 @@ Modified 2021-07-17
 *** Options.
 */
 #define UNE_DEBUG_MEMDBG
-#define UNE_DEBUG_SIZES
-#define UNE_DEBUG_REPORT
+// #define UNE_DEBUG_SIZES
+// #define UNE_DEBUG_REPORT
 
 // #define UNE_NO_LEX
 // #define UNE_NO_PARSE
@@ -52,7 +52,7 @@ Modified 2021-07-17
 /*
 *** Constants.
 */
-#define UNE_DEFAULT_CONTEXT_NAME L"<stdin>"
+#define UNE_DEFAULT_CONTEXT_NAME L"<args>"
 #define UNE_STDIN_SWITCH "-s"
 #define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
@@ -118,8 +118,8 @@ typedef union _une_value {
   une_int _int;
   une_flt _flt;
   wchar_t *_wcs;
-  void **_vpp;
   void *_vp;
+  void **_vpp;
 } une_value;
 
 /*

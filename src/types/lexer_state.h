@@ -1,6 +1,6 @@
 /*
 lexer_state.h - Une
-Modified 2021-06-13
+Modified 2021-07-25
 */
 
 #ifndef UNE_LEXER_STATE_H
@@ -28,6 +28,6 @@ typedef struct _une_lexer_state {
 *** Interface.
 */
 
-une_lexer_state une_lexer_state_create(bool read_from_file, char *path, wchar_t* text);
+une_lexer_state une_lexer_state_create(bool read_from_file, char *path, wchar_t *text);
 
 #endif /* UNE_LEXER_STATE_H */
