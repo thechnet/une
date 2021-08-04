@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- The error line is always `1`.
+- The position of an expression in parentheses does not include the surrounding parentheses.
+- If there are non-printable but legal characters on the line of an error, the underscore in the error display gets misaligned.
+
 ## [0.5.8] - 2021-07-30
 
 ### Added

@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-07-25
+Modified 2021-08-04
 */
 
 /* Header-specific includes. */
@@ -358,6 +358,7 @@ __une_parser(une_parse_atom)
     /* Expression. */
     case UNE_TT_LPAR: {
       LOGPARSE(L"expression", une_token_to_wcs(now(&ps->in)));
+      size_t pos_start = now(&ps->in).pos.start;
       pull(&ps->in);
       une_node *expression = une_parse_expression(error, ps);
       if (expression == NULL)
@@ -367,6 +368,10 @@ __une_parser(une_parse_atom)
         *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
         return NULL;
       }
+      expression->pos = (une_position){
+        .start = pos_start,
+        .end = now(&ps->in).pos.end
+      };
       pull(&ps->in);
       return expression;
     }

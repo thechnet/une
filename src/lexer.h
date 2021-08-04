@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Modified 2021-07-25
+Modified 2021-08-04
 */
 
 #ifndef UNE_LEXER_H
@@ -36,6 +36,11 @@ Condition to check whether a character can be in an id.
 Condition to check whether a character is whitespace that can always be ignored.
 */
 #define UNE_LEXER_WC_IS_SOFT_WHITESPACE(wc) (wc == L' ' || wc == L'\t')
+
+/*
+Condition to check whether a character is legal but non-printable.
+*/
+#define UNE_LEXER_WC_IS_INVISIBLE(wc) (wc == L'\r')
 
 /*
 Condition to check whether a character can seperate statements.

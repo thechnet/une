@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-07-15
+Modified 2021-08-04
 */
 
 /* Header-specific includes. */
@@ -8,6 +8,7 @@ Modified 2021-07-15
 
 /* Implementation-specific includes. */
 #include "../stream.h"
+#include "../lexer.h"
 
 /*
 Error message table.
@@ -78,6 +79,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   size_t line_end = 0;
   size_t pos_start = error->pos.start;
   size_t pos_end = error->pos.end;
+  int invisible_characters = 0;
   une_istream text;
   wint_t (*pull)(une_istream*);
   wint_t (*peek)(une_istream*, ptrdiff_t);
@@ -115,10 +117,14 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   while (true) {
     if (pull(&text) == WEOF)
       break;
+    if (UNE_LEXER_WC_IS_INVISIBLE(now(&text)))
+      invisible_characters++;
     if (text.index >= pos_start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
       break;
-    if (now(&text) == L'\n')
+    if (now(&text) == L'\n') {
       line_begin = text.index+1;
+      invisible_characters = 0;
+    }
   }
   line_end = text.index;
   
@@ -150,7 +156,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
 
   /* Underline error position within line. */
   wprintf(UNE_COLOR_FAIL);
-  for (int i=pos_start-line_begin; i>0; i--)
+  for (int i=pos_start-line_begin-invisible_characters; i>0; i--)
     putwc(L' ', stdout);
   for (int i=0; i<pos_end-pos_start; i++)
     putwc(L'~', stdout);
@@ -173,6 +179,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   wprintf(L"pos_end: %d\n", pos_end);
   wprintf(L"line_begin: %d\n", line_begin);
   wprintf(L"line_end: %d\n", line_end);
+  wprintf(L"invisible_characters: %d\n", invisible_characters);
   wprintf(L"\n");
   #endif
   
