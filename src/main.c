@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-07-30
+Modified 2021-08-05
 */
 
 /* Import public Une interface. */
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
   
   /* main Error. */
   if (main_error) {
-    wprintf(RESET L"Usage: une {<script>|-s <string>})\n");
+    wprintf(RESET L"Usage: %hs {<script>|-s <string>})\n", argv[0]);
     result = (une_result){
       .type = UNE_RT_ERROR,
       .value._int = UNE_MAIN_ERROR

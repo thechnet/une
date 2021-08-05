@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- The help message on invalid command line arguments now shows an environment-specific path to the executable by using the implicit zeroth path argument.
+
 ### Fixed
 - The error line is always `1`.
 - The position of an expression in parentheses does not include the surrounding parentheses.

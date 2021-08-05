@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-07-17
+Modified 2021-08-05
 */
 
 /* Header-specific includes. */
@@ -68,7 +68,7 @@ const une_int une_builtin_get_num_of_params(une_builtin_type type)
 /*
 Print a text representation of a une_result.
 */
-__une_builtin_fn(une_builtin_put, une_result result)
+__une_builtin_fn(une_builtin_put, une_position pos, une_result result)
 {
   /* Print text representation. */
   une_result_represent(stdout, result);
@@ -79,7 +79,7 @@ __une_builtin_fn(une_builtin_put, une_result result)
 /*
 Print a text representation of a une_result, always adding a newline at the end.
 */
-__une_builtin_fn(une_builtin_print, une_result result)
+__une_builtin_fn(une_builtin_print, une_position pos, une_result result)
 {
   une_builtin_put(error, is, pos, result);
   
@@ -91,7 +91,7 @@ __une_builtin_fn(une_builtin_print, une_result result)
 /*
 Convert une_result to UNE_RT_INT une_result and return it.
 */
-__une_builtin_fn(une_builtin_to_int, une_result result)
+__une_builtin_fn(une_builtin_to_int, une_position pos, une_result result)
 {
   /* Convert une_result. */
   switch (result.type) {
@@ -123,7 +123,7 @@ __une_builtin_fn(une_builtin_to_int, une_result result)
 /*
 Convert une_result to UNE_RT_FLT une_result and return it.
 */
-__une_builtin_fn(une_builtin_to_flt, une_result result)
+__une_builtin_fn(une_builtin_to_flt, une_position pos, une_result result)
 {
   /* Convert une_result. */
   switch (result.type) {
@@ -155,7 +155,7 @@ __une_builtin_fn(une_builtin_to_flt, une_result result)
 /*
 Convert une_result to UNE_RT_STR une_result and return it.
 */
-__une_builtin_fn(une_builtin_to_str, une_result result)
+__une_builtin_fn(une_builtin_to_str, une_position pos, une_result result)
 {
   /* Convert une_result. */
   switch (result.type) {
@@ -187,7 +187,7 @@ __une_builtin_fn(une_builtin_to_str, une_result result)
 /*
 Get length of une_result and return it.
 */
-__une_builtin_fn(une_builtin_get_len, une_result result)
+__une_builtin_fn(une_builtin_get_len, une_position pos, une_result result)
 {
   /* Get length of une_result. */
   switch (result.type) {
@@ -213,7 +213,7 @@ __une_builtin_fn(une_builtin_get_len, une_result result)
 /*
 Halt execution for a given amount of miliseconds.
 */
-__une_builtin_fn(une_builtin_sleep, une_result result)
+__une_builtin_fn(une_builtin_sleep, une_position pos, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_INT. */
   if (result.type != UNE_RT_INT) {
@@ -234,7 +234,7 @@ __une_builtin_fn(une_builtin_sleep, une_result result)
 /*
 Convert a number to its corresponding one-character string.
 */
-__une_builtin_fn(une_builtin_chr, une_result result)
+__une_builtin_fn(une_builtin_chr, une_position pos, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_INT. */
   if (result.type != UNE_RT_INT) {
@@ -252,7 +252,7 @@ __une_builtin_fn(une_builtin_chr, une_result result)
 /*
 Convert a one-character string to its corresponding number.
 */
-__une_builtin_fn(une_builtin_ord, une_result result)
+__une_builtin_fn(une_builtin_ord, une_position pos, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR and is only one character long. */
   if (result.type != UNE_RT_STR || wcslen(result.value._wcs) != 1) {
@@ -268,7 +268,7 @@ __une_builtin_fn(une_builtin_ord, une_result result)
 /*
 Return the entire contents of a file as text.
 */
-__une_builtin_fn(une_builtin_read, une_result result)
+__une_builtin_fn(une_builtin_read, une_position pos, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR. */
   if (result.type != UNE_RT_STR) {
@@ -299,28 +299,28 @@ __une_builtin_fn(une_builtin_read, une_result result)
 /*
 Write text to a file.
 */
-__une_builtin_fn(une_builtin_write, une_result file, une_position pos2, une_result text)
+__une_builtin_fn(une_builtin_write, une_position pos_file, une_result file, une_position pos_text, une_result text)
 {
   /* Ensure input une_result_types are UNE_RT_STR. */
   if (file.type != UNE_RT_STR) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos_file);
     return une_result_create(UNE_RT_ERROR);
   }
   if (text.type != UNE_RT_STR) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos2);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos_text);
     return une_result_create(UNE_RT_ERROR);
   }
 
   /* Create file. */
   char *path = une_wcs_to_str(file.value._wcs);
   if (path == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos);
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, pos_file);
     return une_result_create(UNE_RT_ERROR);
   }
   FILE *fp = fopen(path, UNE_FOPEN_WFLAGS);
   free(path);
   if (fp == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos);
+    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, pos_file);
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -333,7 +333,7 @@ __une_builtin_fn(une_builtin_write, une_result file, une_position pos2, une_resu
 /*
 Get user input as string from the console.
 */
-__une_builtin_fn(une_builtin_input, une_result result)
+__une_builtin_fn(une_builtin_input, une_position pos, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR. */
   if (result.type != UNE_RT_STR) {
@@ -359,7 +359,7 @@ __une_builtin_fn(une_builtin_input, une_result result)
 /*
 Run an external Une script.
 */
-__une_builtin_fn(une_builtin_script, une_result result)
+__une_builtin_fn(une_builtin_script, une_position pos, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR. */
   if (result.type != UNE_RT_STR) {
@@ -388,7 +388,7 @@ __une_builtin_fn(une_builtin_script, une_result result)
 /*
 Check if a file or directory exists.
 */
-__une_builtin_fn(une_builtin_exist, une_result result)
+__une_builtin_fn(une_builtin_exist, une_position pos, une_result result)
 {
   /* Ensure input une_result_type is UNE_RT_STR. */
   if (result.type != UNE_RT_STR) {
@@ -412,21 +412,21 @@ __une_builtin_fn(une_builtin_exist, une_result result)
 
 /* Split a string into a list of substrings. */
 UNE_OSTREAM_PUSHER(__une_builtin_split_push, une_result)
-__une_builtin_fn(une_builtin_split, une_result string, une_position pos2, une_result delims)
+__une_builtin_fn(une_builtin_split, une_position pos_string, une_result string, une_position pos_delims, une_result delims)
 {
   /* Ensure input une_result_types are UNE_RT_STR and UNE_RT_LIST, where each member is of type UNE_RT_STR. */
   if (string.type != UNE_RT_STR) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos_string);
     return une_result_create(UNE_RT_ERROR);
   }
   if (delims.type != UNE_RT_LIST || ((une_result*)delims.value._vp)[0].value._int == 0) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos2);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, pos_delims);
     return une_result_create(UNE_RT_ERROR);
   }
   UNE_UNPACK_RESULT_LIST(delims, delims_p, delims_len);
   UNE_FOR_RESULT_LIST_ITEM(i, delims_len) {
     if (delims_p[i].type != UNE_RT_STR || wcslen(delims_p[i].value._wcs) <= 0) {
-      *error = UNE_ERROR_SET(UNE_ET_TYPE, pos2);
+      *error = UNE_ERROR_SET(UNE_ET_TYPE, pos_delims);
       return une_result_create(UNE_RT_ERROR);
     }
   }
