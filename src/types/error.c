@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-08-04
+Modified 2021-08-05
 */
 
 /* Header-specific includes. */
@@ -117,9 +117,9 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   while (true) {
     if (pull(&text) == WEOF)
       break;
-    if (UNE_LEXER_WC_IS_INVISIBLE(now(&text)))
+    if (UNE_LEXER_WC_IS_INVISIBLE(now(&text)) && text.index < pos_end)
       invisible_characters++;
-    if (text.index >= pos_start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
+    if (text.index >= pos_end && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
       break;
     if (now(&text) == L'\n') {
       line_begin = text.index+1;

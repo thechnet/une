@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-07-30
+Modified 2021-08-05
 */
 
 /* Header-specific includes. */
@@ -110,42 +110,9 @@ __une_static une_result une_interpret_call_def(une_error *error, une_interpreter
 /*
 Call built-in function.
 */
-__une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_builtin_type type, une_result *args, une_node **arg_nodes)
+__une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args, une_builtin_fnptr fn)
 {
-  assert(UNE_BUILTIN_TYPE_IS_VALID(type));
-  switch (type) {
-    case UNE_BIF_PUT:
-      return une_builtin_put(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_PRINT:
-      return une_builtin_print(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_TO_INT:
-      return une_builtin_to_int(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_TO_FLT:
-      return une_builtin_to_flt(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_TO_STR:
-      return une_builtin_to_str(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_GET_LEN:
-      return une_builtin_get_len(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_SLEEP:
-      return une_builtin_sleep(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_CHR:
-      return une_builtin_chr(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_ORD:
-      return une_builtin_ord(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_READ:
-      return une_builtin_read(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_WRITE:
-      return une_builtin_write(error, is, arg_nodes[1]->pos, args[0], arg_nodes[2]->pos, args[1]);
-    case UNE_BIF_INPUT:
-      return une_builtin_input(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_SCRIPT:
-      return une_builtin_script(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_EXIST:
-      return une_builtin_exist(error, is, arg_nodes[1]->pos, args[0]);
-    case UNE_BIF_SPLIT:
-    default:
-      return une_builtin_split(error, is, arg_nodes[1]->pos, args[0], arg_nodes[2]->pos, args[1]);
-  }
+  return (*fn)(error, is, call_node, args);
 }
 
 /*
@@ -1123,7 +1090,7 @@ __une_interpreter(une_interpret_def)
   wchar_t *name = node->content.branch.a->content.value._wcs;
   
   /* Check if function built-in or already exists *in current context*. */
-  if (une_builtin_wcs_to_type(name) != __UNE_BIF_none__ || une_function_find(is->context, name) != NULL) {
+  if (une_builtin_wcs_to_fnptr(name) != NULL || une_function_find(is->context, name) != NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ALREADY_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
@@ -1154,27 +1121,29 @@ __une_interpreter(une_interpret_call)
   /* Get function name. */
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
-  size_t num_of_params;
-  une_function *fn;
+  /* Unpack arguments. */
+  UNE_UNPACK_NODE_LIST(node->content.branch.b, args_n, args_count);
+
+  size_t params_count;
 
   /* Check if function is built-in. */
-  une_builtin_type builtin_type = une_builtin_wcs_to_type(name);
-  if (builtin_type != __UNE_BIF_none__)
-    num_of_params = une_builtin_get_num_of_params(builtin_type);
+  une_builtin_fnptr builtin_fn = une_builtin_wcs_to_fnptr(name);
+  if (builtin_fn != NULL)
+    params_count = une_builtin_params_count(builtin_fn);
 
   /* Check if function exists in symbol table. */
-  else {
+  une_function *fn;
+  if (builtin_fn == NULL) {
     fn = une_function_find_global(is->context, name);
     if (fn == NULL) {
       *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
       return une_result_create(UNE_RT_ERROR);
     }
-    num_of_params = fn->params_count;
+    params_count = fn->params_count;
   }
-
-  /* Get arguments and compare number of arguments to number of parameters. */
-  UNE_UNPACK_NODE_LIST(node->content.branch.b, args_n, args_count);
-  if (args_count != num_of_params) {
+  
+  /* Compare number of arguments to number of parameters. */
+  if (args_count != params_count) {
     *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ARG_COUNT, node->content.branch.b->pos);
     return une_result_create(UNE_RT_ERROR);
   }
@@ -1196,11 +1165,13 @@ __une_interpreter(une_interpret_call)
 
   /* Execute function. */
   une_result result;
-  if (builtin_type != __UNE_BIF_none__)
-    result = une_interpret_call_builtin(error, is, builtin_type, args, args_n);
-  else
+  if (builtin_fn == NULL)
     result = une_interpret_call_def(error, is, fn, args);
-  for (size_t i=0; i<num_of_params; i++)
+  else
+    result = une_interpret_call_builtin(error, is, node, args, builtin_fn);
+  
+  /* Clean up. */
+  for (size_t i=0; i<args_count; i++)
     une_result_free(args[i]);
   if (args != NULL)
     free(args);

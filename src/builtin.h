@@ -12,61 +12,69 @@ Modified 2021-08-05
 #include "types/error.h"
 #include "types/interpreter_state.h"
 
-/*
-The type of built-in function.
-*/
-typedef enum _une_builtin_type {
-  __UNE_BIF_none__,
-  UNE_BIF_PUT,
-  UNE_BIF_PRINT,
-  UNE_BIF_TO_INT,
-  UNE_BIF_TO_FLT,
-  UNE_BIF_TO_STR,
-  UNE_BIF_GET_LEN,
-  UNE_BIF_SLEEP,
-  UNE_BIF_CHR,
-  UNE_BIF_ORD,
-  UNE_BIF_READ,
-  UNE_BIF_WRITE,
-  UNE_BIF_INPUT,
-  UNE_BIF_SCRIPT,
-  UNE_BIF_EXIST,
-  UNE_BIF_SPLIT,
-  __UNE_BIF_max__,
-} une_builtin_type;
+#define __une_builtin_fn_sign(__id) une_result (__id)(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args)
+
+typedef const int une_builtin_param;
+typedef __une_builtin_fn_sign(*une_builtin_fnptr);
 
 /*
 *** Interface.
 */
 
 /*
-Condition to check whether une_builtin_type is valid.
+Every built-in function.
 */
-#define UNE_BUILTIN_TYPE_IS_VALID(type)\
-  (type > __UNE_BIF_none__ && type < __UNE_BIF_max__)
+#define UNE_ENUMERATE_BUILTIN_FUNCTIONS(enumerator) \
+  enumerator(put) \
+  enumerator(print) \
+  enumerator(int) \
+  enumerator(flt) \
+  enumerator(str) \
+  enumerator(len) \
+  enumerator(sleep) \
+  enumerator(chr) \
+  enumerator(ord) \
+  enumerator(read) \
+  enumerator(write) \
+  enumerator(input) \
+  enumerator(script) \
+  enumerator(exist) \
+  enumerator(split)
 
 /*
 Built-in function template.
 */
-#define __une_builtin_fn(__id, ...) une_result (__id)(une_error *error, une_interpreter_state *is, ##__VA_ARGS__)
+#define __une_builtin_fn(__id) __une_builtin_fn_sign(une_builtin_fn_##__id)
 
-const une_builtin_type une_builtin_wcs_to_type(wchar_t *name);
-const une_int une_builtin_get_num_of_params(une_builtin_type type);
+/*
+Ensure the number of arguments received are correct.
+*/
+#define UNE_BUILTIN_VERIFY_ARG_COUNT(expected_argc) \
+  if (((une_node**)call_node->content.branch.b->content.value._vpp)[0]->content.value._int != expected_argc) {\
+    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ARG_COUNT, call_node->pos);\
+    return une_result_create(UNE_RT_ERROR);\
+  }
 
-__une_builtin_fn(une_builtin_put,     une_position pos, une_result result);
-__une_builtin_fn(une_builtin_print,   une_position pos, une_result result);
-__une_builtin_fn(une_builtin_to_int,  une_position pos, une_result result);
-__une_builtin_fn(une_builtin_to_flt,  une_position pos, une_result result);
-__une_builtin_fn(une_builtin_to_str,  une_position pos, une_result result);
-__une_builtin_fn(une_builtin_get_len, une_position pos, une_result result);
-__une_builtin_fn(une_builtin_sleep,   une_position pos, une_result result);
-__une_builtin_fn(une_builtin_chr,     une_position pos, une_result result);
-__une_builtin_fn(une_builtin_ord,     une_position pos, une_result result);
-__une_builtin_fn(une_builtin_read,    une_position pos, une_result result);
-__une_builtin_fn(une_builtin_write,   une_position pos_file, une_result file, une_position pos_text, une_result text);
-__une_builtin_fn(une_builtin_input,   une_position pos, une_result result);
-__une_builtin_fn(une_builtin_script,  une_position pos, une_result result);
-__une_builtin_fn(une_builtin_exist,   une_position pos, une_result result);
-__une_builtin_fn(une_builtin_split,   une_position pos_string, une_result string, une_position pos_delims, une_result delims);
+/*
+Get the position of an argument.
+*/
+#define UNE_BUILTIN_POS_OF_ARG(index) \
+  (((une_node**)call_node->content.branch.b->content.value._vpp)[index+1]->pos)
+
+/*
+Ensure an argument has the correct type.
+*/
+#define UNE_BUILTIN_VERIFY_ARG_TYPE(index, expected_type) \
+  if (args[index].type != expected_type) {\
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(index));\
+    return une_result_create(UNE_RT_ERROR);\
+  }
+
+const size_t une_builtin_params_count(une_builtin_fnptr fn);
+une_builtin_fnptr une_builtin_wcs_to_fnptr(wchar_t *wcs);
+
+#define __BUILTIN_DECLARATION(__id) __une_builtin_fn(__id);
+UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_DECLARATION)
+#undef __BUILTIN_DECLARATION
 
 #endif /* UNE_BUILTIN_H */
