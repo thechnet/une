@@ -1,6 +1,6 @@
 /*
 stream.c - Une
-Modified 2021-07-15
+Modified 2021-08-07
 */
 
 /* Header-specific includes. */
@@ -93,9 +93,9 @@ bool une_istream_array_verify_position(une_istream *istream, ptrdiff_t offset)
 }
 
 /*
-Verify a position in a une_ostream.
+Ensure a une_ostream is large enough for another item.
 */
-bool une_ostream_verify_position(une_ostream *ostream, ptrdiff_t offset)
+bool une_ostream_grow_if_needed(une_ostream *ostream, ptrdiff_t offset)
 {
   if (ostream->index+offset < 0)
     return false;

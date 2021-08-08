@@ -1,6 +1,6 @@
 /*
 symbols.c - Une
-Modified 2021-07-08
+Modified 2021-08-07
 */
 
 /* Header-specific includes. */
@@ -14,7 +14,6 @@ Free all members of a une_variable.
 */
 void une_variable_free(une_variable variable)
 {
-  LOGFREE(L"une_variable", variable.name, 0);
   free(variable.name);
   une_result_free(variable.content);
 }
@@ -24,7 +23,6 @@ Free all members of a une_function.
 */
 void une_function_free(une_function function)
 {
-  LOGFREE(L"une_function", function.name, 0);
   free(function.name);
   for (size_t i=0; i<function.params_count; i++)
     free(function.params[i]);

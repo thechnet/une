@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2021-07-17
+Modified 2021-08-07
 */
 
 /* Header-specific includes. */
@@ -87,8 +87,6 @@ void une_token_free(une_token token)
       break;
   
   }
-  
-  LOGFREE(L"une_token", une_token_type_to_wcs(token.type), token.type);
 }
 
 /*

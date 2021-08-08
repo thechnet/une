@@ -318,9 +318,9 @@ tests = [
   
   # FDIV
   ['1//3', UNE_RT_INT, '0'],
-  ['5//2.0', UNE_RT_FLT, '2.000'],
-  ['0.1//1', UNE_RT_FLT, '0.000'],
-  ['6.0//4.0', UNE_RT_FLT, '1.000'],
+  ['5//2.0', UNE_RT_INT, '2'],
+  ['0.1//1', UNE_RT_INT, '0'],
+  ['6.0//4.0', UNE_RT_INT, '1'],
   ['unknown//1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1//unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1//[1]', UNE_RT_ERROR, UNE_ET_TYPE],

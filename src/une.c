@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-07-19
+Modified 2021-08-07
 */
 
 /* Header-specific includes. */
@@ -85,7 +85,6 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #else
   result = une_result_create(UNE_RT_VOID);
   #endif
-  
   /* Wrap up. */
   if (
     #ifndef UNE_NO_LEX

@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-07-17
+Modified 2021-08-07
 */
 
 /* Header-specific includes. */
@@ -229,7 +229,8 @@ __une_lexer(une_lex_num)
     /* Return integer. */
     buffer[ls->in.index-idx_start] = L'\0';
     une_int int_;
-    assert(une_wcs_to_une_int(buffer, &int_));
+    if(!une_wcs_to_une_int(buffer, &int_))
+      assert(false);
     une_token tk = (une_token){
       .type = UNE_TT_INT,
       .pos = (une_position){idx_start, ls->in.index},
@@ -268,7 +269,8 @@ __une_lexer(une_lex_num)
   /* Return floating point number. */
   buffer[ls->in.index-idx_start] = L'\0';
   une_flt flt;
-  assert(une_wcs_to_une_flt(buffer, &flt));
+  if (!une_wcs_to_une_flt(buffer, &flt))
+    assert(false);
   une_token tk = (une_token){
     .type = UNE_TT_FLT,
     .pos = (une_position){idx_start, ls->in.index},

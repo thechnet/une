@@ -1,6 +1,6 @@
 /*
 stream.h - Une
-Modified 2021-07-25
+Modified 2021-08-07
 */
 
 #ifndef UNE_STREAM_H
@@ -185,7 +185,8 @@ Push an item to a une_ostream.
 #define UNE_OSTREAM_PUSHER(__id, __type)\
   __une_static void __id(une_ostream *ostream, __type item)\
   {\
-    assert(une_ostream_verify_position(ostream, 1));\
+    if (!une_ostream_grow_if_needed(ostream, 1))\
+      assert(false);\
     ostream->index++;\
     __UNE_OSTREAM_ITEM(ostream, __type, 0) = item;\
   }
@@ -196,7 +197,7 @@ Peek an item in a une_ostream by value.
 #define UNE_OSTREAM_PEEKER_VAL(__id, __type, __error_value)\
   __une_static __type __id(une_ostream *ostream, ptrdiff_t offset)\
   {\
-    if (!une_ostream_verify_position(ostream, offset+1))\
+    if (!une_ostream_grow_if_needed(ostream, offset+1))\
       return __error_value;\
     return __UNE_OSTREAM_ITEM(ostream, __type, offset+1);\
   }
@@ -207,7 +208,7 @@ Peek an item in a une_ostream by reference.
 #define UNE_OSTREAM_PEEKER_REF(__id, __type, __error_value)\
   __une_static __type *__id(une_ostream *ostream, ptrdiff_t offset)\
   {\
-    if (!une_ostream_verify_position(ostream, offset+1))\
+    if (!une_ostream_grow_if_needed(ostream, offset+1))\
       return __error_value;\
     return &__UNE_OSTREAM_ITEM(ostream, __type, offset+1);\
   }
@@ -222,6 +223,6 @@ void une_istream_wfile_reset(une_istream *istream);
 void une_istream_wfile_free(une_istream stream);
 
 bool une_istream_array_verify_position(une_istream *istream, ptrdiff_t offset);
-bool une_ostream_verify_position(une_ostream *ostream, ptrdiff_t offset);
+bool une_ostream_grow_if_needed(une_ostream *ostream, ptrdiff_t offset);
 
 #endif /* !UNE_STREAM_H */

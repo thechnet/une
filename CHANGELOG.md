@@ -1,15 +1,25 @@
 # Changelog
 
-## [Unreleased]
+## [0.5.9]
 
 ### Changed
 - The help message on invalid command line arguments now shows an environment-specific path to the executable by using the implicit zeroth path argument.
 - Built-in functions no longer each have a custom declaration.
+- Data result types are now organized in `src/datatypes`.  
+  - Each data type defines a number of routines in its corresponding `.c` file, with all types being united in `datatypes.c`.
+  - When applying an operation, the required routine is found through the `une_datatypes` lookup table.
 
 ### Fixed
 - The error line is always `1`.
 - The position of an expression in parentheses does not include the surrounding parentheses.
 - If there are non-printable but legal characters on the line of an error, the underscore in the error display gets misaligned.
+- `ostream` buffers do not grow if `assert()` is disabled.
+- The creation of `UNE_TT_INT` and `UNE_TT_FLT` tokens does not work if `assert()` is disabled.
+- Missing error on conversion of integer into invalid character.
+
+### Removed
+- `LOGFREE()` macros.
+- Data result type helpers from `result.c` – See *Changed*.
 
 ## [0.5.8] - 2021-07-30
 
@@ -411,9 +421,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.5.8...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.5.9...HEAD
 
 <!-- Releases -->
+[0.5.9]: https://github.com/thechnet/une/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/thechnet/une/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/thechnet/une/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/thechnet/une/compare/v0.5.5...v0.5.6

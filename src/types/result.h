@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2021-07-17
+Modified 2021-08-08
 */
 
 #ifndef UNE_RESULT_H
@@ -51,6 +51,13 @@ Unpack a une_result list into its name and size.
   size_t listsize = listname[0].value._int
 
 /*
+Unpack a une_result string into its string pointer and size.
+*/
+#define UNE_UNPACK_RESULT_STR(strresult, strname, strsize)\
+  wchar_t *strname = strresult.value._wcs;\
+  size_t strsize = wcslen(strname)
+
+/*
 Iterate over every item in a une_result list.
 */
 #define UNE_FOR_RESULT_LIST_ITEM(var, size)\
@@ -75,7 +82,7 @@ Condition to check whether une_result_type is data type.
   (type >= UNE_R_BGN_DATA_RESULT_TYPES && type <= UNE_R_END_DATA_RESULT_TYPES)
 
 une_result une_result_create(une_result_type type);
-une_result une_result_copy(une_result src);
+une_result une_result_copy(une_result original);
 void une_result_free(une_result result);
 
 une_result *une_result_list_create(size_t size);
@@ -87,11 +94,5 @@ void une_result_represent(FILE *file, une_result result);
 
 une_int une_result_is_true(une_result result);
 une_int une_results_are_equal(une_result left, une_result right);
-
-une_result une_result_lists_add(une_result left, une_result right);
-une_result une_result_strs_add (une_result left, une_result right);
-
-une_result une_result_list_mul(une_result list, une_int count);
-une_result une_result_str_mul (une_result str, une_int count);
 
 #endif /* !UNE_RESULT_H */

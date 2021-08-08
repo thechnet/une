@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-07-17
+Modified 2021-08-08
 */
 
 /* Header-specific includes. */
@@ -9,6 +9,7 @@ Modified 2021-07-17
 /* Implementation-specific includes. */
 #include "../tools.h"
 #include "node.h"
+#include "../datatypes/datatypes.h"
 
 /*
 Result name table.
@@ -39,39 +40,15 @@ une_result une_result_create(une_result_type type)
 /*
 Return a duplicate une_result.
 */
-une_result une_result_copy(une_result src)
+une_result une_result_copy(une_result original)
 {
-  assert(UNE_RESULT_TYPE_IS_VALID(src.type));
-  
-  /* Create destination une_result. */
-  une_result dest = une_result_create(src.type);
-  
-  /* Populate destination. */
-  switch (src.type) {
-    
-    /* Heap data. */
-    case UNE_RT_STR:
-      dest.value._wcs = wcsdup(src.value._wcs);
-      break;
-    
-    /* List. */
-    case UNE_RT_LIST: {
-      UNE_UNPACK_RESULT_LIST(src, list, list_size);
-      une_result *list_copy = une_result_list_create(list_size);
-      UNE_FOR_RESULT_LIST_ITEM(i, list_size)
-        list_copy[i] = une_result_copy(list[i]);
-      dest.value._vp = (void*)list_copy;
-      break;
-    }
-    
-    /* Stack data. */
-    default:
-      dest.value = src.value;
-      break;
-    
-  }
-  
-  return dest;
+  assert(UNE_RESULT_TYPE_IS_VALID(original.type));
+  if (!UNE_RESULT_TYPE_IS_DATA_TYPE(original.type))
+    return original;
+  une_datatype dt_original = UNE_DATATYPE_FOR_RESULT(original);
+  if (dt_original.copy == NULL)
+    return original;
+  return dt_original.copy(original);
 }
 
 /*
@@ -80,27 +57,9 @@ Free all members of a une_result.
 void une_result_free(une_result result)
 {
   assert(UNE_RESULT_TYPE_IS_VALID(result.type));
-  
-  /* Free members. */
-  switch (result.type) {
-    
-    /* Heap data. */
-    case UNE_RT_STR:
-      LOGFREE(L"une_result", une_result_type_to_wcs(result.type), result.type);
-      free(result.value._wcs);
-      break;
-    
-    /* List. */
-    case UNE_RT_LIST: {
-      LOGFREE(L"une_result", une_result_type_to_wcs(result.type), result.type);
-      UNE_UNPACK_RESULT_LIST(result, list, list_size);
-      UNE_FOR_RESULT_LIST_INDEX(i, list_size)
-        une_result_free(list[i]);
-      free(list);
-      break;
-    }
-  
-  }
+  if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type))
+    if (UNE_DATATYPE_FOR_RESULT(result).free_members != NULL)
+      UNE_DATATYPE_FOR_RESULT(result).free_members(result);
 }
 
 /*
@@ -123,72 +82,18 @@ Return a text representation of a une_result_type.
 const wchar_t *une_result_type_to_wcs(une_result_type type)
 {
   assert(UNE_RESULT_TYPE_IS_VALID(type));
-  
   return une_result_table[type-1];
 }
 #endif /* UNE_DEBUG */
 
 /*
 Print a text representation of a une_result.
-une_result does not have a *_to_wcs function because these functions can end in a buffer overflow.
-As une_result needs to be representable in release builds, it instead has a *_represent function.
 */
 void une_result_represent(FILE *file, une_result result)
 {
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
-
-  switch (result.type) {
-    
-    case UNE_RT_INT:
-      fwprintf(file, UNE_PRINTF_UNE_INT, result.value._int);
-      break;
-    
-    case UNE_RT_FLT:
-      fwprintf(file, UNE_PRINTF_UNE_FLT, result.value._flt);
-      break;
-    
-    case UNE_RT_STR:
-      fwprintf(file, L"%ls", result.value._wcs);
-      break;
-    
-    case UNE_RT_LIST:
-      fwprintf(file, L"[");
-      UNE_UNPACK_RESULT_LIST(result, list, list_size);
-      UNE_FOR_RESULT_LIST_ITEM(i, list_size) {
-        if (list[i].type == UNE_RT_STR)
-          putwc(L'"', file);
-        une_result_represent(file, list[i]);
-        if (list[i].type == UNE_RT_STR)
-          putwc(L'"', file);
-        if (i < list_size)
-          fwprintf(file, L", ");
-      }
-      putwc(L']', file);
-      break;
-    
-    case UNE_RT_VOID:
-      fwprintf(file, L"VOID");
-      break;
-    
-    #ifdef UNE_DEBUG
-    case UNE_RT_ERROR:
-      fwprintf(file, L"ERROR");
-      break;
-    
-    case UNE_RT_CONTINUE:
-      fwprintf(file, L"CONTINUE");
-      break;
-    
-    case UNE_RT_BREAK:
-      fwprintf(file, L"BREAK");
-      break;
-    
-    case UNE_RT_SIZE:
-      fwprintf(file, L"SIZE");
-      break;
-    #endif
-    
-  }
+  assert(UNE_DATATYPE_FOR_RESULT(result).represent != NULL);
+  UNE_DATATYPE_FOR_RESULT(result).represent(file, result);
 }
 
 /*
@@ -197,19 +102,8 @@ Return 1 if the une_result is considered 'true', otherwise 0.
 une_int une_result_is_true(une_result result)
 {
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
-  
-  switch (result.type) {
-    case UNE_RT_INT:
-      return result.value._int == 0 ? 0 : 1;
-    case UNE_RT_FLT:
-      return result.value._flt == 0.0 ? 0 : 1;
-    case UNE_RT_STR:
-      return wcslen(result.value._wcs) == 0 ? 0 : 1;
-    case UNE_RT_LIST:
-      return ((une_result*)result.value._vp)[0].value._int == 0 ? 0 : 1;
-  }
-  
-  return 0;
+  assert(UNE_DATATYPE_FOR_RESULT(result).is_true != NULL);
+  return UNE_DATATYPE_FOR_RESULT(result).is_true(result);
 }
 
 /*
@@ -217,123 +111,8 @@ Return 1 if the une_results are considered equal, otherwise 0.
 */
 une_int une_results_are_equal(une_result left, une_result right)
 {
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT)
-    return left.value._int == right.value._int;
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT)
-    return (une_flt)left.value._int == right.value._flt;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT)
-    return left.value._flt == (une_flt)right.value._int;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT)
-    return left.value._flt == right.value._flt;
-  
-  /* STR and STR. */
-  else if (left.type == UNE_RT_STR && right.type == UNE_RT_STR)
-    return !wcscmp(left.value._wcs, right.value._wcs);
-  
-  /* LIST and LIST. */
-  else if (left.type == UNE_RT_LIST && right.type == UNE_RT_LIST) {
-    UNE_UNPACK_RESULT_LIST(left, left_list, left_size);
-    UNE_UNPACK_RESULT_LIST(right, right_list, right_size);
-    if (left_size != right_size)
-      return 0;
-    UNE_FOR_NODE_LIST_ITEM(i, left_size)
-      if (!une_results_are_equal(left_list[i], right_list[i]))
-        return 0;
-    return 1;
-  }
-  
-  /* Different types; not equal. */
-  return 0;
-}
-
-/*
-Concatenate two une_result lists.
-*/
-une_result une_result_lists_add(une_result left, une_result right)
-{
-  /* Unpack result lists. */
-  UNE_UNPACK_RESULT_LIST(left, left_list, left_size);
-  UNE_UNPACK_RESULT_LIST(right, right_list, right_size);
-  
-  /* Create new list. */
-  une_result *new = une_result_list_create(left_size+right_size);
-
-  /* Populate new list. */
-  UNE_FOR_NODE_LIST_ITEM(i, left_size)
-    new[i] = une_result_copy(left_list[i]);
-  UNE_FOR_NODE_LIST_ITEM(i, right_size)
-    new[left_size+i] = une_result_copy(right_list[i]);
-
-  return (une_result){
-    .type = UNE_RT_LIST,
-    .value._vp = (void*)new
-  };
-}
-
-/*
-Concatenate two une_result strings.
-*/
-une_result une_result_strs_add(une_result left, une_result right)
-{
-  /* Get size of strings. */
-  size_t left_size = wcslen(left.value._wcs);
-  size_t right_size = wcslen(right.value._wcs);
-
-  /* Create new string. */
-  wchar_t *new = malloc((left_size+right_size+1)*sizeof(*new));
-
-  /* Populate new string. */
-  wmemcpy(new, left.value._wcs, left_size);
-  wmemcpy(new+left_size, right.value._wcs, right_size);
-  new[left_size+right_size] = L'\0';
-
-  return (une_result){
-    .type = UNE_RT_STR,
-    .value._wcs = new
-  };
-}
-
-/*
-Repeat a une_result list.
-*/
-une_result une_result_list_mul(une_result list, une_int count)
-{
-  /* Unpack source list. */
-  UNE_UNPACK_RESULT_LIST(list, list_p, list_size);
-
-  /* Create new list. */
-  une_result *new = une_result_list_create(count*list_size);
-
-  /* Populate new list. */
-  for (size_t i=0; i<count; i++)
-    UNE_FOR_RESULT_LIST_ITEM(j, list_size)
-      new[i*list_size+j] = une_result_copy(list_p[j]);
-
-  return (une_result){
-    .type = UNE_RT_LIST,
-    .value._vp = (void*)new
-  };
-}
-
-/*
-Repeat a une_result string.
-*/
-une_result une_result_str_mul(une_result str, une_int count)
-{
-  /* Get size of source string. */
-  size_t str_size = wcslen(str.value._wcs);
-
-  /* Create new string. */
-  wchar_t *new = malloc((count*str_size+1)*sizeof(*new));
-
-  /* Populate new string. */
-  for (size_t i=0; i<count; i++)
-    wmemcpy(new+i*str_size, str.value._wcs, str_size);
-  new[count*str_size] = L'\0';
-
-  return (une_result){
-    .type = UNE_RT_STR,
-    .value._wcs = new
-  };
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(left.type));
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(right.type));
+  assert(UNE_DATATYPE_FOR_RESULT(left).is_equal != NULL);
+  return UNE_DATATYPE_FOR_RESULT(left).is_equal(left, right);
 }

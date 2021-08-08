@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-07-30
+Modified 2021-08-08
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -10,8 +10,8 @@ Modified 2021-07-30
 *** Options.
 */
 #define UNE_DEBUG_MEMDBG
-// #define UNE_DEBUG_SIZES
-// #define UNE_DEBUG_REPORT
+#define UNE_DEBUG_SIZES
+#define UNE_DEBUG_REPORT
 
 // #define UNE_NO_LEX
 // #define UNE_NO_PARSE
@@ -34,6 +34,9 @@ Modified 2021-07-30
 #include <wchar.h>
 #include <stdint.h>
 #include <stdbool.h>
+#ifndef UNE_DEBUG
+#define NDEBUG
+#endif
 #include <assert.h>
 #include <stddef.h>
 
@@ -132,11 +135,6 @@ typedef union _une_value {
 /*
 *** Logging.
 */
-#if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_FREE)
-#define LOGFREE(obj, str, num) out(L"%ls ('%ls', %lld)", obj, str, (une_int)num)
-#else
-#define LOGFREE(...)
-#endif
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
 #define LOGINTERPRET(str) out(L"interpret: %ls", str);
 #else

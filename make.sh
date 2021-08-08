@@ -56,6 +56,12 @@ src=\
 "types/interpreter_state.c "\
 "types/parser_state.c "\
 "types/lexer_state.c "\
+"datatypes/datatypes.c "\
+"datatypes/int.c "\
+"datatypes/flt.c "\
+"datatypes/str.c "\
+"datatypes/list.c "\
+"datatypes/void.c "\
 "tools.c "\
 "stream.c "\
 "builtin.c"

@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-08-05
+Modified 2021-08-08
 */
 
 /* Header-specific includes. */
@@ -11,6 +11,7 @@ Modified 2021-08-05
 #include <math.h>
 #include "tools.h"
 #include "types/context.h"
+#include "datatypes/datatypes.h"
 
 /*
 Interpreter function lookup table.
@@ -116,41 +117,6 @@ __une_static une_result une_interpret_call_builtin(une_error *error, une_interpr
 }
 
 /*
-Retrieve an item in a UNE_RT_LIST une_result.
-*/
-__une_static une_result une_interpret_get_idx_list(une_result list, une_int index)
-{
-  UNE_UNPACK_RESULT_LIST(list, list_p, list_size);
-
-  /* Ensure index is within range. */
-  if (index < 0 || index >= list_size)
-    return une_result_create(UNE_RT_ERROR);
-
-  return une_result_copy(list_p[1+index]);
-}
-
-/*
-Retrieve a character in a UNE_RT_STR une_result.
-*/
-__une_static une_result une_interpret_get_idx_str(une_result str, une_int index)
-{
-  UNE_UNPACK_NODE_STR(str, string, string_size);
-
-  /* Ensure index is within range. */
-  if (index < 0 || index >= string_size)
-    return une_result_create(UNE_RT_ERROR);
-
-  wchar_t *substring = malloc(2*sizeof(*substring));
-  substring[0] = string[index];
-  substring[1] = L'\0';
-
-  return (une_result){
-    .type = UNE_RT_STR,
-    .value._wcs = substring
-  };
-}
-
-/*
 Interpret a UNE_NT_INT une_node.
 */
 __une_interpreter(une_interpret_int)
@@ -205,7 +171,6 @@ __une_interpreter(une_interpret_list)
       return result;
     }
   }
-
   return (une_result){
     .type = UNE_RT_LIST,
     .value._vp = (void*)result_list,
@@ -358,39 +323,20 @@ __une_interpreter(une_interpret_gtr)
     return right;
   }
   
-  une_result result = une_result_create(UNE_RT_INT);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT)
-    result.value._int = left.value._int > right.value._int;
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT)
-    result.value._int = (une_flt)left.value._int > right.value._flt;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT)
-    result.value._int = left.value._flt > (une_flt)right.value._int;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT)
-    result.value._int = left.value._flt > right.value._flt;
-  
-  /* STR and STR. */
-  else if (left.type == UNE_RT_STR && right.type == UNE_RT_STR)
-    result.value._int = wcslen(left.value._wcs) > wcslen(right.value._wcs);
-  
-  /* LIST and LIST. */
-  else if (left.type == UNE_RT_LIST && right.type == UNE_RT_LIST) {
-    UNE_UNPACK_RESULT_LIST(left, left_list, left_list_size);
-    UNE_UNPACK_RESULT_LIST(right, right_list, right_list_size);
-    result.value._int = left_list_size > right_list_size;
-  }
-  
-  /* Illegal Comparison. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  assert(dt_left.is_greater != NULL);
+  une_int is_greater = dt_left.is_greater(left, right);
   une_result_free(left);
   une_result_free(right);
   
-  return result;
+  if (is_greater == -1) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = is_greater
+  };
 }
 
 /*
@@ -408,39 +354,20 @@ __une_interpreter(une_interpret_geq)
     return right;
   }
   
-  une_result result = une_result_create(UNE_RT_INT);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT)
-    result.value._int = left.value._int >= right.value._int;
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT)
-    result.value._int = (une_flt)left.value._int >= right.value._flt;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT)
-    result.value._int = left.value._flt >= (une_flt)right.value._int;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT)
-    result.value._int = left.value._flt >= right.value._flt;
-  
-  /* STR and STR. */
-  else if (left.type == UNE_RT_STR && right.type == UNE_RT_STR)
-    result.value._int = wcslen(left.value._wcs) >= wcslen(right.value._wcs);
-  
-  /* LIST and LIST. */
-  else if (left.type == UNE_RT_LIST && right.type == UNE_RT_LIST) {
-    UNE_UNPACK_RESULT_LIST(left, left_list, left_list_size);
-    UNE_UNPACK_RESULT_LIST(right, right_list, right_list_size);
-    result.value._int = left_list_size >= right_list_size;
-  }
-  
-  /* Illegal Comparison. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  assert(dt_left.is_greater_or_equal != NULL);
+  une_int is_greater_or_equal = dt_left.is_greater_or_equal(left, right);
   une_result_free(left);
   une_result_free(right);
   
-  return result;
+  if (is_greater_or_equal == -1) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = is_greater_or_equal
+  };
 }
 
 /*
@@ -458,39 +385,20 @@ __une_interpreter(une_interpret_lss)
     return right;
   }
   
-  une_result result = une_result_create(UNE_RT_INT);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT)
-    result.value._int = left.value._int < right.value._int;
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT)
-    result.value._int = (une_flt)left.value._int < right.value._flt;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT)
-    result.value._int = left.value._flt < (une_flt)right.value._int;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT)
-    result.value._int = left.value._flt < right.value._flt;
-  
-  /* STR and STR. */
-  else if (left.type == UNE_RT_STR && right.type == UNE_RT_STR)
-    result.value._int = wcslen(left.value._wcs) < wcslen(right.value._wcs);
-  
-  /* LIST and LIST. */
-  else if (left.type == UNE_RT_LIST && right.type == UNE_RT_LIST) {
-    UNE_UNPACK_RESULT_LIST(left, left_list, left_list_size);
-    UNE_UNPACK_RESULT_LIST(right, right_list, right_list_size);
-    result.value._int = left_list_size < right_list_size;
-  }
-  
-  /* Illegal Comparison. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  assert(dt_left.is_less != NULL);
+  une_int is_less = dt_left.is_less(left, right);
   une_result_free(left);
   une_result_free(right);
   
-  return result;
+  if (is_less == -1) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = is_less
+  };
 }
 
 /*
@@ -508,39 +416,20 @@ __une_interpreter(une_interpret_leq)
     return right;
   }
   
-  une_result result = une_result_create(UNE_RT_INT);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT)
-    result.value._int = left.value._int <= right.value._int;
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT)
-    result.value._int = (une_flt)left.value._int <= right.value._flt;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT)
-    result.value._int = left.value._flt <= (une_flt)right.value._int;
-  else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT)
-    result.value._int = left.value._flt <= right.value._flt;
-  
-  /* STR and STR. */
-  else if (left.type == UNE_RT_STR && right.type == UNE_RT_STR)
-    result.value._int = wcslen(left.value._wcs) <= wcslen(right.value._wcs);
-  
-  /* LIST and LIST. */
-  else if (left.type == UNE_RT_LIST && right.type == UNE_RT_LIST) {
-    UNE_UNPACK_RESULT_LIST(left, left_list, left_list_size);
-    UNE_UNPACK_RESULT_LIST(right, right_list, right_list_size);
-    result.value._int = left_list_size <= right_list_size;
-  }
-  
-  /* Illegal Comparison. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  assert(dt_left.is_less_or_equal != NULL);
+  une_int is_less_or_equal = dt_left.is_less_or_equal(left, right);
   une_result_free(left);
   une_result_free(right);
   
-  return result;
+  if (is_less_or_equal == -1) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = is_less_or_equal
+  };
 }
 
 /*
@@ -558,41 +447,17 @@ __une_interpreter(une_interpret_add)
     return right;
   }
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_INT;
-    result.value._int = left.value._int + right.value._int;
-  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = (une_flt)left.value._int + right.value._flt;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt + (une_flt)right.value._int;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt + right.value._flt;
-  }
-  
-  /* STR and STR. */
-  else if (left.type == UNE_RT_STR && right.type == UNE_RT_STR)
-    result = une_result_strs_add(left, right);
-  
-  /* LIST and LIST. */
-  else if (left.type == UNE_RT_LIST && right.type == UNE_RT_LIST)
-    result = une_result_lists_add(left, right);
-
-  /* Error. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_result sum = une_result_create(__UNE_RT_none__);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  if (dt_left.add != NULL)
+    sum = dt_left.add(left, right);
   une_result_free(left);
   une_result_free(right);
-  
-  return result;
+  if (dt_left.add == NULL || sum.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    sum = une_result_create(UNE_RT_ERROR);
+  }
+  return sum;
 }
 
 /*
@@ -610,33 +475,17 @@ __une_interpreter(une_interpret_sub)
     return right;
   }
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_INT;
-    result.value._int = left.value._int - right.value._int;
-  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = (une_flt)left.value._int - right.value._flt;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt - (une_flt)right.value._int;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt - right.value._flt;
-  }
-
-  /* Error. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_result difference = une_result_create(__UNE_RT_none__);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  if (dt_left.sub != NULL)
+    difference = dt_left.sub(left, right);
   une_result_free(left);
   une_result_free(right);
-  
-  return result;
+  if (dt_left.sub == NULL || difference.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    difference = une_result_create(UNE_RT_ERROR);
+  }
+  return difference;
 }
 
 /*
@@ -654,65 +503,17 @@ __une_interpreter(une_interpret_mul)
     return right;
   }
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_INT;
-    result.value._int = left.value._int * right.value._int;
-  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = (une_flt)left.value._int * right.value._flt;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt * (une_flt)right.value._int;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt * right.value._flt;
-  }
-  
-  /* INT and STR. */
-  else if ((left.type == UNE_RT_INT && right.type == UNE_RT_STR) || (left.type == UNE_RT_STR && right.type == UNE_RT_INT)) {
-    une_int count;
-    une_result wcs;
-    if (left.type == UNE_RT_INT) {
-      count = left.value._int;
-      wcs = right;
-    } else {
-      count = right.value._int;
-      wcs = left;
-    }
-    if (count < 0)
-      count = 0;
-    result = une_result_str_mul(wcs, count);
-  }
-  
-  /* INT and LIST. */
-  else if ((left.type == UNE_RT_INT && right.type == UNE_RT_LIST) || (left.type == UNE_RT_LIST && right.type == UNE_RT_INT)) {
-    une_int count;
-    une_result list;
-    if (left.type == UNE_RT_INT) {
-      count = left.value._int;
-      list = right;
-    } else {
-      count = right.value._int;
-      list = left;
-    }
-    if (count < 0)
-      count = 0;
-    result = une_result_list_mul(list, count);
-  }
-
-  /* Error. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_result product = une_result_create(__UNE_RT_none__);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  if (dt_left.mul != NULL)
+    product = dt_left.mul(left, right);
   une_result_free(left);
   une_result_free(right);
-  
-  return result;
+  if (dt_left.mul == NULL || product.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    product = une_result_create(UNE_RT_ERROR);
+  }
+  return product;
 }
 
 /*
@@ -730,43 +531,22 @@ __une_interpreter(une_interpret_div)
     return right;
   }
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  if ((right.type == UNE_RT_INT && right.value._int == 0) || (right.type == UNE_RT_FLT && right.value._flt == 0.0)) {
-    *error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, node->content.branch.b->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
-  /* INT and FLT. */
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
-    if (left.value._int % right.value._int == 0) {
-      result.type = UNE_RT_INT;
-      result.value._int = left.value._int / right.value._int;
-    } else {
-      result.type = UNE_RT_FLT;
-      result.value._flt = (une_flt)left.value._int / right.value._int;
-    }
-  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = (une_flt)left.value._int / right.value._flt;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt / (une_flt)right.value._int;
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = left.value._flt / right.value._flt;
-  }
-
-  /* Error. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_result quotient = une_result_create(__UNE_RT_none__);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  if (dt_left.div != NULL)
+    quotient = dt_left.div(left, right);
   une_result_free(left);
   une_result_free(right);
-  
-  return result;
+  if (dt_left.div == NULL || quotient.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    quotient = une_result_create(UNE_RT_ERROR);
+  }
+  if (quotient.type == UNE_RT_FLT && quotient.value._flt == INFINITY) {
+    /* Zero division. */
+    *error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, node->pos);
+    quotient = une_result_create(UNE_RT_ERROR);
+  }
+  return quotient;
 }
 
 /*
@@ -784,38 +564,22 @@ __une_interpreter(une_interpret_fdiv)
     return right;
   }
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  if ((right.type == UNE_RT_INT && right.value._int == 0) || (right.type == UNE_RT_FLT && right.value._flt == 0.0)) {
-    *error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, node->content.branch.b->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
-  /* INT and FLT. */
-  else if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_INT;
-    result.value._int = left.value._int / right.value._int;
-  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = floor((une_flt)left.value._int / right.value._flt);
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = floor(left.value._flt / (une_flt)right.value._int);
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = floor(left.value._flt / right.value._flt);
-  }
-
-  /* Error. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_result quotient = une_result_create(__UNE_RT_none__);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  if (dt_left.fdiv != NULL)
+    quotient = dt_left.fdiv(left, right);
   une_result_free(left);
   une_result_free(right);
-  
-  return result;
+  if (dt_left.fdiv == NULL || quotient.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    quotient = une_result_create(UNE_RT_ERROR);
+  }
+  if (quotient.type == UNE_RT_FLT && quotient.value._flt == INFINITY) {
+    /* Zero division. */
+    *error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, node->pos);
+    quotient = une_result_create(UNE_RT_ERROR);
+  }
+  return quotient;
 }
 
 /*
@@ -833,33 +597,17 @@ __une_interpreter(une_interpret_mod)
     return right;
   }
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_INT;
-    result.value._int = left.value._int % right.value._int;
-  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = fmod((une_flt)left.value._int, right.value._flt);
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = fmod(left.value._flt, (une_flt)right.value._int);
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = fmod(left.value._flt, right.value._flt);
-  }
-
-  /* Error. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_result remainder = une_result_create(__UNE_RT_none__);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  if (dt_left.mod != NULL)
+    remainder = dt_left.mod(left, right);
   une_result_free(left);
   une_result_free(right);
-  
-  return result;
+  if (dt_left.mod == NULL || remainder.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    remainder = une_result_create(UNE_RT_ERROR);
+  }
+  return remainder;
 }
 
 /*
@@ -877,37 +625,22 @@ __une_interpreter(une_interpret_pow)
     return right;
   }
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  /* INT and FLT. */
-  if (left.type == UNE_RT_INT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_INT;
-    result.value._int = (une_int)pow((double)left.value._int, (double)right.value._int);
-  } else if (left.type == UNE_RT_INT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = (une_flt)pow((double)left.value._int, (double)right.value._flt);
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_INT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = (une_flt)pow((double)left.value._flt, (double)right.value._int);
-  } else if (left.type == UNE_RT_FLT && right.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = (une_flt)pow((double)left.value._flt, (double)right.value._flt);
-  }
-  
-  /* Error. */
-  else {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-
-  if (result.type == UNE_RT_FLT && isnan(result.value._flt)) {
-    *error = UNE_ERROR_SET(UNE_ET_UNREAL_NUMBER, node->pos);
-    result.type = UNE_RT_ERROR;
-  }
-  
+  une_result raised = une_result_create(__UNE_RT_none__);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  if (dt_left.pow != NULL)
+    raised = dt_left.pow(left, right);
   une_result_free(left);
   une_result_free(right);
-  return result;
+  if (dt_left.pow == NULL || raised.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    raised = une_result_create(UNE_RT_ERROR);
+  }
+  if (raised.type == UNE_RT_FLT && isnan(raised.value._flt)) {
+    /* Unreal number. */
+    *error = UNE_ERROR_SET(UNE_ET_UNREAL_NUMBER, node->pos);
+    raised = une_result_create(UNE_RT_ERROR);
+  }
+  return raised;
 }
 
 /*
@@ -920,22 +653,15 @@ __une_interpreter(une_interpret_neg)
   if (center.type == UNE_RT_ERROR)
     return center;
   
-  une_result result = une_result_create(__UNE_RT_none__);
-  
-  if (center.type == UNE_RT_INT) {
-    result.type = UNE_RT_INT;
-    result.value._int = -center.value._int;
-  } else if (center.type == UNE_RT_FLT) {
-    result.type = UNE_RT_FLT;
-    result.value._flt = -center.value._flt;
-  } else {
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(center);
+  if (dt_left.negate == NULL) {
+    une_result_free(center);
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    result.type = UNE_RT_ERROR;
+    return une_result_create(UNE_RT_ERROR);
   }
-  
+  une_result negative = dt_left.negate(center);
   une_result_free(center);
-  
-  return result;
+  return negative;
 }
 
 /*
@@ -971,11 +697,11 @@ Interpret a UNE_NT_SET_IDX une_node.
 */
 __une_interpreter(une_interpret_set_idx)
 {
-  /* Get name of list and global. */
+  /* Get name of variable and global. */
   bool global = (bool)node->content.branch.d;
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
-  /* Find list in all contexts. */
+  /* Find variable in all contexts. */
   une_variable *var;
   if (global)
     var = une_variable_find_global(is->context, name);
@@ -985,30 +711,33 @@ __une_interpreter(une_interpret_set_idx)
     *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
-  if (var->content.type != UNE_RT_LIST) {
+  une_datatype dt_var = UNE_DATATYPE_FOR_RESULT(var->content);
+  if (dt_var.set_index == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
-  UNE_UNPACK_RESULT_LIST(var->content, list, list_size);
 
-  /* Get index to list. */
-  une_result index = une_interpret_as(error, is, node->content.branch.b, UNE_RT_INT);
-  if (index.type == UNE_RT_ERROR)
-    return index;
-  une_int index_value = index.value._int;
-  une_result_free(index);
-  if (index_value < 0 || index_value >= list_size) {
-    *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
+  /* Get index to variable and check if it is valid. */
+  une_result index = une_interpret(error, is, node->content.branch.b);
+  assert(dt_var.is_valid_index_type != NULL);
+  if (!dt_var.is_valid_index_type(index.type)) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
+  } else {
+    assert(dt_var.is_valid_index != NULL);
+    if (!dt_var.is_valid_index(var->content, index))
+      *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
+  }
+  if (error->type != __UNE_ET_none__) {
+    une_result_free(index);
     return une_result_create(UNE_RT_ERROR);
   }
 
-  /* Set result. */
+  /* Set index. */
   une_result result = une_interpret(error, is, node->content.branch.c);
   if (result.type == UNE_RT_ERROR)
     return result;
-  une_result_free(list[1+index_value]);
-  list[1+index_value] = result;
-
+  dt_var.set_index(&var->content, index, result);
+  une_result_free(index);
   return une_result_create(UNE_RT_VOID);
 }
 
@@ -1039,46 +768,39 @@ __une_interpreter(une_interpret_get_idx)
   une_result base = une_interpret(error, is, node->content.branch.a);
   if (base.type == UNE_RT_ERROR)
     return base;
+  une_datatype dt_base = UNE_DATATYPE_FOR_RESULT(base);
+  if (dt_base.get_index == NULL) {
+    une_result_free(base);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
 
   /* Get index. */
-  une_result index_result = une_interpret_as(error, is, node->content.branch.b, UNE_RT_INT);
-  if (index_result.type == UNE_RT_ERROR) {
+  une_result index = une_interpret(error, is, node->content.branch.b);
+  if (index.type == UNE_RT_ERROR) {
     une_result_free(base);
-    return index_result;
+    return index;
   }
-  une_int index = index_result.value._int;
-  une_result_free(index_result);
-
-  /* Get index of base. */
-  une_result result;
-
-  switch (base.type) {
-    
-    case UNE_RT_LIST:
-      result = une_interpret_get_idx_list(base, index);
-      une_result_free(base);
-      if (result.type == UNE_RT_ERROR)
-        break;
-      return result;
-
-    case UNE_RT_STR:
-      result = une_interpret_get_idx_str(base, index);
-      une_result_free(base);
-      if (result.type == UNE_RT_ERROR)
-        break;
-      return result;
-
-    /* Type not indexable. */
-    default:
-      une_result_free(base);
-      *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-      return une_result_create(UNE_RT_ERROR);
+  assert(dt_base.is_valid_index_type != NULL);
+  if (!dt_base.is_valid_index_type(index.type)) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
+  } else {
+    assert(dt_base.is_valid_index != NULL);
+    if (!dt_base.is_valid_index(base, index))
+      *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
+  }
+  if (error->type != __UNE_ET_none__) {
+    une_result_free(base);
+    une_result_free(index);
+    return une_result_create(UNE_RT_ERROR);
+  }
   
-  }
-
-  /* Index out of range (une_interpret_get_idx_TYPE returned UNE_RT_ERROR). */
-  *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
-  return une_result_create(UNE_RT_ERROR);
+  /* Get index of base. */
+  assert(dt_base.get_index != NULL);
+  une_result result = dt_base.get_index(base, index);
+  une_result_free(base);
+  une_result_free(index);
+  return result;
 }
 
 /*

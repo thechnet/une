@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2021-08-05
+Modified 2021-08-06
 */
 
 #ifndef UNE_BUILTIN_H
@@ -45,15 +45,6 @@ Every built-in function.
 Built-in function template.
 */
 #define __une_builtin_fn(__id) __une_builtin_fn_sign(une_builtin_fn_##__id)
-
-/*
-Ensure the number of arguments received are correct.
-*/
-#define UNE_BUILTIN_VERIFY_ARG_COUNT(expected_argc) \
-  if (((une_node**)call_node->content.branch.b->content.value._vpp)[0]->content.value._int != expected_argc) {\
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ARG_COUNT, call_node->pos);\
-    return une_result_create(UNE_RT_ERROR);\
-  }
 
 /*
 Get the position of an argument.

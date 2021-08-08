@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2021-07-17
+Modified 2021-08-07
 */
 
 /* Header-specific includes. */
@@ -152,7 +152,6 @@ void une_node_free(une_node *node, bool free_wcs)
     case UNE_NT_BREAK:
     case UNE_NT_CONTINUE:
     case UNE_NT_SIZE:
-      LOGFREE(L"une_node", une_node_type_to_wcs(node->type), node->type);
       break;
     
     /* Heap data. */
@@ -163,7 +162,6 @@ void une_node_free(une_node *node, bool free_wcs)
       which may still be needed after the parse. This memory is freed alongside the tokens. */
       if (free_wcs)
         free(node->content.value._wcs);
-      LOGFREE(L"une_node", une_node_type_to_wcs(node->type), node->type);
       break;
     
     /* List. */
@@ -176,7 +174,6 @@ void une_node_free(une_node *node, bool free_wcs)
       UNE_FOR_NODE_LIST_INDEX(i, list_size)
         une_node_free(list[i], free_wcs);
       free(list);
-      LOGFREE(L"une_node", une_node_type_to_wcs(node->type), node->type);
       break;
     }
     
@@ -187,7 +184,6 @@ void une_node_free(une_node *node, bool free_wcs)
       une_node_free(node->content.branch.c, free_wcs);
       if (node->type != UNE_NT_SET && node->type != UNE_NT_SET_IDX)
         une_node_free(node->content.branch.d, free_wcs);
-      LOGFREE(L"une_node", une_node_type_to_wcs(node->type), node->type);
       break;
   
   }

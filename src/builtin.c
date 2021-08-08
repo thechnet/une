@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-08-05
+Modified 2021-08-07
 */
 
 /* Header-specific includes. */
@@ -8,9 +8,11 @@ Modified 2021-08-05
 
 /* Implementation-specific includes. */
 #include <time.h>
+#include <limits.h>
 #include "tools.h"
 #include "une.h"
 #include "stream.h"
+#include "datatypes/datatypes.h"
 
 /*
 Pointers to all built-in functions.
@@ -88,9 +90,10 @@ Print a text representation of a une_result.
 __une_builtin_fn(put)
 {
   une_builtin_param string = 0;
+  une_datatype dt_string = UNE_DATATYPE_FOR_RESULT(args[string]);
   
-  /* Print text representation. */
-  une_result_represent(stdout, args[string]);
+  assert(dt_string.represent != NULL);
+  dt_string.represent(stdout, args[string]);
   
   return une_result_create(UNE_RT_VOID);
 }
@@ -113,32 +116,20 @@ Convert une_result to UNE_RT_INT une_result and return it.
 __une_builtin_fn(int)
 {
   une_builtin_param result = 0;
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
   
-  /* Convert une_result. */
-  switch (args[result].type) {
-    case UNE_RT_INT:
-      return une_result_copy(args[result]);
-    case UNE_RT_FLT:
-      return (une_result){
-        .type = UNE_RT_INT,
-        .value._int = (une_int)args[result].value._flt
-      };
-    case UNE_RT_STR: {
-      une_int int_;
-      if (!une_wcs_to_une_int(args[result].value._wcs, &int_)) {
-        *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
-        return une_result_create(UNE_RT_ERROR);
-      }
-      return (une_result){
-        .type = UNE_RT_INT,
-        .value._int = int_
-      };
-    }
+  if (dt_result.as_int == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+    return une_result_create(UNE_RT_ERROR);
   }
   
-  /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
-  return une_result_create(UNE_RT_ERROR);
+  une_result result_as_int = dt_result.as_int(args[result]);
+  if (result_as_int.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  return result_as_int;
 }
 
 /*
@@ -147,32 +138,20 @@ Convert une_result to UNE_RT_FLT une_result and return it.
 __une_builtin_fn(flt)
 {
   une_builtin_param result = 0;
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
   
-  /* Convert une_result. */
-  switch (args[result].type) {
-    case UNE_RT_INT:
-      return (une_result){
-        .type = UNE_RT_FLT,
-        .value._flt = (une_flt)args[result].value._int
-      };
-    case UNE_RT_FLT:
-      return une_result_copy(args[result]);
-    case UNE_RT_STR: {
-      une_flt flt;
-      if (!une_wcs_to_une_flt(args[result].value._wcs, &flt)) {
-        *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
-        return une_result_create(UNE_RT_ERROR);
-      }
-      return (une_result){
-        .type = UNE_RT_FLT,
-        .value._flt = flt
-      };
-    }
+  if (dt_result.as_flt == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+    return une_result_create(UNE_RT_ERROR);
   }
   
-  /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
-  return une_result_create(UNE_RT_ERROR);
+  une_result result_as_flt = dt_result.as_flt(args[result]);
+  if (result_as_flt.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  return result_as_flt;
 }
 
 /*
@@ -181,32 +160,20 @@ Convert une_result to UNE_RT_STR une_result and return it.
 __une_builtin_fn(str)
 {
   une_builtin_param result = 0;
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
   
-  /* Convert une_result. */
-  switch (args[result].type) {
-    case UNE_RT_INT: {
-      wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
-      swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_INT, args[result].value._int);
-      return (une_result){
-        .type = UNE_RT_STR,
-        .value._wcs = out
-      };
-    }
-    case UNE_RT_FLT: {
-      wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
-      swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_FLT, args[result].value._flt);
-      return (une_result){
-        .type = UNE_RT_STR,
-        .value._wcs = out
-      };
-    }
-    case UNE_RT_STR:
-      return une_result_copy(args[result]);
+  if (dt_result.as_str == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+    return une_result_create(UNE_RT_ERROR);
   }
   
-  /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
-  return une_result_create(UNE_RT_ERROR);
+  une_result result_as_str = dt_result.as_str(args[result]);
+  if (result_as_str.type == UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  return result_as_str;
 }
 
 /*
@@ -215,26 +182,19 @@ Get length of une_result and return it.
 __une_builtin_fn(len)
 {
   une_builtin_param result = 0;
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
   
-  /* Get length of une_result. */
-  switch (args[result].type) {
-    case UNE_RT_STR:
-      return (une_result){
-        .type = UNE_RT_INT,
-        .value._int = wcslen(args[result].value._wcs)
-      };
-    case UNE_RT_LIST: {
-      UNE_UNPACK_RESULT_LIST(args[result], result_p, result_size);
-      return (une_result){
-        .type = UNE_RT_INT,
-        .value._int = result_size
-      };
-    }
+  if (dt_result.get_len == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+    return une_result_create(UNE_RT_ERROR);
   }
   
-  /* Illegal input une_result_type. */
-  *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
-  return une_result_create(UNE_RT_ERROR);
+  size_t result_len = dt_result.get_len(args[result]);
+  
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = (une_int)result_len
+  };
 }
 
 /*
@@ -244,11 +204,7 @@ __une_builtin_fn(sleep)
 {
   une_builtin_param result = 0;
   
-  /* Ensure input une_result_type is UNE_RT_INT. */
-  if (args[result].type != UNE_RT_INT) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
-    return une_result_create(UNE_RT_ERROR);
-  }
+  UNE_BUILTIN_VERIFY_ARG_TYPE(result, UNE_RT_INT);
   
   /* Halt execution. */
   struct timespec ts = {
@@ -267,12 +223,13 @@ __une_builtin_fn(chr)
 {
   une_builtin_param result = 0;
   
-  /* Ensure input une_result_type is UNE_RT_INT. */
-  if (args[result].type != UNE_RT_INT) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+  UNE_BUILTIN_VERIFY_ARG_TYPE(result, UNE_RT_INT);
+  
+  if (args[result].value._int > WCHAR_MAX) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
     return une_result_create(UNE_RT_ERROR);
   }
-
+  
   une_result chr = une_result_create(UNE_RT_STR);
   chr.value._wcs = malloc(2*sizeof(*chr.value._wcs));
   chr.value._wcs[0] = (wchar_t)args[result].value._int;
@@ -367,7 +324,7 @@ __une_builtin_fn(input)
   UNE_BUILTIN_VERIFY_ARG_TYPE(prompt, UNE_RT_STR);
 
   /* Get string. */
-  une_result_represent(stdout, args[prompt]);
+  une_datatype_str_represent(stdout, args[prompt]);
   wchar_t *instr = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*instr));
   fgetws(instr, UNE_SIZE_FGETWS_BUFFER, stdin);
   size_t len = wcslen(instr);
