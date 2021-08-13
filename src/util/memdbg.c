@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-07-30
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -462,7 +462,7 @@ static inline int memdbg_current_second(void)
 
 memdbg_wrap_allocator\
   (char*, strdup, (char *file, int line, char *str),\
-  str, strdup(str), strlen(memory_new)+1, true, true)
+  str, strdup(str), strlen(memory_new)+1, false, true)
 
 memdbg_wrap_allocator\
   (char*, strndup, (char *file, int line, char *str, size_t n),\

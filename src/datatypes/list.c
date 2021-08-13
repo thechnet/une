@@ -1,15 +1,10 @@
 /*
 list.c - Une
-Modified 2021-08-08
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
 #include "list.h"
-
-/* Implementation-specific includes. */
-#include <math.h>
-#include "../tools.h"
-#include "../types/result.h"
 
 /*
 Print a text representation to file.
@@ -46,6 +41,8 @@ Check if subject is equal to comparison.
 une_int une_datatype_list_is_equal(une_result subject, une_result comparison)
 {
   assert(subject.type == UNE_RT_LIST);
+  if (comparison.type != UNE_RT_LIST)
+    return 0;
   UNE_UNPACK_RESULT_LIST(subject, subject_list, subject_size);
   UNE_UNPACK_RESULT_LIST(comparison, comparison_list, comparison_size);
   if (subject_size != comparison_size)

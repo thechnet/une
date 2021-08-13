@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2021-07-25
+Modified 2021-08-13
 */
 
 #ifndef UNE_PARSER_H
@@ -29,14 +29,23 @@ __une_parser(une_parse_stmt);
 __une_parser(une_parse_id);
 __une_parser(une_parse_block);
 __une_parser(une_parse_expression);
+__une_parser(une_parse_ternary_operation);
 __une_parser(une_parse_and_or);
 __une_parser(une_parse_condition);
 __une_parser(une_parse_add_sub);
 __une_parser(une_parse_term);
 __une_parser(une_parse_power);
 __une_parser(une_parse_index);
+__une_parser(une_parse_call);
+__une_parser(une_parse_negation);
 __une_parser(une_parse_atom);
-__une_parser(une_parse_def);
+__une_parser(une_parse_int);
+__une_parser(une_parse_flt);
+__une_parser(une_parse_str);
+__une_parser(une_parse_get);
+__une_parser(une_parse_builtin);
+__une_parser(une_parse_list);
+__une_parser(une_parse_function);
 __une_parser(une_parse_for);
 __une_parser(une_parse_while);
 __une_parser(une_parse_if);

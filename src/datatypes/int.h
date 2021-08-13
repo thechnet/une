@@ -1,10 +1,10 @@
 /*
 int.h - Une
-Modified 2021-08-05
+Modified 2021-08-11
 */
 
-#ifndef UNE_INT_H
-#define UNE_INT_H
+#ifndef UNE_DATATYPES_INT_H
+#define UNE_DATATYPES_INT_H
 
 /* Header-specific includes. */
 #include "../primitive.h"
@@ -31,4 +31,4 @@ une_result une_datatype_int_mod(une_result left, une_result right);
 une_result une_datatype_int_pow(une_result left, une_result right);
 une_result une_datatype_int_negate(une_result result);
 
-#endif /* UNE_INT_H */
+#endif /* UNE_DATATYPES_INT_H */

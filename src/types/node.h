@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2021-08-05
+Modified 2021-08-13
 */
 
 #ifndef UNE_NODE_H
@@ -21,6 +21,8 @@ typedef enum _une_node_type {
   UNE_NT_FLT,
   UNE_NT_STR,
   UNE_NT_LIST,
+  UNE_NT_FUNCTION,
+  UNE_NT_BUILTIN,
   UNE_NT_STMTS,
   UNE_NT_COP,
   UNE_NT_NOT,
@@ -54,7 +56,6 @@ typedef enum _une_node_type {
   UNE_NT_SET_IDX,
   UNE_NT_GET,
   UNE_NT_GET_IDX,
-  UNE_NT_DEF,
   UNE_NT_CALL,
   UNE_NT_FOR,
   UNE_NT_WHILE,

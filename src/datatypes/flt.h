@@ -1,10 +1,10 @@
 /*
 flt.h - Une
-Modified 2021-08-05
+Modified 2021-08-11
 */
 
-#ifndef UNE_FLT_H
-#define UNE_FLT_H
+#ifndef UNE_DATATYPES_FLT_H
+#define UNE_DATATYPES_FLT_H
 
 /* Header-specific includes. */
 #include "../primitive.h"
@@ -31,4 +31,4 @@ une_result une_datatype_flt_mod(une_result left, une_result right);
 une_result une_datatype_flt_pow(une_result left, une_result right);
 une_result une_datatype_flt_negate(une_result result);
 
-#endif /* UNE_FLT_H */
+#endif /* UNE_DATATYPES_FLT_H */

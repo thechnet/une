@@ -1,11 +1,11 @@
 # BMI Calculator
 
-def bmi(height, weight)
+bmi = function(height, weight)
 {
   return weight/height**2
 }
 
-def is_overweight(bmi)
+is_overweight = function(bmi)
 {
   if bmi < 25
     return "Not overweight."

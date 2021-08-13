@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-08-04
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -9,6 +9,7 @@ Modified 2021-08-04
 /* Implementation-specific includes. */
 #include "tools.h"
 #include "stream.h"
+#include "builtin.h"
 
 /*
 Public parser interface.
@@ -24,7 +25,7 @@ une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
   ps->in = une_istream_array_create((void*)tokens, 0);
   pull(&ps->in);
 
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   return une_parse_sequence(error, ps, UNE_NT_STMTS, __UNE_TT_none__, UNE_TT_NEW, UNE_TT_EOF, &une_parse_stmt);
 }
@@ -34,7 +35,7 @@ Parse statement.
 */
 __une_parser(une_parse_stmt)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   /* Skip NEW before/between statements. */
   if (now(&ps->in).type == UNE_TT_NEW)
@@ -44,8 +45,6 @@ __une_parser(une_parse_stmt)
   switch (now(&ps->in).type) {
     case UNE_TT_LBRC:
       return une_parse_block(error, ps);
-    case UNE_TT_DEF:
-      return une_parse_def(error, ps);
     case UNE_TT_FOR:
       return une_parse_for(error, ps);
     case UNE_TT_WHILE:
@@ -69,7 +68,7 @@ Parse id.
 */
 __une_parser(une_parse_id)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   if (now(&ps->in).type != UNE_TT_ID) {
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
@@ -96,7 +95,7 @@ Parse expression.
 */
 __une_parser(une_parse_expression)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   /* Condition. */
   une_node *cond = une_parse_and_or(error, ps);
@@ -146,7 +145,7 @@ Parse and/or.
 */
 __une_parser(une_parse_and_or)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   return une_parse_binary_operation(error, ps,
     UNE_R_BGN_AND_OR_TOKENS,
@@ -163,10 +162,10 @@ Parse condition.
 */
 __une_parser(une_parse_condition)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   if (now(&ps->in).type == UNE_TT_NOT) {
-    LOGPARSE(L"not", une_token_to_wcs(now(&ps->in)));
+    LOGPARSE(L"not", now(&ps->in));
     return une_parse_unary_operation(error, ps, UNE_NT_NOT, &une_parse_condition);
   }
   
@@ -185,7 +184,7 @@ Parse add/sub.
 */
 __une_parser(une_parse_add_sub)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   return une_parse_binary_operation(error, ps,
     UNE_R_BGN_ADD_SUB_TOKENS,
@@ -202,7 +201,7 @@ Parse term.
 */
 __une_parser(une_parse_term)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   return une_parse_binary_operation(error, ps,
     UNE_R_BGN_TERM_TOKENS,
@@ -219,7 +218,7 @@ Parse power.
 */
 __une_parser(une_parse_power)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   return une_parse_binary_operation(error, ps,
     UNE_R_BGN_POWER_TOKENS,
@@ -236,10 +235,10 @@ Parse index.
 */
 __une_parser(une_parse_index)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   /* Base. */
-  une_node *left = une_parse_atom(error, ps);
+  une_node *left = une_parse_call(error, ps);
   if (left == NULL)
     return NULL;
   
@@ -273,91 +272,77 @@ __une_parser(une_parse_index)
 }
 
 /*
+Parse call.
+*/
+__une_parser(une_parse_call)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  /* Atom. */
+  une_node *negation = une_parse_negation(error, ps);
+  if (negation == NULL)
+    return negation;
+  
+  /* Arguments. */
+  if (now(&ps->in).type != UNE_TT_LPAR)
+    return negation;
+  une_node *args = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_expression);
+  if (args == NULL) {
+    une_node_free(negation, false);
+    return args;
+  }
+  une_node *call = une_node_create(UNE_NT_CALL);
+  call->pos.start = negation->pos.start;
+  call->pos.end = args->pos.end;
+  call->content.branch.a = negation;
+  call->content.branch.b = args;
+  return call;
+}
+
+/*
+Parse negation.
+*/
+__une_parser(une_parse_negation)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  if (now(&ps->in).type == UNE_TT_SUB)
+    return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_negation);
+  return une_parse_atom(error, ps);
+}
+
+/*
 Parse atom.
 */
 __une_parser(une_parse_atom)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   switch (now(&ps->in).type) {
     
-    /* Negation. */
-    case UNE_TT_SUB:
-      LOGPARSE(L"negate", une_token_to_wcs(now(&ps->in)));
-      return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_atom);
+    case UNE_TT_INT:
+      return une_parse_int(error, ps);
     
-    /* Numbers. */
-    case UNE_TT_INT: {
-      LOGPARSE(L"int", une_token_to_wcs(now(&ps->in)));
-      une_node *num = une_node_create(UNE_NT_INT);
-      num->pos = now(&ps->in).pos;
-      num->content.value._int = now(&ps->in).value._int;
-      pull(&ps->in);
-      return num;
-    }
-    case UNE_TT_FLT: {
-      LOGPARSE(L"flt", une_token_to_wcs(now(&ps->in)));
-      une_node *num = une_node_create(UNE_NT_FLT);
-      num->pos = now(&ps->in).pos;
-      num->content.value._flt = now(&ps->in).value._flt;
-      pull(&ps->in);
-      return num;
-    }
+    case UNE_TT_FLT:
+      return une_parse_flt(error, ps);
     
-    /* String. */
-    case UNE_TT_STR: {
-      LOGPARSE(L"str", une_token_to_wcs(now(&ps->in)));
-      une_node *str = une_node_create(UNE_NT_STR);
-      str->pos = now(&ps->in).pos;
-      /* DOC: Memory Management: This shows that nodes reference tokens' WCS
-      instead of storing their own. */
-      str->content.value._wcs = now(&ps->in).value._wcs;
-      pull(&ps->in);
-      return str;
-    }
+    case UNE_TT_STR:
+      return une_parse_str(error, ps);
     
-    /* Variable or function call. */
-    case UNE_TT_ID: {
-      LOGPARSE(L"get/call", une_token_to_wcs(now(&ps->in)));
-      une_node *id = une_node_create(UNE_NT_ID);
-      id->pos = now(&ps->in).pos;
-      id->content.value._wcs = now(&ps->in).value._wcs;
-      pull(&ps->in);
-
-      if (now(&ps->in).type != UNE_TT_LPAR) {
-        LOGPARSE(L"get/call:get", une_token_to_wcs(now(&ps->in)));
-        une_node *get = une_node_create(UNE_NT_GET);
-        get->pos = id->pos;
-        get->content.branch.a = id;
-        return get;
-      }
-
-      /* Function Call. */
-      LOGPARSE(L"get/call:call", une_token_to_wcs(now(&ps->in)));
-      une_node *args = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_expression);
-      if (args == NULL) {
-        une_node_free(id, false);
-        return NULL;
-      }
-      
-      une_node *call = une_node_create(UNE_NT_CALL);
-      call->pos = (une_position){
-        .start = id->pos.start,
-        .end = args->pos.end
-      };
-      call->content.branch.a = id;
-      call->content.branch.b = args;
-      return call;
-    }
+    case UNE_TT_BUILTIN:
+      return une_parse_builtin(error, ps);
     
-    /* List. */
+    case UNE_TT_ID:
+      return une_parse_get(error, ps);
+    
     case UNE_TT_LSQB:
-      LOGPARSE(L"list", une_token_to_wcs(now(&ps->in)));
-      return une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB, &une_parse_expression);
+      return une_parse_list(error, ps);
+
+    case UNE_TT_FUNCTION:
+      return une_parse_function(error, ps);
     
-    /* Expression. */
     case UNE_TT_LPAR: {
-      LOGPARSE(L"expression", une_token_to_wcs(now(&ps->in)));
+      LOGPARSE(L"expression", now(&ps->in));
       size_t pos_start = now(&ps->in).pos.start;
       pull(&ps->in);
       une_node *expression = une_parse_expression(error, ps);
@@ -384,45 +369,118 @@ __une_parser(une_parse_atom)
 }
 
 /*
-Parse function definition.
+Parse integer.
 */
-__une_parser(une_parse_def)
+__une_parser(une_parse_int)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
-  
-  /* Def. */
-  size_t pos_start = now(&ps->in).pos.start;
+  LOGPARSE(L"int", now(&ps->in));
+  une_node *num = une_node_create(UNE_NT_INT);
+  num->pos = now(&ps->in).pos;
+  num->content.value._int = now(&ps->in).value._int;
   pull(&ps->in);
+  return num;
+}
 
-  /* Id. */
-  une_node *name = une_parse_id(error, ps);
-  if (name == NULL)
+/*
+Parse floating point number.
+*/
+__une_parser(une_parse_flt)
+{
+  LOGPARSE(L"flt", now(&ps->in));
+  une_node *num = une_node_create(UNE_NT_FLT);
+  num->pos = now(&ps->in).pos;
+  num->content.value._flt = now(&ps->in).value._flt;
+  pull(&ps->in);
+  return num;
+}
+
+/*
+Parse string.
+*/
+__une_parser(une_parse_str)
+{
+  LOGPARSE(L"str", now(&ps->in));
+  une_node *str = une_node_create(UNE_NT_STR);
+  str->pos = now(&ps->in).pos;
+  /* DOC: Memory Management: This shows that nodes reference tokens' WCS
+  instead of storing their own. */
+  str->content.value._wcs = now(&ps->in).value._wcs;
+  pull(&ps->in);
+  return str;
+}
+
+/*
+Parse variable.
+*/
+__une_parser(une_parse_get)
+{
+  LOGPARSE(L"get", now(&ps->in));
+  une_node *id = une_parse_id(error, ps);
+  assert(id != NULL);
+  une_node *get = une_node_create(UNE_NT_GET);
+  get->pos = id->pos;
+  get->content.branch.a = id;
+  return get;
+}
+
+/*
+Parse builtin-function.
+*/
+__une_parser(une_parse_builtin)
+{
+  if (!UNE_BUILTIN_FUNCTION_IS_VALID(now(&ps->in).value._int))
     return NULL;
+  LOGPARSE(L"builtin", now(&ps->in));
+  une_node *builtin = une_node_create(UNE_NT_BUILTIN);
+  builtin->pos = now(&ps->in).pos;
+  builtin->content.value._int = now(&ps->in).value._int;
+  pull(&ps->in);
+  return builtin;
+}
 
-  /* Params. */
+/*
+Parse list.
+*/
+__une_parser(une_parse_list)
+{
+  LOGPARSE(L"list", now(&ps->in));
+  
+  return une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB, &une_parse_expression);
+}
+
+/*
+Parse function.
+*/
+__une_parser(une_parse_function)
+{
+  LOGPARSE(L"function", now(&ps->in));
+  
+  /* function. */
+  size_t pos_start = now(&ps->in).pos.start;
+  void *definition_file = now(&ps->in).value._vp;
+  pull(&ps->in);
+  
+  /* Parameters. */
   une_node *params = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_id);
-  if (params == NULL) {
-    une_node_free(name, false);
+  if (params == NULL)
     return NULL;
-  }
   
   /* Body. */
   une_node *body = une_parse_stmt(error, ps);
   if (body == NULL) {
-    une_node_free(name, false);
     une_node_free(params, false);
     return NULL;
   }
-
-  une_node *def = une_node_create(UNE_NT_DEF);
-  def->pos = (une_position){
+  
+  une_node *function = une_node_create(UNE_NT_FUNCTION);
+  function->pos = (une_position){
     .start = pos_start,
     .end = body->pos.end
   };
-  def->content.branch.a = name;
-  def->content.branch.b = params;
-  def->content.branch.c = body;
-  return def;
+  function->content.branch.a = params;
+  function->content.branch.b = body;
+  function->content.branch.c = definition_file;
+  return function;
 }
 
 /*
@@ -430,7 +488,7 @@ Parse 'for' loop.
 */
 __une_parser(une_parse_for)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   size_t pos_start = now(&ps->in).pos.start;
   
@@ -502,7 +560,7 @@ Parse 'while' loop.
 */
 __une_parser(une_parse_while)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   size_t pos_start = now(&ps->in).pos.start;
   
@@ -538,7 +596,7 @@ Parse 'if' statement.
 */
 __une_parser(une_parse_if)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   size_t pos_start = now(&ps->in).pos.start;
   
@@ -637,7 +695,7 @@ Parse 'return' statement.
 */
 __une_parser(une_parse_return)
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   une_position pos = now(&ps->in).pos; /* If the parser finds a return
                                             value after this, pos.end is
@@ -738,7 +796,7 @@ Parse unary operation.
 __une_parser(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)(une_error*, une_parser_state*)
 )
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   size_t pos_start = now(&ps->in).pos.start;
   
@@ -769,7 +827,7 @@ __une_parser(une_parse_binary_operation,
   une_node *(*parse_right)(une_error*, une_parser_state*)
 )
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   une_node *left = (*parse_left)(error, ps);
   if (left == NULL)
@@ -809,7 +867,7 @@ __une_parser(une_parse_sequence,
   une_node *(*parser)(une_error*, une_parser_state*)
 )
 {
-  LOGPARSE(L"", une_token_to_wcs(now(&ps->in)));
+  LOGPARSE(L"", now(&ps->in));
   
   /* Begin Sequence. */
   size_t pos_start = now(&ps->in).pos.start;

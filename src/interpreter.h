@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2021-08-08
+Modified 2021-08-13
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -29,9 +29,6 @@ une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *
 
 __une_interpreter(une_interpret_as, une_result_type type);
 
-__une_static une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args);
-__une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args, une_builtin_fnptr fn);
-
 __une_static une_result une_interpret_get_idx_list(une_result list, une_int index);
 __une_static une_result une_interpret_get_idx_str (une_result str,  une_int index);
 
@@ -39,6 +36,8 @@ __une_interpreter(une_interpret_int);
 __une_interpreter(une_interpret_flt);
 __une_interpreter(une_interpret_str);
 __une_interpreter(une_interpret_list);
+__une_interpreter(une_interpret_function);
+__une_interpreter(une_interpret_builtin);
 __une_interpreter(une_interpret_stmts);
 __une_interpreter(une_interpret_cop);
 __une_interpreter(une_interpret_not);
@@ -62,7 +61,6 @@ __une_interpreter(une_interpret_set);
 __une_interpreter(une_interpret_set_idx);
 __une_interpreter(une_interpret_get);
 __une_interpreter(une_interpret_get_idx);
-__une_interpreter(une_interpret_def);
 __une_interpreter(une_interpret_call);
 __une_interpreter(une_interpret_for);
 __une_interpreter(une_interpret_while);

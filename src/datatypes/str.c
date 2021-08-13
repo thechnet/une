@@ -1,13 +1,12 @@
 /*
 str.c - Une
-Modified 2021-08-08
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
 #include "str.h"
 
 /* Implementation-specific includes. */
-#include <math.h>
 #include "../tools.h"
 #include "str.h"
 #include "list.h"
@@ -75,9 +74,9 @@ Check if subject is equal to comparison.
 une_int une_datatype_str_is_equal(une_result subject, une_result comparison)
 {
   assert(subject.type == UNE_RT_STR);
-  if (comparison.type == UNE_RT_STR)
-    return wcscmp(subject.value._wcs, comparison.value._wcs) == 0;
-  return 0;
+  if (comparison.type != UNE_RT_STR)
+    return 0;
+  return wcscmp(subject.value._wcs, comparison.value._wcs) == 0;
 }
 
 /*

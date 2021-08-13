@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2021-08-06
+Modified 2021-08-11
 */
 
 #ifndef UNE_BUILTIN_H
@@ -42,6 +42,17 @@ Every built-in function.
   enumerator(split)
 
 /*
+The index of a built-in function.
+*/
+typedef enum _une_builtin_function {
+  __UNE_BUILTIN_none__,
+  #define __BUILTIN_FUNCTION(__id) UNE_BUILTIN_##__id,
+  UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_FUNCTION)
+  #undef __BUILTIN_FUNCTION
+  __UNE_BUILTIN_max__,
+} une_builtin_function;
+
+/*
 Built-in function template.
 */
 #define __une_builtin_fn(__id) __une_builtin_fn_sign(une_builtin_fn_##__id)
@@ -61,8 +72,19 @@ Ensure an argument has the correct type.
     return une_result_create(UNE_RT_ERROR);\
   }
 
-const size_t une_builtin_params_count(une_builtin_fnptr fn);
-une_builtin_fnptr une_builtin_wcs_to_fnptr(wchar_t *wcs);
+/*
+Verify that a une_builtin_function is valid.
+*/
+#define UNE_BUILTIN_FUNCTION_IS_VALID(function) \
+  (function > __UNE_BUILTIN_none__ && function < __UNE_BUILTIN_max__)
+
+const size_t une_builtin_params_count(une_builtin_function function);
+const une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function);
+une_builtin_function une_builtin_wcs_to_function(wchar_t *wcs);
+
+#ifdef UNE_DEBUG
+const wchar_t *une_builtin_function_to_wcs(une_builtin_function function);
+#endif /* UNE_DEBUG */
 
 #define __BUILTIN_DECLARATION(__id) __une_builtin_fn(__id);
 UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_DECLARATION)

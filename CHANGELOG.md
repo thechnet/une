@@ -1,6 +1,37 @@
 # Changelog
 
-## [0.5.9]
+## [0.6.0] - 2021-08-13
+
+### Added
+- Warning when `UNE_DEBUG_MEMDBG` is enabled.
+- Option to skip ahead in `testing/test.py`.
+
+### Changed
+- A statement immediately following a closing brace is no longer considered valid syntax.
+- Some refactoring.
+- Functions and built-in functions are now datatypes.  
+  The fundamental change in this is that a call is now a seperate operation, performed *on* a datatype. When not called, a function or built-in function is just *data*, which can represent itself or be checked for truth (both types are *always* true).
+
+  A literal representation of a "square" function might look as follows:  
+  `function(number) { return number**2 }`  
+  To "define" a function, we simply bind it to a variable...  
+  `square = function(number) { return number**2 }`  
+  ... which can then be referenced to call the function:  
+  `square(4)` (would return `16`)
+
+  Internally, this changes a bunch of things:
+  - The lexer now differentiates between built-in functions and variables, creating a new `UNE_TT_BUILTIN` token holding a `une_builtin_function` when encountering the name of a built-in function.
+  - The parser creates two new nodes, `UNE_NT_FUNCTION` or `UNE_NT_BUILTIN`. For user-defined functions, the node closely resembles `UNE_NT_DEF`. For built-in functions, the node simply holds the `une_builtin_function` value from the token.
+  - The interpreter now has seperate methods for interpreting a function or built-in function. They return a `une_result`:
+    - For functions, the result holds a pointer to the function in the function buffer of the context. To allow this, the function buffers no longer hold actual `une_function`s but instead pointers to standalone allocations.
+    - For built-in functions, the result holds a `une_builtin_function`, which can be used to access the function pointer, get the amount of required parameters, and more.
+
+  One problem this change created is that functions are no longer named. Therefore, when creating the traceback on an error, we instead use the file and line where the function was defined. To access this information, every `une_context` now holds a pointer to the `une_function` that created the context, which in turn holds information on its point of definition.
+
+### Removed
+- Old function implementation.
+
+## [0.5.9] - 2021-08-08
 
 ### Changed
 - The help message on invalid command line arguments now shows an environment-specific path to the executable by using the implicit zeroth path argument.
@@ -13,8 +44,8 @@
 - The error line is always `1`.
 - The position of an expression in parentheses does not include the surrounding parentheses.
 - If there are non-printable but legal characters on the line of an error, the underscore in the error display gets misaligned.
-- `ostream` buffers do not grow if `assert()` is disabled.
-- The creation of `UNE_TT_INT` and `UNE_TT_FLT` tokens does not work if `assert()` is disabled.
+- `ostream` buffers do not grow if assertions are disabled.
+- The creation of `UNE_TT_INT` and `UNE_TT_FLT` tokens does not work if assertions are disabled.
 - Missing error on conversion of integer into invalid character.
 
 ### Removed
@@ -421,9 +452,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.5.9...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.6.0...HEAD
 
 <!-- Releases -->
+[0.6.0]: https://github.com/thechnet/une/compare/v0.5.9...v0.6.0
 [0.5.9]: https://github.com/thechnet/une/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/thechnet/une/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/thechnet/une/compare/v0.5.6...v0.5.7

@@ -1,10 +1,10 @@
 /*
 list.h - Une
-Modified 2021-08-08
+Modified 2021-08-11
 */
 
-#ifndef UNE_LIST_H
-#define UNE_LIST_H
+#ifndef UNE_DATATYPES_LIST_H
+#define UNE_DATATYPES_LIST_H
 
 /* Header-specific includes. */
 #include "../primitive.h"
@@ -32,4 +32,4 @@ void une_datatype_list_set_index(une_result *target, une_result index, une_resul
 une_result une_datatype_list_copy(une_result result);
 void une_datatype_list_free_members(une_result result);
 
-#endif /* UNE_LIST_H */
+#endif /* UNE_DATATYPES_LIST_H */

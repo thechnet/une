@@ -1,4 +1,4 @@
-# Une Arithmetic Interpreter
+# Simple Arithmetic Interpreter
 
 ERR = 0.0
 TKS = "+-*/()"
@@ -9,14 +9,14 @@ LPAR = 5; RPAR = 6
 NEG = 7
 END = 8
 
-def is_digit(character)
+is_digit = function(character)
 {
   if ord(character) >= ord("0") && ord(character) <= ord("9")
     return 1
   return 0
 }
 
-def tokenize(string)
+tokenize = function(string)
 {
   tokens = []
   i = 0
@@ -49,7 +49,7 @@ def tokenize(string)
   return tokens
 }
 
-def parse_atom()
+parse_atom = function()
 {
   if tokens[tokens_idx][0] == SUB {
     global tokens_idx = tokens_idx+1
@@ -78,7 +78,7 @@ def parse_atom()
   return ERR
 }
 
-def parse_term()
+parse_term = function()
 {
   left = parse_atom()
   if left == ERR
@@ -94,7 +94,7 @@ def parse_term()
   return left
 }
 
-def parse_exp()
+parse_exp = function()
 {
   left = parse_term()
   if left == ERR
@@ -110,23 +110,23 @@ def parse_exp()
   return left
 }
 
-def interpret(node)
+interpret = function(node)
 {
   if node[0] == NUM
     return node[1]
   if node[0] == ADD
-    return interpret(node[1])+interpret(node[2])
+    return interpret(node[1]) + interpret(node[2])
   if node[0] == SUB
-    return interpret(node[1])-interpret(node[2])
+    return interpret(node[1]) - interpret(node[2])
   if node[0] == MUL
-    return interpret(node[1])*interpret(node[2])
+    return interpret(node[1]) * interpret(node[2])
   if node[0] == DIV
-    return interpret(node[1])//interpret(node[2])
+    return interpret(node[1]) // interpret(node[2])
   if node[0] == NEG
     return -interpret(node[1])
 }
 
-def run(expression)
+run = function(expression)
 {
   tokens = tokenize(expression)
   if tokens == ERR

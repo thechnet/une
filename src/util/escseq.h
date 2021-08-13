@@ -1,6 +1,6 @@
 /*
 escseq.h - ANSI Escape Sequences
-Modified 2021-07-12
+Modified 2021-08-13
 */
 
 /* https://en.wikipedia.org/wiki/ANSI_escape_code */
@@ -139,7 +139,7 @@ Text Formatting
 #define RESET SGR(0)
 #define BRIGHT SGR(1)
 #define BOLD BRIGHT
-#define NOBRIGHT SGR(21) SGR(22) // Conflicting Information
+#define NOBRIGHT SGR(21) SGR(22) /* Conflicting Information. */
 #define NOBOLD NOBRIGHT
 #define UNDERLINE SGR(4)
 #define NOUNDERLINE SGR(24)

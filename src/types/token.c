@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2021-08-07
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -8,6 +8,7 @@ Modified 2021-08-07
 
 /* Implementation-specific includes. */
 #include "../tools.h"
+#include "../builtin.h"
 
 /*
 Token name table.
@@ -50,13 +51,14 @@ const wchar_t *une_token_table[] = {
   L"from",
   L"till",
   L"while",
-  L"def",
   L"continue",
   L"break",
   L"return",
   L"global",
   L"?",
   L":",
+  L"function",
+  L"builtin",
 };
 
 /*
@@ -159,6 +161,11 @@ __une_static wchar_t *une_token_to_wcs(une_token token)
       break;
     case UNE_TT_ID:
       str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, token.value._wcs);
+      break;
+    
+    /* Built-in function. */
+    case UNE_TT_BUILTIN:
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, une_builtin_function_to_wcs((une_builtin_function)token.value._int));
       break;
     
   }

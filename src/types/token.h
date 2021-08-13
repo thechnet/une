@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2021-07-28
+Modified 2021-08-13
 */
 
 #ifndef UNE_TOKEN_H
@@ -63,13 +63,14 @@ typedef enum _une_token_type {
   UNE_TT_FROM,
   UNE_TT_TILL,
   UNE_TT_WHILE,
-  UNE_TT_DEF,
   UNE_TT_CONTINUE,
   UNE_TT_BREAK,
   UNE_TT_RETURN,
   UNE_TT_GLOBAL,
   UNE_TT_QMARK,
   UNE_TT_COLON,
+  UNE_TT_FUNCTION,
+  UNE_TT_BUILTIN,
   
   __UNE_TT_max__,
 } une_token_type;

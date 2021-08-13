@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-08-08
+Modified 2021-08-13
 */
 
 /* Import public Une interface. */
@@ -14,6 +14,26 @@ Modified 2021-08-08
 
 int main(int argc, char *argv[])
 {
+  /* Warnings */
+  #ifdef UNE_DEBUG_MEMDBG
+  warn("UNE_DEBUG_MEMDBG enabled.");
+  #endif
+  #ifdef UNE_DEBUG_SIZES
+  warn("UNE_DEBUG_SIZES enabled.");
+  #endif
+  #ifdef UNE_DEBUG_REPORT
+  warn("UNE_DEBUG_REPORT enabled.");
+  #endif
+  #ifdef UNE_NO_LEX
+  warn("UNE_NO_LEX enabled.");
+  #endif
+  #ifdef UNE_NO_PARSE
+  warn("UNE_NO_PARSE enabled.");
+  #endif
+  #ifdef UNE_NO_INTERPRET
+  warn("UNE_NO_INTERPRET enabled.");
+  #endif
+  
   une_result result;
   bool read_from_file;
   bool main_error = false;
@@ -57,7 +77,7 @@ int main(int argc, char *argv[])
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (result.type != UNE_RT_ERROR) {
     assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
-    wprintf(UNE_COLOR_RESULT_TYPE L"\n%ls" RESET ": ", une_result_type_to_wcs(result.type));
+    wprintf(UNE_COLOR_RESULT_TYPE L"%ls" RESET ": ", une_result_type_to_wcs(result.type));
     une_result_represent(stdout, result);
     putwc(L'\n', stdout);
   }
@@ -85,22 +105,22 @@ int main(int argc, char *argv[])
   #ifdef UNE_DEBUG_REPORT
   FILE *report_status = fopen(UNE_DEBUG_REPORT_FILE_STATUS, UNE_FOPEN_WFLAGS);
   assert(report_status != NULL);
-  #ifdef MEMDBG_ENABLE
+  #ifdef UNE_DEBUG_MEMDBG
   extern size_t memdbg_allocations_count;
   extern size_t memdbg_alert_count;
-  #endif /* MEMDBG_ENABLE */
+  #endif /* UNE_DEBUG_MEMDBG */
   fwprintf(
     report_status,
     L"result_type:%d\n"
-    #ifdef MEMDBG_ENABLE
+    #ifdef UNE_DEBUG_MEMDBG
     L"alloc_count:%d\n"
     L"alert_count:%d\n"
-    #endif /* MEMDBG_ENABLE */
+    #endif /* UNE_DEBUG_MEMDBG */
     , (int)result.type
-    #ifdef MEMDBG_ENABLE
+    #ifdef UNE_DEBUG_MEMDBG
     , memdbg_allocations_count-1 /* FILE *report_status */,
     memdbg_alert_count
-    #endif /* MEMDBG_ENABLE */
+    #endif /* UNE_DEBUG_MEMDBG */
   );
   fclose(report_status);
   #endif /* UNE_DEBUG_REPORT */

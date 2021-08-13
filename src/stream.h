@@ -1,6 +1,6 @@
 /*
 stream.h - Une
-Modified 2021-08-07
+Modified 2021-08-12
 */
 
 #ifndef UNE_STREAM_H
@@ -48,7 +48,7 @@ typedef struct _une_ostream {
 The current item in an array une_istream, with an optional offset.
 */
 #define __UNE_ISTREAM_ARRAY_ITEM(__istream, __cast_type, __offset)\
-  ((__cast_type*)__istream->data.array.array)[__istream->index+__offset]
+  ((__cast_type*)__istream->data.array.array)[(__istream->index)+__offset]
 
 /*
 Pull the next item from an array une_istream by value.
@@ -59,11 +59,11 @@ Pull the next item from an array une_istream by value.
     if (__verify_position && !une_istream_array_verify_position(istream, 1)) {\
       if (!istream->has_reached_end) {\
         istream->has_reached_end = true;\
-        istream->index++;\
+        (istream->index)++;\
       }\
       return __error_value;\
     }\
-    istream->index++;\
+    (istream->index)++;\
     return __UNE_ISTREAM_ARRAY_ITEM(istream, __cast_type, 0);\
   }
 
@@ -76,11 +76,11 @@ Pull the next item from an array une_istream by reference.
     if (__verify_position && !une_istream_array_verify_position(istream, 1)) {\
       if (!istream->has_reached_end) {\
         istream->has_reached_end = true;\
-        istream->index++;\
+        (istream->index)++;\
       }\
       return __error_value;\
     }\
-    istream->index++;\
+    (istream->index)++;\
     return &__UNE_ISTREAM_ARRAY_ITEM(istream, __cast_type, 0);\
   }
 
@@ -143,7 +143,7 @@ Pull the next item from a wfile une_istream.
   __une_static wint_t __id(une_istream *istream)\
   {\
     if (__UNE_ISTREAM_WFILE_ITEM(istream) != WEOF)\
-      istream->index++;\
+      (istream->index)++;\
     __UNE_ISTREAM_WFILE_ITEM(istream) = fgetwc(istream->data.wfile.file);\
     return __UNE_ISTREAM_WFILE_ITEM(istream);\
   }
@@ -177,7 +177,7 @@ Access the current item in a wfile une_istream.
 The current item in a une_ostream, with an optional offset.
 */
 #define __UNE_OSTREAM_ITEM(__ostream, __type, __offset)\
-  ((__type*)__ostream->array)[__ostream->index+__offset]
+  ((__type*)__ostream->array)[(__ostream->index)+__offset]
 
 /*
 Push an item to a une_ostream.
@@ -187,7 +187,7 @@ Push an item to a une_ostream.
   {\
     if (!une_ostream_grow_if_needed(ostream, 1))\
       assert(false);\
-    ostream->index++;\
+    (ostream->index)++;\
     __UNE_OSTREAM_ITEM(ostream, __type, 0) = item;\
   }
 

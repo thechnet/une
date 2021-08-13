@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-08-08
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -21,6 +21,8 @@ __une_interpreter(*__interpreter_table[]) = {
   &une_interpret_flt,
   &une_interpret_str,
   &une_interpret_list,
+  &une_interpret_function,
+  &une_interpret_builtin,
   &une_interpret_stmts,
   &une_interpret_cop,
   &une_interpret_not,
@@ -44,7 +46,6 @@ __une_interpreter(*__interpreter_table[]) = {
   &une_interpret_set_idx,
   &une_interpret_get,
   &une_interpret_get_idx,
-  &une_interpret_def,
   &une_interpret_call,
   &une_interpret_for,
   &une_interpret_while,
@@ -63,7 +64,7 @@ une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *
   
   LOGINTERPRET(une_node_type_to_wcs(node->type));
   
-  return __interpreter_table[node->type-UNE_R_BGN_LUT_NODES](error, is, node);
+  return __interpreter_table[(node->type)-UNE_R_BGN_LUT_NODES](error, is, node);
 }
 
 /*
@@ -78,42 +79,6 @@ __une_interpreter(une_interpret_as, une_result_type type)
     result = une_result_create(UNE_RT_ERROR);
   }
   return result;
-}
-
-/*
-Call user-defined function.
-*/
-__une_static une_result une_interpret_call_def(une_error *error, une_interpreter_state *is, une_function *fn, une_result *args)
-{
-  /* Create function context. */
-  une_context *parent = is->context;
-  is->context = une_context_create(fn->name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
-  is->context->parent = parent;
-
-  /* Define parameters. */
-  for (size_t i=0; i<fn->params_count; i++) {
-    une_variable *var = une_variable_create(is->context, fn->params[i]);
-    var->content = une_result_copy(args[i]);
-  }
-
-  /* Interpret body. */
-  une_result result = une_interpret(error, is, fn->body);
-  is->should_return = false;
-
-  /* Return to parent context. */
-  if (result.type != UNE_RT_ERROR) {
-    une_context_free_children(parent, is->context);
-    is->context = parent;
-  }
-  return result;
-}
-
-/*
-Call built-in function.
-*/
-__une_static une_result une_interpret_call_builtin(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args, une_builtin_fnptr fn)
-{
-  return (*fn)(error, is, call_node, args);
 }
 
 /*
@@ -174,6 +139,38 @@ __une_interpreter(une_interpret_list)
   return (une_result){
     .type = UNE_RT_LIST,
     .value._vp = (void*)result_list,
+  };
+}
+
+/*
+Interpret a UNE_NT_FUNCTION une_node.
+*/
+__une_interpreter(une_interpret_function)
+{
+  UNE_UNPACK_NODE_LIST(node->content.branch.a, params_n, params_count);
+  une_function *function = une_function_create(is->context, (char*)node->content.branch.c, node->pos);
+  wchar_t **params = NULL;
+  if (params_count > 0)
+    params = malloc(params_count*sizeof(*params));
+  for (size_t i=0; i<params_count; i++)
+    params[i] = wcsdup(params_n[i+1]->content.value._wcs);
+  function->params = params;
+  function->params_count = params_count;
+  function->body = une_node_copy(node->content.branch.b);
+  return (une_result){
+    .type = UNE_RT_FUNCTION,
+    .value._vp = (void*)function
+  };
+}
+
+/*
+Interpret a UNE_NT_BUILTIN une_node.
+*/
+__une_interpreter(une_interpret_builtin)
+{
+  return (une_result){
+    .type = UNE_RT_BUILTIN,
+    .value._int = node->content.value._int
   };
 }
 
@@ -804,99 +801,33 @@ __une_interpreter(une_interpret_get_idx)
 }
 
 /*
-Interpret a UNE_NT_DEF une_node.
-*/
-__une_interpreter(une_interpret_def)
-{
-  /* Get function name. */
-  wchar_t *name = node->content.branch.a->content.value._wcs;
-  
-  /* Check if function built-in or already exists *in current context*. */
-  if (une_builtin_wcs_to_fnptr(name) != NULL || une_function_find(is->context, name) != NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ALREADY_DEFINED, node->content.branch.a->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-
-  /* Copy contents. */
-  UNE_UNPACK_NODE_LIST(node->content.branch.b, params_n, params_count);
-  wchar_t **params = NULL;
-  if (params_count > 0)
-    params = malloc(params_count*sizeof(*params));
-  for (size_t i=0; i<params_count; i++)
-    params[i] = wcsdup(params_n[i+1]->content.value._wcs);
-  une_node *body = une_node_copy(node->content.branch.c);
-
-  /* Define function. */
-  une_function *fn = une_function_create(is->context, name);
-  fn->params_count = params_count;
-  fn->params = params;
-  fn->body = body;
-  
-  return une_result_create(UNE_RT_VOID);
-}
-
-/*
 Interpret a UNE_NT_CALL une_node.
 */
 __une_interpreter(une_interpret_call)
 {
-  /* Get function name. */
-  wchar_t *name = node->content.branch.a->content.value._wcs;
-
-  /* Unpack arguments. */
-  UNE_UNPACK_NODE_LIST(node->content.branch.b, args_n, args_count);
-
-  size_t params_count;
-
-  /* Check if function is built-in. */
-  une_builtin_fnptr builtin_fn = une_builtin_wcs_to_fnptr(name);
-  if (builtin_fn != NULL)
-    params_count = une_builtin_params_count(builtin_fn);
-
-  /* Check if function exists in symbol table. */
-  une_function *fn;
-  if (builtin_fn == NULL) {
-    fn = une_function_find_global(is->context, name);
-    if (fn == NULL) {
-      *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
-      return une_result_create(UNE_RT_ERROR);
-    }
-    params_count = fn->params_count;
-  }
+  /* Get callable. */
+  une_result callable = une_interpret(error, is, node->content.branch.a);
+  if (callable.type == UNE_RT_ERROR)
+    return callable;
   
-  /* Compare number of arguments to number of parameters. */
-  if (args_count != params_count) {
-    *error = UNE_ERROR_SET(UNE_ET_FUNCTION_ARG_COUNT, node->content.branch.b->pos);
+  /* Ensure result type is callable. */
+  une_datatype dt_callable = UNE_DATATYPE_FOR_RESULT(callable);
+  if (dt_callable.call == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
 
   /* Interpret arguments. */
-  une_result *args = NULL;
-  if (args_count > 0)
-    args = malloc(args_count*sizeof(*args));
-  for (size_t i=0; i<args_count; i++) {
-    une_result temp = une_interpret(error, is, args_n[i+1]);
-    if (temp.type == UNE_RT_ERROR) {
-      for (size_t j=0; j<i; j++)
-        une_result_free(args[j]);
-      free(args);
-      return temp;
-    }
-    args[i] = temp;
+  une_result args = une_interpret_list(error, is, node->content.branch.b);
+  if (args.type == UNE_RT_ERROR) {
+    une_result_free(callable);
+    return args;
   }
 
   /* Execute function. */
-  une_result result;
-  if (builtin_fn == NULL)
-    result = une_interpret_call_def(error, is, fn, args);
-  else
-    result = une_interpret_call_builtin(error, is, node, args, builtin_fn);
-  
-  /* Clean up. */
-  for (size_t i=0; i<args_count; i++)
-    une_result_free(args[i]);
-  if (args != NULL)
-    free(args);
+  une_result result = dt_callable.call(error, is, node, callable, args);
+  une_result_free(callable);
+  une_result_free(args);
   return result;
 }
 

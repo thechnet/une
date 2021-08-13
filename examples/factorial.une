@@ -1,9 +1,9 @@
 # Factorial Calculator
 
-def fac(num)
+fac = function(num)
 {
-  return num <= 2 ? num : num*fac(num-1)
+  return num<=2 ? num : num*fac(num-1)
 }
 
 num = 10
-print(str(num)+"! = "+str(fac(num)))
+print(str(num) + "! = " + str(fac(num)))

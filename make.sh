@@ -62,6 +62,8 @@ src=\
 "datatypes/str.c "\
 "datatypes/list.c "\
 "datatypes/void.c "\
+"datatypes/function.c "\
+"datatypes/builtin.c "\
 "tools.c "\
 "stream.c "\
 "builtin.c"

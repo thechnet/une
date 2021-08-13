@@ -4,6 +4,7 @@ from os import system as cmd
 from sys import platform
 
 # Options
+SKIP_UNTIL = 0
 HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
@@ -44,28 +45,24 @@ UNE_ERROR_INPUT = 1
 UNE_ET_SYNTAX = ERROR_TYPE_OFFSET+1
 UNE_ET_BREAK_OUTSIDE_LOOP = ERROR_TYPE_OFFSET+2
 UNE_ET_CONTINUE_OUTSIDE_LOOP = ERROR_TYPE_OFFSET+3
-UNE_ET_ASSIGN_TO_LITERAL = ERROR_TYPE_OFFSET+4
-UNE_ET_SYMBOL_NOT_DEFINED = ERROR_TYPE_OFFSET+5
-UNE_ET_INDEX_OUT_OF_RANGE = ERROR_TYPE_OFFSET+6
-UNE_ET_ZERO_DIVISION = ERROR_TYPE_OFFSET+7
-UNE_ET_UNREAL_NUMBER = ERROR_TYPE_OFFSET+8
-UNE_ET_FUNCTION_ALREADY_DEFINED = ERROR_TYPE_OFFSET+9
-UNE_ET_FUNCTION_ARG_COUNT = ERROR_TYPE_OFFSET+10
-UNE_ET_FILE_NOT_FOUND = ERROR_TYPE_OFFSET+11
-UNE_ET_ENCODING = ERROR_TYPE_OFFSET+12
-UNE_ET_TYPE = ERROR_TYPE_OFFSET+13
+UNE_ET_SYMBOL_NOT_DEFINED = ERROR_TYPE_OFFSET+4
+UNE_ET_INDEX_OUT_OF_RANGE = ERROR_TYPE_OFFSET+5
+UNE_ET_ZERO_DIVISION = ERROR_TYPE_OFFSET+6
+UNE_ET_UNREAL_NUMBER = ERROR_TYPE_OFFSET+7
+UNE_ET_CALLABLE_ARG_COUNT = ERROR_TYPE_OFFSET+8
+UNE_ET_FILE_NOT_FOUND = ERROR_TYPE_OFFSET+9
+UNE_ET_ENCODING = ERROR_TYPE_OFFSET+10
+UNE_ET_TYPE = ERROR_TYPE_OFFSET+11
 error_types = {
   UNE_ERROR_INPUT: 'UNE_ERROR_INPUT',
   UNE_ET_SYNTAX: 'UNE_ET_SYNTAX',
   UNE_ET_BREAK_OUTSIDE_LOOP: 'UNE_ET_BREAK_OUTSIDE_LOOP',
   UNE_ET_CONTINUE_OUTSIDE_LOOP: 'UNE_ET_CONTINUE_OUTSIDE_LOOP',
-  UNE_ET_ASSIGN_TO_LITERAL: 'UNE_ET_ASSIGN_TO_LITERAL',
   UNE_ET_SYMBOL_NOT_DEFINED: 'UNE_ET_SYMBOL_NOT_DEFINED',
   UNE_ET_INDEX_OUT_OF_RANGE: 'UNE_ET_INDEX_OUT_OF_RANGE',
   UNE_ET_ZERO_DIVISION: 'UNE_ET_ZERO_DIVISION',
   UNE_ET_UNREAL_NUMBER: 'UNE_ET_UNREAL_NUMBER',
-  UNE_ET_FUNCTION_ALREADY_DEFINED: 'UNE_ET_FUNCTION_ALREADY_DEFINED',
-  UNE_ET_FUNCTION_ARG_COUNT: 'UNE_ET_FUNCTION_ARG_COUNT',
+  UNE_ET_CALLABLE_ARG_COUNT: 'UNE_ET_CALLABLE_ARG_COUNT',
   UNE_ET_FILE_NOT_FOUND: 'UNE_ET_FILE_NOT_FOUND',
   UNE_ET_ENCODING: 'UNE_ET_ENCODING',
   UNE_ET_TYPE: 'UNE_ET_TYPE'
@@ -387,7 +384,7 @@ tests = [
   ['a=0;for i from 0 till 3 a=a+i;return a', UNE_RT_INT, '3', ATTR_NO_IMPLICIT_RETURN],
   ['a=0;for i from 3 till 0{if i==2 continue;a=a+i};return a', UNE_RT_INT, '4', ATTR_NO_IMPLICIT_RETURN],
   ['a=0;for i from 0 till 0 a=1;return a', UNE_RT_INT, '0', ATTR_NO_IMPLICIT_RETURN],
-  ['a=0;for i from 0 till 1{break;a=1}return a', UNE_RT_INT, '0', ATTR_NO_IMPLICIT_RETURN],
+  ['a=0;for i from 0 till 1{break;a=1};return a', UNE_RT_INT, '0', ATTR_NO_IMPLICIT_RETURN],
   ['for i from [1]**2 till 3 print(i)', UNE_RT_ERROR, UNE_ET_TYPE],
   ['for i from [1] till 3 print(i)', UNE_RT_ERROR, UNE_ET_TYPE],
   ['for i from 0 till [1]**2 print(i)', UNE_RT_ERROR, UNE_ET_TYPE],
@@ -395,7 +392,7 @@ tests = [
   
   # WHILE
   ['i=3;while i>0 i=i-1;return i', UNE_RT_INT, '0', ATTR_NO_IMPLICIT_RETURN],
-  ['i=0;while i>0{i=-1;break}return i', UNE_RT_INT, '0', ATTR_NO_IMPLICIT_RETURN],
+  ['i=0;while i>0{i=-1;break};return i', UNE_RT_INT, '0', ATTR_NO_IMPLICIT_RETURN],
   ['i=3;while [i]**2 i=i-1', UNE_RT_ERROR, UNE_ET_TYPE],
   ['i=3;while i>0{[i]**2;i=i-1}', UNE_RT_ERROR, UNE_ET_TYPE],
   
@@ -409,15 +406,15 @@ tests = [
   ['if [1]**2 1', UNE_RT_ERROR, UNE_ET_TYPE],
   
   # DEF
-  ['def fn(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break}return [arg*1*1.1, "str"]}', UNE_RT_VOID, 'VOID', ATTR_NO_IMPLICIT_RETURN],
-  ['def a(){return}\ndef a(){return}', UNE_RT_ERROR, UNE_ET_FUNCTION_ALREADY_DEFINED, ATTR_FILE_ONLY],
-  ['def int(){return}', UNE_RT_ERROR, UNE_ET_FUNCTION_ALREADY_DEFINED],
+  ['fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RT_VOID, 'VOID', ATTR_NO_IMPLICIT_RETURN],
+  ['a=function(){return};a=function(){return}', UNE_RT_VOID, 'VOID', ATTR_NO_IMPLICIT_RETURN],
+  ['int=function(){return}', UNE_RT_ERROR, UNE_ET_SYNTAX],
   
   # CALL
-  ['def fn(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break}return [arg*1*1.1, "str"]}return fn(2)', UNE_RT_LIST, '[2.200, "str"]', ATTR_NO_IMPLICIT_RETURN],
+  ['fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]};return fn(2)', UNE_RT_LIST, '[2.200, "str"]', ATTR_NO_IMPLICIT_RETURN],
   ['a()', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
-  ['def a(b)return b;def c(d)return a();c(1)', UNE_RT_ERROR, UNE_ET_FUNCTION_ARG_COUNT],
-  ['def a(b, c){return b};a(1, [1]**2)', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['a=function(b)return b;c=function(d)return a();c(1)', UNE_RT_ERROR, UNE_ET_CALLABLE_ARG_COUNT],
+  ['a=function(b, c){return b};a(1, [1]**2)', UNE_RT_ERROR, UNE_ET_TYPE],
 ]
 TESTS_LEN = len(tests)
 
@@ -479,7 +476,9 @@ print("\33[33m\33[1mEnsure UNE_DEBUG_SIZES is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_REPORT is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_MEMDBG is enabled.\33[0m")
 i = 0
-for test in tests:
+for i, test in enumerate(tests):
+  if i+1 < SKIP_UNTIL:
+    continue
   if HIDE_OUTPUT and not (len(test) > 3 and test[3] == ATTR_NEVER_HIDE_OUTPUT):
     une = f'1>nul 2>&1 {UNE}'
   else:
@@ -518,8 +517,7 @@ for test in tests:
   elif STOP_AT_FAIL:
     print('\33[33m(test.py) Failed, stopping.\33[0m')
     break
-os.chdir(cd)
-if i == TESTS_LEN:
+else:
   print('\33[32m\33[1m(test.py) ALL TESTS PASSED\33[0m')
   exit(0)
 exit(1)

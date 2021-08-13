@@ -1,10 +1,10 @@
 /*
 str.h - Une
-Modified 2021-08-08
+Modified 2021-08-11
 */
 
-#ifndef UNE_STR_H
-#define UNE_STR_H
+#ifndef UNE_DATATYPES_STR_H
+#define UNE_DATATYPES_STR_H
 
 /* Header-specific includes. */
 #include "../primitive.h"
@@ -34,4 +34,4 @@ une_result une_datatype_str_get_index(une_result target, une_result index);
 une_result une_datatype_str_copy(une_result result);
 void une_datatype_str_free_members(une_result result);
 
-#endif /* UNE_STR_H */
+#endif /* UNE_DATATYPES_STR_H */

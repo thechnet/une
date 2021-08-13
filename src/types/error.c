@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-08-05
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -18,12 +18,10 @@ const wchar_t *une_error_message_table[] = {
   L"Syntax error.",
   L"Break outside loop.",
   L"Continue outside loop.",
-  L"Cannot assign to literal.",
   L"Symbol not defined.",
   L"Index out of range.",
   L"Zero division.",
   L"Unreal number.",
-  L"Function already defined.",
   L"Wrong number of arguments.",
   L"File not found.",
   L"Encoding or conversion error.",
@@ -42,8 +40,8 @@ une_error une_error_create(void)
       .end = 0
     },
     .type = __UNE_ET_none__,
-    .line = 0,
-    .file = NULL
+    .meta_line = 0,
+    .meta_file = NULL
   };
 }
 
@@ -74,18 +72,16 @@ UNE_OSTREAM_PUSHER(__une_error_display_ctx_push, une_context*)
 void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_state *is)
 {
   /* Setup. */
-  int line = 1;
-  size_t line_begin = 0;
-  size_t line_end = 0;
-  size_t pos_start = error->pos.start;
-  size_t pos_end = error->pos.end;
   int invisible_characters = 0;
   une_istream text;
   wint_t (*pull)(une_istream*);
   wint_t (*peek)(une_istream*, ptrdiff_t);
   wint_t (*now)(une_istream*);
+  void (*reset)(une_istream*);
   const wchar_t *error_info_as_wcs; /* Predeclare to allow label jump. */
+  une_position error_line = { .start = 0, .end = 0 };
 
+  /* Skip preview if not available. */
   if (error->type == UNE_ET_FILE_NOT_FOUND && error->pos.start == 0 && error->pos.end == 0)
     goto skip_preview;
 
@@ -95,70 +91,115 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   contexts = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_context*) = &__une_error_display_ctx_push;
   une_context *current_context = is->context;
+  push(&s_contexts, NULL);
   while (current_context != NULL) {
     push(&s_contexts, current_context);
     current_context = current_context->parent;
   }
+  contexts = (une_context**)s_contexts.array; /* Reobtain up-to-date pointer. */
+  contexts[0] = contexts[(s_contexts.index)--];
+  contexts = NULL;
 
+  /* Setup stream. */
   if (ls->read_from_file) {
     text = une_istream_wfile_create(ls->path);
     pull = &__une_error_display_wfile_pull;
     peek = &__une_error_display_wfile_peek;
     now = &__une_error_display_wfile_now;
+    reset = &une_istream_wfile_reset;
   } else {
     text = une_istream_array_create((void*)ls->text, wcslen(ls->text));
     pull = &__une_error_display_array_pull;
     peek = &__une_error_display_array_peek;
     now = &__une_error_display_array_now;
+    reset = &une_istream_array_reset;
   }
 
-  /* Find error position in file. */
-  assert(pos_start != pos_end);
-  while (true) {
-    if (pull(&text) == WEOF)
-      break;
-    if (UNE_LEXER_WC_IS_INVISIBLE(now(&text)) && text.index < pos_end)
-      invisible_characters++;
-    if (text.index >= pos_end && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
-      break;
-    if (now(&text) == L'\n') {
-      line_begin = text.index+1;
-      invisible_characters = 0;
-    }
-  }
-  line_end = text.index;
-  
-  /* Print location of error. */
-  wprintf(RESET BOLD L"File %ls, Line %d", is->context->name, line);
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
-  wprintf(L" (%hs @ %d)", error->file, error->line);
-  #endif
-  wprintf(L":" RESET L"\n" RESET);
+  /* Print traceback. */
   contexts = (une_context**)s_contexts.array; /* Reobtain up-to-date pointer. */
-  for (size_t i=s_contexts.index; i>0; i--)
-    wprintf(BOLD L"(In %ls)" RESET L"\n", contexts[i-1]->name);
-  free(contexts);
+  for (int i=0; i<=s_contexts.index; i++) {
+    /* Get stored information. */
+    une_function *function = contexts[i]->function;
+    char *name;
+    une_position position;
+    bool main_context = false;
+    if (function == NULL) {
+      main_context = true;
+      if (ls->read_from_file)
+        name = ls->path;
+      else
+        name = UNE_COMMAND_LINE_NAME;
+      position = error->pos;
+    } else {
+      name = function->definition_file;
+      position = function->definition_point;
+    }
+    
+    /* Compute line number. */
+    int line = 1, line_begin = 0, line_end = 0;
+    assert(position.start != position.end);
+    reset(&text);
+    while (true) {
+      if (pull(&text) == WEOF)
+        break;
+      if (main_context && UNE_LEXER_WC_IS_INVISIBLE(now(&text)) && text.index < position.end)
+        invisible_characters++;
+      if (text.index >= position.start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
+        break;
+      if (now(&text) == L'\n') {
+        line_begin = text.index+1;
+        if (main_context)
+          invisible_characters = 0;
+        line++;
+      }
+    }
+    line_end = text.index;
+    
+    /* Print position. */
+    if (main_context) {
+      error_line.start = line_begin;
+      error_line.end = line_end;
+      wprintf(BOLD L"File %hs, Line %d", name, line);
+      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+      wprintf(L" (%hs @ %d)", error->meta_file, error->meta_line);
+      #endif
+      wprintf(L":\n" RESET);
+    } else {
+      wprintf(BOLD L"(In function %hs:%d)" RESET "\n", name, line);
+    }
+    
+    /* Print more detailed information. */
+    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+    wprintf(L"position.start/end %d, %d\n", position.start, position.end);
+    wprintf(L"line_begin/end: %d, %d\n", line_begin, line_end);
+    wprintf(L"invisible_characters: %d\n", invisible_characters);
+    wprintf(L"error_line.start/end %d, %d\n", error_line.start, error_line.end);
+    wprintf(L"---\n");
+    #endif
+  }
+  
+  free(s_contexts.array);
   
   /* Print text at location. */
   if (ls->read_from_file)
     une_istream_wfile_reset(&text);
   else
     une_istream_array_reset(&text);
-  while (text.index+1 < (ptrdiff_t)line_begin)
+  while (text.index+1 < (ptrdiff_t)error_line.start)
     if (pull(&text) == WEOF)
       break;
-  while (text.index < (ptrdiff_t)line_end) {
+  while (text.index < (ptrdiff_t)error_line.end) {
     if (pull(&text) == WEOF)
       break;
-    wprintf(L"%c", now(&text));
+    putwc(now(&text), stdout);
   }
-  wprintf(L"\n");
+  putwc(L'\n', stdout);
 
   /* Underline error position within line. */
   wprintf(UNE_COLOR_FAIL);
-  for (int i=pos_start-line_begin-invisible_characters; i>0; i--)
+  for (int i=error->pos.start-error_line.start-invisible_characters; i>0; i--)
     putwc(L' ', stdout);
-  for (int i=0; i<pos_end-pos_start; i++)
+  for (int i=0; i<error->pos.end-error->pos.start; i++)
     putwc(L'~', stdout);
   putwc(L'\n', stdout);
 
@@ -171,16 +212,4 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   /* Print error message. */
   error_info_as_wcs = une_error_type_to_wcs(error->type);
   wprintf(UNE_COLOR_FAIL L"%ls" RESET L"\n", error_info_as_wcs);
-
-  /* Print more detailed information. */
-  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
-  wprintf(L"\n");
-  wprintf(L"pos_start: %d\n", pos_start);
-  wprintf(L"pos_end: %d\n", pos_end);
-  wprintf(L"line_begin: %d\n", line_begin);
-  wprintf(L"line_end: %d\n", line_end);
-  wprintf(L"invisible_characters: %d\n", invisible_characters);
-  wprintf(L"\n");
-  #endif
-  
 }

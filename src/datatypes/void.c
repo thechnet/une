@@ -1,14 +1,10 @@
 /*
 void.c - Une
-Modified 2021-08-07
+Modified 2021-08-09
 */
 
 /* Header-specific includes. */
 #include "void.h"
-
-/* Implementation-specific includes. */
-#include <math.h>
-#include "../tools.h"
 
 /*
 Print a text representation to file.

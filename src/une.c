@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-08-07
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -24,23 +24,6 @@ Run a Une program.
 */
 une_result une_run(bool read_from_file, char *path, wchar_t *text)
 {
-  /* Warnings */
-  #ifdef UNE_DEBUG_SIZES
-  warn("UNE_DEBUG_SIZES enabled.");
-  #endif
-  #ifdef UNE_DEBUG_REPORT
-  warn("UNE_DEBUG_REPORT enabled.");
-  #endif
-  #ifdef UNE_NO_LEX
-  warn("UNE_NO_LEX enabled.");
-  #endif
-  #ifdef UNE_NO_PARSE
-  warn("UNE_NO_PARSE enabled.");
-  #endif
-  #ifdef UNE_NO_INTERPRET
-  warn("UNE_NO_INTERPRET enabled.");
-  #endif
-  
   /* Setup. */
   une_error error = une_error_create();
   
@@ -63,6 +46,9 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   if (tokens != NULL)
     ast = une_parse(&error, &ps, tokens);
   #endif
+  #ifdef UNE_DEBUG_LOG_PARSE
+  success("parse done.");
+  #endif
   
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
   wchar_t *node_as_wcs = une_node_to_wcs(ast);
@@ -72,10 +58,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #endif
   
   /* Interpret. */
-  wchar_t *context_name = ls.read_from_file ? une_str_to_wcs(path) : UNE_DEFAULT_CONTEXT_NAME;
-  une_context *context = une_context_create(context_name, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
-  if (ls.read_from_file)
-    free(context_name);
+  une_context *context = une_context_create(NULL, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
   
   une_interpreter_state is = une_interpreter_state_create(context);
   une_result result = une_result_create(UNE_RT_ERROR);
@@ -84,6 +67,9 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     result = une_interpret(&error, &is, ast);
   #else
   result = une_result_create(UNE_RT_VOID);
+  #endif
+  #ifdef UNE_DEBUG_LOG_INTERPRET
+  success("interpret done.");
   #endif
   /* Wrap up. */
   if (

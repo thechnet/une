@@ -1,15 +1,15 @@
 # Scrolling Text
 
-def move(str)
+move = function(string)
 {
   new = ""
-  amt = len(str)
+  amt = len(string)
   for i from 0 till amt
-    new = new + str[(i + 1) % amt]
+    new = new + string[(i + 1) % amt]
   return new
 }
 
-def cursor(show)
+cursor = function(show)
 {
   print(show ? "[?25h" : "[?25l")
 }
@@ -19,11 +19,11 @@ revolutions = 3
 speed = 50 # ms between each step.
 
 cursor(0)
-_in=in
+_in = in
 for i from 0 till revolutions
   for j from 0 till len(in) {
     _in = move(_in)
-    print("[F|"+_in+"| "+str(i+1)+"/"+str(revolutions)+"[K")
+    print("[F|" + _in + "| " + str(i+1) + "/" + str(revolutions) + "[K")
     sleep(speed)
   }
 cursor(1)

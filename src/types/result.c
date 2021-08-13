@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-08-08
+Modified 2021-08-09
 */
 
 /* Header-specific includes. */
@@ -24,6 +24,8 @@ const wchar_t *une_result_table[] = {
   L"FLT",
   L"STR",
   L"LIST",
+  L"FUNCTION",
+  L"BUILTIN",
 };
 
 /*

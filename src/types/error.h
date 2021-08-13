@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Modified 2021-07-15
+Modified 2021-08-13
 */
 
 #ifndef UNE_ERROR_H
@@ -19,13 +19,11 @@ typedef enum _une_error_type {
   UNE_ET_SYNTAX,
   UNE_ET_BREAK_OUTSIDE_LOOP,
   UNE_ET_CONTINUE_OUTSIDE_LOOP,
-  UNE_ET_ASSIGN_TO_LITERAL,
   UNE_ET_SYMBOL_NOT_DEFINED,
   UNE_ET_INDEX_OUT_OF_RANGE,
   UNE_ET_ZERO_DIVISION,
   UNE_ET_UNREAL_NUMBER,
-  UNE_ET_FUNCTION_ALREADY_DEFINED,
-  UNE_ET_FUNCTION_ARG_COUNT,
+  UNE_ET_CALLABLE_ARG_COUNT,
   UNE_ET_FILE_NOT_FOUND,
   UNE_ET_ENCODING,
   UNE_ET_TYPE,
@@ -38,8 +36,8 @@ Holds error information.
 typedef struct _une_error {
   une_error_type type;
   une_position pos;
-  char *file;
-  size_t line;
+  char *meta_file;
+  size_t meta_line;
 } une_error;
 
 /*
@@ -59,8 +57,8 @@ Populate a une_error.
   (une_error){\
     .type = __type,\
     .pos = __pos,\
-    .line = __LINE__,\
-    .file = __FILE__,\
+    .meta_line = __LINE__,\
+    .meta_file = __FILE__,\
   }
 
 une_error une_error_create(void);

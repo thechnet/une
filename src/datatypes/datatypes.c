@@ -1,6 +1,6 @@
 /*
 datatypes.c - Une
-Modified 2021-08-07
+Modified 2021-08-11
 */
 
 /* Header-specific includes. */
@@ -12,6 +12,8 @@ Modified 2021-08-07
 #include "str.h"
 #include "list.h"
 #include "void.h"
+#include "function.h"
+#include "builtin.h"
 
 une_datatype une_datatypes[] = {
   {
@@ -40,7 +42,8 @@ une_datatype une_datatypes[] = {
     .get_index = NULL,
     .set_index = NULL,
     .copy = NULL,
-    .free_members = NULL
+    .free_members = NULL,
+    .call = NULL,
   },
   {
     .type = UNE_RT_INT,
@@ -68,7 +71,8 @@ une_datatype une_datatypes[] = {
     .get_index = NULL,
     .set_index = NULL,
     .copy = NULL,
-    .free_members = NULL
+    .free_members = NULL,
+    .call = NULL,
   },
   {
     .type = UNE_RT_FLT,
@@ -96,7 +100,8 @@ une_datatype une_datatypes[] = {
     .get_index = NULL,
     .set_index = NULL,
     .copy = NULL,
-    .free_members = NULL
+    .free_members = NULL,
+    .call = NULL,
   },
   {
     .type = UNE_RT_STR,
@@ -124,7 +129,8 @@ une_datatype une_datatypes[] = {
     .get_index = &une_datatype_str_get_index,
     .set_index = NULL,
     .copy = &une_datatype_str_copy,
-    .free_members = &une_datatype_str_free_members
+    .free_members = &une_datatype_str_free_members,
+    .call = NULL,
   },
   {
     .type = UNE_RT_LIST,
@@ -152,6 +158,65 @@ une_datatype une_datatypes[] = {
     .get_index = &une_datatype_list_get_index,
     .set_index = &une_datatype_list_set_index,
     .copy = &une_datatype_list_copy,
-    .free_members = &une_datatype_list_free_members
-  }
+    .free_members = &une_datatype_list_free_members,
+    .call = NULL,
+  },
+  {
+    .type = UNE_RT_FUNCTION,
+    .as_int = NULL,
+    .as_flt = NULL,
+    .as_str = NULL,
+    .represent = &une_datatype_function_represent,
+    .is_true = &une_datatype_function_is_true,
+    .is_equal = NULL,
+    .is_greater = NULL,
+    .is_greater_or_equal = NULL,
+    .is_less = NULL,
+    .is_less_or_equal = NULL,
+    .add = NULL,
+    .sub = NULL,
+    .mul = NULL,
+    .div = NULL,
+    .fdiv = NULL,
+    .mod = NULL,
+    .pow = NULL,
+    .negate = NULL,
+    .get_len = NULL,
+    .is_valid_index_type = NULL,
+    .is_valid_index = NULL,
+    .get_index = NULL,
+    .set_index = NULL,
+    .copy = NULL,
+    .free_members = NULL,
+    .call = &une_datatype_function_call,
+  },
+  {
+    .type = UNE_RT_BUILTIN,
+    .as_int = NULL,
+    .as_flt = NULL,
+    .as_str = NULL,
+    .represent = &une_datatype_builtin_represent,
+    .is_true = &une_datatype_builtin_is_true,
+    .is_equal = NULL,
+    .is_greater = NULL,
+    .is_greater_or_equal = NULL,
+    .is_less = NULL,
+    .is_less_or_equal = NULL,
+    .add = NULL,
+    .sub = NULL,
+    .mul = NULL,
+    .div = NULL,
+    .fdiv = NULL,
+    .mod = NULL,
+    .pow = NULL,
+    .negate = NULL,
+    .get_len = NULL,
+    .is_valid_index_type = NULL,
+    .is_valid_index = NULL,
+    .get_index = NULL,
+    .set_index = NULL,
+    .copy = NULL,
+    .free_members = NULL,
+    .call = &une_datatype_builtin_call,
+  },
 };

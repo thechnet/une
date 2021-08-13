@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-08-07
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -10,6 +10,7 @@ Modified 2021-08-07
 #include <string.h>
 #include "tools.h"
 #include "stream.h"
+#include "builtin.h"
 
 /*
 Two-character token characters.
@@ -159,11 +160,6 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     tk = une_lex_1c_token(error, ls);
     if (tk.type != __UNE_TT_none__) {
       push(&out, tk);
-      if (tk.type == UNE_TT_RBRC)
-        push(&out, (une_token){
-          .type = UNE_TT_NEW,
-          .pos = tk.pos,
-        });
       continue;
     }
     
@@ -189,7 +185,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
       continue;
     }
     
-    /* Illegal character. */
+    /* Unexpected character. */
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){ls->in.index, ls->in.index+1}));
     push(&out, une_token_create(__UNE_TT_none__));
     continue;
@@ -305,7 +301,7 @@ __une_lexer(une_lex_str)
     if (ls->now(&ls->in) == L'\r')
       continue;
     
-    /* Premature end of stream. */
+    /* Premature end of string. */
     if (ls->now(&ls->in) == WEOF) {
       *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){ls->in.index, ls->in.index+1}));
       free(buffer);
@@ -399,8 +395,6 @@ __une_lexer(une_lex_id)
     tk.type = UNE_TT_TILL;
   else if (!wcscmp(buffer, L"while"))
     tk.type = UNE_TT_WHILE;
-  else if (!wcscmp(buffer, L"def"))
-    tk.type = UNE_TT_DEF;
   else if (!wcscmp(buffer, L"return"))
     tk.type = UNE_TT_RETURN;
   else if (!wcscmp(buffer, L"break"))
@@ -409,9 +403,21 @@ __une_lexer(une_lex_id)
     tk.type = UNE_TT_CONTINUE;
   else if (!wcscmp(buffer, L"global"))
     tk.type = UNE_TT_GLOBAL;
-  else {
-    tk.type = UNE_TT_ID;
-    tk.value._wcs = buffer;
+  else if (!wcscmp(buffer, L"function")) {
+    tk.type = UNE_TT_FUNCTION;
+    if (ls->read_from_file)
+      tk.value._vp = (void*)ls->path;
+    else
+      tk.value._vp = (void*)UNE_COMMAND_LINE_NAME;
+  } else {
+    une_builtin_function builtin = une_builtin_wcs_to_function(buffer);
+    if (builtin != __UNE_BUILTIN_none__) {
+      tk.type = UNE_TT_BUILTIN;
+      tk.value._int = (int)builtin;
+    } else {
+      tk.type = UNE_TT_ID;
+      tk.value._wcs = buffer;
+    }
   }
   if (tk.type != UNE_TT_ID)
     free(buffer);

@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-08-07
+Modified 2021-08-11
 */
 
 /* Header-specific includes. */
@@ -21,7 +21,6 @@ une_builtin_fnptr une_builtin_functions[] = {
   #define __BUILTIN_FUNCTION(__id) &une_builtin_fn_##__id,
   UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_FUNCTION)
   #undef __BUILTIN_FUNCTION
-  NULL
 };
 
 /*
@@ -31,7 +30,6 @@ const wchar_t *une_builtin_functions_as_strings[] = {
   #define __BUILTIN_AS_STRING(__id) L"" #__id,
   UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_AS_STRING)
   #undef __BUILTIN_AS_STRING
-  NULL
 };
 
 /* The amount of parameters of every built-in function. */
@@ -54,31 +52,51 @@ const size_t une_builtin_functions_params_count[] = {
 };
 
 /*
+*** Interface.
+*/
+
+/*
 Get the number of parameters of a built-in function.
 */
-const size_t une_builtin_params_count(une_builtin_fnptr fn)
+const size_t une_builtin_params_count(une_builtin_function function)
 {
-  size_t index = 0;
-  while (une_builtin_functions[index] != fn) {
-    index++;
-    assert(une_builtin_functions[index] != NULL);
-  }
-  return une_builtin_functions_params_count[index];
+  assert(UNE_BUILTIN_FUNCTION_IS_VALID(function));
+  return une_builtin_functions_params_count[function];
+}
+
+/*
+Get the function pointer for a builtin-in function.
+*/
+const une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function)
+{
+  assert(UNE_BUILTIN_FUNCTION_IS_VALID(function));
+  return une_builtin_functions[function-1];
 }
 
 /*
 Get a pointer to the built-in function matching the given string or NULL;
 */
-une_builtin_fnptr une_builtin_wcs_to_fnptr(wchar_t *wcs)
+une_builtin_function une_builtin_wcs_to_function(wchar_t *wcs)
 {
-  une_builtin_fnptr fn = NULL;
-  for (int i=0; une_builtin_functions_as_strings[i] != NULL; i++)
-    if (wcscmp(une_builtin_functions_as_strings[i], wcs) == 0) {
-      fn = une_builtin_functions[i];
+  une_builtin_function fn = __UNE_BUILTIN_none__;
+  for (int i=1; i<__UNE_BUILTIN_max__; i++)
+    if (wcscmp(une_builtin_functions_as_strings[i-1], wcs) == 0) {
+      fn = i;
       break;
     }
   return fn;
 }
+
+/*
+Convert a une_builtin_function to its string representation.
+*/
+#ifdef UNE_DEBUG
+const wchar_t *une_builtin_function_to_wcs(une_builtin_function function)
+{
+  assert(UNE_BUILTIN_FUNCTION_IS_VALID(function));
+  return une_builtin_functions_as_strings[function-1];
+}
+#endif /* UNE_DEBUG */
 
 /*
 ***** Built-in Functions.

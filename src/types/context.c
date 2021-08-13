@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-08-07
+Modified 2021-08-13
 */
 
 /* Header-specific includes. */
@@ -12,15 +12,15 @@ Modified 2021-08-07
 /*
 Allocates, initializes, and returns a pointer to a une_context struct.
 */
-une_context *une_context_create(wchar_t *name, size_t variables_size, size_t functions_size)
+une_context *une_context_create(une_function *function, size_t variables_size, size_t functions_size)
 {
   /* Allocate une_context. */
   une_context *context = malloc(sizeof(*context));
   
   /* Initialize une_context. */
   *context = (une_context){
-    .name = wcsdup(name),
     .parent = NULL,
+    .function = function,
     .variables = malloc(variables_size*sizeof(*context->variables)),
     .variables_size = variables_size,
     .variables_count = 0,
@@ -60,12 +60,9 @@ void une_context_free(une_context *context)
   /* Free une_function buffer. */
   if (context->functions != NULL) {
     for (size_t i=0; i<context->functions_count; i++)
-      une_function_free(context->functions[i]);
+      une_function_free((context->functions)[i]);
     free(context->functions);
   }
-  
-  /* Free context name. */
-  free(context->name);
 
   free(context);
 }
@@ -156,7 +153,7 @@ __une_variable_itf(une_variable_find_or_create_global)
 /*
 Initializes a new une_function in a une_context's function buffer.
 */
-__une_function_itf(une_function_create)
+une_function *une_function_create(une_context *context, char *definition_file, une_position definition_point)
 {
   /* Ensure sufficient space in une_function buffer. */
   if (context->functions_count >= context->functions_size) {
@@ -165,47 +162,15 @@ __une_function_itf(une_function_create)
   }
   
   /* Initialize une_function. */
-  une_function *var = &((context->functions)[context->functions_count]);
-  (context->functions_count)++;
-  *var = (une_function){
-    .name = wcsdup(name),
+  une_function *fn = malloc(sizeof(*fn));
+  (context->functions)[(context->functions_count)++] = fn;
+  *fn = (une_function){
+    .definition_file = strdup(definition_file),
+    .definition_point = definition_point,
     .params_count = 0,
     .params = NULL,
     .body = NULL
   };
-  
-  return var;
-}
-
-/*
-Returns a pointer to a une_function in a une_context's function buffer or NULL.
-*/
-__une_function_itf(une_function_find)
-{
-  /* Find une_function. */
-  for (size_t i=0; i<context->functions_count; i++)
-    if (wcscmp(context->functions[i].name, name) == 0)
-      return &context->functions[i];
-  
-  /* Return NULL if no match was found. */
-  return NULL;
-}
-
-/*
-Returns a pointer to a une_function in a une_context's function buffer and its parents or NULL.
-*/
-__une_function_itf(une_function_find_global)
-{
-  /* Return NULL by default. */
-  une_function *fn = NULL;
-  
-  /* Find une_function. */
-  while (fn == NULL) {
-    fn = une_function_find(context, name);
-    if (context->parent == NULL)
-      break;
-    context = context->parent;
-  }
   
   return fn;
 }

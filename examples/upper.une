@@ -1,13 +1,13 @@
 # Turn Text Uppercase
 
-def char_upper(char)
+char_upper = function(char)
 {
   if ord(char) < ord("a") || ord(char) > ord("z")
     return char
   return chr(ord(char)+ord("A")-ord("a"))
 }
 
-def upper(string)
+upper = function(string)
 {
   out = ""
   for i from 0 till len(string)

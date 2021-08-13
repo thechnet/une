@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-08-08
+Modified 2021-08-13
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -20,11 +20,10 @@ Modified 2021-08-08
 // #define UNE_DISPLAY_TOKENS
 // #define UNE_DISPLAY_NODES
 #define UNE_DISPLAY_RESULT
-#define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
+// #define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
 
 // #define UNE_DEBUG_LOG_INTERPRET
 // #define UNE_DEBUG_LOG_PARSE
-// #define UNE_DEBUG_LOG_FREE
 
 /* TO TOGGLE ESCAPE SEQUENCES, SEE ESCSEQ.H. */
 
@@ -55,7 +54,7 @@ Modified 2021-08-08
 /*
 *** Constants.
 */
-#define UNE_DEFAULT_CONTEXT_NAME L"<args>"
+#define UNE_COMMAND_LINE_NAME "<args>"
 #define UNE_STDIN_SWITCH "-s"
 #define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
@@ -98,7 +97,7 @@ Modified 2021-08-08
 /* Output Color Escape Sequences. */
 #define UNE_COLOR_SUCCESS FGGREEN
 #define UNE_COLOR_FAIL BOLD FGRED
-#define UNE_COLOR_HINT FGBLACK
+#define UNE_COLOR_HINT FGBBLACK
 #define UNE_COLOR_TOKEN_TYPE FGYELLOW
 #define UNE_COLOR_TOKEN_VALUE FGGREEN
 #define UNE_COLOR_NODE_BRANCH_TYPE FGCYAN
@@ -141,7 +140,7 @@ typedef union _une_value {
 #define LOGINTERPRET(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
-#define LOGPARSE(object, nt) out(L"%ls [%ls]", object, nt);
+#define LOGPARSE(object, nt) out(L"%ls [%d]", object, nt);
 #else
 #define LOGPARSE(...)
 #endif
