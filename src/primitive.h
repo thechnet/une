@@ -65,6 +65,7 @@ Modified 2021-08-14
 #define UNE_DEBUG_REPORT_ERROR_TYPE_OFFSET 10
 #define UNE_PRINTF_UNE_FLT L"%.3f"
 #define UNE_PRINTF_UNE_INT L"%lld"
+#define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */

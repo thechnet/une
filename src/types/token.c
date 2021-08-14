@@ -137,6 +137,7 @@ __une_static wchar_t *une_token_to_wcs(une_token token)
 {
   /* Write token type. */
   wchar_t *str = malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));
+  verify(str);
   size_t str_len = 0;
   str_len += swprintf(str, UNE_SIZE_TOKEN_AS_WCS, UNE_COLOR_TOKEN_TYPE);
   

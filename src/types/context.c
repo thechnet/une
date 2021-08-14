@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -16,6 +16,7 @@ une_context *une_context_create(une_function *function, size_t variables_size, s
 {
   /* Allocate une_context. */
   une_context *context = malloc(sizeof(*context));
+  verify(context);
   
   /* Initialize une_context. */
   *context = (une_context){
@@ -28,6 +29,8 @@ une_context *une_context_create(une_function *function, size_t variables_size, s
     .functions_size = functions_size,
     .functions_count = 0,
   };
+  verify(context->variables);
+  verify(context->functions);
   
   return context;
 }
@@ -76,6 +79,7 @@ __une_variable_itf(une_variable_create)
   if (context->variables_count >= context->variables_size) {
     context->variables_size *= 2;
     context->variables = realloc(context->variables, context->variables_size*sizeof(*context->variables));
+    verify(context->variables);
   }
   
   /* Initialize une_variable. */
@@ -85,6 +89,7 @@ __une_variable_itf(une_variable_create)
     .name = wcsdup(name),
     .content = une_result_create(UNE_RT_VOID) /* Don'use __UNE_RT_none__ because this will be freed using une_result_free. */
   };
+  verify(var->name);
   
   return var;
 }
@@ -159,10 +164,12 @@ une_function *une_function_create(une_context *context, char *definition_file, u
   if (context->functions_count >= context->functions_size) {
     context->functions_size *= 2;
     context->functions = realloc(context->functions, context->functions_size*sizeof(*context->functions));
+    verify(context->functions);
   }
   
   /* Initialize une_function. */
   une_function *fn = malloc(sizeof(*fn));
+  verify(fn);
   (context->functions)[(context->functions_count)++] = fn;
   *fn = (une_function){
     .definition_file = strdup(definition_file),
@@ -171,6 +178,7 @@ une_function *une_function_create(une_context *context, char *definition_file, u
     .params = NULL,
     .body = NULL
   };
+  verify(fn->definition_file);
   
   return fn;
 }

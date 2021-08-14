@@ -1,6 +1,6 @@
 /*
 flt.c - Une
-Modified 2021-08-07
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -8,6 +8,7 @@ Modified 2021-08-07
 
 /* Implementation-specific includes. */
 #include <math.h>
+#include "../tools.h"
 
 /*
 Convert to INT.
@@ -37,6 +38,7 @@ une_result une_datatype_flt_as_str(une_result result)
 {
   assert(result.type == UNE_RT_FLT);
   wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
+  verify(out);
   swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_FLT, result.value._flt);
   return (une_result){
     .type = UNE_RT_STR,

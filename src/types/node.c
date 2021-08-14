@@ -61,6 +61,7 @@ une_node *une_node_create(une_node_type type)
 {
   /* Allocate new une_node. */
   une_node *node = malloc(sizeof(*node));
+  verify(node);
   
   /* Initialize new une_node. */
   *node = (une_node){
@@ -108,6 +109,7 @@ une_node *une_node_copy(une_node *src)
     case UNE_NT_STR:
     case UNE_NT_ID:
       dest->content.value._wcs = wcsdup(src->content.value._wcs);
+      verify(dest->content.value._wcs);
       break;
     
     /* List. */
@@ -204,6 +206,7 @@ Create a une_node list buffer.
 une_node **une_node_list_create(size_t size)
 {
   une_node **nodepp = malloc((size+1)*sizeof(*nodepp));
+  verify(nodepp);
   nodepp[0] = une_node_create(UNE_NT_SIZE);
   nodepp[0]->content.value._int = size;
   return nodepp;
@@ -234,6 +237,7 @@ wchar_t *une_node_to_wcs(une_node *node)
 {
   /* Create output buffer. */
   wchar_t *buffer = malloc(UNE_SIZE_NODE_AS_WCS*sizeof(*buffer));
+  verify(buffer);
   size_t buffer_len = 0;
   if (node == NULL) {
     buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"NULL");

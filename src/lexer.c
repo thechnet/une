@@ -95,6 +95,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   
   /* Initialize token buffer. */
   une_token *tokens = malloc(UNE_SIZE_TOKEN_BUF*sizeof(*tokens));
+  verify(tokens);
   une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_TOKEN_BUF, sizeof(*tokens), true);
   tokens = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_token) = &__une_lex_push;
@@ -207,6 +208,7 @@ __une_lexer(une_lex_num)
   /* Setup. */
   size_t buffer_size = UNE_SIZE_NUM_LEN;
   wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
+  verify(buffer);
   size_t idx_start = ls->in.index;
   
   do {
@@ -214,6 +216,7 @@ __une_lexer(une_lex_num)
     while (ls->in.index-idx_start+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
       buffer = realloc(buffer, buffer_size*sizeof(*buffer));
+      verify(buffer);
     }
   
     /* Add character to buffer. */
@@ -248,6 +251,7 @@ __une_lexer(une_lex_num)
     if (ls->in.index-idx_start+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
       buffer = realloc(buffer, buffer_size*sizeof(*buffer));
+      verify(buffer);
     }
   
     /* Add character to buffer. */
@@ -284,6 +288,7 @@ __une_lexer(une_lex_str)
   /* Setup. */
   size_t buffer_size = UNE_SIZE_STR_LEN;
   wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
+  verify(buffer);
   size_t idx_start = ls->in.index;
   bool escape = false;
   size_t buffer_index = 0;
@@ -293,6 +298,7 @@ __une_lexer(une_lex_str)
     if (buffer_index+1 /* NUL. */ >= buffer_size) {
       buffer_size *= 2;
       buffer = realloc(buffer, buffer_size*sizeof(*buffer));
+      verify(buffer);
     }
     
     ls->pull(&ls->in);
@@ -362,6 +368,7 @@ __une_lexer(une_lex_id)
   /* Setup. */
   size_t buffer_size = UNE_SIZE_ID_LEN;
   wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
+  verify(buffer);
   size_t idx_start = ls->in.index;
   size_t buffer_index = 0;
   
@@ -370,6 +377,7 @@ __une_lexer(une_lex_id)
     if (buffer_index >= buffer_size-1) { /* NUL. */
       buffer_size *= 2;
       buffer = realloc(buffer, buffer_size*sizeof(*buffer));
+      verify(buffer);
     }
     
     /* Add character to string buffer. */

@@ -1,6 +1,6 @@
 /*
 int.c - Une
-Modified 2021-08-08
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -8,6 +8,7 @@ Modified 2021-08-08
 
 /* Implementation-specific includes. */
 #include <math.h>
+#include "../tools.h"
 #include "str.h"
 #include "list.h"
 
@@ -39,6 +40,7 @@ une_result une_datatype_int_as_str(une_result result)
 {
   assert(result.type == UNE_RT_INT);
   wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
+  verify(out);
   swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_INT, result.value._int);
   return (une_result){
     .type = UNE_RT_STR,

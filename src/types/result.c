@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-08-09
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -70,6 +70,7 @@ Return a list of uninitialized une_results.
 une_result *une_result_list_create(size_t items)
 {
   une_result *list = malloc((items+1)*sizeof(*list));
+  verify(list);
   list[0] = (une_result){
     .type = UNE_RT_SIZE,
     .value._int = items

@@ -882,12 +882,14 @@ __une_parser(une_parse_sequence,
   /* Sequence. */
   size_t sequence_size = UNE_SIZE_SEQUENCE;
   une_node **sequence = malloc(sequence_size*sizeof(*sequence));
+  verify(sequence);
   size_t sequence_index = 1;
 
   while (true) {
     if (sequence_index >= sequence_size) {
       sequence_size *= 2;
       sequence = realloc(sequence, sequence_size*sizeof(sequence));
+      verify(sequence);
     }
     
     /* ADDITIONAL WHITESPACE. */

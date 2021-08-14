@@ -1,6 +1,6 @@
 /*
 str.c - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -138,6 +138,7 @@ une_result une_datatype_str_add(une_result left, une_result right)
 
   /* Create new string. */
   wchar_t *new = malloc((left_size+right_size+1)*sizeof(*new));
+  verify(new);
 
   /* Populate new string. */
   wmemcpy(new, left.value._wcs, left_size);
@@ -164,6 +165,7 @@ une_result une_datatype_str_mul(une_result left, une_result right)
 
   /* Create new string. */
   wchar_t *new = malloc((right.value._int*str_size+1)*sizeof(*new));
+  verify(new);
 
   /* Populate new string. */
   for (size_t i=0; i<right.value._int; i++)
@@ -210,6 +212,7 @@ une_result une_datatype_str_get_index(une_result target, une_result index)
   assert(target.type == UNE_RT_STR);
   assert(index.type == UNE_RT_INT);
   wchar_t *substring = malloc(2*sizeof(*substring));
+  verify(substring);
   substring[0] = target.value._wcs[index.value._int];
   substring[1] = L'\0';
   return (une_result){
@@ -224,10 +227,12 @@ Create a duplicate.
 une_result une_datatype_str_copy(une_result result)
 {
   assert(result.type == UNE_RT_STR);
-  return (une_result){
+  une_result copy = {
     .type = UNE_RT_STR,
     .value._wcs = wcsdup(result.value._wcs)
   };
+  verify(copy.value._wcs);
+  return copy;
 }
 
 /*

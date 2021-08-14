@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -87,6 +87,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
 
   /* Get context traceback. */
   une_context **contexts = malloc(UNE_SIZE_EXPECTED_TRACEBACK_DEPTH*sizeof(*contexts));
+  verify(contexts);
   une_ostream s_contexts = une_ostream_create((void*)contexts, UNE_SIZE_EXPECTED_TRACEBACK_DEPTH, sizeof(*contexts), true);
   contexts = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_context*) = &__une_error_display_ctx_push;

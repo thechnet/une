@@ -1,6 +1,6 @@
 /*
 stream.c - Une
-Modified 2021-08-12
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -104,6 +104,7 @@ bool une_ostream_grow_if_needed(une_ostream *ostream, ptrdiff_t offset)
       return false;
     ostream->array_size *= 2;
     ostream->array = realloc(ostream->array, ostream->array_size*ostream->item_size);
+    verify(ostream->array);
   }
   return true;
 }

@@ -246,6 +246,7 @@ __une_builtin_fn(chr)
   
   une_result chr = une_result_create(UNE_RT_STR);
   chr.value._wcs = malloc(2*sizeof(*chr.value._wcs));
+  verify(chr.value._wcs);
   chr.value._wcs[0] = (wchar_t)args[result].value._int;
   chr.value._wcs[1] = L'\0';
   return chr;
@@ -340,6 +341,7 @@ __une_builtin_fn(input)
   /* Get string. */
   une_datatype_str_represent(stdout, args[prompt]);
   wchar_t *instr = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*instr));
+  verify(instr);
   fgetws(instr, UNE_SIZE_FGETWS_BUFFER, stdin);
   size_t len = wcslen(instr);
   instr[--len] = L'\0'; /* Remove trailing newline. */
@@ -347,6 +349,7 @@ __une_builtin_fn(input)
   /* Return result. */
   une_result str = une_result_create(UNE_RT_STR);
   str.value._wcs = malloc((len+1)*sizeof(*str.value._wcs));
+  verify(str.value._wcs);
   wcscpy(str.value._wcs, instr);
   free(instr);
   return str;
@@ -424,12 +427,14 @@ __une_builtin_fn(split)
   /* Setup. */
   size_t tokens_amt = 0;
   une_result *tokens = malloc((UNE_SIZE_BIF_SPLIT_TKS+1)*sizeof(*tokens));
+  verify(tokens);
   une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_BIF_SPLIT_TKS+1, sizeof(*tokens), true);
   tokens = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_result) = &__une_builtin_split_push;
   push(&out, une_result_create(UNE_RT_SIZE));
   /* Cache delimiter lengths for performance. */
   size_t *delim_lens = malloc(delims_len*sizeof(*delim_lens));
+  verify(delim_lens);
   for (size_t i=0; i<delims_len; i++)
     delim_lens[i] = wcslen(delims_p[i+1].value._wcs);
   wchar_t *wcs = args[string].value._wcs;
@@ -460,6 +465,7 @@ __une_builtin_fn(split)
           break;
         /* Create substring. */
         wchar_t *substr = malloc((substr_len+1)*sizeof(*substr));
+        verify(substr);
         wmemcpy(substr, wcs+last_token_end_cpy, substr_len);
         substr[substr_len] = L'\0';
         /* Push substring. */

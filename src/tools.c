@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-07-25
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -40,6 +40,7 @@ wchar_t *une_str_to_wcs(char *str)
 {
   size_t size = strlen(str)+1 /* NUL. */;
   wchar_t *wcs = malloc(size*sizeof(*wcs));
+  verify(wcs);
   mbstowcs(wcs, str, size);
   if (errno == EILSEQ) {
     free(wcs);
@@ -55,6 +56,7 @@ char *une_wcs_to_str(wchar_t *wcs)
 {
   size_t size = wcslen(wcs)+1 /* NUL. */;
   char *str = malloc(size*sizeof(*str));
+  verify(str);
   wcstombs(str, wcs, size);
   if (errno == EILSEQ) {
     free(str);
@@ -93,6 +95,7 @@ wchar_t *une_file_read(char *path)
     return NULL;
   size_t text_size = UNE_SIZE_FILE_BUFFER;
   wchar_t *text = malloc(text_size*sizeof(*text));
+  verify(text);
   size_t cursor = 0;
   wint_t c; /* DOC: Can represent any Unicode character + WEOF (!).
                This is important when using fgetwc(), as otherwise,
@@ -105,6 +108,7 @@ wchar_t *une_file_read(char *path)
     if (cursor >= text_size-1) { /* NUL. */
       text_size *= 2;
       text = realloc(text, text_size *sizeof(*text));
+      verify(text);
     }
     if (c == WEOF)
       break;
@@ -114,4 +118,14 @@ wchar_t *une_file_read(char *path)
   fclose(f);
   text[cursor] = L'\0';
   return text;
+}
+
+/*
+Print a message and abort.
+*/
+int une_out_of_memory(void)
+{
+  wprintf(UNE_ERROR_OUT_OF_MEMORY L"\n");
+  fflush(stdout);
+  abort();
 }

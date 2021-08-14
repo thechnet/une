@@ -8,6 +8,7 @@
 ### Changed
 - Renamed `src/builtin.c` and `builtin.h` to `builtin_functions.c` and `builtin_functions.h` to avoid confusion with `src/datatypes/builtin.c` and `builtin.h`.
 - Some other small changes.
+- Since the introduction of memdbg, allocations were left unchecked in non-debug mode. This has now been adressed with a new macro `verify()`, which, if the pointer provided to it is `NULL`, prints an error message and aborts the program.
 
 ## [0.6.0] - 2021-08-13
 

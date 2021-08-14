@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2021-07-15
+Modified 2021-08-14
 */
 
 #ifndef UNE_TOOLS_H
@@ -13,6 +13,12 @@ Modified 2021-07-15
 *** Interface.
 */
 
+/*
+Verify an allocation.
+*/
+#define verify(memory) \
+  ((void)((memory) != NULL || une_out_of_memory()))
+
 bool une_wcs_to_une_int(wchar_t *wcs, une_int *dest);
 bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest);
 
@@ -22,5 +28,7 @@ char *une_wcs_to_str(wchar_t *wcs);
 bool une_file_exists(char *path);
 bool une_file_or_folder_exists(char *path);
 wchar_t *une_file_read(char *path);
+
+int une_out_of_memory(void);
 
 #endif /* !UNE_TOOLS_H */

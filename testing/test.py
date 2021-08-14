@@ -9,13 +9,15 @@ HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
 FILE_SCRIPT = 'test.py.une'
-DIR = '..\\private\\gcov' if platform=='win32' else '../private/gcov'
-UNE = 'une' if platform=='win32' else './une'
-# DIR = '.'
-# UNE = '..\\une' if platform=='win32' else '../une'
+DIR = '.'
+UNE = '..\\une' if platform=='win32' else '../une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
 ERROR_TYPE_OFFSET = 10
+
+# UNCOMMENT THESE LINES WHEN USING GCOV:
+# DIR = '..\\private\\gcov' if platform=='win32' else '../private/gcov'
+# UNE = 'une' if platform=='win32' else './une'
 
 ##### CONSTANTS
 

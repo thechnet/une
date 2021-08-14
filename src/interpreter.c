@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -109,10 +109,12 @@ Interpret a UNE_NT_STR une_node.
 __une_interpreter(une_interpret_str)
 {
   /* DOC: Memory Management: Here we can see that results DUPLICATE strings. */
-  return (une_result){
+  une_result result = {
     .type = UNE_RT_STR,
     .value._wcs = wcsdup(node->content.value._wcs)
   };
+  verify(result.value._wcs);
+  return result;
 }
 
 /*
@@ -150,10 +152,14 @@ __une_interpreter(une_interpret_function)
   UNE_UNPACK_NODE_LIST(node->content.branch.a, params_n, params_count);
   une_function *function = une_function_create(is->context, (char*)node->content.branch.c, node->pos);
   wchar_t **params = NULL;
-  if (params_count > 0)
+  if (params_count > 0) {
     params = malloc(params_count*sizeof(*params));
-  for (size_t i=0; i<params_count; i++)
+    verify(params);
+  }
+  for (size_t i=0; i<params_count; i++) {
     params[i] = wcsdup(params_n[i+1]->content.value._wcs);
+    verify(params[i]);
+  }
   function->params = params;
   function->params_count = params_count;
   function->body = une_node_copy(node->content.branch.b);
