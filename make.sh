@@ -66,7 +66,7 @@ src=\
 "datatypes/builtin.c "\
 "tools.c "\
 "stream.c "\
-"builtin.c"
+"builtin_functions.c"
 if [ $debug -eq 1 ]; then
   src+=" util/memdbg.c"
 fi

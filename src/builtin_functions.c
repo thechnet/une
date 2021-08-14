@@ -1,10 +1,10 @@
 /*
 builtin.c - Une
-Modified 2021-08-11
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
-#include "builtin.h"
+#include "builtin_functions.h"
 
 /* Implementation-specific includes. */
 #include <time.h>
@@ -186,11 +186,7 @@ __une_builtin_fn(str)
   }
   
   une_result result_as_str = dt_result.as_str(args[result]);
-  if (result_as_str.type == UNE_RT_ERROR) {
-    *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
-    return une_result_create(UNE_RT_ERROR);
-  }
-  
+  assert(result_as_str.type != UNE_RT_ERROR);
   return result_as_str;
 }
 

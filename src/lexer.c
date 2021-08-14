@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -10,7 +10,7 @@ Modified 2021-08-13
 #include <string.h>
 #include "tools.h"
 #include "stream.h"
-#include "builtin.h"
+#include "builtin_functions.h"
 
 /*
 Two-character token characters.

@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2021-08-09
+Modified 2021-08-14
 */
 
 #ifndef UNE_RESULT_H
@@ -14,11 +14,9 @@ Type of une_result.
 */
 typedef enum _une_result_type {
   __UNE_RT_none__,
-  #define UNE_R_BGN_MARKER_RESULT_TYPES UNE_RT_VOID
   UNE_RT_ERROR,
   UNE_RT_CONTINUE,
   UNE_RT_BREAK,
-  #define UNE_R_END_MARKER_RESULT_TYPES UNE_RT_BREAK
   UNE_RT_SIZE,
   #define UNE_R_BGN_DATA_RESULT_TYPES UNE_RT_VOID
   UNE_RT_VOID,
@@ -28,7 +26,7 @@ typedef enum _une_result_type {
   UNE_RT_LIST,
   UNE_RT_FUNCTION,
   UNE_RT_BUILTIN,
-  #define UNE_R_END_DATA_RESULT_TYPES UNE_RT_LIST
+  #define UNE_R_END_DATA_RESULT_TYPES UNE_RT_BUILTIN
   __UNE_RT_max__,
 } une_result_type;
 

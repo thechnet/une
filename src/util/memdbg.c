@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -12,6 +12,7 @@ Modified 2021-08-13
 #include <assert.h>
 #include <limits.h>
 #include <time.h>
+#include <stdint.h>
 #include "escseq.h"
 #define LOGGING_WIDE
 #define LOGGING_ID "memdbg"
@@ -39,14 +40,14 @@ Modified 2021-08-13
 /* Globals. */
 char memdbg_padding[MEMDBG_PADDING_SIZE];
 memdbg_allocation *memdbg_allocations = NULL;
-size_t memdbg_allocations_size;
-size_t memdbg_allocations_count;
-size_t memdbg_malloc_count;
-size_t memdbg_realloc_count;
-size_t memdbg_free_count;
-size_t memdbg_alert_count;
-size_t memdbg_current_total_size;
-size_t memdbg_max_total_size;
+int64_t memdbg_allocations_size;
+int64_t memdbg_allocations_count;
+int64_t memdbg_malloc_count;
+int64_t memdbg_realloc_count;
+int64_t memdbg_free_count;
+int64_t memdbg_alert_count;
+int64_t memdbg_current_total_size;
+int64_t memdbg_max_total_size;
 
 /* Private Function Declarations. */
 static void memdbg_init(void);

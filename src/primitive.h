@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -30,6 +30,7 @@ Modified 2021-08-13
 /* Universal includes. */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 #include <stdint.h>
 #include <stdbool.h>

@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 /* Import public Une interface. */
@@ -103,12 +103,12 @@ int main(int argc, char *argv[])
   une_result_free(result);
   
   #ifdef UNE_DEBUG_REPORT
+  #ifdef UNE_DEBUG_MEMDBG
+  extern int64_t memdbg_allocations_count;
+  extern int64_t memdbg_alert_count;
+  #endif /* UNE_DEBUG_MEMDBG */
   FILE *report_status = fopen(UNE_DEBUG_REPORT_FILE_STATUS, UNE_FOPEN_WFLAGS);
   assert(report_status != NULL);
-  #ifdef UNE_DEBUG_MEMDBG
-  extern size_t memdbg_allocations_count;
-  extern size_t memdbg_alert_count;
-  #endif /* UNE_DEBUG_MEMDBG */
   fwprintf(
     report_status,
     L"result_type:%d\n"

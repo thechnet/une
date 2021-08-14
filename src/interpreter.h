@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2021-08-13
+Modified 2021-08-14
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -13,7 +13,7 @@ Modified 2021-08-13
 #include "types/node.h"
 #include "types/result.h"
 #include "types/symbols.h"
-#include "builtin.h"
+#include "builtin_functions.h"
 
 /*
 *** Interface.

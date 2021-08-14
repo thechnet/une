@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-08-12
+Modified 2021-08-14
 */
 
 /* Header-specific includes. */
@@ -8,7 +8,7 @@ Modified 2021-08-12
 
 /* Implementation-specific includes. */
 #include "../types/symbols.h"
-#include "../builtin.h"
+#include "../builtin_functions.h"
 
 /*
 Print a text representation to file.

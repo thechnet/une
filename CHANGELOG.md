@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- New test cases to increase code coverage after recent changes.
+
+### Changed
+- Renamed `src/builtin.c` and `builtin.h` to `builtin_functions.c` and `builtin_functions.h` to avoid confusion with `src/datatypes/builtin.c` and `builtin.h`.
+- Some other small changes.
+
 ## [0.6.0] - 2021-08-13
 
 ### Added
@@ -27,6 +36,7 @@
     - For built-in functions, the result holds a `une_builtin_function`, which can be used to access the function pointer, get the amount of required parameters, and more.
 
   One problem this change created is that functions are no longer named. Therefore, when creating the traceback on an error, we instead use the file and line where the function was defined. To access this information, every `une_context` now holds a pointer to the `une_function` that created the context, which in turn holds information on its point of definition.
+- Updated examples.
 
 ### Removed
 - Old function implementation.

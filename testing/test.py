@@ -4,15 +4,15 @@ from os import system as cmd
 from sys import platform
 
 # Options
-SKIP_UNTIL = 0
+SKIP_UNTIL = 2
 HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
 FILE_SCRIPT = 'test.py.une'
-# DIR = '..\\private\\gcov' if platform=='win32' else '../private/gcov'
-# UNE = 'une' if platform=='win32' else './une'
-DIR = '.'
-UNE = '..\\une' if platform=='win32' else '../une'
+DIR = '..\\private\\gcov' if platform=='win32' else '../private/gcov'
+UNE = 'une' if platform=='win32' else './une'
+# DIR = '.'
+# UNE = '..\\une' if platform=='win32' else '../une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
 ERROR_TYPE_OFFSET = 10
@@ -31,13 +31,17 @@ UNE_RT_INT = 6
 UNE_RT_FLT = 7
 UNE_RT_STR = 8
 UNE_RT_LIST = 9
+UNE_RT_FUNCTION = 10
+UNE_RT_BUILTIN = 11
 result_types = {
   UNE_RT_ERROR: 'UNE_RT_ERROR',
   UNE_RT_VOID: 'UNE_RT_VOID',
   UNE_RT_INT: 'UNE_RT_INT',
   UNE_RT_FLT: 'UNE_RT_FLT',
   UNE_RT_STR: 'UNE_RT_STR',
-  UNE_RT_LIST: 'UNE_RT_LIST'
+  UNE_RT_LIST: 'UNE_RT_LIST',
+  UNE_RT_FUNCTION: 'UNE_RT_FUNCTION',
+  UNE_RT_BUILTIN: 'UNE_RT_BUILTIN',
 }
 
 # Error Types
@@ -110,6 +114,7 @@ tests = [
   
   ['chr(65)', UNE_RT_STR, 'A'],
   ['chr(1.1)', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['chr(999999999999)', UNE_RT_ERROR, UNE_ET_ENCODING],
   
   ['ord("A")', UNE_RT_INT, '65'],
   ['ord(1)', UNE_RT_ERROR, UNE_ET_TYPE],
@@ -177,6 +182,8 @@ tests = [
   ['[1, +]', UNE_RT_ERROR, UNE_ET_SYNTAX],
   ['[1 1]', UNE_RT_ERROR, UNE_ET_SYNTAX],
   ['for i from 1.1', UNE_RT_ERROR, UNE_ET_SYNTAX],
+  ['a=function(a, 1){return a}', UNE_RT_ERROR, UNE_ET_SYNTAX],
+  ['function()', UNE_RT_ERROR, UNE_ET_SYNTAX],
   
   # Data
   ['100', UNE_RT_INT, '100'],
@@ -278,6 +285,10 @@ tests = [
   ['unknown+1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1+unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1+[1]', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['1.0+"str"', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['[1]+1', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['"str"+1', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['"str"*"str"', UNE_RT_ERROR, UNE_ET_TYPE],
   
   # SUB
   ['1-1', UNE_RT_INT, '0'],
@@ -287,6 +298,7 @@ tests = [
   ['unknown-1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1-unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1-[1]', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['1.0-"str"', UNE_RT_ERROR, UNE_ET_TYPE],
   
   # MUL
   ['2*2', UNE_RT_INT, '4'],
@@ -300,6 +312,8 @@ tests = [
   ['unknown*1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1*unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['[1]*[1]', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['1.0*"str"', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['1*int', UNE_RT_ERROR, UNE_ET_TYPE],
   
   # DIV
   ['6/2', UNE_RT_INT, '3'],
@@ -312,6 +326,7 @@ tests = [
   ['1/[1]', UNE_RT_ERROR, UNE_ET_TYPE],
   ['1/0', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION],
   ['1/0.0', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION],
+  ['1.0/"str"', UNE_RT_ERROR, UNE_ET_TYPE],
   
   # FDIV
   ['1//3', UNE_RT_INT, '0'],
@@ -323,6 +338,9 @@ tests = [
   ['1//[1]', UNE_RT_ERROR, UNE_ET_TYPE],
   ['1//0', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION],
   ['1//0.0', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION],
+  ['1.0//"str"', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['1.0/0', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION],
+  ['1.0/0.0', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION],
   
   # MOD
   ['3%2', UNE_RT_INT, '1'],
@@ -332,6 +350,7 @@ tests = [
   ['unknown%1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1%unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1%[1]', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['1.0%"str"', UNE_RT_ERROR, UNE_ET_TYPE],
   
   # POW
   ['3**3', UNE_RT_INT, '27'],
@@ -342,6 +361,7 @@ tests = [
   ['1**unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['1**[1]', UNE_RT_ERROR, UNE_ET_TYPE],
   ['(-1)**1.1', UNE_RT_ERROR, UNE_ET_UNREAL_NUMBER],
+  ['1.0**"str"', UNE_RT_ERROR, UNE_ET_TYPE],
   
   # NEG
   ['--100', UNE_RT_INT, '100'],
@@ -372,6 +392,7 @@ tests = [
   ['[46][0]', UNE_RT_INT, '46'],
   ['"str"[0]', UNE_RT_STR, 's'],
   ['a[0]', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
+  ['a="str";a[1/0]', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION],
   ['([1]**2)[0]', UNE_RT_ERROR, UNE_ET_TYPE],
   ['[0][[0]]', UNE_RT_ERROR, UNE_ET_TYPE],
   ['1[0]', UNE_RT_ERROR, UNE_ET_TYPE],
@@ -405,7 +426,7 @@ tests = [
   ['if 0 return 0 elif 0 return 0;return', UNE_RT_VOID, 'VOID', ATTR_NO_IMPLICIT_RETURN],
   ['if [1]**2 1', UNE_RT_ERROR, UNE_ET_TYPE],
   
-  # DEF
+  # CALLABLES
   ['fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RT_VOID, 'VOID', ATTR_NO_IMPLICIT_RETURN],
   ['a=function(){return};a=function(){return}', UNE_RT_VOID, 'VOID', ATTR_NO_IMPLICIT_RETURN],
   ['int=function(){return}', UNE_RT_ERROR, UNE_ET_SYNTAX],
@@ -415,6 +436,17 @@ tests = [
   ['a()', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED],
   ['a=function(b)return b;c=function(d)return a();c(1)', UNE_RT_ERROR, UNE_ET_CALLABLE_ARG_COUNT],
   ['a=function(b, c){return b};a(1, [1]**2)', UNE_RT_ERROR, UNE_ET_TYPE],
+  ['1()', UNE_RT_ERROR, UNE_ET_TYPE],
+  
+  # DATATYPES
+  ['print(int)', UNE_RT_VOID, 'VOID'],
+  ['if int{return 1}else{return 0}', UNE_RT_INT, '1', ATTR_NO_IMPLICIT_RETURN],
+  ['print(function(){})', UNE_RT_VOID, 'VOID'],
+  ['if function(){}{return 1}else{return 0}', UNE_RT_INT, '1', ATTR_NO_IMPLICIT_RETURN],
+  ['if print(1){return 1}else{return 0}', UNE_RT_INT, '0', ATTR_NO_IMPLICIT_RETURN],
+  
+  # ERROR DISPLAY
+  ['1\n2\n3/0\n4', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION, ATTR_FILE_ONLY],
 ]
 TESTS_LEN = len(tests)
 
