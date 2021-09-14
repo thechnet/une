@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2021-08-13
+Modified 2021-09-14
 */
 
 #ifndef UNE_CONTEXT_H
@@ -31,12 +31,7 @@ typedef struct _une_context {
 /*
 Variable interface function template.
 */
-#define __une_variable_itf(__id) une_variable *(__id)(une_context *context, wchar_t *name)
-
-/*
-Function interface function template.
-*/
-#define __une_function_itf(__id) 
+#define __une_variable_itf(__id) une_variable *(__id)(une_context *context, wchar_t *name) 
 
 une_context *une_context_create(une_function *function, size_t variables_size, size_t functions_size);
 void une_context_free_children(une_context *parent, une_context *youngest_child);

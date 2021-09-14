@@ -70,17 +70,6 @@ Hello, Une
 
 ---
 
-  - Download this repository.
-
-  - Run `make.sh` from within the repository.  
-    (Ensure `compiler` points to either GCC or Clang.)
-
-- Run a script:
-
-  ```
-  une {<script>|-s <string>}
-  ```
-
 ## Visual Studio Code Language Support
 
 If you're using Visual Studio Code, make sure to install [the Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une) to get syntax highlighting and general language support. The repository for the extension can be found [here](https://github.com/thechnet/une-vscode).

@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2021-08-14
+Modified 2021-09-14
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -28,9 +28,6 @@ Interpreter function template.
 une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *node);
 
 __une_interpreter(une_interpret_as, une_result_type type);
-
-__une_static une_result une_interpret_get_idx_list(une_result list, une_int index);
-__une_static une_result une_interpret_get_idx_str (une_result str,  une_int index);
 
 __une_interpreter(une_interpret_int);
 __une_interpreter(une_interpret_flt);
