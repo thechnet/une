@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-08-13
+Modified 2021-08-15
 */
 
 /* Header-specific includes. */
@@ -97,7 +97,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     une_result_free(result);
     return (une_result){
       .type = UNE_RT_ERROR,
-      .value._int = (une_int)error.type+UNE_DEBUG_REPORT_ERROR_TYPE_OFFSET
+      .value._int = (une_int)error.type+(une_int)UNE_R_END_DATA_RESULT_TYPES
     };
   }
   #endif /* UNE_DEBUG_REPORT */

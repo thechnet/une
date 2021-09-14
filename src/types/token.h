@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2021-08-13
+Modified 2021-08-22
 */
 
 #ifndef UNE_TOKEN_H
@@ -53,9 +53,7 @@ typedef enum _une_token_type {
   UNE_TT_FDIV,
   UNE_TT_MOD,
   #define UNE_R_END_TERM_TOKENS UNE_TT_MOD
-  #define UNE_R_BGN_POWER_TOKENS UNE_TT_POW
   UNE_TT_POW,
-  #define UNE_R_END_POWER_TOKENS UNE_TT_POW
   UNE_TT_IF,
   UNE_TT_ELIF,
   UNE_TT_ELSE,

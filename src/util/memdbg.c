@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-08-14
+Modified 2021-08-22
 */
 
 /* Header-specific includes. */
@@ -8,7 +8,6 @@ Modified 2021-08-14
 
 /* Implementation-specific includes. */
 #include <stdio.h>
-#include <string.h>
 #include <assert.h>
 #include <limits.h>
 #include <time.h>
@@ -17,6 +16,8 @@ Modified 2021-08-14
 #define LOGGING_WIDE
 #define LOGGING_ID "memdbg"
 #include "logging.h"
+
+#define STDOUT_FILENO 1
 
 /* Messages. */
 #define MEMDBG_MSG_ALL_FREED "All memory freed."
@@ -464,10 +465,6 @@ static inline int memdbg_current_second(void)
 memdbg_wrap_allocator\
   (char*, strdup, (char *file, int line, char *str),\
   str, strdup(str), strlen(memory_new)+1, false, true)
-
-memdbg_wrap_allocator\
-  (char*, strndup, (char *file, int line, char *str, size_t n),\
-  str, strndup(str, n), n+1, true, true)
 
 memdbg_wrap_allocator\
   (wchar_t*, wcsdup, (char *file, int line, wchar_t *wcs),\

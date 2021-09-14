@@ -1,6 +1,6 @@
 /*
 memdbg_internal.h - Une
-Modified 2021-07-25
+Modified 2021-08-22
 */
 
 #ifndef MEMDBG_INTERNAL_H
@@ -44,7 +44,6 @@ void __memdbg_conclude(void);
 void __memdbg_signal_handler(int signum);
 
 char *__memdbg_strdup(char *file, int line, char *str);
-char *__memdbg_strndup(char *file, int line, char *str, size_t n);
 wchar_t *__memdbg_wcsdup(char *file, int line, wchar_t *wcs);
 FILE *__memdbg_fopen(char *file, int line, char *path, char *mode);
 int __memdbg_fclose(char *file, int line, FILE *fp);

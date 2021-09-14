@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-08-14
+Modified 2021-08-22
 */
 
 /* Header-specific includes. */
@@ -221,10 +221,10 @@ __une_parser(une_parse_power)
   LOGPARSE(L"", now(&ps->in));
   
   return une_parse_binary_operation(error, ps,
-    UNE_R_BGN_POWER_TOKENS,
-    UNE_R_BGN_POWER_NODES,
-    UNE_R_END_POWER_TOKENS,
-    UNE_R_END_POWER_NODES,
+    UNE_TT_POW,
+    UNE_NT_POW,
+    UNE_TT_POW,
+    UNE_NT_POW,
     &une_parse_index,
     &une_parse_power /* DOC: We parse power and not index because powers are evaluated right to left. */
   );

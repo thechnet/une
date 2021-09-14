@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2021-08-13
+Modified 2021-08-22
 */
 
 #ifndef UNE_NODE_H
@@ -48,9 +48,7 @@ typedef enum _une_node_type {
   UNE_NT_FDIV,
   UNE_NT_MOD,
   #define UNE_R_END_TERM_NODES UNE_NT_MOD
-  #define UNE_R_BGN_POWER_NODES UNE_NT_POW
   UNE_NT_POW,
-  #define UNE_R_END_POWER_NODES UNE_NT_POW
   UNE_NT_NEG,
   UNE_NT_SET,
   UNE_NT_SET_IDX,

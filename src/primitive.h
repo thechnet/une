@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-08-14
+Modified 2021-08-22
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -20,7 +20,7 @@ Modified 2021-08-14
 // #define UNE_DISPLAY_TOKENS
 // #define UNE_DISPLAY_NODES
 #define UNE_DISPLAY_RESULT
-// #define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
+#define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
 
 // #define UNE_DEBUG_LOG_INTERPRET
 // #define UNE_DEBUG_LOG_PARSE
@@ -62,10 +62,10 @@ Modified 2021-08-14
 #define UNE_DEBUG_SIZES_SIZE 1
 #define UNE_DEBUG_REPORT_FILE_RETURN "une_report_return.txt"
 #define UNE_DEBUG_REPORT_FILE_STATUS "une_report_status.txt"
-#define UNE_DEBUG_REPORT_ERROR_TYPE_OFFSET 10
 #define UNE_PRINTF_UNE_FLT L"%.3f"
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
+#define UNE_ERROR_USAGE L"Usage: %hs {<script>|-s <string>}"
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */

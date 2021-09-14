@@ -10,6 +10,9 @@
 - Some other small changes.
 - Since the introduction of memdbg, allocations were left unchecked in non-debug mode. This has now been adressed with a new macro `verify()`, which, if the pointer provided to it is `NULL`, prints an error message and aborts the program.
 
+### Fixed
+- Spelling mistake in usage message.
+
 ## [0.6.0] - 2021-08-13
 
 ### Added

@@ -18,16 +18,16 @@ compiler="gcc"
 
 unset O
 if [ $release -eq 1 ]; then
-  if [ $compiler=="gcc" ]; then
+  if [ "$compiler"=="gcc" ]; then
     O="-O3 "
-  elif [ $compiler=="clang" ]; then
+  elif [ "$compiler"=="clang" ]; then
     O="-O3 "
   fi
 fi
 
 # -Wextra (-Wshadow?)
 flags="-pedantic -Wall -Wno-switch "
-if [ $compiler=="clang" ]; then
+if [ "$compiler"=="clang" ]; then
   flags="${flags}-Wno-deprecated "
 fi
 if [ $debug_gdb -eq 1 ]; then
