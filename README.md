@@ -15,7 +15,16 @@ Some demo programs can be found in [examples](examples).
 
 ### 1. Building the executable
 
+> **This section is unfinished.**
+
 #### Windows
+
+<details>
+<summary><b>Clang</b></summary>
+</details>
+
+<details>
+<summary><b>GCC</b></summary>
 
 > A video guide for the Windows installation can be found [here](https://www.youtube.com/watch?v=Irjglwouq7s).
 
@@ -27,7 +36,16 @@ Some demo programs can be found in [examples](examples).
 - Open a Command Prompt **inside the innermost "une-main" directory**.
 - Build Une using `sh make.sh`.
 
+</details>
+
 #### macOS
+
+<details>
+<summary><b>Clang</b></summary>
+</details>
+
+<details>
+<summary><b>GCC</b></summary>
 
 > A video guide for the macOS installation can be found [here](https://www.youtube.com/watch?v=Hm5mQRtN44w).
 
@@ -43,6 +61,8 @@ Some demo programs can be found in [examples](examples).
 - Open Terminal **inside the innermost "une-main" directory**.
 - Build Une using `./make.sh`.
   > If this fails, ensure the build script is executable using `chmod 700 make.sh`, and repeat.
+
+</details>
 
 ### 2. Running Une
 

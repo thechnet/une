@@ -1,17 +1,24 @@
 # Changelog
 
-## [Unreleased]
+## [Unreleased] - 2021-09-15
 
 ### Added
 - New test cases to increase code coverage after recent changes.
+- Clang support.  
+  - `make.sh` now suppresses warnings for zero variadic macro arguments.
+  - On Windows:
+    - `une_file_exists` uses `GetFileAttributesA()` to ensure the path is not a directory.
+    - Sleeping for a given amount of miliseconds is handled via `Sleep()`.
 
 ### Changed
 - Renamed `src/builtin.c` and `builtin.h` to `builtin_functions.c` and `builtin_functions.h` to avoid confusion with `src/datatypes/builtin.c` and `builtin.h`.
 - Some other small changes.
 - Since the introduction of memdbg, allocations were left unchecked in non-debug mode. This has now been adressed with a new macro `verify()`, which, if the pointer provided to it is `NULL`, prints an error message and aborts the program.
+- On Windows builds, memdbg no longer prints signal messages.
 
 ### Fixed
 - Spelling mistake in usage message.
+- `make.sh` does not append ".exe" to the output binary.
 
 ## [0.6.0] - 2021-08-13
 

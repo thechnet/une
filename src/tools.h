@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2021-08-14
+Modified 2021-09-15
 */
 
 #ifndef UNE_TOOLS_H
@@ -28,6 +28,8 @@ char *une_wcs_to_str(wchar_t *wcs);
 bool une_file_exists(char *path);
 bool une_file_or_folder_exists(char *path);
 wchar_t *une_file_read(char *path);
+
+void une_sleep_ms(int ms);
 
 int une_out_of_memory(void);
 

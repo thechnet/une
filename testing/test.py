@@ -3,21 +3,27 @@ import os
 from os import system as cmd
 from sys import platform
 
+def is_win():
+  return platform=='win32' or platform=='cygwin' or platform=='msys'
+
+def is_cmd_exe():
+  return platform=='win32'
+
 # Options
-SKIP_UNTIL = 2
+SKIP_UNTIL = 0 # 0/2
 HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
 FILE_SCRIPT = 'test.py.une'
 DIR = '.'
-UNE = '..\\une' if platform=='win32' else '../une'
+UNE = '..\\\\une' if is_win() else '../une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
 UNE_R_END_DATA_RESULT_TYPES = 11
 
 # UNCOMMENT THESE LINES WHEN USING GCOV:
-# DIR = '..\\private\\gcov' if platform=='win32' else '../private/gcov'
-# UNE = 'une' if platform=='win32' else './une'
+# DIR = '..\\private\\gcov' if is_win() else '../private/gcov'
+# UNE = 'une' if is_win() else './une'
 
 ##### CONSTANTS
 
@@ -461,7 +467,7 @@ def dict_get(dictionary, value):
 
 def check_report(type, test, i):
   passed = True
-  with open(FILE_STATUS, 'r') as report_status:
+  with open(FILE_STATUS, mode='r', encoding='utf-8-sig') as report_status:
     for line in report_status:
       if line.startswith('result_type:'):
         result_type = int(line.split(':')[1])
@@ -489,7 +495,7 @@ def check_report(type, test, i):
       else:
         print('Internal error.')
         exit(1)
-  with open(FILE_RETURN, 'r') as report_return:
+  with open(FILE_RETURN, mode='r', encoding='utf-8-sig') as report_return:
     return_value = report_return.read()
     if return_value != str(test[2]):
       if result_type == UNE_RT_ERROR:
@@ -503,7 +509,7 @@ def check_report(type, test, i):
   return passed
 
 if CLEAR:
-  cmd('cls' if platform == 'win32' else 'clear')
+  cmd('cls' if is_cmd_exe() else 'clear')
 cd = os.getcwd()
 os.chdir(DIR)
 print("\33[33m\33[1mEnsure UNE_DEBUG_SIZES is enabled.\33[0m")
@@ -514,7 +520,7 @@ for i, test in enumerate(tests):
   if i+1 < SKIP_UNTIL:
     continue
   if HIDE_OUTPUT and not (len(test) > 3 and test[3] == ATTR_NEVER_HIDE_OUTPUT):
-    une = '1>' + ('nul' if platform=='win32' else '/dev/null') + f' 2>&1 {UNE}'
+    une = '1>' + ('nul' if is_cmd_exe() else '/dev/null') + f' 2>&1 {UNE}'
   else:
     une = UNE
   i += 1

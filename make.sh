@@ -1,35 +1,39 @@
 #!/bin/bash
 # Make Une
 
-#region Preferences
+#region ***************************** Preferences
 
-# 1, 0
+# Allowed: 1, 0
 clear=1
 release=0
 debug=1
 debug_gdb=0
 
-# gcc, clang
-compiler="gcc"
+# Allowed: gcc, clang
+compiler="clang"
 
-#endregion Preferences
+out="une"
 
-#region Options
+#endregion ***************************** Preferences
 
+# File Extension
+if [ "$OSTYPE" == "msys" ]; then
+  out="${out}.exe"
+fi
+
+# Optimization Level
 unset O
 if [ $release -eq 1 ]; then
-  if [ "$compiler"=="gcc" ]; then
-    O="-O3 "
-  elif [ "$compiler"=="clang" ]; then
-    O="-O3 "
-  fi
+  O="-O3 "
 fi
 
-# -Wextra (-Wshadow?)
-flags="-pedantic -Wall -Wno-switch "
-if [ "$compiler"=="clang" ]; then
-  flags="${flags}-Wno-deprecated "
+# Warnings
+flags="-pedantic -Wall " # -Wextra (-Wshadow?)
+if [ "$compiler" == "clang" ]; then
+  flags="${flags}-Wno-deprecated -Wno-switch -Wno-gnu-zero-variadic-macro-arguments "
 fi
+
+# Debug Mode
 if [ $debug_gdb -eq 1 ]; then
   flags="${flags}-g3 "
 fi
@@ -39,8 +43,7 @@ else
   flags="${flags}-Wno-unused-function "
 fi
 
-#endregion Options
-
+# Source Files
 src=\
 "main.c "\
 "une.c "\
@@ -71,20 +74,23 @@ if [ $debug -eq 1 ]; then
   src+=" util/memdbg.c"
 fi
 
+# Compilation
 >/dev/null pushd src
 if [ $clear -eq 1 ]; then
   clear
 fi
-$compiler $O$flags$src -o ../une
+$compiler $O$flags$src -o ../$out
 el=$?
 >/dev/null popd
+
+# Une Arguments
 if [ $el -eq 0 ]; then
   if [ -n "$*" ]; then
-    ./une $*
+    ./$out $*
     el=$?
   fi
 fi
 
-echo $'\e[35m'"$compiler $O$flags"$'\e[0m'
-
+# Feedback
+echo "$compiler: $out [$el] ($O$flags)"
 exit $el

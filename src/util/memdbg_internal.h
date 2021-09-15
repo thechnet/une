@@ -1,6 +1,6 @@
 /*
 memdbg_internal.h - Une
-Modified 2021-08-22
+Modified 2021-09-15
 */
 
 #ifndef MEMDBG_INTERNAL_H
@@ -12,7 +12,9 @@ Modified 2021-08-22
 #include <wchar.h>
 #include <stdbool.h>
 #include <signal.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 // #define MEMDBG_SHOW_STATS
 #define MEMDBG_PADDING_SIZE 32

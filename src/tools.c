@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-08-14
+Modified 2021-09-15
 */
 
 /* Header-specific includes. */
@@ -9,7 +9,11 @@ Modified 2021-08-14
 /* Implementation-specific includes. */
 #include <string.h>
 #include <errno.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/stat.h>
+#endif
 
 /*
 Convert a wchar_t string into a une_int integer.
@@ -72,7 +76,15 @@ bool une_file_exists(char *path)
 {
   struct stat path_stat;
   int does_not_exist = stat(path, &path_stat);
-  return (does_not_exist || S_ISDIR(path_stat.st_mode)) ? false : true;
+  #ifdef _WIN32
+  DWORD attr = GetFileAttributesA(path);
+  if (attr == INVALID_FILE_ATTRIBUTES)
+    return false;
+  int is_directory = attr & FILE_ATTRIBUTE_DIRECTORY;
+  #else
+  int is_directory = S_ISDIR(path_stat.st_mode);
+  #endif
+  return !does_not_exist && !is_directory;
 }
 
 /*
@@ -82,7 +94,7 @@ bool une_file_or_folder_exists(char *path)
 {
   struct stat path_stat;
   int does_not_exist = stat(path, &path_stat);
-  return does_not_exist ? false : true;
+  return !does_not_exist;
 }
 
 /*
@@ -118,6 +130,22 @@ wchar_t *une_file_read(char *path)
   fclose(f);
   text[cursor] = L'\0';
   return text;
+}
+
+/*
+Halt execution for the specified number of miliseconds.
+*/
+void une_sleep_ms(int ms)
+{
+  #ifdef _WIN32
+  Sleep(ms);
+  #else
+  struct timespec ts = {
+    .tv_sec = ms / 1000,
+    .tv_nsec = ms % 1000 * 1000000
+  };
+  nanosleep(&ts, NULL);
+  #endif
 }
 
 /*

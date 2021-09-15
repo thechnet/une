@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-08-22
+Modified 2021-09-15
 */
 
 /* Header-specific includes. */
@@ -297,7 +297,9 @@ void __memdbg_signal_handler(int signum)
     default:
       assert(false);
   }
+  #ifndef _WIN32
   write(STDOUT_FILENO, msg, strlen(msg)+1);
+  #endif
   abort();
 }
 

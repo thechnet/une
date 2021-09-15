@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-08-14
+Modified 2021-09-15
 */
 
 /* Header-specific includes. */
@@ -221,11 +221,7 @@ __une_builtin_fn(sleep)
   UNE_BUILTIN_VERIFY_ARG_TYPE(result, UNE_RT_INT);
   
   /* Halt execution. */
-  struct timespec ts = {
-    .tv_sec = args[result].value._int / 1000,
-    .tv_nsec = args[result].value._int % 1000 * 1000000
-  };
-  nanosleep(&ts, NULL);
+  une_sleep_ms(args[result].value._int);
   
   return une_result_create(UNE_RT_VOID);
 }
