@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Modified 2021-08-13
+Modified 2021-09-15
 */
 
 #ifndef UNE_ERROR_H
@@ -62,8 +62,6 @@ Populate a une_error.
   }
 
 une_error une_error_create(void);
-
-__une_static const wchar_t *une_error_type_to_wcs(une_error_type type);
 
 void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_state *is);
 

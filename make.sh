@@ -28,9 +28,9 @@ if [ $release -eq 1 ]; then
 fi
 
 # Warnings
-flags="-pedantic -Wall " # -Wextra (-Wshadow?)
+flags="-pedantic -Wall -Wextra -Wshadow -Wno-switch -Wno-unused-parameter "
 if [ "$compiler" == "clang" ]; then
-  flags="${flags}-Wno-deprecated -Wno-switch -Wno-gnu-zero-variadic-macro-arguments "
+  flags="${flags}-Wno-deprecated -Wno-gnu-zero-variadic-macro-arguments "
 fi
 
 # Debug Mode

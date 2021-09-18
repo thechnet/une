@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2021-08-11
+Modified 2021-09-15
 */
 
 #ifndef UNE_BUILTIN_H
@@ -78,8 +78,8 @@ Verify that a une_builtin_function is valid.
 #define UNE_BUILTIN_FUNCTION_IS_VALID(function) \
   (function > __UNE_BUILTIN_none__ && function < __UNE_BUILTIN_max__)
 
-const size_t une_builtin_params_count(une_builtin_function function);
-const une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function);
+size_t une_builtin_params_count(une_builtin_function function);
+une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function);
 une_builtin_function une_builtin_wcs_to_function(wchar_t *wcs);
 
 #ifdef UNE_DEBUG

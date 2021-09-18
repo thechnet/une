@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2021-08-14
+Modified 2021-09-18
 */
 
 /* Header-specific includes. */
@@ -278,7 +278,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
       size_t offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"[%ls", node_as_wcs);
       free(node_as_wcs);
-      for (int i=2; i<=list_size; i++) {
+      for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, RESET L", %ls", node_as_wcs);
         free(node_as_wcs);

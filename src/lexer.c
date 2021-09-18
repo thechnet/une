@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-08-14
+Modified 2021-09-15
 */
 
 /* Header-specific includes. */
@@ -260,7 +260,7 @@ __une_lexer(une_lex_num)
   }
   
   /* No digits after decimal point. */
-  if (ls->in.index == idx_before_decimals) {
+  if (ls->in.index == (ptrdiff_t)idx_before_decimals) {
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){ls->in.index, ls->in.index+1}));
     free(buffer);
     return une_token_create(__UNE_TT_none__);

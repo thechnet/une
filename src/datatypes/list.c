@@ -1,6 +1,6 @@
 /*
 list.c - Une
-Modified 2021-08-13
+Modified 2021-09-18
 */
 
 /* Header-specific includes. */
@@ -153,7 +153,7 @@ une_result une_datatype_list_mul(une_result left, une_result right)
   une_result *new = une_result_list_create(right.value._int*left_size);
 
   /* Populate new list. */
-  for (size_t i=0; i<right.value._int; i++)
+  for (une_int i=0; i<right.value._int; i++)
     UNE_FOR_RESULT_LIST_ITEM(j, left_size)
       new[i*left_size+j] = une_result_copy(left_p[j]);
 
@@ -187,7 +187,7 @@ Check if a index is valid.
 bool une_datatype_list_is_valid_index(une_result target, une_result index)
 {
   assert(index.type == UNE_RT_INT);
-  return index.value._int >= 0 && index.value._int < une_datatype_list_get_len(target);
+  return index.value._int >= 0 && (_une_uint)index.value._int < une_datatype_list_get_len(target);
 }
 
 /*

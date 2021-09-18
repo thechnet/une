@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-08-22
+Modified 2021-09-18
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -111,6 +111,7 @@ Modified 2021-08-22
 *** Types.
 */
 typedef int64_t une_int;
+typedef uint64_t _une_uint;
 typedef double une_flt;
 
 typedef struct _une_position {

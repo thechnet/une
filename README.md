@@ -23,14 +23,14 @@ Some demo programs can be found in [examples](examples).
 <summary><b>Clang</b></summary>
 </details>
 
-<details>
+<details open>
 <summary><b>GCC</b></summary>
 
 > A video guide for the Windows installation can be found [here](https://www.youtube.com/watch?v=Irjglwouq7s).
 
 - Download and install [MSYS2](https://www.msys2.org/).
 - From the **MSYS2 terminal**, install GCC using `pacman -S gcc`.
-- Add `MSYS2\usr\bin` to your `PATH` environment variable, **where `MSYS2` is your MSYS2 *installation directory***.
+- Add `MSYS2\usr\bin` to your `PATH` environment variable, **where `MSYS2` is your MSYS2 *installation directory*** *(for example, `C:\Program Files\MSYS2\usr\bin`)*.
 
 - Download and extract this repository.
 - Open a Command Prompt **inside the innermost "une-main" directory**.

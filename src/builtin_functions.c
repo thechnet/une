@@ -58,7 +58,7 @@ const size_t une_builtin_functions_params_count[] = {
 /*
 Get the number of parameters of a built-in function.
 */
-const size_t une_builtin_params_count(une_builtin_function function)
+size_t une_builtin_params_count(une_builtin_function function)
 {
   assert(UNE_BUILTIN_FUNCTION_IS_VALID(function));
   return une_builtin_functions_params_count[function];
@@ -67,7 +67,7 @@ const size_t une_builtin_params_count(une_builtin_function function)
 /*
 Get the function pointer for a builtin-in function.
 */
-const une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function)
+une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function)
 {
   assert(UNE_BUILTIN_FUNCTION_IS_VALID(function));
   return une_builtin_functions[function-1];

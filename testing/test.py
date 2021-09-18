@@ -455,6 +455,11 @@ tests = [
   
   # ERROR DISPLAY
   ['1\n2\n3/0\n4', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION, ATTR_FILE_ONLY],
+  
+  # ORDER OF OPERATIONS
+  ['-2**2', UNE_RT_INT, '-4'],
+  ['a=[2];return -a[0]**2', UNE_RT_INT, '-4', ATTR_NO_IMPLICIT_RETURN],
+  ['a=function()return 2;return -a()**2', UNE_RT_INT, '-4', ATTR_NO_IMPLICIT_RETURN],
 ]
 TESTS_LEN = len(tests)
 

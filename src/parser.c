@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-08-22
+Modified 2021-09-18
 */
 
 /* Header-specific includes. */
@@ -151,7 +151,6 @@ __une_parser(une_parse_and_or)
     UNE_R_BGN_AND_OR_TOKENS,
     UNE_R_BGN_AND_OR_NODES,
     UNE_R_END_AND_OR_TOKENS,
-    UNE_R_END_AND_OR_NODES,
     &une_parse_condition,
     &une_parse_condition
   );
@@ -173,7 +172,6 @@ __une_parser(une_parse_condition)
     UNE_R_BGN_CONDITION_TOKENS,
     UNE_R_BGN_CONDITION_NODES,
     UNE_R_END_CONDITION_TOKENS,
-    UNE_R_END_CONDITION_NODES,
     &une_parse_add_sub,
     &une_parse_add_sub
   );
@@ -190,7 +188,6 @@ __une_parser(une_parse_add_sub)
     UNE_R_BGN_ADD_SUB_TOKENS,
     UNE_R_BGN_ADD_SUB_NODES,
     UNE_R_END_ADD_SUB_TOKENS,
-    UNE_R_END_ADD_SUB_NODES,
     &une_parse_term,
     &une_parse_term
   );
@@ -207,10 +204,21 @@ __une_parser(une_parse_term)
     UNE_R_BGN_TERM_TOKENS,
     UNE_R_BEGIN_TERM_NODES,
     UNE_R_END_TERM_TOKENS,
-    UNE_R_END_TERM_NODES,
-    &une_parse_power,
-    &une_parse_power
+    &une_parse_negation,
+    &une_parse_negation
   );
+}
+
+/*
+Parse negation.
+*/
+__une_parser(une_parse_negation)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  if (now(&ps->in).type == UNE_TT_SUB)
+    return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_negation);
+  return une_parse_power(error, ps);
 }
 
 /*
@@ -224,7 +232,6 @@ __une_parser(une_parse_power)
     UNE_TT_POW,
     UNE_NT_POW,
     UNE_TT_POW,
-    UNE_NT_POW,
     &une_parse_index,
     &une_parse_power /* DOC: We parse power and not index because powers are evaluated right to left. */
   );
@@ -279,7 +286,7 @@ __une_parser(une_parse_call)
   LOGPARSE(L"", now(&ps->in));
   
   /* Atom. */
-  une_node *negation = une_parse_negation(error, ps);
+  une_node *negation = une_parse_atom(error, ps);
   if (negation == NULL)
     return negation;
   
@@ -297,18 +304,6 @@ __une_parser(une_parse_call)
   call->content.branch.a = negation;
   call->content.branch.b = args;
   return call;
-}
-
-/*
-Parse negation.
-*/
-__une_parser(une_parse_negation)
-{
-  LOGPARSE(L"", now(&ps->in));
-  
-  if (now(&ps->in).type == UNE_TT_SUB)
-    return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_negation);
-  return une_parse_atom(error, ps);
 }
 
 /*
@@ -822,7 +817,6 @@ __une_parser(une_parse_binary_operation,
   une_token_type range_begin_tt,
   une_node_type range_begin_nt,
   une_token_type range_end_tt,
-  une_node_type range_end_nt,
   une_node *(*parse_left)(une_error*, une_parser_state*),
   une_node *(*parse_right)(une_error*, une_parser_state*)
 )

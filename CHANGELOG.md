@@ -1,9 +1,9 @@
 # Changelog
 
-## [Unreleased] - 2021-09-15
+## [Unreleased] - 2021-09-18
 
 ### Added
-- New test cases to increase code coverage after recent changes.
+- New test cases.
 - Clang support.  
   - `make.sh` now suppresses warnings for zero variadic macro arguments.
   - On Windows:
@@ -19,6 +19,8 @@
 ### Fixed
 - Spelling mistake in usage message.
 - `make.sh` does not append ".exe" to the output binary.
+- Some warnings when compiling with `-Wextra`.
+- Negations are parsed *after* powers, indices, and calls, creating an unintuitive order of operations, where, for example, `-2**2` is evaluated to `4` when one would expect to get `-4`. To fix this, negations are now parsed *before* each of these structures.
 
 ## [0.6.0] - 2021-08-13
 

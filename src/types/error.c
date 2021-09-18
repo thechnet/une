@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-08-14
+Modified 2021-09-18
 */
 
 /* Header-specific includes. */
@@ -143,9 +143,9 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
     while (true) {
       if (pull(&text) == WEOF)
         break;
-      if (main_context && UNE_LEXER_WC_IS_INVISIBLE(now(&text)) && text.index < position.end)
+      if (main_context && UNE_LEXER_WC_IS_INVISIBLE(now(&text)) && text.index < (ptrdiff_t)position.end)
         invisible_characters++;
-      if (text.index >= position.start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
+      if (text.index >= (ptrdiff_t)position.start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
         break;
       if (now(&text) == L'\n') {
         line_begin = text.index+1;
@@ -198,9 +198,9 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
 
   /* Underline error position within line. */
   wprintf(UNE_COLOR_FAIL);
-  for (int i=error->pos.start-error_line.start-invisible_characters; i>0; i--)
+  for (size_t i=error->pos.start-error_line.start-invisible_characters; i>0; i--)
     putwc(L' ', stdout);
-  for (int i=0; i<error->pos.end-error->pos.start; i++)
+  for (size_t i=0; i<error->pos.end-error->pos.start; i++)
     putwc(L'~', stdout);
   putwc(L'\n', stdout);
 

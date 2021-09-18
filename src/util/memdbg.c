@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-09-15
+Modified 2021-09-18
 */
 
 /* Header-specific includes. */
@@ -12,6 +12,7 @@ Modified 2021-09-15
 #include <limits.h>
 #include <time.h>
 #include <stdint.h>
+#include <stddef.h>
 #include "escseq.h"
 #define LOGGING_WIDE
 #define LOGGING_ID "memdbg"
@@ -41,7 +42,7 @@ Modified 2021-09-15
 /* Globals. */
 char memdbg_padding[MEMDBG_PADDING_SIZE];
 memdbg_allocation *memdbg_allocations = NULL;
-int64_t memdbg_allocations_size;
+uint64_t memdbg_allocations_size;
 int64_t memdbg_allocations_count;
 int64_t memdbg_malloc_count;
 int64_t memdbg_realloc_count;
@@ -271,7 +272,7 @@ void *__memdbg_array_check(char *file, int line, char *array, size_t array_size,
     items_count = array_size/item_size;
   else
     items_count = memdbg_allocations[allocations_index].size/item_size;
-  if (index < 0 || index >= items_count) {
+  if (index < 0 || (size_t)index >= items_count) { // FIXME
     memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_INDEX_OUT_OF_RANGE, index, items_count);
   }
