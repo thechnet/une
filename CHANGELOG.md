@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] - 2021-09-18
+## [0.6.1] - 2021-09-28
 
 ### Added
 - New test cases.
@@ -9,18 +9,22 @@
   - On Windows:
     - `une_file_exists` uses `GetFileAttributesA()` to ensure the path is not a directory.
     - Sleeping for a given amount of miliseconds is handled via `Sleep()`.
+- `object_orientation.une` example.
 
 ### Changed
 - Renamed `src/builtin.c` and `builtin.h` to `builtin_functions.c` and `builtin_functions.h` to avoid confusion with `src/datatypes/builtin.c` and `builtin.h`.
 - Some other small changes.
 - Since the introduction of memdbg, allocations were left unchecked in non-debug mode. This has now been adressed with a new macro `verify()`, which, if the pointer provided to it is `NULL`, prints an error message and aborts the program.
 - On Windows builds, memdbg no longer prints signal messages.
+- Functions are no longer scoped per context, instead they are all part of a main function buffer in the interpreter state.  
+  This allows users to, for example, return new functions as return value of other functions.
 
 ### Fixed
 - Spelling mistake in usage message.
 - `make.sh` does not append ".exe" to the output binary.
 - Some warnings when compiling with `-Wextra`.
 - Negations are parsed *after* powers, indices, and calls, creating an unintuitive order of operations, where, for example, `-2**2` is evaluated to `4` when one would expect to get `-4`. To fix this, negations are now parsed *before* each of these structures.
+- When copying a function node, the program crashes because it tries to duplicate a string as if it was a node.
 
 ## [0.6.0] - 2021-08-13
 
@@ -475,9 +479,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.6.1...HEAD
 
 <!-- Releases -->
+[0.6.1]: https://github.com/thechnet/une/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/thechnet/une/compare/v0.5.9...v0.6.0
 [0.5.9]: https://github.com/thechnet/une/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/thechnet/une/compare/v0.5.7...v0.5.8

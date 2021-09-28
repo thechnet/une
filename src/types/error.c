@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-09-18
+Modified 2021-09-28
 */
 
 /* Header-specific includes. */
@@ -120,7 +120,11 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   contexts = (une_context**)s_contexts.array; /* Reobtain up-to-date pointer. */
   for (int i=0; i<=s_contexts.index; i++) {
     /* Get stored information. */
-    une_function *function = contexts[i]->function;
+    une_function *function;
+    if (contexts[i]->function < 0)
+      function = NULL;
+    else
+      function = (is->functions)+((contexts[i])->function);
     char *name;
     une_position position;
     bool main_context = false;
@@ -155,7 +159,6 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
       }
     }
     line_end = text.index;
-    
     /* Print position. */
     if (main_context) {
       error_line.start = line_begin;

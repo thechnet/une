@@ -1,6 +1,6 @@
 /*
 symbols.c - Une
-Modified 2021-08-13
+Modified 2021-09-28
 */
 
 /* Header-specific includes. */
@@ -29,5 +29,4 @@ void une_function_free(une_function *function)
   if (function->params != NULL)
     free(function->params);
   une_node_free(function->body, true);
-  free(function);
 }

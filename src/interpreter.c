@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-08-14
+Modified 2021-09-28
 */
 
 /* Header-specific includes. */
@@ -150,7 +150,7 @@ Interpret a UNE_NT_FUNCTION une_node.
 __une_interpreter(une_interpret_function)
 {
   UNE_UNPACK_NODE_LIST(node->content.branch.a, params_n, params_count);
-  une_function *function = une_function_create(is->context, (char*)node->content.branch.c, node->pos);
+  size_t function = une_function_create(is, (char*)node->content.branch.c, node->pos);
   wchar_t **params = NULL;
   if (params_count > 0) {
     params = malloc(params_count*sizeof(*params));
@@ -160,12 +160,12 @@ __une_interpreter(une_interpret_function)
     params[i] = wcsdup(params_n[i+1]->content.value._wcs);
     verify(params[i]);
   }
-  function->params = params;
-  function->params_count = params_count;
-  function->body = une_node_copy(node->content.branch.b);
+  (is->functions)[function].params = params;
+  (is->functions)[function].params_count = params_count;
+  (is->functions)[function].body = une_node_copy(node->content.branch.b);
   return (une_result){
     .type = UNE_RT_FUNCTION,
-    .value._vp = (void*)function
+    .value._int = (une_int)function
   };
 }
 

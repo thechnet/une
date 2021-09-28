@@ -14,6 +14,7 @@ SKIP_UNTIL = 0 # 0/2
 HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
+ENUMERATE_TESTS = False
 FILE_SCRIPT = 'test.py.une'
 DIR = '.'
 UNE = '..\\\\une' if is_win() else '../une'
@@ -460,6 +461,9 @@ tests = [
   ['-2**2', UNE_RT_INT, '-4'],
   ['a=[2];return -a[0]**2', UNE_RT_INT, '-4', ATTR_NO_IMPLICIT_RETURN],
   ['a=function()return 2;return -a()**2', UNE_RT_INT, '-4', ATTR_NO_IMPLICIT_RETURN],
+  
+  # COPYING FUNCTION NODE
+  ['function(){function(){}}', UNE_RT_FUNCTION, 'FUNCTION'],
 ]
 TESTS_LEN = len(tests)
 
@@ -515,6 +519,11 @@ def check_report(type, test, i):
 
 if CLEAR:
   cmd('cls' if is_cmd_exe() else 'clear')
+  
+if ENUMERATE_TESTS:
+  for i, j in enumerate(tests):
+    print(i, j)
+
 cd = os.getcwd()
 os.chdir(DIR)
 print("\33[33m\33[1mEnsure UNE_DEBUG_SIZES is enabled.\33[0m")

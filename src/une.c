@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-08-15
+Modified 2021-09-28
 */
 
 /* Header-specific includes. */
@@ -58,9 +58,9 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #endif
   
   /* Interpret. */
-  une_context *context = une_context_create(NULL, UNE_SIZE_VARIABLE_BUF, UNE_SIZE_FUNCTION_BUF);
+  une_context *context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
   
-  une_interpreter_state is = une_interpreter_state_create(context);
+  une_interpreter_state is = une_interpreter_state_create(context, UNE_SIZE_FUNCTION_BUF);
   une_result result = une_result_create(UNE_RT_ERROR);
   #ifndef UNE_NO_INTERPRET
   if (ast != NULL)
@@ -68,6 +68,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #else
   result = une_result_create(UNE_RT_VOID);
   #endif
+  une_interpreter_state_free(&is);
   #ifdef UNE_DEBUG_LOG_INTERPRET
   success("interpret done.");
   #endif

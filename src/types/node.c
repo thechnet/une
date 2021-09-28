@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2021-09-18
+Modified 2021-09-28
 */
 
 /* Header-specific includes. */
@@ -127,7 +127,10 @@ une_node *une_node_copy(une_node *src)
     default:
       dest->content.branch.a = une_node_copy(src->content.branch.a);
       dest->content.branch.b = une_node_copy(src->content.branch.b);
-      dest->content.branch.c = une_node_copy(src->content.branch.c);
+      if (src->type == UNE_NT_FUNCTION)
+        dest->content.branch.c = src->content.branch.c;
+      else
+        dest->content.branch.c = une_node_copy(src->content.branch.c);
       if (src->type == UNE_NT_SET || src->type == UNE_NT_SET_IDX)
         dest->content.branch.d = src->content.branch.d;
       else

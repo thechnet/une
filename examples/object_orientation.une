@@ -1,0 +1,34 @@
+# Object Orientation
+
+# This is a proof of concept to demonstrate that object-oriented programming is
+# *technically* possible in Une.
+# This approach is by no means practical and should never be used.
+
+# Constants to avoid having to remember attribute indices.
+NAME = 0
+GREET = 1
+
+# Person Constructor
+person_create = function(name)
+{
+  # Default values.
+  person = [
+    "",            # { Name Attribute }
+    function(self) # { Greet Method }
+    {
+      print("Hello, my name is " + self[NAME] + "!")
+    }
+  ]
+  
+  # Applying custom values.
+  person[NAME] = name
+  
+  return person
+}
+
+# Creating the person.
+bob = person_create("Bob")
+
+# Calling the persons "greet" method.
+# This does what syntax like "bob.greet()" does in object-oriented languages.
+(bob[GREET])(bob)
