@@ -11,7 +11,6 @@ Modified 2021-10-17
 #include <errno.h>
 #ifdef _WIN32
 #include <windows.h>
-#define stat _stat
 #else
 #include <sys/stat.h>
 #endif
@@ -75,17 +74,15 @@ Check if a file exists.
 */
 bool une_file_exists(char *path)
 {
+  #ifdef _WIN32
+  DWORD attribs = GetFileAttributesA(path);
+  return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
+  #else
   struct stat path_stat;
   int does_not_exist = stat(path, &path_stat);
-  #ifdef _WIN32
-  DWORD attr = GetFileAttributesA(path);
-  if (attr == INVALID_FILE_ATTRIBUTES)
-    return false;
-  int is_directory = attr & FILE_ATTRIBUTE_DIRECTORY;
-  #else
   int is_directory = S_ISDIR(path_stat.st_mode);
-  #endif
   return !does_not_exist && !is_directory;
+  #endif
 }
 
 /*
@@ -93,9 +90,14 @@ Check if a file or folder exists.
 */
 bool une_file_or_folder_exists(char *path)
 {
+  #ifdef _WIN32
+  DWORD attribs = GetFileAttributesA(path);
+  return attribs != INVALID_FILE_ATTRIBUTES;
+  #else
   struct stat path_stat;
   int does_not_exist = stat(path, &path_stat);
   return !does_not_exist;
+  #endif
 }
 
 /*
