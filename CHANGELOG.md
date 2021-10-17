@@ -9,9 +9,11 @@
 
 ### Changed
 - Changed error message formatting.
+- Refactored test.py to improve robustness.
 
 ### Fixed
 - test.py: Not appending ".exe" to executable path.
+- Warnings when compiling with Clang on Windows.
 
 ### Removed
 - make.sh is no longer the preferred build method. Refer to *Added: Build argument lists*.

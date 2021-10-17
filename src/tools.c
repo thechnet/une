@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-09-15
+Modified 2021-10-17
 */
 
 /* Header-specific includes. */
@@ -11,6 +11,7 @@ Modified 2021-09-15
 #include <errno.h>
 #ifdef _WIN32
 #include <windows.h>
+#define stat _stat
 #else
 #include <sys/stat.h>
 #endif

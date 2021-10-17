@@ -4,4 +4,5 @@
 -Wshadow
 -Wno-switch
 -Wno-unused-parameter
+-Wno-deprecated
 -Wno-gnu-zero-variadic-macro-arguments

@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-09-18
+Modified 2021-10-17
 */
 
 /* Header-specific includes. */
@@ -284,6 +284,7 @@ Handle signals.
 */
 void __memdbg_signal_handler(int signum)
 {
+  #ifndef _WIN32
   char *msg;
   switch (signum) {
     case SIGFPE:
@@ -298,7 +299,6 @@ void __memdbg_signal_handler(int signum)
     default:
       assert(false);
   }
-  #ifndef _WIN32
   write(STDOUT_FILENO, msg, strlen(msg)+1);
   #endif
   abort();

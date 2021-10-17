@@ -10,6 +10,8 @@ une
 *.dSYM
 *.exe
 *.exe.stackdump
+*.ilk
+*.pdb
 
 testing
 !testing/test.py
