@@ -160,3 +160,25 @@ int une_out_of_memory(void)
   fflush(stdout);
   abort();
 }
+
+#ifdef _WIN32
+/*
+Enable Virtual Terminal Processing for the Windows console.
+*/
+void une_win_vt_proc(bool enable)
+{
+  static DWORD mode = 0;
+  static bool mode_defined = false;
+  HANDLE stdout_ = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (enable) {
+    if (!mode_defined) {
+      GetConsoleMode(stdout_, &mode);
+      mode_defined = true;
+    }
+    SetConsoleMode(stdout_, mode | ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+  } else {
+    if (mode_defined)
+      SetConsoleMode(stdout, mode);
+  }
+}
+#endif

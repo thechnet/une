@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2021-09-15
+Modified 2021-10-17
 */
 
 #ifndef UNE_TOOLS_H
@@ -32,5 +32,9 @@ wchar_t *une_file_read(char *path);
 void une_sleep_ms(int ms);
 
 int une_out_of_memory(void);
+
+#ifdef _WIN32
+void une_win_vt_proc(bool enable);
+#endif
 
 #endif /* !UNE_TOOLS_H */

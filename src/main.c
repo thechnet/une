@@ -14,6 +14,11 @@ Modified 2021-10-17
 
 int main(int argc, char *argv[])
 {
+  #ifdef _WIN32
+  /* Manually enable Virtual Terminal Processing for the Windows console. */
+  une_win_vt_proc(true);
+  #endif
+  
   /* Warnings */
   #ifdef UNE_DEBUG
   #ifdef UNE_DEBUG_MEMDBG
@@ -126,6 +131,11 @@ int main(int argc, char *argv[])
   );
   fclose(report_status);
   #endif /* UNE_DEBUG_REPORT */
+  
+  #ifdef _WIN32
+  /* Manually disable Virtual Terminal Processing for the Windows console. */
+  une_win_vt_proc(false);
+  #endif
   
   return final;
 }
