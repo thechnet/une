@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-09-28
+Modified 2021-10-17
 */
 
 /* Header-specific includes. */
@@ -163,24 +163,23 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
     if (main_context) {
       error_line.start = line_begin;
       error_line.end = line_end;
-      wprintf(BOLD L"File %hs, Line %d", name, line);
+      wprintf(UNE_COLOR_FAIL L"Error in file \"%hs\" at line %d", name, line);
       #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
-      wprintf(L" (%hs @ %d)", error->meta_file, error->meta_line);
+      wprintf(UNE_COLOR_HINT L"\n(%hs @ %d)\n", error->meta_file, error->meta_line);
+      wprintf(L"(invisible_characters: %d)\n", invisible_characters);
+      wprintf(L"(error_line.start/end: %d, %d)", error_line.start, error_line.end);
       #endif
-      wprintf(L":\n" RESET);
     } else {
-      wprintf(BOLD L"(In function %hs:%d)" RESET "\n", name, line);
+      wprintf(L",\nIn function {\"%hs\":%d}", name, line);
     }
     
     /* Print more detailed information. */
     #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
-    wprintf(L"position.start/end %d, %d\n", position.start, position.end);
-    wprintf(L"line_begin/end: %d, %d\n", line_begin, line_end);
-    wprintf(L"invisible_characters: %d\n", invisible_characters);
-    wprintf(L"error_line.start/end %d, %d\n", error_line.start, error_line.end);
-    wprintf(L"---\n");
+    wprintf(UNE_COLOR_HINT L"\n(position.start/end:   %d, %d)\n", position.start, position.end);
+    wprintf(L"(line_begin/end:       %d, %d)" UNE_COLOR_FAIL, line_begin, line_end);
     #endif
   }
+  wprintf(L":\n" RESET);
   
   free(s_contexts.array);
   

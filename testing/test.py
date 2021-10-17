@@ -17,7 +17,7 @@ STOP_AT_FAIL = True
 ENUMERATE_TESTS = False
 FILE_SCRIPT = 'test.py.une'
 DIR = '.'
-UNE = '..\\\\une' if is_win() else '../une'
+UNE = '..\\\\une.exe' if is_win() else '../une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
 UNE_R_END_DATA_RESULT_TYPES = 11
@@ -526,9 +526,9 @@ if ENUMERATE_TESTS:
 
 cd = os.getcwd()
 os.chdir(DIR)
+print("\33[33m\33[1mEnsure UNE_DEBUG_MEMDBG is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_SIZES is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_REPORT is enabled.\33[0m")
-print("\33[33m\33[1mEnsure UNE_DEBUG_MEMDBG is enabled.\33[0m")
 i = 0
 for i, test in enumerate(tests):
   if i+1 < SKIP_UNTIL:

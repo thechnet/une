@@ -1,0 +1,4 @@
+@res/build/files
+@res/build/files_debug
+@res/build/flags
+@res/build/flags_debug
