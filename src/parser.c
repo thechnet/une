@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-09-18
+Modified 2021-10-17
 */
 
 /* Header-specific includes. */
@@ -232,78 +232,88 @@ __une_parser(une_parse_power)
     UNE_TT_POW,
     UNE_NT_POW,
     UNE_TT_POW,
-    &une_parse_index,
-    &une_parse_power /* DOC: We parse power and not index because powers are evaluated right to left. */
+    &une_parse_index_or_call,
+    &une_parse_power /* DOC: We parse power and not index_or_call because powers are evaluated right to left. */
   );
 }
 
 /*
-Parse index.
+Parse index or call.
 */
-__une_parser(une_parse_index)
+__une_parser(une_parse_index_or_call)
 {
   LOGPARSE(L"", now(&ps->in));
   
-  /* Base. */
-  une_node *left = une_parse_call(error, ps);
-  if (left == NULL)
+  une_node *base = une_parse_atom(error, ps);
+  if (base == NULL)
     return NULL;
   
-  /* Index. */
-  while (now(&ps->in).type == UNE_TT_LSQB) {
-    size_t pos_start = left->pos.start;
-    pull(&ps->in);
-
-    une_node *right = une_parse_expression(error, ps);
-    if (right == NULL)
-      return NULL;
-    if (now(&ps->in).type != UNE_TT_RSQB) {
-      une_node_free(right, false);
-      une_node_free(left, false);
-      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
-      return NULL;
+  while (true) {
+    switch (now(&ps->in).type) {
+      
+      /*
+      GET_IDX.
+      */
+      case UNE_TT_LSQB: {
+        LOGPARSE(L"index", now(&ps->in));
+        
+        /* [. */
+        pull(&ps->in);
+        
+        /* Index. */
+        une_node *index = une_parse_expression(error, ps);
+        if (index == NULL)
+          return NULL;
+        
+        une_node *get_idx = une_node_create(UNE_NT_GET_IDX);
+        get_idx->pos = (une_position){
+          .start = base->pos.start,
+          .end = now(&ps->in).pos.end
+        };
+        get_idx->content.branch.a = base;
+        get_idx->content.branch.b = index;
+        base = get_idx;
+        
+        if (now(&ps->in).type != UNE_TT_RSQB) {
+          une_node_free(base, false);
+          *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+          return NULL;
+        }
+        
+        /* ]. */
+        pull(&ps->in);
+        
+        continue;
+      }
+      
+      /*
+      CALL.
+      */
+      case UNE_TT_LPAR: {
+        LOGPARSE(L"call", now(&ps->in));
+        
+        /* Arguments. */
+        une_node *args = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_expression);
+        if (args == NULL) {
+          une_node_free(base, false);
+          return NULL;
+        }
+        
+        une_node *call = une_node_create(UNE_NT_CALL);
+        call->pos.start = base->pos.start;
+        call->pos.end = args->pos.end;
+        call->content.branch.a = base;
+        call->content.branch.b = args;
+        base = call;
+        
+        continue;
+      }
+      
     }
-    
-    une_node *new_left = une_node_create(UNE_NT_GET_IDX);
-    new_left->pos = (une_position){
-      .start = pos_start,
-      .end = now(&ps->in).pos.end
-    };
-    pull(&ps->in);
-    new_left->content.branch.a = left;
-    new_left->content.branch.b = right;
-    left = new_left;
+    break;
   }
   
-  return left;
-}
-
-/*
-Parse call.
-*/
-__une_parser(une_parse_call)
-{
-  LOGPARSE(L"", now(&ps->in));
-  
-  /* Atom. */
-  une_node *negation = une_parse_atom(error, ps);
-  if (negation == NULL)
-    return negation;
-  
-  /* Arguments. */
-  if (now(&ps->in).type != UNE_TT_LPAR)
-    return negation;
-  une_node *args = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_expression);
-  if (args == NULL) {
-    une_node_free(negation, false);
-    return args;
-  }
-  une_node *call = une_node_create(UNE_NT_CALL);
-  call->pos.start = negation->pos.start;
-  call->pos.end = args->pos.end;
-  call->content.branch.a = negation;
-  call->content.branch.b = args;
-  return call;
+  return base;
 }
 
 /*
@@ -704,7 +714,7 @@ __une_parser(une_parse_return)
   if (now(&ps->in).type != UNE_TT_NEW && now(&ps->in).type != UNE_TT_EOF && now(&ps->in).type != UNE_TT_RBRC) {
     value = une_parse_expression(error, ps);
     if (value == NULL) /* DOC: NULL here means an error. */
-      return value;
+      return NULL;
     pos.end = value->pos.end;
   }
 

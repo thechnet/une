@@ -472,6 +472,9 @@ cases = [
   
   # COPYING FUNCTION NODE
   Case('function(){function(){}}', UNE_RT_FUNCTION, 'FUNCTION', []),
+  
+  # REPEATED GET_IDX OR CALL OPERATIONS
+  Case('function(){return function(){return [[function(){return 46}]]}}()()[0][0]()', UNE_RT_INT, '46', [])
 ]
 CASES_LEN = len(cases)
 
