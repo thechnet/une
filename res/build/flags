@@ -1,0 +1,7 @@
+-pedantic
+-Wall
+-Wextra
+-Wshadow
+-Wno-switch
+-Wno-unused-parameter
+-Wno-gnu-zero-variadic-macro-arguments

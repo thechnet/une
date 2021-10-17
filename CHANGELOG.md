@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased] - 2021-20-27
+
+### Added
+- Build argument lists.  
+  To simplify the build process, this commit introduces the "win", "unix", "win-dbg", and "unix-dbg" build configurations, which refer to argument lists in res/build.  
+  To build Une using one of these configurations, use `<cc> @<file_name>`.
+
+### Changed
+- Changed error message formatting.
+
+### Fixed
+- test.py: Not appending ".exe" to executable path.
+
+### Removed
+- make.sh is no longer the preferred build method. Refer to *Added: Build argument lists*.
+
 ## [0.6.1] - 2021-09-28
 
 ### Added

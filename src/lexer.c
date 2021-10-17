@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-09-15
+Modified 2021-10-17
 */
 
 /* Header-specific includes. */
@@ -421,7 +421,7 @@ __une_lexer(une_lex_id)
     une_builtin_function builtin = une_builtin_wcs_to_function(buffer);
     if (builtin != __UNE_BUILTIN_none__) {
       tk.type = UNE_TT_BUILTIN;
-      tk.value._int = (int)builtin;
+      tk.value._int = (une_int)builtin;
     } else {
       tk.type = UNE_TT_ID;
       tk.value._wcs = buffer;

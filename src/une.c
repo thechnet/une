@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-09-28
+Modified 2021-10-17
 */
 
 /* Header-specific includes. */
@@ -93,7 +93,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   une_node_free(ast, false);
   une_tokens_free(tokens);
   
-  #ifdef UNE_DEBUG_REPORT
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(result);
     return (une_result){

@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-08-15
+Modified 2021-10-17
 */
 
 /* Import public Une interface. */
@@ -15,6 +15,7 @@ Modified 2021-08-15
 int main(int argc, char *argv[])
 {
   /* Warnings */
+  #ifdef UNE_DEBUG
   #ifdef UNE_DEBUG_MEMDBG
   warn("UNE_DEBUG_MEMDBG enabled.");
   #endif
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
   #endif
   #ifdef UNE_NO_INTERPRET
   warn("UNE_NO_INTERPRET enabled.");
+  #endif
   #endif
   
   une_result result;
@@ -83,7 +85,7 @@ int main(int argc, char *argv[])
   }
   #endif
   
-  #ifdef UNE_DEBUG_REPORT
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
   FILE *report_return = fopen(UNE_DEBUG_REPORT_FILE_RETURN, UNE_FOPEN_WFLAGS);
   assert(report_return != NULL);
   if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type))
@@ -102,7 +104,7 @@ int main(int argc, char *argv[])
     final = 0;
   une_result_free(result);
   
-  #ifdef UNE_DEBUG_REPORT
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
   #ifdef UNE_DEBUG_MEMDBG
   extern int64_t memdbg_allocations_count;
   extern int64_t memdbg_alert_count;
