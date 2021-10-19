@@ -4,7 +4,7 @@
 
 ## What is Une?
 
-Une */juːn/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my Gymnasium Matura paper.
+Une */ˈjun/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my Gymnasium Matura paper.
 
 ## What can Une do?
 
