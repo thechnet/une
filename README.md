@@ -15,52 +15,38 @@ Some demo programs can be found in [examples](examples).
 
 ### 1. Building the executable
 
-> **This section is unfinished.**
+<details open>
+<summary><b>Windows</b></summary>
 
-#### Windows
+- Download the latest prebuilt [LLVM-MinGW toolchain by GitHub user *mstorsjo*](https://github.com/mstorsjo/llvm-mingw/releases). The recommended configurations are `msvcrt-x86_64` for 64-bit, and `msvcrt-i686` for 32-bit systems.
+- Extract the directory contained in the download, and move it to a permanent location (for example into the program files).
+- Add the toolchain to your `PATH` environment variable:
+  - Inside the directory, <kbd>Shift</kbd>-right-click on the `bin` folder and choose *Copy as path*.
+  - Search Windows for "Edit the system environment variables", and open the first result.
+  - Choose *Environment Variables…*.
+  - Ensure that under *User variables*, "Path" is selected.
+  - Choose *Edit* → *New*, and insert the copied path using <kbd>Ctrl</kbd>+<kbd>V</kbd>.
+  - Choose *OK* 3x.
+- Download and extract this repository.
+- Open a *Command Prompt* instance inside the downloaded repository.  
+  An easy way to do this is to navigate inside the repository, click on the adress bar, type `cmd`, and press <kbd>Enter</kbd>.
+- Build `une.exe` using `clang @win`.  
+  To build the debug version, use `clang @win-dbg`.
 
-<details>
-<summary><b>Clang</b></summary>
+
 </details>
 
 <details open>
-<summary><b>GCC</b></summary>
-
-> A video guide for the Windows installation can be found [here](https://www.youtube.com/watch?v=Irjglwouq7s).
-
-- Download and install [MSYS2](https://www.msys2.org/).
-- From the **MSYS2 terminal**, install GCC using `pacman -S gcc`.
-- Add `MSYS2\usr\bin` to your `PATH` environment variable, **where `MSYS2` is your MSYS2 *installation directory*** *(for example, `C:\Program Files\MSYS2\usr\bin`)*.
+<summary><b>macOS</b></summary>
 
 - Download and extract this repository.
-- Open a Command Prompt **inside the innermost "une-main" directory**.
-- Build Une using `sh make.sh`.
-
-</details>
-
-#### macOS
-
-<details>
-<summary><b>Clang</b></summary>
-</details>
-
-<details>
-<summary><b>GCC</b></summary>
-
-> A video guide for the macOS installation can be found [here](https://www.youtube.com/watch?v=Hm5mQRtN44w).
-
-> ❕ Depending on your environment, some parts of this installation may produce errors. If you encounter an error, follow the instructions given in the error message and retry the step that failed.
-
-- Install [Homebrew](https://brew.sh/).
-- In Terminal, install GCC using `brew install gcc`.
-- Create a symbolic link to GCC using the following commands:
-  1. `cd /usr/local/bin`
-  2. `sudo rm gcc`
-  3. `ln -s gcc-11 gcc` *(Ensure the `-11` suffix matches your GCC major version.)*
-- Download this repository, unzipping it if necessary.
-- Open Terminal **inside the innermost "une-main" directory**.
-- Build Une using `./make.sh`.
-  > If this fails, ensure the build script is executable using `chmod 700 make.sh`, and repeat.
+- Open a Terminal instance inside the repository.  
+  An easy way to do this is to select the repository in *Finder*, and – in the menu bar – choose *Finder* → *Services* → *New Terminal at Folder*
+- In *Terminal*, type `clang` and press <kbd>Enter</kbd>.
+- In the dialog that appears, choose *Install* → *Agree*.
+- Once the installation is complete, choose *Done*.
+- Build `une` using `clang @unix`.  
+  To build the debug version, use `clang @unix-dbg`.
 
 </details>
 
@@ -69,22 +55,22 @@ Some demo programs can be found in [examples](examples).
 Running Une without any arguments will give you its usage:
 
 ```
-$ une
-une {<script>|-s <string>}
+> une
+Usage: une {<script>|-s <string>}
 ```
-> Note: On macOS, write `./une` instead of just `une`.
+> Note: On macOS, write `./une` instead of `une`.
 
-Run the "arithmetic_interpreter" example. It should print "7".
+Run the `arithmetic_interpreter.une` example. It should print `7`:
 
 ```
-$ une examples/arithmetic_interpreter.une
+> une examples/arithmetic_interpreter.une
 7
 ```
 
 Directly pass commands to Une using the `-s` flag:
 
 ```
-$ une -s "print(\"Hello, Une\")"
+> une -s "print(\"Hello, Une\")"
 Hello, Une
 ```
 

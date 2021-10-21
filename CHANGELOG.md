@@ -1,6 +1,14 @@
 # Changelog
 
-## [0.6.2] - 2021-10-19
+## [0.7.1] - 2021-10-21
+
+### Added
+- `error.une` example to demonstrate error messages.
+
+### Fixed
+- Fixed an early deallocation of the definition file in functions, before they were used for the traceback.
+
+## [0.7.0] - 2021-10-19
 
 ### Added
 - Build argument lists.  
@@ -499,10 +507,11 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.7.1...HEAD
 
 <!-- Releases -->
-[0.6.2]: https://github.com/thechnet/une/compare/v0.6.1...v0.6.2
+[0.7.1]: https://github.com/thechnet/une/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/thechnet/une/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/thechnet/une/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/thechnet/une/compare/v0.5.9...v0.6.0
 [0.5.9]: https://github.com/thechnet/une/compare/v0.5.8...v0.5.9

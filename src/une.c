@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-10-17
+Modified 2021-10-20
 */
 
 /* Header-specific includes. */
@@ -68,7 +68,6 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #else
   result = une_result_create(UNE_RT_VOID);
   #endif
-  une_interpreter_state_free(&is);
   #ifdef UNE_DEBUG_LOG_INTERPRET
   success("interpret done.");
   #endif
@@ -88,6 +87,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
     assert(error.type != __UNE_ET_none__);
     une_error_display(&error, &ls, &is);
   }
+  une_interpreter_state_free(&is);
   
   une_context_free_children(NULL, is.context);
   une_node_free(ast, false);
