@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-08-14
+Modified 2021-10-24
 */
 
 /* Header-specific includes. */
@@ -40,6 +40,7 @@ une_result une_datatype_builtin_call(une_error *error, une_interpreter_state *is
   UNE_UNPACK_RESULT_LIST(args, args_p, args_count);
   if (une_builtin_params_count(builtin) != args_count) {
     *error = UNE_ERROR_SET(UNE_ET_CALLABLE_ARG_COUNT, call->pos);
+    return une_result_create(UNE_RT_ERROR);
   }
   
   return (une_builtin_function_to_fnptr(builtin))(error, is, call, args_p+1);

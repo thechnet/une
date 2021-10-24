@@ -29,7 +29,7 @@ Some demo programs can be found in [examples](examples).
   - Choose *OK* 3x.
 - Download and extract this repository.
 - Open a *Command Prompt* instance inside the downloaded repository.  
-  An easy way to do this is to navigate inside the repository, click on the adress bar, type `cmd`, and press <kbd>Enter</kbd>.
+  An easy way to do this is to navigate inside the repository, click on the address bar, type `cmd`, and press <kbd>Enter</kbd>.
 - Build `une.exe` using `clang @win`.  
   To build the debug version, use `clang @win-dbg`.
 
@@ -40,11 +40,12 @@ Some demo programs can be found in [examples](examples).
 <summary><b>macOS</b></summary>
 
 - Download and extract this repository.
-- Open a Terminal instance inside the repository.  
-  An easy way to do this is to select the repository in *Finder*, and – in the menu bar – choose *Finder* → *Services* → *New Terminal at Folder*
-- In *Terminal*, type `clang` and press <kbd>Enter</kbd>.
-- In the dialog that appears, choose *Install* → *Agree*.
-- Once the installation is complete, choose *Done*.
+- Open a *Terminal* instance inside the downloaded repository.  
+  An easy way to do this is to select the repository in *Finder*, and – in the menu bar – choose *Finder* → *Services* → *New Terminal at Folder*.
+- Install the *Developer Tools*:
+  - In *Terminal*, type `clang` and press <kbd>Enter</kbd>.
+  - In the dialog that appears, choose *Install* → *Agree*.
+  - Once the installation is complete, choose *Done*.
 - Build `une` using `clang @unix`.  
   To build the debug version, use `clang @unix-dbg`.
 
@@ -78,7 +79,7 @@ Hello, Une
 
 ## Visual Studio Code Language Support
 
-If you're using Visual Studio Code, make sure to install [the Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une) to get syntax highlighting and general language support. The repository for the extension can be found [here](https://github.com/thechnet/une-vscode).
+If you're using Visual Studio Code, make sure to install [the Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une) to get syntax highlighting and general language support. Its repository can be found [here](https://github.com/thechnet/une-vscode).
 
 ---
 

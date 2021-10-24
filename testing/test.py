@@ -97,6 +97,7 @@ cases = [
   
   Case('input("Write \'test\' and press enter: ")', UNE_RT_STR, 'test', [ATTR_NEVER_HIDE_OUTPUT]),
   Case('input(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('input()', UNE_RT_ERROR, UNE_ET_CALLABLE_ARG_COUNT, []),
   
   Case('print(100.9)', UNE_RT_VOID, 'VOID', []),
   Case('print("str")', UNE_RT_VOID, 'VOID', []),

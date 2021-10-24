@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-08-14
+Modified 2021-10-24
 */
 
 /* Header-specific includes. */
@@ -116,6 +116,7 @@ une_int une_results_are_equal(une_result left, une_result right)
 {
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(left.type));
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(right.type));
-  assert(UNE_DATATYPE_FOR_RESULT(left).is_equal != NULL);
+  if (UNE_DATATYPE_FOR_RESULT(left).is_equal == NULL)
+    return 0;
   return UNE_DATATYPE_FOR_RESULT(left).is_equal(left, right);
 }

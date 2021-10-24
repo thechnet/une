@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-09-15
+Modified 2021-10-24
 */
 
 /* Header-specific includes. */
@@ -61,7 +61,7 @@ Get the number of parameters of a built-in function.
 size_t une_builtin_params_count(une_builtin_function function)
 {
   assert(UNE_BUILTIN_FUNCTION_IS_VALID(function));
-  return une_builtin_functions_params_count[function];
+  return une_builtin_functions_params_count[function-1];
 }
 
 /*
