@@ -129,7 +129,7 @@ Not expressable, used to communicate the absence of a value (see 6.2).
 
 ### 2.7 Lists
 
-Lists can hold number of any kind of data, including lists. The items are separated using commas (`,`):
+Lists can hold any number of any kind of data, including lists. The items are separated using commas (`,`):
 
 ```
 [46, 4.6, "string", function(){return}, print, [46]]
@@ -240,7 +240,7 @@ variable_name = value
 > This is also how you define functions — as variables:
 > ```
 > add = function(left, right) {
->    return left + right
+>    return left+right
 >  }
 > add(40, 6) # Evaluates to '46'
 > ```
@@ -361,7 +361,7 @@ for i from 0 till 11 {
 }
 ```
 
-7. Built-in Functions
+## 7. Built-in Functions
 
 - `put(value)` – Prints `value` to the standard output pipe:
     ```
@@ -398,23 +398,23 @@ for i from 0 till 11 {
     ```
 - `ord(character)` – Returns the ordinal character code of `character`:
     ```
-    ord(".") == 46
+    ord("A") == 65
     ```
 - `chr(code)` – Returns the character represented by the ordinal character code `code`:
     ```
-    chr(46) == "."
+    chr(65) == "A"
     ```
 - `write(path, text)` – Writes the text `text` to a file at `path`:
     ```
     > une -s "write(\"test.txt\", \"print(46)\")"
     ```
-    → test.txt:
+    test.txt:
     ```
-    print(46)
+    return 46
     ```
 - `read(path)` – Returns the text contents of a file at `path`:
     ```
-    read("test.txt") == "print(46)"
+    read("test.txt") == "return 46"
     ```
 - `script(path)` – Returns the result of executing a Une script at `path`:
     ```
