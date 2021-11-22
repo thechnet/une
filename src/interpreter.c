@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-09-28
+Modified 2021-11-22
 */
 
 /* Header-specific includes. */
@@ -869,6 +869,7 @@ __une_interpreter(une_interpret_for)
   
   /* Loop. */
   for (une_int i=from; i!=till; i+=step) {
+    var = une_variable_find(is->context, id);
     une_result_free(var->content);
     var->content = (une_result){
       .type = UNE_RT_INT,
