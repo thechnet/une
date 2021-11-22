@@ -2,6 +2,9 @@
 
 ## [0.7.3] - 2021-11-22
 
+### Added
+- Test case for latest bugfix.
+
 ### Fixed
 - Fixed stale pointer in *for* loop implementation causing nested loops to break.
 
