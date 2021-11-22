@@ -1,6 +1,6 @@
 /*
 list.c - Une
-Modified 2021-09-18
+Modified 2021-11-22
 */
 
 /* Header-specific includes. */
@@ -174,7 +174,7 @@ size_t une_datatype_list_get_len(une_result result)
 }
 
 /*
-Check if a index type is valid.
+Check if an index type is valid.
 */
 bool une_datatype_list_is_valid_index_type(une_result_type type)
 {
@@ -182,7 +182,7 @@ bool une_datatype_list_is_valid_index_type(une_result_type type)
 }
 
 /*
-Check if a index is valid.
+Check if an index is valid.
 */
 bool une_datatype_list_is_valid_index(une_result target, une_result index)
 {

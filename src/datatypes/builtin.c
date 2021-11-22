@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-10-24
+Modified 2021-11-22
 */
 
 /* Header-specific includes. */
@@ -35,6 +35,7 @@ une_result une_datatype_builtin_call(une_error *error, une_interpreter_state *is
 {
   /* Get built-in function. */
   une_builtin_function builtin = (une_builtin_function)function.value._int;
+  assert(UNE_BUILTIN_FUNCTION_IS_VALID(builtin));
   
   /* Ensure number of arguments matches number of required parameters. */
   UNE_UNPACK_RESULT_LIST(args, args_p, args_count);

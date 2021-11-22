@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-10-17
+Modified 2021-11-22
 */
 
 /* Header-specific includes. */
@@ -787,7 +787,7 @@ __une_parser(une_parse_set_expstmt)
       return varset;
     }
 
-    /* Not a Variable Definition -> Expression. */
+    /* Not a variable definition -> Expression. */
     une_node_free(varset, false);
     ps->in.index = token_index_before;
   }

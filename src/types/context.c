@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-09-28
+Modified 2021-11-22
 */
 
 /* Header-specific includes. */
@@ -76,7 +76,7 @@ __une_variable_itf(une_variable_create)
   (context->variables_count)++;
   *var = (une_variable){
     .name = wcsdup(name),
-    .content = une_result_create(UNE_RT_VOID) /* Don'use __UNE_RT_none__ because this will be freed using une_result_free. */
+    .content = une_result_create(UNE_RT_VOID) /* Don't use __UNE_RT_none__ because this will be freed using une_result_free. */
   };
   verify(var->name);
   

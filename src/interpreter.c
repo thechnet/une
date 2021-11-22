@@ -869,7 +869,7 @@ __une_interpreter(une_interpret_for)
   
   /* Loop. */
   for (une_int i=from; i!=till; i+=step) {
-    var = une_variable_find(is->context, id);
+    var = une_variable_find(is->context, id); /* Avoid stale pointer if variable buffer grows. */
     une_result_free(var->content);
     var->content = (une_result){
       .type = UNE_RT_INT,
