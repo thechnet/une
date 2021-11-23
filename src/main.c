@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-10-17
+Modified 2021-11-23
 */
 
 /* Import public Une interface. */
@@ -9,8 +9,12 @@ Modified 2021-10-17
 /* Implementation-specific includes. */
 #include <string.h>
 #include "tools.h"
+#include "datatypes/datatypes.h"
+#include <signal.h>
 
 #define UNE_MAIN_ERROR 1
+
+void main_cli(void);
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +54,12 @@ int main(int argc, char *argv[])
     goto end;
   }
   
-  if (strcmp(argv[1], UNE_STDIN_SWITCH) == 0) {
+  if (strcmp(argv[1], UNE_SWITCH_CLI) == 0) {
+    main_cli();
+    return 0;
+  }
+  
+  if (strcmp(argv[1], UNE_SWITCH_STDIN) == 0) {
     if (argc < 3) {
       main_error = true;
       goto end;
@@ -60,14 +69,14 @@ int main(int argc, char *argv[])
     read_from_file = true;
   
   if (read_from_file)
-    result = une_run(read_from_file, argv[1], NULL);
+    result = une_run(read_from_file, argv[1], NULL, NULL);
   else {
     wchar_t *wcs = une_str_to_wcs(argv[2]);
     if (wcs == NULL) {
       main_error = true;
       goto end;
     }
-    result = une_run(read_from_file, NULL, wcs);
+    result = une_run(read_from_file, NULL, wcs, NULL);
     free(wcs);
   }
   
@@ -138,4 +147,42 @@ int main(int argc, char *argv[])
   #endif
   
   return final;
+}
+
+/*
+*** CLI.
+*/
+
+volatile sig_atomic_t cli_exit = false;
+
+void main_cli_exit(int signal)
+{
+  cli_exit = true;
+}
+
+void main_cli(void)
+{
+  signal(SIGINT, &main_cli_exit);
+  une_context *context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
+  wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
+  verify(stmts);
+  while (!cli_exit) {
+    fputws(UNE_CLI_PREFIX, stdout);
+    fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin);
+    size_t len = wcslen(stmts);
+    stmts[--len] = L'\0'; /* Remove trailing newline. */
+    une_result result = une_run(false, NULL, stmts, context);
+    if (result.type != UNE_RT_VOID && result.type != UNE_RT_ERROR) {
+      if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
+        une_result_represent(stdout, result);
+      } else {
+        assert(UNE_DATATYPE_FOR_RESULT(result).represent != NULL);
+        UNE_DATATYPE_FOR_RESULT(result).represent(stdout, result);
+      }
+      fputwc(L'\n', stdout);
+    }
+    une_result_free(result);
+  }
+  free(stmts);
+  une_context_free_children(NULL, context);
 }

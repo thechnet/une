@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-11-22
+Modified 2021-11-23
 */
 
 /* Header-specific includes. */
@@ -185,21 +185,23 @@ Interpret a UNE_NT_STMTS une_node.
 */
 __une_interpreter(une_interpret_stmts)
 {
-  une_result _result; /* Here it's ok to not initialize the result, as it will never be returned like this. */
+  une_result _result = une_result_create(UNE_RT_VOID);
 
   UNE_UNPACK_NODE_LIST(node, nodes, nodes_size);
 
   UNE_FOR_NODE_LIST_ITEM(i, nodes_size) {
+    /* Free previous result. */
+    une_result_free(_result);
+    
     /* Interpret statement. */
     _result = une_interpret(error, is, nodes[i]);
     
-    /* Return if required, otherwise discard result. */
+    /* Return if required. */
     if (_result.type == UNE_RT_ERROR || _result.type == UNE_RT_CONTINUE || _result.type == UNE_RT_BREAK || is->should_return)
       return _result;
-    une_result_free(_result);
   }
   
-  return une_result_create(UNE_RT_VOID);
+  return _result; /* Return last result. */
 }
 
 /*

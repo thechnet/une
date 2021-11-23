@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2021-10-24
+Modified 2021-11-23
 */
 
 /* Header-specific includes. */
@@ -373,7 +373,7 @@ __une_builtin_fn(script)
   }
 
   /* Run script. */
-  une_result out = une_run(true, path, NULL);
+  une_result out = une_run(true, path, NULL, NULL);
   free(path);
   return out;
 }

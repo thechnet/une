@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.0] - 2021-11-23
+
+### Added
+- Added CLI.  
+  To access the interface, use `une -c`.  
+  To exit a session, use <kbd>CTRL</kbd>+<kbd>C</kbd>.
+
+### Changed
+- The interpreter will now always return the final evaluated result.  
+  This is useful for implementing a CLI, as it allows the user to quickly check the contents of variables or evaluate expressions without `print`.
+- `une_run` now accepts an optional external context. When this context is supplied, the function uses *it* for the interpretation instead of creating a new context.  
+  This allows 
+
 ## [0.7.3] - 2021-11-22
 
 ### Added
@@ -521,9 +534,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.7.3...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.8.0...HEAD
 
 <!-- Releases -->
+[0.8.0]: https://github.com/thechnet/une/compare/v0.7.3...v0.8.0
 [0.7.3]: https://github.com/thechnet/une/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/thechnet/une/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/thechnet/une/compare/v0.7.0...v0.7.1

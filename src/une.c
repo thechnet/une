@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-10-20
+Modified 2021-11-23
 */
 
 /* Header-specific includes. */
@@ -22,7 +22,7 @@ Modified 2021-10-20
 /*
 Run a Une program.
 */
-une_result une_run(bool read_from_file, char *path, wchar_t *text)
+une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *external_context)
 {
   /* Setup. */
   une_error error = une_error_create();
@@ -58,7 +58,11 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   #endif
   
   /* Interpret. */
-  une_context *context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
+  une_context *context;
+  if (external_context)
+    context = external_context;
+  else
+    context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
   
   une_interpreter_state is = une_interpreter_state_create(context, UNE_SIZE_FUNCTION_BUF);
   une_result result = une_result_create(UNE_RT_ERROR);
@@ -89,7 +93,8 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text)
   }
   une_interpreter_state_free(&is);
   
-  une_context_free_children(NULL, is.context);
+  if (!external_context)
+    une_context_free_children(NULL, is.context);
   une_node_free(ast, false);
   une_tokens_free(tokens);
   

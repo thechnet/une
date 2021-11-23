@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2021-09-18
+Modified 2021-11-23
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -56,7 +56,9 @@ Modified 2021-09-18
 *** Constants.
 */
 #define UNE_COMMAND_LINE_NAME "<args>"
-#define UNE_STDIN_SWITCH "-s"
+#define UNE_SWITCH_STDIN "-s"
+#define UNE_SWITCH_CLI "-c"
+#define UNE_CLI_PREFIX L">>> "
 #define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
 #define UNE_DEBUG_SIZES_SIZE 1
