@@ -67,7 +67,7 @@ Modified 2021-11-23
 #define UNE_PRINTF_UNE_FLT L"%.3f"
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
-#define UNE_ERROR_USAGE L"Usage: %hs {<script>|-s <string>}"
+#define UNE_ERROR_USAGE L"Usage: %hs {<script>|-s <string>|-c}"
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
