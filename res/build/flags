@@ -1,3 +1,4 @@
+-lm
 -pedantic
 -Wall
 -Wextra

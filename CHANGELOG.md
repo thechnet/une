@@ -10,8 +10,7 @@
 ### Changed
 - The interpreter will now always return the final evaluated result.  
   This is useful for implementing a CLI, as it allows the user to quickly check the contents of variables or evaluate expressions without `print`.
-- `une_run` now accepts an optional external context. When this context is supplied, the function uses *it* for the interpretation instead of creating a new context.  
-  This allows 
+- `une_run` now accepts an optional external context. When this context is supplied, the function uses *it* for the interpretation instead of creating a new context.
 
 ## [0.7.3] - 2021-11-22
 
