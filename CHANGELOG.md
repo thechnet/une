@@ -10,6 +10,7 @@
   - Test cases for `exit` statement.
 
 ### Changed
+- The built-in `script` command now executes in the same context as the host script, allowing the caller and callee to exchange information.
 - Updated README.
 - Updated documentation to include the exit statement (6.3).
 - The command line interface now shows version information.

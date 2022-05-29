@@ -373,7 +373,7 @@ __une_builtin_fn(script)
   }
 
   /* Run script. */
-  une_result out = une_run(true, path, NULL, NULL, NULL);
+  une_result out = une_run(true, path, NULL, is->context, NULL);
   free(path);
   return out;
 }
