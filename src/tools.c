@@ -8,6 +8,7 @@ Modified 2021-10-17
 
 /* Implementation-specific includes. */
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 #ifdef _WIN32
 #include <windows.h>

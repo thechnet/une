@@ -443,7 +443,7 @@ __une_lexer(une_lex_2c_token)
   while (true) {
     if (une_2c_tokens_wc[i] == L'\0')
       return une_token_create(__UNE_TT_none__);
-    if (une_2c_tokens_wc[i] == ls->now(&ls->in) && ls->peek(&ls->in, 1) == une_2c_tokens_wc[i+1]) {
+    if ((wint_t)une_2c_tokens_wc[i] == ls->now(&ls->in) && ls->peek(&ls->in, 1) == (wint_t)une_2c_tokens_wc[i+1]) {
       ls->pull(&ls->in);
       ls->pull(&ls->in);
       return (une_token){
@@ -465,7 +465,7 @@ __une_lexer(une_lex_1c_token)
   while (true) {
     if (une_1c_tokens_wc[i] == L'\0')
       return une_token_create(__UNE_TT_none__);
-    if (une_1c_tokens_wc[i] == ls->now(&ls->in)) {
+    if ((wint_t)une_1c_tokens_wc[i] == ls->now(&ls->in)) {
       ls->pull(&ls->in);
       return (une_token){
         .type = une_1c_tokens_tt[i],
