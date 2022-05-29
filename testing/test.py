@@ -478,7 +478,10 @@ cases = [
   Case('function(){return function(){return [[function(){return 46}]]}}()()[0][0]()', UNE_RT_INT, '46', []),
   
   # STALE POINTER IN FOR LOOP IMPLEMENTATION
-  Case('a=0;for i from 1 till 3 for j from 4 till 6 a=a+i*j;return a', UNE_RT_INT, '27', [ATTR_NO_IMPLICIT_RETURN])
+  Case('a=0;for i from 1 till 3 for j from 4 till 6 a=a+i*j;return a', UNE_RT_INT, '27', [ATTR_NO_IMPLICIT_RETURN]),
+  
+  # LAST RESULT ALWAYS RETURNED
+  Case('46', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 ]
 CASES_LEN = len(cases)
 

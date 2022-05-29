@@ -1,17 +1,17 @@
 # Changelog
 
-## [0.8.0] - 2021-11-23
+## [0.8.0] - 2022-05-29
 
 ### Added
 - Added CLI.  
   To access the interface, use `une -c`.  
   To exit a session, use <kbd>CTRL</kbd>+<kbd>C</kbd>.
+- Test case to check that the last evaluated result is implicitly returned when exiting a script.
 
 ### Changed
-- The interpreter will now always return the final evaluated result.  
+- The interpreter now implicitly returns the final evaluated result when exiting a script.  
   This is useful for implementing a CLI, as it allows the user to quickly check the contents of variables or evaluate expressions without `print`.
-- `une_run` now accepts an optional external context. When this context is supplied, the function uses *it* for the interpretation instead of creating a new context.  
-  This allows 
+- `une_run` now accepts an optional external context. When this context is supplied, the function uses *it* for the interpretation instead of creating a new context.
 
 ## [0.7.3] - 2021-11-22
 
