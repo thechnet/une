@@ -286,6 +286,15 @@ return # The return value can be omitted.
 
 A script can be aborted early using the `exit` keyword, optionally followed by an integer-only exit code to be returned to the operating system. If the exit code is omitted, it defaults to 0.
 
+```
+return function() {
+  return function() {
+    exit 46 # Immediately ends the execution with exit code 46.
+    return 1 # Does not get returned.
+  }()
+}()
+```
+
 ### 6.4 Selective Control Flow
 
 Conditional execution is achieved using the `if` keyword:
@@ -409,17 +418,25 @@ for i from 0 till 11 {
     ```
 - `write(path, text)` – Writes the text `text` to a file at `path`:
     ```
-    > une -s "write(\"test.txt\", \"print(46)\")"
+    > une -s "write(\"test.txt\", \"return 40\")"
     ```
     test.txt:
     ```
-    return 46
+    return 40
+    ```
+- `append(path, text)` – Same as `write`, but does not overwrite existing content:
+    ```
+    > une -s "append(\"test.txt\", \"+6\")"
+    ```
+    test.txt:
+    ```
+    return 40+6
     ```
 - `read(path)` – Returns the text contents of a file at `path`:
     ```
-    read("test.txt") == "return 46"
+    read("test.txt") == "return 40+6"
     ```
-- `script(path)` – Returns the result of executing a Une script at `path`:
+- `script(path)` – Calls a script at `path` into the host context:
     ```
     script("test.txt") == 46
     ```
