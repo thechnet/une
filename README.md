@@ -4,7 +4,7 @@
 
 ## What is Une?
 
-Une */ˈjun/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my Gymnasium Matura paper.
+Une */ˈjun/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my Matura paper (2021).
 
 ## What can Une do?
 
@@ -37,7 +37,7 @@ Some demo programs can be found in [examples](examples).
 </details>
 
 <details open>
-<summary><b>macOS</b></summary>
+<summary><b>macOS (and similarly for other Unix-based systems)</b></summary>
 
 - Download and extract this repository.
 - Open a *Terminal* instance inside the downloaded repository.  
@@ -51,7 +51,7 @@ Some demo programs can be found in [examples](examples).
 
 </details>
 
-### 2. Running Une
+### 2. Running a script
 
 Running Une without any arguments will give you its usage:
 
@@ -74,6 +74,18 @@ Directly pass commands to Une using the `-s` flag:
 > une -s "print(\"Hello, Une\")"
 Hello, Une
 ```
+
+### 3. Running the test suite
+
+To run the test suite, first build the debug version of Une (see 1.), checking `src/primitive.h` to ensure that the following preprocessor directives are `#define`d:
+
+- `UNE_DEBUG_MEMDBG` *(enables memdbg to catch memory-related issues)*
+- `UNE_DEBUG_SIZES` *(defaults most sizes to `1` to check if sufficient memory is allocated)*
+- `UNE_DEBUG_REPORT` *(enables communication between Une and `test.py`)*
+
+Then, `cd` into `testing` and run `test.py` using Python 3.
+
+The Python script will ask for manual input twice for the first test case. The remaining cases will not require manual input.
 
 ---
 
