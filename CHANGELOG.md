@@ -3,11 +3,16 @@
 ## [Unreleased]
 
 ### Added
-- `exit` statement to immediately exit the running script. Similar to the return statement, the exit statement also supports an optional exit code; however, since this code is returned to the operating system, it **must** be an integer. If the exit code is omitted, it defaults to `0`.
+- New built-in function `append()`.  
+  Exactly the same as `write()` but does not discard the content previously found in the target file.
+- New `exit` statement to immediately exit the running script.  
+  Similar to the return statement, the exit statement also supports an optional exit code; however, since this code is returned to the operating system, it **must** be an integer. If the exit code is omitted, it defaults to `0`.
 - To implement the exit statement, the interpreter state was given a new flag `should_exit` to signal when the script should exit. The state of this flag can be retrieved after the execution through a new optional parameter in the `une_run` function.
-- Testing:
-  - Test case for return statement without return value.
-  - Test cases for `exit` statement.
+- New test cases for:
+  - Return statement without return value.
+  - New `exit` statement.
+  - Changed `script()` behavior.
+  - New `append()` command.
 
 ### Changed
 - The built-in `script` command now executes in the same context as the host script, allowing the caller and callee to exchange information.

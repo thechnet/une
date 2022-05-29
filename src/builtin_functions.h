@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2021-09-15
+Modified 2022-05-29
 */
 
 #ifndef UNE_BUILTIN_H
@@ -36,6 +36,7 @@ Every built-in function.
   enumerator(ord) \
   enumerator(read) \
   enumerator(write) \
+  enumerator(append) \
   enumerator(input) \
   enumerator(script) \
   enumerator(exist) \

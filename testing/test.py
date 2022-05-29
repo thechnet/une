@@ -149,6 +149,9 @@ cases = [
   Case('script("script.une")', UNE_RT_INT, '46', []),
   Case('script(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('script("/")', UNE_RT_ERROR, UNE_ET_FILE_NOT_FOUND, []),
+  Case('write("script.une", "msg=128");script("script.une");return msg', UNE_RT_INT, '128', [ATTR_NO_IMPLICIT_RETURN]),
+  
+  Case('write("script.une", "4");append("script.une", "\n6");return read("script.une")', UNE_RT_STR, '4\n6', [ATTR_NO_IMPLICIT_RETURN]),
   
   Case('exist("script.une")', UNE_RT_INT, '1', []),
   Case('exist(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
@@ -490,7 +493,7 @@ cases = [
   Case('exit;return 0', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
   Case('exit 46;return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('exit "string"', UNE_RT_ERROR, UNE_ET_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
-  Case('function(){exit(46)}();return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN])
+  Case('function(){exit(46)}();return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 ]
 CASES_LEN = len(cases)
 

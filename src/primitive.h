@@ -56,7 +56,7 @@ Modified 2022-05-29
 *** Constants.
 */
 #define UNE_VERSION_MAJOR "0"
-#define UNE_VERSION_MINOR "8"
+#define UNE_VERSION_MINOR "9"
 #define UNE_VERSION_PATCH "0"
 #define UNE_VERSION UNE_VERSION_MAJOR L"." UNE_VERSION_MINOR L"." UNE_VERSION_PATCH
 #define UNE_COMMAND_LINE_NAME "<args>"
@@ -66,6 +66,7 @@ Modified 2022-05-29
 #define UNE_CLI_WELCOME L"Une " UNE_VERSION "\nUse \"exit\" or CTRL + C to exit.\n"
 #define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
+#define UNE_FOPEN_AFLAGS "a,ccs=UTF-8"
 #define UNE_DEBUG_SIZES_SIZE 1
 #define UNE_DEBUG_REPORT_FILE_RETURN "une_report_return.txt"
 #define UNE_DEBUG_REPORT_FILE_STATUS "une_report_status.txt"

@@ -45,6 +45,7 @@ const size_t une_builtin_functions_params_count[] = {
   1, /* ord */
   1, /* read */
   2, /* write */
+  2, /* append */
   1, /* input */
   1, /* script */
   1, /* exist */
@@ -296,9 +297,9 @@ __une_builtin_fn(read)
 }
 
 /*
-Write text to a file.
+Write/append text to a file (helper).
 */
-__une_builtin_fn(write)
+une_result une_builtin_fn_write_or_append(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args, bool write)
 {
   une_builtin_param file = 0;
   une_builtin_param text = 1;
@@ -312,7 +313,7 @@ __une_builtin_fn(write)
     *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(file));
     return une_result_create(UNE_RT_ERROR);
   }
-  FILE *fp = fopen(path, UNE_FOPEN_WFLAGS);
+  FILE *fp = fopen(path, write ? UNE_FOPEN_WFLAGS : UNE_FOPEN_AFLAGS);
   free(path);
   if (fp == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, UNE_BUILTIN_POS_OF_ARG(file));
@@ -323,6 +324,22 @@ __une_builtin_fn(write)
   fputws(args[text].value._wcs, fp);
   fclose(fp);
   return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Write text to a file.
+*/
+__une_builtin_fn(write)
+{
+  return une_builtin_fn_write_or_append(error, is, call_node, args, true);
+}
+
+/*
+Append text to a file.
+*/
+__une_builtin_fn(append)
+{
+  return une_builtin_fn_write_or_append(error, is, call_node, args, false);
 }
 
 /*
