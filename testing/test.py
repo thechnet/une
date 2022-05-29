@@ -482,6 +482,15 @@ cases = [
   
   # LAST RESULT ALWAYS RETURNED
   Case('46', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  
+  # RETURN WITHOUT RETURN VALUE
+  Case('return;return 46', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
+  
+  # EXIT
+  Case('exit;return 0', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('exit 46;return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('exit "string"', UNE_RT_ERROR, UNE_ET_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+  Case('function(){exit(46)}();return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN])
 ]
 CASES_LEN = len(cases)
 

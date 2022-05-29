@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2021-09-28
+Modified 2022-05-29
 */
 
 /* Header-specific includes. */
@@ -52,6 +52,7 @@ const wchar_t *une_node_table[] = {
   L"CONTINUE",
   L"BREAK",
   L"RETURN",
+  L"EXIT",
 };
 
 /*
@@ -334,7 +335,8 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_NEG:
     case UNE_NT_NOT:
     case UNE_NT_GET:
-    case UNE_NT_RETURN: {
+    case UNE_NT_RETURN:
+    case UNE_NT_EXIT: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         RESET L" %ls" RESET L")", une_node_type_to_wcs(node->type), branch1);

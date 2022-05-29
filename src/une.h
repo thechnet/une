@@ -1,6 +1,6 @@
 /*
 une.h - Une
-Modified 2021-11-23
+Modified 2022-05-29
 */
 
 #ifndef UNE_UNE_H
@@ -14,6 +14,6 @@ Modified 2021-11-23
 *** Interface.
 */
 
-une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *external_context);
+une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *external_context, bool *did_exit);
 
 #endif /* !UNE_UNE_H */

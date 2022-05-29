@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2021-11-22
+Modified 2022-05-29
 */
 
 /* Header-specific includes. */
@@ -57,6 +57,8 @@ __une_parser(une_parse_stmt)
       return une_parse_break(error, ps);
     case UNE_TT_RETURN:
       return une_parse_return(error, ps);
+    case UNE_TT_EXIT:
+      return une_parse_exit(error, ps);
     default:
       return une_parse_set_expstmt(error, ps);
   }
@@ -722,6 +724,35 @@ __une_parser(une_parse_return)
   return_->pos = pos;
   return_->content.branch.a = value;
   return return_;
+}
+
+/*
+Parse 'exit' statement.
+*/
+__une_parser(une_parse_exit)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  une_position pos = now(&ps->in).pos; /* If the parser finds an exit
+                                          code after this, pos.end is
+                                          changed again further down. */
+  pull(&ps->in); /* Exit. */
+
+  /* Exit Code. */
+  une_node *value = NULL; /* DOC: NULL here means no exit code was specified.
+                             This tells the interpreter that there is no exit
+                             code. */
+  if (now(&ps->in).type != UNE_TT_NEW && now(&ps->in).type != UNE_TT_EOF && now(&ps->in).type != UNE_TT_RBRC) {
+    value = une_parse_expression(error, ps);
+    if (value == NULL) /* DOC: NULL here means an error. */
+      return NULL;
+    pos.end = value->pos.end;
+  }
+
+  une_node *exit = une_node_create(UNE_NT_EXIT);
+  exit->pos = pos;
+  exit->content.branch.a = value;
+  return exit;
 }
 
 /*

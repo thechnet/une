@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- `exit` statement to immediately exit the running script. Similar to the return statement, the exit statement also supports an optional exit code; however, since this code is returned to the operating system, it **must** be an integer. If the exit code is omitted, it defaults to `0`.
+- To implement the exit statement, the interpreter state was given a new flag `should_exit` to signal when the script should exit. The state of this flag can be retrieved after the execution through a new optional parameter in the `une_run` function.
+- Testing:
+  - Test case for return statement without return value.
+  - Test cases for `exit` statement.
+
+### Changed
+- Updated README.
+- Updated documentation to include the exit statement (6.3).
+- The command line interface now shows version information.
+
+### Fixed
+- Return statement without return value has no effect.
+
 ## [0.8.0] - 2022-05-29
 
 ### Added
@@ -537,6 +554,7 @@
 [Unreleased]: https://github.com/thechnet/une/compare/v0.8.0...HEAD
 
 <!-- Releases -->
+<!-- [0.9.0]: https://github.com/thechnet/une/compare/v0.8.0...v0.9.0 -->
 [0.8.0]: https://github.com/thechnet/une/compare/v0.7.3...v0.8.0
 [0.7.3]: https://github.com/thechnet/une/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/thechnet/une/compare/v0.7.1...v0.7.2

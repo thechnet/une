@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2021-10-17
+Modified 2022-05-29
 */
 
 /* Header-specific includes. */
@@ -405,6 +405,8 @@ __une_lexer(une_lex_id)
     tk.type = UNE_TT_WHILE;
   else if (!wcscmp(buffer, L"return"))
     tk.type = UNE_TT_RETURN;
+  else if (!wcscmp(buffer, L"exit"))
+    tk.type = UNE_TT_EXIT;
   else if (!wcscmp(buffer, L"break"))
     tk.type = UNE_TT_BREAK;
   else if (!wcscmp(buffer, L"continue"))

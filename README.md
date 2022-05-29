@@ -57,7 +57,7 @@ Running Une without any arguments will give you its usage:
 
 ```
 > une
-Usage: une {<script>|-s <string>}
+Usage: une {<script>|-s <string>|-c}
 ```
 > Note: On macOS, write `./une` instead of `une`.
 
@@ -73,6 +73,12 @@ Directly pass commands to Une using the `-s` flag:
 ```
 > une -s "print(\"Hello, Une\")"
 Hello, Une
+```
+
+Enter the command line interface using the `-c` flag:
+
+```
+> une -c
 ```
 
 ### 3. Running the test suite

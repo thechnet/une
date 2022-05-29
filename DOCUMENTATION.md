@@ -280,10 +280,13 @@ function()
 }
 
 return # The return value can be omitted.
-
 ```
 
-### 6.3 Selective Control Flow
+### 6.3 Exit Statement
+
+A script can be aborted early using the `exit` keyword, optionally followed by an integer-only exit code to be returned to the operating system. If the exit code is omitted, it defaults to 0.
+
+### 6.4 Selective Control Flow
 
 Conditional execution is achieved using the `if` keyword:
 
@@ -314,7 +317,7 @@ if conditional_expression {
 }
 ```
 
-### 6.4 Iterative Control Flow
+### 6.5 Iterative Control Flow
 
 Statement(s) can be repeated.
 

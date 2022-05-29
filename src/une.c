@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2021-11-23
+Modified 2022-05-29
 */
 
 /* Header-specific includes. */
@@ -22,7 +22,7 @@ Modified 2021-11-23
 /*
 Run a Une program.
 */
-une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *external_context)
+une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *external_context, bool *did_exit)
 {
   /* Setup. */
   une_error error = une_error_create();
@@ -91,6 +91,8 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *
     assert(error.type != __UNE_ET_none__);
     une_error_display(&error, &ls, &is);
   }
+  if (did_exit != NULL)
+    *did_exit = is.should_exit;
   une_interpreter_state_free(&is);
   
   if (!external_context)

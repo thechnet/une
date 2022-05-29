@@ -1,6 +1,6 @@
 /*
 interpreter_state.h - Une
-Modified 2021-09-28
+Modified 2022-05-29
 */
 
 #ifndef UNE_INTERPRETER_STATE_H
@@ -16,6 +16,7 @@ Holds the state of the interpreter.
 typedef struct _une_interpreter_state {
   une_context *context;
   bool should_return;
+  bool should_exit;
   une_function *functions;
   size_t functions_size;
   size_t functions_count;

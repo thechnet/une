@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2021-08-22
+Modified 2022-05-29
 */
 
 #ifndef UNE_NODE_H
@@ -61,7 +61,8 @@ typedef enum _une_node_type {
   UNE_NT_CONTINUE,
   UNE_NT_BREAK,
   UNE_NT_RETURN,
-  #define UNE_R_END_LUT_NODES UNE_NT_RETURN /* (!) Order-sensitive. */
+  UNE_NT_EXIT,
+  #define UNE_R_END_LUT_NODES UNE_NT_EXIT /* (!) Order-sensitive. */
   __UNE_NT_max__,
 } une_node_type;
 

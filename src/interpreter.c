@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2021-11-23
+Modified 2022-05-29
 */
 
 /* Header-specific includes. */
@@ -53,6 +53,7 @@ __une_interpreter(*__interpreter_table[]) = {
   &une_interpret_continue,
   &une_interpret_break,
   &une_interpret_return,
+  &une_interpret_exit,
 };
 
 /*
@@ -197,7 +198,7 @@ __une_interpreter(une_interpret_stmts)
     _result = une_interpret(error, is, nodes[i]);
     
     /* Return if required. */
-    if (_result.type == UNE_RT_ERROR || _result.type == UNE_RT_CONTINUE || _result.type == UNE_RT_BREAK || is->should_return)
+    if (_result.type == UNE_RT_ERROR || _result.type == UNE_RT_CONTINUE || _result.type == UNE_RT_BREAK || is->should_return || is->should_exit)
       return _result;
   }
   
@@ -878,7 +879,7 @@ __une_interpreter(une_interpret_for)
       .value._int = i
     };
     result = une_interpret(error, is, node->content.branch.d);
-    if (result.type == UNE_RT_ERROR || is->should_return)
+    if (result.type == UNE_RT_ERROR || is->should_return || is->should_exit)
       return result;
     if (result.type == UNE_RT_BREAK) {
       une_result_free(result);
@@ -908,7 +909,7 @@ __une_interpreter(une_interpret_while)
     if (!condition_is_true)
       break;
     result = une_interpret(error, is, node->content.branch.b);
-    if (result.type == UNE_RT_ERROR || is->should_return)
+    if (result.type == UNE_RT_ERROR || is->should_return || is->should_exit)
       return result;
     result_type = result.type;
     une_result_free(result);
@@ -959,9 +960,25 @@ Interpret a UNE_NT_RETURN une_node.
 */
 __une_interpreter(une_interpret_return)
 {
-  if (node->content.branch.a == NULL)
-    return une_result_create(UNE_RT_VOID);
-  une_result result = une_interpret(error, is, node->content.branch.a);
+  une_result result;
+  if (node->content.branch.a != NULL)
+    result = une_interpret(error, is, node->content.branch.a);
+  else
+    result = une_result_create(UNE_RT_VOID);
   is->should_return = true;
+  return result;
+}
+
+/*
+Interpret a UNE_NT_EXIT une_node.
+*/
+__une_interpreter(une_interpret_exit)
+{
+  une_result result;
+  if (node->content.branch.a != NULL)
+    result = une_interpret_as(error, is, node->content.branch.a, UNE_RT_INT);
+  else
+    result = une_result_create(UNE_RT_VOID);
+  is->should_exit = true;
   return result;
 }

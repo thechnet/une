@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2021-11-23
+Modified 2022-05-29
 */
 
 /* Import public Une interface. */
@@ -69,14 +69,14 @@ int main(int argc, char *argv[])
     read_from_file = true;
   
   if (read_from_file)
-    result = une_run(read_from_file, argv[1], NULL, NULL);
+    result = une_run(read_from_file, argv[1], NULL, NULL, NULL);
   else {
     wchar_t *wcs = une_str_to_wcs(argv[2]);
     if (wcs == NULL) {
       main_error = true;
       goto end;
     }
-    result = une_run(read_from_file, NULL, wcs, NULL);
+    result = une_run(read_from_file, NULL, wcs, NULL, NULL);
     free(wcs);
   }
   
@@ -153,25 +153,29 @@ int main(int argc, char *argv[])
 *** CLI.
 */
 
-volatile sig_atomic_t cli_exit = false;
+volatile sig_atomic_t sigint_fired = false;
 
-void main_cli_exit(int signal)
+void main_sigint_fired(int signal)
 {
-  cli_exit = true;
+  sigint_fired = true;
 }
 
 void main_cli(void)
 {
-  signal(SIGINT, &main_cli_exit);
+  signal(SIGINT, &main_sigint_fired);
   une_context *context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
   wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
+  bool did_exit;
   verify(stmts);
-  while (!cli_exit) {
+  
+  fputws(UNE_CLI_WELCOME, stdout);
+  
+  while (!sigint_fired && !did_exit) {
     fputws(UNE_CLI_PREFIX, stdout);
     fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin);
     size_t len = wcslen(stmts);
     stmts[--len] = L'\0'; /* Remove trailing newline. */
-    une_result result = une_run(false, NULL, stmts, context);
+    une_result result = une_run(false, NULL, stmts, context, &did_exit);
     if (result.type != UNE_RT_VOID && result.type != UNE_RT_ERROR) {
       if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
         une_result_represent(stdout, result);

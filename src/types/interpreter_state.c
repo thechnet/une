@@ -1,6 +1,6 @@
 /*
 interpreter_state.c - Une
-Modified 2021-09-28
+Modified 2022-05-29
 */
 
 /* Header-specific includes. */
@@ -17,6 +17,7 @@ une_interpreter_state une_interpreter_state_create(une_context *context, size_t 
   return (une_interpreter_state){
     .context = context,
     .should_return = false,
+    .should_exit = false,
     .functions = functions,
     .functions_size = functions_size,
     .functions_count = 0
