@@ -69,7 +69,7 @@ For example `-46`, `0`, `346`.
 
 ### 2.2 Floating-point numbers
 
-For example `-4.6, 0.0, 3.46`.
+For example `-4.6`, `0.0`, `3.46`.
 
 ### 2.3 Strings
 
@@ -245,7 +245,7 @@ variable_name = value
 > add(40, 6) # Evaluates to '46'
 > ```
 
-By default, variables defined within functions are limited to the context of the function, meaning they will be destroyed after the function concludes. The prevent this, or to redefine variables previously defined outside the function, add the `global` keyword before the statement:
+By default, variables defined within functions are limited to the context of the function, meaning they will be destroyed after the function concludes. The prevent this, or to change the value of a variable previously defined outside the function, add the `global` keyword before the statement:
 ```
 global variable_name = value
 ```
@@ -369,7 +369,7 @@ odd_numbers = 0
 for i from 0 till 11 {
   if i%2
     continue
-  odd_numbers = even_numbers+1
+  odd_numbers = odd_numbers+1
 }
 ```
 
