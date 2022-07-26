@@ -7,11 +7,14 @@ tests
 
 __pycache__
 une
+libunetest
 *.dSYM
 *.exe
 *.exe.stackdump
 *.ilk
 *.pdb
+*.dll
+*.so
 
 testing
 !testing/test.py

@@ -1,2 +1,2 @@
-@res/build/debug
+@res/response_files/build_standalone_debug
 -o une.exe

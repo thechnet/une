@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2022-05-29
+Modified 2022-07-26
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -60,7 +60,7 @@ Modified 2022-05-29
 #define UNE_VERSION_PATCH "0"
 #define UNE_VERSION UNE_VERSION_MAJOR L"." UNE_VERSION_MINOR L"." UNE_VERSION_PATCH
 #define UNE_COMMAND_LINE_NAME "<args>"
-#define UNE_SWITCH_STDIN "-s"
+#define UNE_SWITCH_CLSCRIPT "-s"
 #define UNE_SWITCH_CLI "-c"
 #define UNE_CLI_PREFIX L">>> "
 #define UNE_CLI_WELCOME L"Une " UNE_VERSION "\nUse \"exit\" or CTRL + C to exit.\n"

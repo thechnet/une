@@ -1,4 +1,3 @@
-src/main.c
 src/une.c
 src/interpreter.c
 src/parser.c

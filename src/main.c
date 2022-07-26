@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2022-05-29
+Modified 2022-07-26
 */
 
 /* Import public Une interface. */
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     return 0;
   }
   
-  if (strcmp(argv[1], UNE_SWITCH_STDIN) == 0) {
+  if (strcmp(argv[1], UNE_SWITCH_CLSCRIPT) == 0) {
     if (argc < 3) {
       main_error = true;
       goto end;
