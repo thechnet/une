@@ -1,6 +1,6 @@
 /*
 str.c - Une
-Modified 2021-09-18
+Modified 2022-08-03
 */
 
 /* Header-specific includes. */
@@ -160,17 +160,20 @@ une_result une_datatype_str_mul(une_result left, une_result right)
   if (right.type != UNE_RT_INT)
     return une_result_create(UNE_RT_ERROR);
   
+  /* Determine number of repeats. */
+  size_t repeat = right.value._int < 0 ? 0 : (size_t)right.value._int;
+  
   /* Get size of source string. */
   size_t str_size = wcslen(left.value._wcs);
 
   /* Create new string. */
-  wchar_t *new = malloc((right.value._int*str_size+1)*sizeof(*new));
+  wchar_t *new = malloc((repeat*str_size+1)*sizeof(*new));
   verify(new);
 
   /* Populate new string. */
-  for (une_int i=0; i<right.value._int; i++)
+  for (size_t i=0; i<repeat; i++)
     wmemcpy(new+i*str_size, left.value._wcs, str_size);
-  new[right.value._int*str_size] = L'\0';
+  new[repeat*str_size] = L'\0';
 
   return (une_result){
     .type = UNE_RT_STR,

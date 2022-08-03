@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Multiplying a string or list with a negative number causes a crash.
+
 ## [0.9.0]
 
 ### Added

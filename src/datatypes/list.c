@@ -1,6 +1,6 @@
 /*
 list.c - Une
-Modified 2021-11-22
+Modified 2022-08-03
 */
 
 /* Header-specific includes. */
@@ -146,14 +146,17 @@ une_result une_datatype_list_mul(une_result left, une_result right)
   if (right.type != UNE_RT_INT)
     return une_result_create(UNE_RT_ERROR);
   
+  /* Determine number of repeats. */
+  size_t repeat = right.value._int < 0 ? 0 : (size_t)right.value._int;
+  
   /* Unpack source list. */
   UNE_UNPACK_RESULT_LIST(left, left_p, left_size);
 
   /* Create new list. */
-  une_result *new = une_result_list_create(right.value._int*left_size);
+  une_result *new = une_result_list_create(repeat*left_size);
 
   /* Populate new list. */
-  for (une_int i=0; i<right.value._int; i++)
+  for (size_t i=0; i<repeat; i++)
     UNE_FOR_RESULT_LIST_ITEM(j, left_size)
       new[i*left_size+j] = une_result_copy(left_p[j]);
 
