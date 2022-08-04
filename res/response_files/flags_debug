@@ -4,5 +4,9 @@
 -Wno-switch
 -Wno-switch-enum
 
+-DCOMMENT__FLAGS_DEBUG__REQUIRED_FOR_MEMDBG
 -Wno-unused-macros
 
+-DCOMMENT__FLAGS_DEBUG__REQUIRED_FOR_WATCHDOG
+-Wno-keyword-macro
+-Werror=embedded-directive

@@ -9,7 +9,8 @@ Modified 2022-08-04
 /*
 *** Options.
 */
-#define UNE_DEBUG_MEMDBG
+// #define UNE_DEBUG_MEMDBG
+#define UNE_DEBUG_WATCHDOG
 #define UNE_DEBUG_SIZES
 #define UNE_DEBUG_REPORT
 
@@ -51,6 +52,11 @@ Modified 2022-08-04
 #define MEMDBG_ENABLE
 #endif
 #include "util/memdbg.h"
+
+#if defined(UNE_DEBUG) && defined(UNE_DEBUG_WATCHDOG)
+#define WATCHDOG
+#endif
+#include "../watchdog/watchdog.h"
 
 /*
 *** Constants.

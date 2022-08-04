@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -76,19 +76,21 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *
   success("interpret done.");
   #endif
   /* Wrap up. */
-  if (
-    #ifndef UNE_NO_LEX
-    tokens == NULL ||
-    #endif
-    #ifndef UNE_NO_PARSE
-    ast == NULL ||
-    #endif
-    #ifndef UNE_NO_INTERPRET
-    result.type == UNE_RT_ERROR ||
-    #endif
-    false
-  ) {
-    assert(error.type != __UNE_ET_none__);
+  int error_cases = 0;
+  #ifndef UNE_NO_LEX
+  if (tokens == NULL)
+    error_cases++;
+  #endif
+  #ifndef UNE_NO_PARSE
+  if (ast == NULL)
+    error_cases++;
+  #endif
+  #ifndef UNE_NO_INTERPRET
+  if (result.type == UNE_RT_ERROR)
+    error_cases++;
+  #endif
+  if (error_cases > 0) {
+    assert(error.type != UNE_ET_none__);
     une_error_display(&error, &ls, &is);
   }
   if (did_exit != NULL)

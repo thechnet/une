@@ -1,1 +1,14 @@
 src/util/memdbg.c
+
+watchdog/src/archive.c
+watchdog/src/bounds.c
+watchdog/src/dogshed.c
+watchdog/src/overrides.c
+watchdog/src/padding.c
+watchdog/src/public.c
+watchdog/src/pulse.c
+watchdog/src/radar.c
+watchdog/src/reporter.c
+watchdog/src/signals.c
+watchdog/src/snapshots.c
+watchdog/src/usage.c

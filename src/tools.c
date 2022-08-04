@@ -3,6 +3,13 @@ tools.c - Une
 Modified 2022-08-04
 */
 
+/* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/stat.h>
+#endif
+
 /* Header-specific includes. */
 #include "tools.h"
 
@@ -10,11 +17,6 @@ Modified 2022-08-04
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <sys/stat.h>
-#endif
 
 /*
 Convert a wchar_t string into a une_int integer.

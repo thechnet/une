@@ -4,6 +4,8 @@ desktop.ini
 
 private
 tests
+build
+watchdog
 
 __pycache__
 une
@@ -22,5 +24,6 @@ test.sh
 
 une_report_return.txt
 une_report_status.txt
+*.log
 
 make.sh

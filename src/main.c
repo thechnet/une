@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2022-07-26
+Modified 2022-08-04
 */
 
 /* Import public Une interface. */
@@ -27,6 +27,9 @@ int main(int argc, char *argv[])
   #ifdef UNE_DEBUG
   #ifdef UNE_DEBUG_MEMDBG
   warn("UNE_DEBUG_MEMDBG enabled.");
+  #endif
+  #ifdef UNE_DEBUG_WATCHDOG
+  warn("UNE_DEBUG_WATCHDOG enabled.");
   #endif
   #ifdef UNE_DEBUG_SIZES
   warn("UNE_DEBUG_SIZES enabled.");
@@ -165,7 +168,7 @@ void main_cli(void)
   signal(SIGINT, &main_sigint_fired);
   une_context *context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
   wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
-  bool did_exit;
+  bool did_exit = false;
   verify(stmts);
   
   fputws(UNE_CLI_WELCOME, stdout);
