@@ -1,6 +1,6 @@
 /*
 memdbg_internal.h - Une
-Modified 2021-09-15
+Modified 2022-08-04
 */
 
 #ifndef MEMDBG_INTERNAL_H
@@ -23,7 +23,7 @@ Modified 2021-09-15
 /*
 Holds information for an allocation.
 */
-typedef struct _memdbg_allocation {
+typedef struct memdbg_allocation_ {
   char *file;
   int line;
   char *memory;
@@ -40,15 +40,15 @@ void *memdbg_calloc(char *file, int line, size_t count, size_t size);
 void *memdbg_realloc(char *file, int line, void *memory, size_t size);
 void memdbg_free(char *file, int line, void *memory);
 
-void __memdbg_allocations_padding_check(char *file, int line);
-void *__memdbg_array_check(char *file, int line, char *array, size_t array_size, size_t item_size, int index);
-void __memdbg_conclude(void);
-void __memdbg_signal_handler(int signum);
+void memdbg_allocations_padding_check__(char *file, int line);
+void *memdbg_array_check__(char *file, int line, char *array, size_t array_size, size_t item_size, int index);
+void memdbg_conclude__(void);
+void memdbg_signal_handler__(int signum);
 
-char *__memdbg_strdup(char *file, int line, char *str);
-wchar_t *__memdbg_wcsdup(char *file, int line, wchar_t *wcs);
-FILE *__memdbg_fopen(char *file, int line, char *path, char *mode);
-int __memdbg_fclose(char *file, int line, FILE *fp);
-void *__memdbg_memset(char *file, int line, void *str, int c, size_t n);
+char *memdbg_strdup__(char *file, int line, char *str);
+wchar_t *memdbg_wcsdup__(char *file, int line, wchar_t *wcs);
+FILE *memdbg_fopen__(char *file, int line, char *path, char *mode);
+int memdbg_fclose__(char *file, int line, FILE *fp);
+void *memdbg_memset__(char *file, int line, void *str, int c, size_t n);
 
 #endif /* !MEMDBG_INTERNAL_H */

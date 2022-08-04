@@ -1,6 +1,6 @@
 /*
 lexer_state.h - Une
-Modified 2021-07-25
+Modified 2022-08-04
 */
 
 #ifndef UNE_LEXER_STATE_H
@@ -14,7 +14,7 @@ Modified 2021-07-25
 /*
 Holds the state of the lexer.
 */
-typedef struct _une_lexer_state {
+typedef struct une_lexer_state_ {
   bool read_from_file;
   char *path;
   wchar_t *text;

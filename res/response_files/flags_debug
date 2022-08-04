@@ -1,2 +1,8 @@
--g3
 -DUNE_DEBUG
+-g3
+
+-Wno-switch
+-Wno-switch-enum
+
+-Wno-unused-macros
+

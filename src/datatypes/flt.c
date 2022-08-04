@@ -1,6 +1,6 @@
 /*
 flt.c - Une
-Modified 2021-08-14
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -71,9 +71,9 @@ une_int une_datatype_flt_is_equal(une_result subject, une_result comparison)
 {
   assert(subject.type == UNE_RT_FLT);
   if (comparison.type == UNE_RT_INT)
-    return subject.value._flt == (une_flt)comparison.value._int;
+    return une_flts_equal(subject.value._flt, (une_flt)comparison.value._int);
   if (comparison.type == UNE_RT_FLT)
-    return subject.value._flt == comparison.value._flt;
+    return une_flts_equal(subject.value._flt, comparison.value._flt);
   return 0;
 }
 
@@ -225,12 +225,12 @@ une_result une_datatype_flt_fdiv(une_result left, une_result right)
   if (right.type == UNE_RT_INT)
     return (une_result){
       .type = UNE_RT_INT,
-      .value._int = (une_int)floor(left.value._flt / (une_flt)right.value._int)
+      .value._int = (une_int)(floor(left.value._flt / (une_flt)right.value._int))
     };
   if (right.type == UNE_RT_FLT)
     return (une_result){
       .type = UNE_RT_INT,
-      .value._int = (une_int)floor(left.value._flt / right.value._flt)
+      .value._int = (une_int)(floor(left.value._flt / right.value._flt))
     };
   return une_result_create(UNE_RT_ERROR);
 }

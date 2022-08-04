@@ -1,6 +1,6 @@
 /*
 int.c - Une
-Modified 2021-08-14
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -75,7 +75,7 @@ une_int une_datatype_int_is_equal(une_result subject, une_result comparison)
   if (comparison.type == UNE_RT_INT)
     return subject.value._int == comparison.value._int;
   if (comparison.type == UNE_RT_FLT)
-    return (une_flt)subject.value._int == comparison.value._flt;
+    return une_flts_equal((une_flt)subject.value._int, comparison.value._flt);
   return 0;
 }
 
@@ -213,7 +213,7 @@ une_result une_datatype_int_div(une_result left, une_result right)
       };
     return (une_result){
       .type = UNE_RT_FLT,
-      .value._flt = (une_flt)left.value._int / right.value._int
+      .value._flt = (une_flt)left.value._int / (une_flt)right.value._int
     };
   }
   if (right.type == UNE_RT_FLT)
@@ -246,7 +246,7 @@ une_result une_datatype_int_fdiv(une_result left, une_result right)
   if (right.type == UNE_RT_FLT)
     return (une_result){
       .type = UNE_RT_INT,
-      .value._int = (une_int)floor((une_flt)left.value._int / right.value._flt)
+      .value._int = (une_int)(floor((une_flt)left.value._int / right.value._flt))
     };
   return une_result_create(UNE_RT_ERROR);
 }
@@ -281,7 +281,7 @@ une_result une_datatype_int_pow(une_result left, une_result right)
   if (right.type == UNE_RT_INT)
     return (une_result){
       .type = UNE_RT_INT,
-      .value._int = (une_int)pow((double)left.value._int, (double)right.value._int)
+      .value._int = (une_int)(pow((double)left.value._int, (double)right.value._int))
     };
   if (right.type == UNE_RT_FLT)
     return (une_result){

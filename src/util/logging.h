@@ -1,6 +1,6 @@
 /*
 logging.h - Une
-Modified 2021-07-17
+Modified 2022-08-04
 */
 
 #ifndef LOGGING_H
@@ -17,83 +17,83 @@ Modified 2021-07-17
 
 /* Character-width differences. */
 #ifdef LOGGING_WIDE
-#define __LOGGING_WIDE L""
-#define __LOGGING_OUTFN fwprintf
-#define __LOGGING_PRIS "%ls"
-#define __LOGGING_PRIHS "%hs"
+#define LOGGING_WIDE__ L""
+#define LOGGING_OUTFN__ fwprintf
+#define LOGGING_PRIS__ "%ls"
+#define LOGGING_PRIHS__ "%hs"
 #else
-#define __LOGGING_WIDE
-#define __LOGGING_OUTFN fprintf
-#define __LOGGING_PRIS "%s"
-#define __LOGGING_PRIHS __LOGGING_PRIS
+#define LOGGING_WIDE__
+#define LOGGING_OUTFN__ fprintf
+#define LOGGING_PRIS__ "%s"
+#define LOGGING_PRIHS__ LOGGING_PRIS__
 #endif
 
 /* Format. */
-#define __LOGGING_STYLE_INFO FGBLUE
-#define __LOGGING_STYLE_SUCCESS FGGREEN
-#define __LOGGING_STYLE_WARN FGYELLOW BOLD
-#define __LOGGING_STYLE_FAIL FGRED BOLD
-#define __LOGGING_STYLE_OUT FGWHITE INVERT
-#define LOGGING_WHERE __LOGGING_PRIHS ":%d"
-#define __LOGGING_WHERE LOGGING_WHERE ": "
+#define LOGGING_STYLE_INFO__ FGBLUE
+#define LOGGING_STYLE_SUCCESS__ FGGREEN
+#define LOGGING_STYLE_WARN__ FGYELLOW BOLD
+#define LOGGING_STYLE_FAIL__ FGRED BOLD
+#define LOGGING_STYLE_OUT__ FGWHITE INVERT
+#define LOGGING_WHERE LOGGING_PRIHS__ ":%d"
+#define LOGGING_WHERE__ LOGGING_WHERE ": "
 
 /* Message prefix. */
 #ifndef LOGGING_ID
-#define __LOGGING_ID ""
+#define LOGGING_ID__ ""
 #else
-#define __LOGGING_ID "(" LOGGING_ID ") "
+#define LOGGING_ID__ "(" LOGGING_ID ") "
 #endif
 
 /* Helper macros. */
-#define __LOGGING_msg(style, msg) style __LOGGING_ID __LOGGING_WHERE msg "\33[0m\n"
-#define __LOGGING_out(msg, ...) __LOGGING_OUTFN(stderr, __LOGGING_WIDE msg, ##__VA_ARGS__)
+#define LOGGING_msg__(style, msg) style LOGGING_ID__ LOGGING_WHERE__ msg "\33[0m\n"
+#define LOGGING_out__(msg, ...) LOGGING_OUTFN__(stderr, LOGGING_WIDE__ msg, ##__VA_ARGS__)
 
-#define __LOGGING_logger(file, line, style, msg, ...)\
-  __LOGGING_out(__LOGGING_msg(style, msg), file, line, ##__VA_ARGS__)
+#define LOGGING_logger__(file, line, style, msg, ...)\
+  LOGGING_out__(LOGGING_msg__(style, msg), file, line, ##__VA_ARGS__)
 
 /* Important information. */
 #define info_at(file, line, msg, ...)\
-  __LOGGING_logger(file, line, __LOGGING_STYLE_INFO, msg, ##__VA_ARGS__)
+  LOGGING_logger__(file, line, LOGGING_STYLE_INFO__, msg, ##__VA_ARGS__)
 #define info(msg, ...)\
   info_at(__FILE__, __LINE__, msg, ##__VA_ARGS__)
 
 /* Positive information. */
 #define success_at(file, line, msg, ...)\
-  __LOGGING_logger(file, line, __LOGGING_STYLE_SUCCESS, msg, ##__VA_ARGS__)
+  LOGGING_logger__(file, line, LOGGING_STYLE_SUCCESS__, msg, ##__VA_ARGS__)
 #define success(msg, ...)\
   success_at(__FILE__, __LINE__, msg, ##__VA_ARGS__)
 
 /* Negative information. */
 #define warn_at(file, line, msg, ...)\
-  __LOGGING_logger(file, line, __LOGGING_STYLE_WARN, msg, ##__VA_ARGS__)
+  LOGGING_logger__(file, line, LOGGING_STYLE_WARN__, msg, ##__VA_ARGS__)
 #define warn(msg, ...)\
   warn_at(__FILE__, __LINE__, msg, ##__VA_ARGS__)
 
 /* Fatal information. */
 #define fail_at(file, line, msg, ...)\
-  {\
-    __LOGGING_logger(file, line, __LOGGING_STYLE_FAIL, msg, ##__VA_ARGS__);\
+  do {\
+    LOGGING_logger__(file, line, LOGGING_STYLE_FAIL__, msg, ##__VA_ARGS__);\
     abort();\
-  }
+  } while (0)
 #define fail(msg, ...)\
   fail_at(__FILE__, __LINE__, msg, ##__VA_ARGS__)
 
 /* State information. */
 #define out_at(file, line, msg, ...)\
-  __LOGGING_logger(file, line, __LOGGING_STYLE_OUT, msg, ##__VA_ARGS__)
+  LOGGING_logger__(file, line, LOGGING_STYLE_OUT__, msg, ##__VA_ARGS__)
 #define out(msg, ...)\
   out_at(__FILE__, __LINE__, msg, ##__VA_ARGS__)
 #define outi(int_)\
-  out(__LOGGING_PRIS "=%lld", __LOGGING_WIDE #int_, (long long)int_)
+  out(LOGGING_PRIS__ "=%lld", LOGGING_WIDE__ #int_, (long long)int_)
 #define outf(float_)\
-  out(__LOGGING_PRIS "=%f", __LOGGING_WIDE #float_, (double)float_)
+  out(LOGGING_PRIS__ "=%f", LOGGING_WIDE__ #float_, (double)float_)
 #define outc(c)\
-  out(__LOGGING_PRIS "='%c'", __LOGGING_WIDE #c, c)
+  out(LOGGING_PRIS__ "='%c'", LOGGING_WIDE__ #c, c)
 #define outs(s)\
-  out(__LOGGING_PRIS "=\"" __LOGGING_PRIS "\"", __LOGGING_WIDE #s, s)
+  out(LOGGING_PRIS__ "=\"" LOGGING_PRIS__ "\"", LOGGING_WIDE__ #s, s)
 #ifdef LOGGING_WIDE
 #define ouths(str)\
-  out(__LOGGING_PRIS "=\"%hs\"", __LOGGING_WIDE #str, str)
+  out(LOGGING_PRIS__ "=\"%hs\"", LOGGING_WIDE__ #str, str)
 #endif
 
 #endif /* !LOGGING_H */

@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2021-10-24
+Modified 2022-08-03
 */
 
 /* Header-specific includes. */
@@ -73,7 +73,7 @@ une_result *une_result_list_create(size_t items)
   verify(list);
   list[0] = (une_result){
     .type = UNE_RT_SIZE,
-    .value._int = items
+    .value._int = (une_int)items
   };
   return list;
 }

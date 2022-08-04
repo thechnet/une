@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2021-10-17
+Modified 2022-08-04
 */
 
 #ifndef UNE_TOOLS_H
@@ -8,6 +8,13 @@ Modified 2021-10-17
 
 /* Header-specific includes. */
 #include "primitive.h"
+#include <math.h>
+
+/*
+une_flt-compatible INFINITY.
+*/
+#undef INFINITY
+#define INFINITY __builtin_inf()
 
 /*
 *** Interface.
@@ -32,6 +39,8 @@ wchar_t *une_file_read(char *path);
 void une_sleep_ms(int ms);
 
 int une_out_of_memory(void);
+
+bool une_flts_equal(une_flt a, une_flt b);
 
 #ifdef _WIN32
 void une_win_vt_proc(bool enable);

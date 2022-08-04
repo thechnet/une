@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 #ifndef UNE_PARSER_H
@@ -20,45 +20,45 @@ Modified 2022-05-29
 /*
 Parser function template.
 */
-#define __une_parser(__id, ...)\
-  __une_static une_node *(__id)(une_error *error, une_parser_state *ps, ##__VA_ARGS__)
+#define une_parser__(id__, ...)\
+  une_static__ une_node *(id__)(une_error *error, une_parser_state *ps, ##__VA_ARGS__)
 
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens);
 
-__une_parser(une_parse_stmt);
-__une_parser(une_parse_id);
-__une_parser(une_parse_block);
-__une_parser(une_parse_expression);
-__une_parser(une_parse_and_or);
-__une_parser(une_parse_condition);
-__une_parser(une_parse_add_sub);
-__une_parser(une_parse_term);
-__une_parser(une_parse_negation);
-__une_parser(une_parse_power);
-__une_parser(une_parse_index_or_call);
-__une_parser(une_parse_atom);
-__une_parser(une_parse_int);
-__une_parser(une_parse_flt);
-__une_parser(une_parse_str);
-__une_parser(une_parse_get);
-__une_parser(une_parse_builtin);
-__une_parser(une_parse_list);
-__une_parser(une_parse_function);
-__une_parser(une_parse_for);
-__une_parser(une_parse_while);
-__une_parser(une_parse_if);
-__une_parser(une_parse_continue);
-__une_parser(une_parse_break);
-__une_parser(une_parse_return);
-__une_parser(une_parse_exit);
-__une_parser(une_parse_set_expstmt);
+une_parser__(une_parse_stmt);
+une_parser__(une_parse_id);
+une_parser__(une_parse_block);
+une_parser__(une_parse_expression);
+une_parser__(une_parse_and_or);
+une_parser__(une_parse_condition);
+une_parser__(une_parse_add_sub);
+une_parser__(une_parse_term);
+une_parser__(une_parse_negation);
+une_parser__(une_parse_power);
+une_parser__(une_parse_index_or_call);
+une_parser__(une_parse_atom);
+une_parser__(une_parse_int);
+une_parser__(une_parse_flt);
+une_parser__(une_parse_str);
+une_parser__(une_parse_get);
+une_parser__(une_parse_builtin);
+une_parser__(une_parse_list);
+une_parser__(une_parse_function);
+une_parser__(une_parse_for);
+une_parser__(une_parse_while);
+une_parser__(une_parse_if);
+une_parser__(une_parse_continue);
+une_parser__(une_parse_break);
+une_parser__(une_parse_return);
+une_parser__(une_parse_exit);
+une_parser__(une_parse_set_expstmt);
 
-__une_parser(une_parse_unary_operation,
+une_parser__(une_parse_unary_operation,
   une_node_type node_t,
   une_node *(*parse)(une_error*, une_parser_state*)
 );
 
-__une_parser(une_parse_binary_operation,
+une_parser__(une_parse_binary_operation,
   une_token_type range_begin_tt,
   une_node_type range_begin_nt,
   une_token_type range_end_tt,
@@ -66,7 +66,7 @@ __une_parser(une_parse_binary_operation,
   une_node *(*parse_right)(une_error*, une_parser_state*)
 );
 
-__une_parser(une_parse_sequence,
+une_parser__(une_parse_sequence,
   une_node_type node_type,
   une_token_type tt_begin,
   une_token_type tt_end_of_item,

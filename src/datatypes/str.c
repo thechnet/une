@@ -1,6 +1,6 @@
 /*
 str.c - Une
-Modified 2022-08-03
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -204,7 +204,7 @@ Check if a index is valid.
 bool une_datatype_str_is_valid_index(une_result target, une_result index)
 {
   assert(index.type == UNE_RT_INT);
-  return index.value._int >= 0 && (_une_uint)index.value._int < une_datatype_str_get_len(target);
+  return index.value._int >= 0 && (une_uint)index.value._int < une_datatype_str_get_len(target);
 }
 
 /*

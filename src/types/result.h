@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2021-08-14
+Modified 2022-08-04
 */
 
 #ifndef UNE_RESULT_H
@@ -12,8 +12,8 @@ Modified 2021-08-14
 /*
 Type of une_result.
 */
-typedef enum _une_result_type {
-  __UNE_RT_none__,
+typedef enum une_result_type_ {
+  UNE_RT_none__,
   UNE_RT_ERROR,
   UNE_RT_CONTINUE,
   UNE_RT_BREAK,
@@ -27,13 +27,13 @@ typedef enum _une_result_type {
   UNE_RT_FUNCTION,
   UNE_RT_BUILTIN,
   #define UNE_R_END_DATA_RESULT_TYPES UNE_RT_BUILTIN
-  __UNE_RT_max__,
+  UNE_RT_max__,
 } une_result_type;
 
 /*
 Holds data resulting from interpretation.
 */
-typedef struct _une_result {
+typedef struct une_result_ {
   une_result_type type;
   une_value value;
 } une_result;
@@ -48,7 +48,7 @@ Unpack a une_result list into its name and size.
 #define UNE_UNPACK_RESULT_LIST(listresult, listname, listsize)\
   une_result *listname = (une_result*)listresult.value._vp;\
   assert(listname != NULL);\
-  size_t listsize = listname[0].value._int
+  size_t listsize = (size_t)listname[0].value._int
 
 /*
 Unpack a une_result string into its string pointer and size.
@@ -73,7 +73,7 @@ Iterate over every index in a une_result list.
 Condition to check whether une_result_type is valid.
 */
 #define UNE_RESULT_TYPE_IS_VALID(type)\
-  (type > __UNE_RT_none__ && type < __UNE_RT_max__)
+  (type > UNE_RT_none__ && type < UNE_RT_max__)
 
 /*
 Condition to check whether une_result_type is data type.

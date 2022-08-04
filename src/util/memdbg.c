@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2021-10-17
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -26,7 +26,7 @@ Modified 2021-10-17
 #define MEMDBG_MSG_FREE_NULLPTR "Freeing NULL pointer."
 #define MEMDBG_MSG_NOT_FREED "Memory not freed."
 #define MEMDBG_MSG_REALLOC_SIZE "Size smaller or same."
-#define MEMDBG_MSG_ATEXIT "atexit failed. Call __memdbg_conclude manually."
+#define MEMDBG_MSG_ATEXIT "atexit failed. Call memdbg_conclude__ manually."
 #define MEMDBG_MSG_RECEIVING_NULL "Receiving NULL pointer."
 #define MEMDBG_MSG_RETURNING_NULL "Returning NULL pointer."
 #define MEMDBG_MSG_PADDING "Padding not intact."
@@ -70,7 +70,7 @@ void *memdbg_malloc(char *file, int line, size_t size)
 {
   if (memdbg_allocations == NULL)
     memdbg_init();
-  __memdbg_allocations_padding_check(file, line);
+  memdbg_allocations_padding_check__(file, line);
   if (size == 0) {
     memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_SIZE_0);
@@ -107,7 +107,7 @@ void *memdbg_realloc(char *file, int line, void *memory, size_t size)
 {
   if (memdbg_allocations == NULL)
     memdbg_init();
-  __memdbg_allocations_padding_check(file, line);
+  memdbg_allocations_padding_check__(file, line);
   if (memory == NULL) {
     memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_RECEIVING_NULL);
@@ -149,7 +149,7 @@ void memdbg_free(char *file, int line, void *memory)
 {
   if (memdbg_allocations == NULL)
     memdbg_init();
-  __memdbg_allocations_padding_check(file, line);
+  memdbg_allocations_padding_check__(file, line);
   if (memory == NULL) {
     memdbg_alert_count++;
     warn_at(file, line, MEMDBG_MSG_FREE_NULLPTR);
@@ -172,7 +172,7 @@ Initialize memdbg.
 */
 static void memdbg_init(void)
 {
-  srand(memdbg_current_second());
+  srand((unsigned int)memdbg_current_second());
   for (int i=0; i<MEMDBG_PADDING_SIZE; i++)
     memdbg_padding[i] = rand() % CHAR_MAX;
   assert(memdbg_allocations == NULL);
@@ -190,11 +190,11 @@ static void memdbg_init(void)
   }
   for (size_t i=0; i<memdbg_allocations_size; i++)
     memdbg_allocations[i] = memdbg_allocation_reset();
-  if (atexit(&__memdbg_conclude) != 0) {
+  if (atexit(&memdbg_conclude__) != 0) {
     memdbg_alert_count++;
     warn(MEMDBG_MSG_ATEXIT);
   }
-  if (signal(SIGFPE, &__memdbg_signal_handler) == SIG_ERR || signal(SIGILL, &__memdbg_signal_handler) == SIG_ERR || signal(SIGSEGV, &__memdbg_signal_handler) == SIG_ERR) {
+  if (signal(SIGFPE, &memdbg_signal_handler__) == SIG_ERR || signal(SIGILL, &memdbg_signal_handler__) == SIG_ERR || signal(SIGSEGV, &memdbg_signal_handler__) == SIG_ERR) {
     memdbg_alert_count++;
     warn(MEMDBG_MSG_SIGNAL);
   }
@@ -203,11 +203,11 @@ static void memdbg_init(void)
 /*
 Reports unfreed memory and frees the memory_allocations array.
 */
-void __memdbg_conclude(void)
+void memdbg_conclude__(void)
 {
   bool all_memory_freed = true;
   if (memdbg_allocations != NULL) {
-    __memdbg_allocations_padding_check(NULL, 0);
+    memdbg_allocations_padding_check__(NULL, 0);
     for (size_t i=0; i<memdbg_allocations_size; i++)
       if (memdbg_allocations[i].memory != NULL) {
         all_memory_freed = false;
@@ -236,7 +236,7 @@ void __memdbg_conclude(void)
 /*
 Verify that the padding of all allocations is intact.
 */
-void __memdbg_allocations_padding_check(char *file, int line)
+void memdbg_allocations_padding_check__(char *file, int line)
 {
   if (memdbg_allocations == NULL)
     memdbg_init();
@@ -255,7 +255,7 @@ void __memdbg_allocations_padding_check(char *file, int line)
 /*
 Check if 'idx' is a valid index into array 'arr'.
 */
-void *__memdbg_array_check(char *file, int line, char *array, size_t array_size, size_t item_size, int index)
+void *memdbg_array_check__(char *file, int line, char *array, size_t array_size, size_t item_size, int index)
 {
   if (array == NULL) {
     memdbg_alert_count++;
@@ -276,25 +276,25 @@ void *__memdbg_array_check(char *file, int line, char *array, size_t array_size,
     memdbg_alert_count++;
     fail_at(file, line, MEMDBG_MSG_INDEX_OUT_OF_RANGE, index, items_count);
   }
-  return &array[index*item_size];
+  return &array[(size_t)index*item_size];
 }
 
 /*
 Handle signals.
 */
-void __memdbg_signal_handler(int signum)
+void __attribute__((noreturn)) memdbg_signal_handler__(int signum)
 {
   #ifndef _WIN32
   char *msg;
   switch (signum) {
     case SIGFPE:
-      msg = __LOGGING_STYLE_FAIL __LOGGING_ID MEMDBG_MSG_SIGFPE RESET "\n";
+      msg = LOGGING_STYLE_FAIL__ LOGGING_ID__ MEMDBG_MSG_SIGFPE RESET "\n";
       break;
     case SIGILL:
-      msg = __LOGGING_STYLE_FAIL __LOGGING_ID MEMDBG_MSG_SIGILL RESET "\n";
+      msg = LOGGING_STYLE_FAIL__ LOGGING_ID__ MEMDBG_MSG_SIGILL RESET "\n";
       break;
     case SIGSEGV:
-      msg = __LOGGING_STYLE_FAIL __LOGGING_ID MEMDBG_MSG_SIGSEGV RESET "\n";
+      msg = LOGGING_STYLE_FAIL__ LOGGING_ID__ MEMDBG_MSG_SIGSEGV RESET "\n";
       break;
     default:
       assert(false);
@@ -400,11 +400,11 @@ static inline int memdbg_current_second(void)
 */
 
 #define memdbg_wrap_allocator(type_, name_, params_, memory_, call_, newsize_, check_incoming_memory_, enable_padding_)\
-  type_ __memdbg_##name_ params_\
+  type_ memdbg_##name_##__ params_\
   {\
     if (memdbg_allocations == NULL)\
       memdbg_init();\
-    __memdbg_allocations_padding_check(file, line);\
+    memdbg_allocations_padding_check__(file, line);\
     if (check_incoming_memory_ && memory_ == NULL)\
       info_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
     if (check_incoming_memory_ && memdbg_allocation_find(memory_) == memdbg_allocations_size)\
@@ -433,11 +433,11 @@ static inline int memdbg_current_second(void)
   }
 
 #define memdbg_wrap_deallocator(type_, name_, params_, memory_, call_, enable_padding_)\
-  type_ __memdbg_##name_ params_\
+  type_ memdbg_##name_##__ params_\
   {\
     if (memdbg_allocations == NULL)\
       memdbg_init();\
-    __memdbg_allocations_padding_check(file, line);\
+    memdbg_allocations_padding_check__(file, line);\
     if (memory_ == NULL)\
       info_at(file, line, MEMDBG_MSG_RECEIVING_NULL);\
     size_t index = memdbg_allocation_find(memory_);\
@@ -461,7 +461,7 @@ static inline int memdbg_current_second(void)
     if (memdbg_allocation_find(memory_) == memdbg_allocations_size)\
       info_at(file, line, MEMDBG_MSG_UNOWNED_MEM);\
     type_ return_value = call_;\
-    __memdbg_allocations_padding_check(file, line);\
+    memdbg_allocations_padding_check__(file, line);\
     return return_value;\
   }
 
@@ -482,5 +482,5 @@ memdbg_wrap_deallocator\
   fp, fclose(fp), false)
 
 memdbg_wrap_function\
-  (void*, __memdbg_memset, (char *file, int line, void *str, int c, size_t n),\
+  (void*, memdbg_memset__, (char *file, int line, void *str, int c, size_t n),\
   str, memset(str, c, n))

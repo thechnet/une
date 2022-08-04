@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 #ifndef UNE_NODE_H
@@ -12,8 +12,8 @@ Modified 2022-05-29
 /*
 Type of une_node.
 */
-typedef enum _une_node_type {
-  __UNE_NT_none__,
+typedef enum une_node_type_ {
+  UNE_NT_none__,
   UNE_NT_ID,
   UNE_NT_SIZE,
   #define UNE_R_BGN_LUT_NODES UNE_NT_INT /* (!) Order-sensitive. */
@@ -63,22 +63,22 @@ typedef enum _une_node_type {
   UNE_NT_RETURN,
   UNE_NT_EXIT,
   #define UNE_R_END_LUT_NODES UNE_NT_EXIT /* (!) Order-sensitive. */
-  __UNE_NT_max__,
+  UNE_NT_max__,
 } une_node_type;
 
 /*
 A program node, holding either more nodes or data.
 */
-typedef struct _une_node {
+typedef struct une_node_ {
   une_node_type type;
   une_position pos;
-  union _content {
+  union content_ {
     une_value value;
-    struct _branch {
-        struct _une_node *a;
-        struct _une_node *b;
-        struct _une_node *c;
-        struct _une_node *d;
+    struct branch_ {
+        struct une_node_ *a;
+        struct une_node_ *b;
+        struct une_node_ *c;
+        struct une_node_ *d;
     } branch;
   } content;
 } une_node;
@@ -91,7 +91,7 @@ typedef struct _une_node {
 Condition to check whether une_node_type is valid.
 */
 #define UNE_NODE_TYPE_IS_VALID(type)\
-  (type > __UNE_NT_none__ && type < __UNE_NT_max__)
+  (type > UNE_NT_none__ && type < UNE_NT_max__)
 
 /*
 Condition to check whether une_node_type is in interpreter lookup table.
@@ -105,7 +105,7 @@ Unpack a une_node list into its name and size.
 #define UNE_UNPACK_NODE_LIST(listnode, listname, listsize)\
   une_node **listname = (une_node**)listnode->content.value._vpp;\
   assert(listname != NULL);\
-  size_t listsize = listname[0]->content.value._int
+  size_t listsize = (size_t)listname[0]->content.value._int
 
 /*
 Iterate over every item in a une_node list.
@@ -126,7 +126,7 @@ void une_node_free(une_node *node, bool free_wcs);
 une_node **une_node_list_create(size_t size);
 
 #ifdef UNE_DEBUG
-__une_static const wchar_t *une_node_type_to_wcs(une_node_type type);
+une_static__ const wchar_t *une_node_type_to_wcs(une_node_type type);
 wchar_t *une_node_to_wcs(une_node *node);
 #endif /* UNE_DEBUG */
 

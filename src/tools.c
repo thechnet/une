@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2021-10-17
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -142,7 +142,7 @@ Halt execution for the specified number of miliseconds.
 void une_sleep_ms(int ms)
 {
   #ifdef _WIN32
-  Sleep(ms);
+  Sleep((DWORD)ms);
   #else
   struct timespec ts = {
     .tv_sec = ms / 1000,
@@ -160,6 +160,15 @@ int une_out_of_memory(void)
   wprintf(UNE_ERROR_OUT_OF_MEMORY L"\n");
   fflush(stdout);
   abort();
+}
+
+/*
+Compares two une_flt for equality.
+*/
+bool une_flts_equal(une_flt a, une_flt b)
+{
+  double epsilon = nextafter(0, 1);
+  return fabs(a - b) < epsilon;
 }
 
 #ifdef _WIN32

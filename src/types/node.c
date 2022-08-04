@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -181,7 +181,7 @@ void une_node_free(une_node *node, bool free_wcs)
       une_node **list = (une_node**)node->content.value._vpp;
       if (list == NULL)
         break;
-      size_t list_size = list[0]->content.value._int;
+      size_t list_size = (size_t)list[0]->content.value._int;
       UNE_FOR_NODE_LIST_INDEX(i, list_size)
         une_node_free(list[i], free_wcs);
       free(list);
@@ -212,7 +212,7 @@ une_node **une_node_list_create(size_t size)
   une_node **nodepp = malloc((size+1)*sizeof(*nodepp));
   verify(nodepp);
   nodepp[0] = une_node_create(UNE_NT_SIZE);
-  nodepp[0]->content.value._int = size;
+  nodepp[0]->content.value._int = (une_int)size;
   return nodepp;
 }
 
@@ -220,7 +220,7 @@ une_node **une_node_list_create(size_t size)
 Get node name from node type.
 */
 #ifdef UNE_DEBUG
-__une_static const wchar_t *une_node_type_to_wcs(une_node_type type)
+une_static__ const wchar_t *une_node_type_to_wcs(une_node_type type)
 {
   assert(UNE_NODE_TYPE_IS_VALID(type));
   
@@ -242,7 +242,7 @@ wchar_t *une_node_to_wcs(une_node *node)
   /* Create output buffer. */
   wchar_t *buffer = malloc(UNE_SIZE_NODE_AS_WCS*sizeof(*buffer));
   verify(buffer);
-  size_t buffer_len = 0;
+  int buffer_len = 0;
   if (node == NULL) {
     buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"NULL");
     assert(buffer_len < UNE_SIZE_NODE_AS_WCS);
@@ -263,7 +263,7 @@ wchar_t *une_node_to_wcs(une_node *node)
         break;
       }
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
-      size_t offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"{%ls", node_as_wcs);
+      int offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"{%ls", node_as_wcs);
       free(node_as_wcs);
       for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
@@ -280,7 +280,7 @@ wchar_t *une_node_to_wcs(une_node *node)
         break;
       }
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
-      size_t offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"[%ls", node_as_wcs);
+      int offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"[%ls", node_as_wcs);
       free(node_as_wcs);
       for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);

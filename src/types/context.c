@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2021-11-22
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -62,7 +62,7 @@ void une_context_free(une_context *context)
 /*
 Initializes a new une_variable in a une_context's variable buffer.
 */
-__une_variable_itf(une_variable_create)
+une_variable_itf__(une_variable_create)
 {
   /* Ensure sufficient space in une_variable buffer. */
   if (context->variables_count >= context->variables_size) {
@@ -76,7 +76,7 @@ __une_variable_itf(une_variable_create)
   (context->variables_count)++;
   *var = (une_variable){
     .name = wcsdup(name),
-    .content = une_result_create(UNE_RT_VOID) /* Don't use __UNE_RT_none__ because this will be freed using une_result_free. */
+    .content = une_result_create(UNE_RT_VOID) /* Don't use UNE_RT_none__ because this will be freed using une_result_free. */
   };
   verify(var->name);
   
@@ -86,7 +86,7 @@ __une_variable_itf(une_variable_create)
 /*
 Returns a pointer to a une_variable in a une_context's variable buffer or NULL.
 */
-__une_variable_itf(une_variable_find)
+une_variable_itf__(une_variable_find)
 {
   /* Find une_variable. */
   for (size_t i=0; i<context->variables_count; i++)
@@ -100,7 +100,7 @@ __une_variable_itf(une_variable_find)
 /*
 Returns a pointer to a une_variable in a une_context's variable buffer and its parents or NULL.
 */
-__une_variable_itf(une_variable_find_global)
+une_variable_itf__(une_variable_find_global)
 {
   /* Return NULL by default. */
   une_variable *var = NULL;
@@ -119,7 +119,7 @@ __une_variable_itf(une_variable_find_global)
 /*
 Returns a pointer to a une_variable in a une_context's variable buffer or creates and initializes it.
 */
-__une_variable_itf(une_variable_find_or_create)
+une_variable_itf__(une_variable_find_or_create)
 {
   /* Find une_variable. */
   une_variable *variable = une_variable_find(context, name);
@@ -133,7 +133,7 @@ __une_variable_itf(une_variable_find_or_create)
 /*
 Returns a pointer to a une_variable in a une_context's variable buffer and its parents or creates and initializes it.
 */
-__une_variable_itf(une_variable_find_or_create_global)
+une_variable_itf__(une_variable_find_or_create_global)
 {
   /* Find une_variable. */
   une_variable *variable = une_variable_find_global(context, name);

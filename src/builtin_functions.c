@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -18,18 +18,18 @@ Modified 2022-05-29
 Pointers to all built-in functions.
 */
 une_builtin_fnptr une_builtin_functions[] = {
-  #define __BUILTIN_FUNCTION(__id) &une_builtin_fn_##__id,
-  UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_FUNCTION)
-  #undef __BUILTIN_FUNCTION
+  #define BUILTIN_FUNCTION__(id__) &une_builtin_fn_##id__,
+  UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_FUNCTION__)
+  #undef BUILTIN_FUNCTION__
 };
 
 /*
 String representations of built-in function names.
 */
 const wchar_t *une_builtin_functions_as_strings[] = {
-  #define __BUILTIN_AS_STRING(__id) L"" #__id,
-  UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_AS_STRING)
-  #undef __BUILTIN_AS_STRING
+  #define BUILTIN_AS_STRING__(id__) L"" #id__,
+  UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_AS_STRING__)
+  #undef BUILTIN_AS_STRING__
 };
 
 /* The amount of parameters of every built-in function. */
@@ -79,8 +79,8 @@ Get a pointer to the built-in function matching the given string or NULL;
 */
 une_builtin_function une_builtin_wcs_to_function(wchar_t *wcs)
 {
-  une_builtin_function fn = __UNE_BUILTIN_none__;
-  for (int i=1; i<__UNE_BUILTIN_max__; i++)
+  une_builtin_function fn = UNE_BUILTIN_none__;
+  for (une_builtin_function i=1; i<UNE_BUILTIN_max__; i++)
     if (wcscmp(une_builtin_functions_as_strings[i-1], wcs) == 0) {
       fn = i;
       break;
@@ -106,7 +106,7 @@ const wchar_t *une_builtin_function_to_wcs(une_builtin_function function)
 /*
 Print a text representation of a une_result.
 */
-__une_builtin_fn(put)
+une_builtin_fn__(put)
 {
   une_builtin_param string = 0;
   une_datatype dt_string = UNE_DATATYPE_FOR_RESULT(args[string]);
@@ -120,7 +120,7 @@ __une_builtin_fn(put)
 /*
 Print a text representation of a une_result, always adding a newline at the end.
 */
-__une_builtin_fn(print)
+une_builtin_fn__(print)
 {
   une_builtin_fn_put(error, is, call_node, args);
   
@@ -132,7 +132,7 @@ __une_builtin_fn(print)
 /*
 Convert une_result to UNE_RT_INT une_result and return it.
 */
-__une_builtin_fn(int)
+une_builtin_fn__(int)
 {
   une_builtin_param result = 0;
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
@@ -154,7 +154,7 @@ __une_builtin_fn(int)
 /*
 Convert une_result to UNE_RT_FLT une_result and return it.
 */
-__une_builtin_fn(flt)
+une_builtin_fn__(flt)
 {
   une_builtin_param result = 0;
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
@@ -176,7 +176,7 @@ __une_builtin_fn(flt)
 /*
 Convert une_result to UNE_RT_STR une_result and return it.
 */
-__une_builtin_fn(str)
+une_builtin_fn__(str)
 {
   une_builtin_param result = 0;
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
@@ -194,7 +194,7 @@ __une_builtin_fn(str)
 /*
 Get length of une_result and return it.
 */
-__une_builtin_fn(len)
+une_builtin_fn__(len)
 {
   une_builtin_param result = 0;
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
@@ -215,14 +215,14 @@ __une_builtin_fn(len)
 /*
 Halt execution for a given amount of miliseconds.
 */
-__une_builtin_fn(sleep)
+une_builtin_fn__(sleep)
 {
   une_builtin_param result = 0;
   
   UNE_BUILTIN_VERIFY_ARG_TYPE(result, UNE_RT_INT);
   
   /* Halt execution. */
-  une_sleep_ms(args[result].value._int);
+  une_sleep_ms((int)args[result].value._int);
   
   return une_result_create(UNE_RT_VOID);
 }
@@ -230,7 +230,7 @@ __une_builtin_fn(sleep)
 /*
 Convert a number to its corresponding one-character string.
 */
-__une_builtin_fn(chr)
+une_builtin_fn__(chr)
 {
   une_builtin_param result = 0;
   
@@ -252,7 +252,7 @@ __une_builtin_fn(chr)
 /*
 Convert a one-character string to its corresponding number.
 */
-__une_builtin_fn(ord)
+une_builtin_fn__(ord)
 {
   une_builtin_param result = 0;
   
@@ -270,7 +270,7 @@ __une_builtin_fn(ord)
 /*
 Return the entire contents of a file as text.
 */
-__une_builtin_fn(read)
+une_builtin_fn__(read)
 {
   une_builtin_param file = 0;
   
@@ -329,7 +329,7 @@ une_result une_builtin_fn_write_or_append(une_error *error, une_interpreter_stat
 /*
 Write text to a file.
 */
-__une_builtin_fn(write)
+une_builtin_fn__(write)
 {
   return une_builtin_fn_write_or_append(error, is, call_node, args, true);
 }
@@ -337,7 +337,7 @@ __une_builtin_fn(write)
 /*
 Append text to a file.
 */
-__une_builtin_fn(append)
+une_builtin_fn__(append)
 {
   return une_builtin_fn_write_or_append(error, is, call_node, args, false);
 }
@@ -345,7 +345,7 @@ __une_builtin_fn(append)
 /*
 Get user input as string from the console.
 */
-__une_builtin_fn(input)
+une_builtin_fn__(input)
 {
   une_builtin_param prompt = 0;
   
@@ -371,7 +371,7 @@ __une_builtin_fn(input)
 /*
 Run an external Une script.
 */
-__une_builtin_fn(script)
+une_builtin_fn__(script)
 {
   une_builtin_param script = 0;
   
@@ -398,7 +398,7 @@ __une_builtin_fn(script)
 /*
 Check if a file or directory exists.
 */
-__une_builtin_fn(exist)
+une_builtin_fn__(exist)
 {
   une_builtin_param path = 0;
   
@@ -419,8 +419,8 @@ __une_builtin_fn(exist)
 }
 
 /* Split a string into a list of substrings. */
-UNE_OSTREAM_PUSHER(__une_builtin_split_push, une_result)
-__une_builtin_fn(split)
+UNE_OSTREAM_PUSHER(une_builtin_split_push__, une_result)
+une_builtin_fn__(split)
 {
   une_builtin_param string = 0;
   une_builtin_param delims = 1;
@@ -443,7 +443,7 @@ __une_builtin_fn(split)
   verify(tokens);
   une_ostream out = une_ostream_create((void*)tokens, UNE_SIZE_BIF_SPLIT_TKS+1, sizeof(*tokens), true);
   tokens = NULL; /* This pointer can turn stale after pushing. */
-  void (*push)(une_ostream*, une_result) = &__une_builtin_split_push;
+  void (*push)(une_ostream*, une_result) = &une_builtin_split_push__;
   push(&out, une_result_create(UNE_RT_SIZE));
   /* Cache delimiter lengths for performance. */
   size_t *delim_lens = malloc(delims_len*sizeof(*delim_lens));
@@ -453,7 +453,7 @@ __une_builtin_fn(split)
   wchar_t *wcs = args[string].value._wcs;
   size_t wcs_len = wcslen(wcs);
   size_t last_token_end = 0;
-  int left_for_match = 0;
+  size_t left_for_match = 0;
 
   /* Create tokens. */
   for (size_t i=0; i<wcs_len; i++) { /* For each character. */
@@ -495,7 +495,7 @@ __une_builtin_fn(split)
   /* Wrap up. */
   free(delim_lens);
   tokens = (une_result*)out.array; /* Reobtain up-to-date pointer. */
-  tokens[0].value._int = tokens_amt;
+  tokens[0].value._int = (une_int)tokens_amt;
   return (une_result){
     .type = UNE_RT_LIST,
     .value._vp = (void*)tokens

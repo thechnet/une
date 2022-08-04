@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -22,49 +22,49 @@ Modified 2022-05-29
 /*
 Interpreter function template.
 */
-#define __une_interpreter(__id, ...)\
-  __une_static une_result (__id)(une_error *error, une_interpreter_state *is, une_node *node, ##__VA_ARGS__)
+#define une_interpreter__(id__, ...)\
+  une_static__ une_result (id__)(une_error *error, une_interpreter_state *is, une_node *node, ##__VA_ARGS__)
 
 une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *node);
 
-__une_interpreter(une_interpret_as, une_result_type type);
+une_interpreter__(une_interpret_as, une_result_type type);
 
-__une_interpreter(une_interpret_int);
-__une_interpreter(une_interpret_flt);
-__une_interpreter(une_interpret_str);
-__une_interpreter(une_interpret_list);
-__une_interpreter(une_interpret_function);
-__une_interpreter(une_interpret_builtin);
-__une_interpreter(une_interpret_stmts);
-__une_interpreter(une_interpret_cop);
-__une_interpreter(une_interpret_not);
-__une_interpreter(une_interpret_and);
-__une_interpreter(une_interpret_or);
-__une_interpreter(une_interpret_equ);
-__une_interpreter(une_interpret_neq);
-__une_interpreter(une_interpret_gtr);
-__une_interpreter(une_interpret_geq);
-__une_interpreter(une_interpret_lss);
-__une_interpreter(une_interpret_leq);
-__une_interpreter(une_interpret_add);
-__une_interpreter(une_interpret_sub);
-__une_interpreter(une_interpret_mul);
-__une_interpreter(une_interpret_div);
-__une_interpreter(une_interpret_fdiv);
-__une_interpreter(une_interpret_mod);
-__une_interpreter(une_interpret_pow);
-__une_interpreter(une_interpret_neg);
-__une_interpreter(une_interpret_set);
-__une_interpreter(une_interpret_set_idx);
-__une_interpreter(une_interpret_get);
-__une_interpreter(une_interpret_get_idx);
-__une_interpreter(une_interpret_call);
-__une_interpreter(une_interpret_for);
-__une_interpreter(une_interpret_while);
-__une_interpreter(une_interpret_if);
-__une_interpreter(une_interpret_continue);
-__une_interpreter(une_interpret_break);
-__une_interpreter(une_interpret_return);
-__une_interpreter(une_interpret_exit);
+une_interpreter__(une_interpret_int);
+une_interpreter__(une_interpret_flt);
+une_interpreter__(une_interpret_str);
+une_interpreter__(une_interpret_list);
+une_interpreter__(une_interpret_function);
+une_interpreter__(une_interpret_builtin);
+une_interpreter__(une_interpret_stmts);
+une_interpreter__(une_interpret_cop);
+une_interpreter__(une_interpret_not);
+une_interpreter__(une_interpret_and);
+une_interpreter__(une_interpret_or);
+une_interpreter__(une_interpret_equ);
+une_interpreter__(une_interpret_neq);
+une_interpreter__(une_interpret_gtr);
+une_interpreter__(une_interpret_geq);
+une_interpreter__(une_interpret_lss);
+une_interpreter__(une_interpret_leq);
+une_interpreter__(une_interpret_add);
+une_interpreter__(une_interpret_sub);
+une_interpreter__(une_interpret_mul);
+une_interpreter__(une_interpret_div);
+une_interpreter__(une_interpret_fdiv);
+une_interpreter__(une_interpret_mod);
+une_interpreter__(une_interpret_pow);
+une_interpreter__(une_interpret_neg);
+une_interpreter__(une_interpret_set);
+une_interpreter__(une_interpret_set_idx);
+une_interpreter__(une_interpret_get);
+une_interpreter__(une_interpret_get_idx);
+une_interpreter__(une_interpret_call);
+une_interpreter__(une_interpret_for);
+une_interpreter__(une_interpret_while);
+une_interpreter__(une_interpret_if);
+une_interpreter__(une_interpret_continue);
+une_interpreter__(une_interpret_break);
+une_interpreter__(une_interpret_return);
+une_interpreter__(une_interpret_exit);
 
 #endif /* !UNE_INTERPRETER_H */

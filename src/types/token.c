@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -83,12 +83,12 @@ void une_token_free(une_token token)
   
   /* Free members. */
   switch (token.type) {
-    
     case UNE_TT_ID:
     case UNE_TT_STR:
       free(token.value._wcs);
       break;
-  
+    default:
+      break;
   }
 }
 
@@ -118,7 +118,7 @@ void une_tokens_free(une_token *tokens)
 /*
 Return a text representation of a une_token_type.
 */
-__une_static const wchar_t *une_token_type_to_wcs(une_token_type type)
+une_static__ const wchar_t *une_token_type_to_wcs(une_token_type type)
 {
   assert(UNE_TOKEN_TYPE_IS_VALID(type));
   
@@ -134,12 +134,12 @@ environment, but since it is only used for debugging, I'm
 leaving this vulnerability in here.
 */
 #ifdef UNE_DEBUG
-__une_static wchar_t *une_token_to_wcs(une_token token)
+une_static__ wchar_t *une_token_to_wcs(une_token token)
 {
   /* Write token type. */
   wchar_t *str = malloc(UNE_SIZE_TOKEN_AS_WCS*sizeof(*str));
   verify(str);
-  size_t str_len = 0;
+  int str_len = 0;
   str_len += swprintf(str, UNE_SIZE_TOKEN_AS_WCS, UNE_COLOR_TOKEN_TYPE);
   
   assert(UNE_TOKEN_TYPE_IS_VALID(token.type));

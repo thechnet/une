@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2022-07-26
+Modified 2022-08-04
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -119,15 +119,15 @@ Modified 2022-07-26
 *** Types.
 */
 typedef int64_t une_int;
-typedef uint64_t _une_uint;
+typedef uint64_t une_uint;
 typedef double une_flt;
 
-typedef struct _une_position {
+typedef struct une_position_ {
   size_t start;
   size_t end;
 } une_position;
 
-typedef union _une_value {
+typedef union une_value_ {
   une_int _int;
   une_flt _flt;
   wchar_t *_wcs;
@@ -160,9 +160,9 @@ typedef union _une_value {
 *** Miscellaneous.
 */
 #ifndef UNE_DEBUG
-#define __une_static static
+#define une_static__ static
 #else
-#define __une_static
+#define une_static__
 #endif
 
 #endif /* !UNE_PRIMITIVE_H */

@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 #ifndef UNE_TOKEN_H
@@ -12,8 +12,8 @@ Modified 2022-05-29
 /*
 Type of une_token.
 */
-typedef enum _une_token_type {
-  __UNE_TT_none__, /* Undefined token type. */
+typedef enum une_token_type_ {
+  UNE_TT_none__, /* Undefined token type. */
   
   UNE_TT_INT,
   UNE_TT_FLT,
@@ -71,13 +71,13 @@ typedef enum _une_token_type {
   UNE_TT_FUNCTION,
   UNE_TT_BUILTIN,
   
-  __UNE_TT_max__,
+  UNE_TT_max__,
 } une_token_type;
 
 /*
 Holds information about a lexical token.
 */
-typedef struct _une_token {
+typedef struct une_token_ {
   une_token_type type;
   une_position pos;
   une_value value;
@@ -91,15 +91,15 @@ typedef struct _une_token {
 Condition to check whether a une_token_type is valid.
 */
 #define UNE_TOKEN_TYPE_IS_VALID(type)\
-  (type > __UNE_TT_none__ && type < __UNE_TT_max__)
+  (type > UNE_TT_none__ && type < UNE_TT_max__)
 
 une_token une_token_create(une_token_type type);
 void une_token_free(une_token token);
 void une_tokens_free(une_token *tokens);
 
 #ifdef UNE_DEBUG
-__une_static const wchar_t *une_token_type_to_wcs(une_token_type type);
-__une_static wchar_t *une_token_to_wcs(une_token token);
+une_static__ const wchar_t *une_token_type_to_wcs(une_token_type type);
+une_static__ wchar_t *une_token_to_wcs(une_token token);
 void une_tokens_display(une_token *tokens);
 #endif /* UNE_DEBUG */
 

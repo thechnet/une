@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2021-10-17
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -39,7 +39,7 @@ une_error une_error_create(void)
       .start = 0,
       .end = 0
     },
-    .type = __UNE_ET_none__,
+    .type = UNE_ET_none__,
     .meta_line = 0,
     .meta_file = NULL
   };
@@ -48,11 +48,11 @@ une_error une_error_create(void)
 /*
 Get error message for error type.
 */
-__une_static const wchar_t *une_error_type_to_wcs(une_error_type type)
+une_static__ const wchar_t *une_error_type_to_wcs(une_error_type type)
 {
   /* Ensure error type is within bounds. */
   if (!UNE_ERROR_TYPE_IS_VALID(type))
-    type = __UNE_ET_max__;
+    type = UNE_ET_max__;
 
   return une_error_message_table[type];
 }
@@ -61,18 +61,18 @@ __une_static const wchar_t *une_error_type_to_wcs(une_error_type type)
 Display error.
 */
 
-UNE_ISTREAM_ARRAY_PULLER_VAL(__une_error_display_array_pull, wint_t, wchar_t, WEOF, true)
-UNE_ISTREAM_ARRAY_ACCESS_VAL(__une_error_display_array_now, wint_t, wchar_t, WEOF, true)
-UNE_ISTREAM_ARRAY_PEEKER_VAL(__une_error_display_array_peek, wint_t, wchar_t, WEOF, true)
-UNE_ISTREAM_WFILE_PULLER(__une_error_display_wfile_pull)
-UNE_ISTREAM_WFILE_ACCESS(__une_error_display_wfile_now)
-UNE_ISTREAM_WFILE_PEEKER(__une_error_display_wfile_peek)
-UNE_OSTREAM_PUSHER(__une_error_display_ctx_push, une_context*)
+UNE_ISTREAM_ARRAY_PULLER_VAL(une_error_display_array_pull__, wint_t, wchar_t, WEOF, true)
+UNE_ISTREAM_ARRAY_ACCESS_VAL(une_error_display_array_now__, wint_t, wchar_t, WEOF, true)
+UNE_ISTREAM_ARRAY_PEEKER_VAL(une_error_display_array_peek__, wint_t, wchar_t, WEOF, true)
+UNE_ISTREAM_WFILE_PULLER(une_error_display_wfile_pull__)
+UNE_ISTREAM_WFILE_ACCESS(une_error_display_wfile_now__)
+UNE_ISTREAM_WFILE_PEEKER(une_error_display_wfile_peek__)
+UNE_OSTREAM_PUSHER(une_error_display_ctx_push__, une_context*)
 
 void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_state *is)
 {
   /* Setup. */
-  int invisible_characters = 0;
+  size_t invisible_characters = 0;
   une_istream text;
   wint_t (*pull)(une_istream*);
   wint_t (*peek)(une_istream*, ptrdiff_t);
@@ -90,7 +90,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   verify(contexts);
   une_ostream s_contexts = une_ostream_create((void*)contexts, UNE_SIZE_EXPECTED_TRACEBACK_DEPTH, sizeof(*contexts), true);
   contexts = NULL; /* This pointer can turn stale after pushing. */
-  void (*push)(une_ostream*, une_context*) = &__une_error_display_ctx_push;
+  void (*push)(une_ostream*, une_context*) = &une_error_display_ctx_push__;
   une_context *current_context = is->context;
   push(&s_contexts, NULL);
   while (current_context != NULL) {
@@ -104,15 +104,15 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   /* Setup stream. */
   if (ls->read_from_file) {
     text = une_istream_wfile_create(ls->path);
-    pull = &__une_error_display_wfile_pull;
-    peek = &__une_error_display_wfile_peek;
-    now = &__une_error_display_wfile_now;
+    pull = &une_error_display_wfile_pull__;
+    peek = &une_error_display_wfile_peek__;
+    now = &une_error_display_wfile_now__;
     reset = &une_istream_wfile_reset;
   } else {
     text = une_istream_array_create((void*)ls->text, wcslen(ls->text));
-    pull = &__une_error_display_array_pull;
-    peek = &__une_error_display_array_peek;
-    now = &__une_error_display_array_now;
+    pull = &une_error_display_array_pull__;
+    peek = &une_error_display_array_peek__;
+    now = &une_error_display_array_now__;
     reset = &une_istream_array_reset;
   }
 
@@ -141,7 +141,8 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
     }
     
     /* Compute line number. */
-    int line = 1, line_begin = 0, line_end = 0;
+    int line = 1;
+    size_t line_begin = 0, line_end = 0;
     assert(position.start != position.end);
     reset(&text);
     while (true) {
@@ -152,13 +153,13 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
       if (text.index >= (ptrdiff_t)position.start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
         break;
       if (now(&text) == L'\n') {
-        line_begin = text.index+1;
+        line_begin = (size_t)text.index+1;
         if (main_context)
           invisible_characters = 0;
         line++;
       }
     }
-    line_end = text.index;
+    line_end = (size_t)text.index;
     /* Print position. */
     if (main_context) {
       error_line.start = line_begin;

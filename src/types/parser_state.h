@@ -1,6 +1,6 @@
 /*
 parser_state.h - Une
-Modified 2021-07-05
+Modified 2022-08-04
 */
 
 #ifndef UNE_PARSER_STATE_H
@@ -15,7 +15,7 @@ Modified 2021-07-05
 /*
 Holds the state of the parser.
 */
-typedef struct _une_parser_state {
+typedef struct une_parser_state_ {
   size_t loop_level;
   une_istream in;
   une_node (*pull)(une_istream*);

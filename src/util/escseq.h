@@ -1,6 +1,6 @@
 /*
 escseq.h - ANSI Escape Sequences
-Modified 2021-08-13
+Modified 2022-08-04
 */
 
 /* https://en.wikipedia.org/wiki/ANSI_escape_code */
@@ -13,15 +13,15 @@ Modified 2021-08-13
 #define ESCSEQ_ENABLE
 
 #ifdef ESCSEQ_WIDE
-#define __ESCSEQ_WIDTH L""
+#define ESCSEQ_WIDTH__ L""
 #else
-#define __ESCSEQ_WIDTH ""
+#define ESCSEQ_WIDTH__ ""
 #endif
 
 #ifdef ESCSEQ_ENABLE
-#define __ESCSEQ(sequence) __ESCSEQ_WIDTH sequence
+#define ESCSEQ__(sequence) ESCSEQ_WIDTH__ sequence
 #else
-#define __ESCSEQ(sequence) __ESCSEQ_WIDTH
+#define ESCSEQ__(sequence) ESCSEQ_WIDTH__
 #endif
 
 /*
@@ -67,13 +67,13 @@ Colors
 /*
 Introducers
 */
-#define ESC(sequence) __ESCSEQ("\33" sequence) /* Escape Code */
+#define ESC(sequence) ESCSEQ__("\33" sequence) /* Escape Code */
 #define CSI(sequence) ESC("[" sequence) /* Control Sequence Introducer */
-#define __SGR(n) CSI(#n "m") /* SGR Base */
-#define SGR(n) __SGR(n) /* Select Graphic Rendition */
-#define __OSC(n, sequence) ESC("]" #n ";" sequence "\a") /* OSC Base */
-#define OSC(n, sequence) __OSC(n, sequence) /* Operating System Command */
-#define COLOR_STR(color) __ESCSEQ(#color) /* Stringize Color */
+#define SGR__(n) CSI(#n "m") /* SGR Base */
+#define SGR(n) SGR__(n) /* Select Graphic Rendition */
+#define OSC__(n, sequence) ESC("]" #n ";" sequence "\a") /* OSC Base */
+#define OSC(n, sequence) OSC__(n, sequence) /* Operating System Command */
+#define COLOR_STR(color) ESCSEQ__(#color) /* Stringize Color */
 
 /*
 Simple Cursor Positioning

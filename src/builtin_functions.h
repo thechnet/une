@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 #ifndef UNE_BUILTIN_H
@@ -12,10 +12,10 @@ Modified 2022-05-29
 #include "types/error.h"
 #include "types/interpreter_state.h"
 
-#define __une_builtin_fn_sign(__id) une_result (__id)(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args)
+#define une_builtin_fn_sign__(id__) une_result (id__)(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args)
 
 typedef const int une_builtin_param;
-typedef __une_builtin_fn_sign(*une_builtin_fnptr);
+typedef une_builtin_fn_sign__(*une_builtin_fnptr);
 
 /*
 *** Interface.
@@ -45,18 +45,18 @@ Every built-in function.
 /*
 The index of a built-in function.
 */
-typedef enum _une_builtin_function {
-  __UNE_BUILTIN_none__,
-  #define __BUILTIN_FUNCTION(__id) UNE_BUILTIN_##__id,
-  UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_FUNCTION)
-  #undef __BUILTIN_FUNCTION
-  __UNE_BUILTIN_max__,
+typedef enum une_builtin_function_ {
+  UNE_BUILTIN_none__,
+  #define BUILTIN_FUNCTION__(id__) UNE_BUILTIN_##id__,
+  UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_FUNCTION__)
+  #undef BUILTIN_FUNCTION__
+  UNE_BUILTIN_max__,
 } une_builtin_function;
 
 /*
 Built-in function template.
 */
-#define __une_builtin_fn(__id) __une_builtin_fn_sign(une_builtin_fn_##__id)
+#define une_builtin_fn__(id__) une_builtin_fn_sign__(une_builtin_fn_##id__)
 
 /*
 Get the position of an argument.
@@ -68,16 +68,16 @@ Get the position of an argument.
 Ensure an argument has the correct type.
 */
 #define UNE_BUILTIN_VERIFY_ARG_TYPE(index, expected_type) \
-  if (args[index].type != expected_type) {\
+  do if (args[index].type != expected_type) {\
     *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(index));\
     return une_result_create(UNE_RT_ERROR);\
-  }
+  } while(false)
 
 /*
 Verify that a une_builtin_function is valid.
 */
 #define UNE_BUILTIN_FUNCTION_IS_VALID(function) \
-  (function > __UNE_BUILTIN_none__ && function < __UNE_BUILTIN_max__)
+  (function > UNE_BUILTIN_none__ && function < UNE_BUILTIN_max__)
 
 size_t une_builtin_params_count(une_builtin_function function);
 une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function);
@@ -87,8 +87,8 @@ une_builtin_function une_builtin_wcs_to_function(wchar_t *wcs);
 const wchar_t *une_builtin_function_to_wcs(une_builtin_function function);
 #endif /* UNE_DEBUG */
 
-#define __BUILTIN_DECLARATION(__id) __une_builtin_fn(__id);
-UNE_ENUMERATE_BUILTIN_FUNCTIONS(__BUILTIN_DECLARATION)
-#undef __BUILTIN_DECLARATION
+#define BUILTIN_DECLARATION__(id__) une_builtin_fn__(id__);
+UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_DECLARATION__)
+#undef BUILTIN_DECLARATION__
 
 #endif /* UNE_BUILTIN_H */

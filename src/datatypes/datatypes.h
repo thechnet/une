@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2021-08-11
+Modified 2022-08-04
 */
 
 #ifndef UNE_DATATYPES_H
@@ -20,7 +20,7 @@ Modified 2021-08-11
 /*
 Holds all the functionality a datatype can define.
 */
-typedef struct _une_datatype {
+typedef struct une_datatype_ {
   une_result_type type;
   
   une_result (*as_int)(une_result);

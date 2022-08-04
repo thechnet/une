@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -15,9 +15,9 @@ Modified 2022-05-29
 Public parser interface.
 */
 
-UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token, une_token_create(__UNE_TT_none__), false)
-UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token, une_token_create(__UNE_TT_none__), false)
-UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token, une_token_create(__UNE_TT_none__), false)
+UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token, une_token_create(UNE_TT_none__), false)
+UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token, une_token_create(UNE_TT_none__), false)
+UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token, une_token_create(UNE_TT_none__), false)
 
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 {
@@ -27,13 +27,13 @@ une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 
   LOGPARSE(L"", now(&ps->in));
   
-  return une_parse_sequence(error, ps, UNE_NT_STMTS, __UNE_TT_none__, UNE_TT_NEW, UNE_TT_EOF, &une_parse_stmt);
+  return une_parse_sequence(error, ps, UNE_NT_STMTS, UNE_TT_none__, UNE_TT_NEW, UNE_TT_EOF, &une_parse_stmt);
 }
 
 /*
 Parse statement.
 */
-__une_parser(une_parse_stmt)
+une_parser__(une_parse_stmt)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -60,15 +60,16 @@ __une_parser(une_parse_stmt)
     case UNE_TT_EXIT:
       return une_parse_exit(error, ps);
     default:
-      return une_parse_set_expstmt(error, ps);
+      break;
   }
-
+  
+  return une_parse_set_expstmt(error, ps);
 }
 
 /*
 Parse id.
 */
-__une_parser(une_parse_id)
+une_parser__(une_parse_id)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -87,7 +88,7 @@ __une_parser(une_parse_id)
 /*
 Parse block.
 */
-__une_parser(une_parse_block)
+une_parser__(une_parse_block)
 {
   return une_parse_sequence(error, ps, UNE_NT_STMTS, UNE_TT_LBRC, UNE_TT_NEW, UNE_TT_RBRC, &une_parse_stmt);
 }
@@ -95,7 +96,7 @@ __une_parser(une_parse_block)
 /*
 Parse expression.
 */
-__une_parser(une_parse_expression)
+une_parser__(une_parse_expression)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -145,7 +146,7 @@ __une_parser(une_parse_expression)
 /*
 Parse and/or.
 */
-__une_parser(une_parse_and_or)
+une_parser__(une_parse_and_or)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -161,7 +162,7 @@ __une_parser(une_parse_and_or)
 /*
 Parse condition.
 */
-__une_parser(une_parse_condition)
+une_parser__(une_parse_condition)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -182,7 +183,7 @@ __une_parser(une_parse_condition)
 /*
 Parse add/sub.
 */
-__une_parser(une_parse_add_sub)
+une_parser__(une_parse_add_sub)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -198,7 +199,7 @@ __une_parser(une_parse_add_sub)
 /*
 Parse term.
 */
-__une_parser(une_parse_term)
+une_parser__(une_parse_term)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -214,7 +215,7 @@ __une_parser(une_parse_term)
 /*
 Parse negation.
 */
-__une_parser(une_parse_negation)
+une_parser__(une_parse_negation)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -226,7 +227,7 @@ __une_parser(une_parse_negation)
 /*
 Parse power.
 */
-__une_parser(une_parse_power)
+une_parser__(une_parse_power)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -242,7 +243,7 @@ __une_parser(une_parse_power)
 /*
 Parse index or call.
 */
-__une_parser(une_parse_index_or_call)
+une_parser__(une_parse_index_or_call)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -311,6 +312,9 @@ __une_parser(une_parse_index_or_call)
         continue;
       }
       
+      default:
+        break;
+      
     }
     break;
   }
@@ -321,7 +325,7 @@ __une_parser(une_parse_index_or_call)
 /*
 Parse atom.
 */
-__une_parser(une_parse_atom)
+une_parser__(une_parse_atom)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -369,16 +373,18 @@ __une_parser(une_parse_atom)
     }
     
     default:
-      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
-      return NULL;
+      break;
   
   }
+  
+  *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+  return NULL;
 }
 
 /*
 Parse integer.
 */
-__une_parser(une_parse_int)
+une_parser__(une_parse_int)
 {
   LOGPARSE(L"int", now(&ps->in));
   une_node *num = une_node_create(UNE_NT_INT);
@@ -391,7 +397,7 @@ __une_parser(une_parse_int)
 /*
 Parse floating point number.
 */
-__une_parser(une_parse_flt)
+une_parser__(une_parse_flt)
 {
   LOGPARSE(L"flt", now(&ps->in));
   une_node *num = une_node_create(UNE_NT_FLT);
@@ -404,7 +410,7 @@ __une_parser(une_parse_flt)
 /*
 Parse string.
 */
-__une_parser(une_parse_str)
+une_parser__(une_parse_str)
 {
   LOGPARSE(L"str", now(&ps->in));
   une_node *str = une_node_create(UNE_NT_STR);
@@ -419,7 +425,7 @@ __une_parser(une_parse_str)
 /*
 Parse variable.
 */
-__une_parser(une_parse_get)
+une_parser__(une_parse_get)
 {
   LOGPARSE(L"get", now(&ps->in));
   une_node *id = une_parse_id(error, ps);
@@ -433,7 +439,7 @@ __une_parser(une_parse_get)
 /*
 Parse builtin-function.
 */
-__une_parser(une_parse_builtin)
+une_parser__(une_parse_builtin)
 {
   if (!UNE_BUILTIN_FUNCTION_IS_VALID(now(&ps->in).value._int))
     return NULL;
@@ -448,7 +454,7 @@ __une_parser(une_parse_builtin)
 /*
 Parse list.
 */
-__une_parser(une_parse_list)
+une_parser__(une_parse_list)
 {
   LOGPARSE(L"list", now(&ps->in));
   
@@ -458,7 +464,7 @@ __une_parser(une_parse_list)
 /*
 Parse function.
 */
-__une_parser(une_parse_function)
+une_parser__(une_parse_function)
 {
   LOGPARSE(L"function", now(&ps->in));
   
@@ -493,7 +499,7 @@ __une_parser(une_parse_function)
 /*
 Parse 'for' loop.
 */
-__une_parser(une_parse_for)
+une_parser__(une_parse_for)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -565,7 +571,7 @@ __une_parser(une_parse_for)
 /*
 Parse 'while' loop.
 */
-__une_parser(une_parse_while)
+une_parser__(une_parse_while)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -601,7 +607,7 @@ __une_parser(une_parse_while)
 /*
 Parse 'if' statement.
 */
-__une_parser(une_parse_if)
+une_parser__(une_parse_if)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -626,7 +632,7 @@ __une_parser(une_parse_if)
      creates an entirely new if node where this stmt then removes
      whitespace in front of 'else'.
      */
-  size_t _token_index = ps->in.index; /* Here we skip over whitespace expecting
+  ptrdiff_t _token_index = ps->in.index; /* Here we skip over whitespace expecting
                                          an elif or else clause. If we don't
                                          find one, however, we have now skipped
                                          the whitespace that tells
@@ -670,7 +676,7 @@ __une_parser(une_parse_if)
 /*
 Parse continue.
 */
-__une_parser(une_parse_continue)
+une_parser__(une_parse_continue)
 {
   if (ps->loop_level == 0) {
     *error = UNE_ERROR_SET(UNE_ET_CONTINUE_OUTSIDE_LOOP, now(&ps->in).pos);
@@ -685,7 +691,7 @@ __une_parser(une_parse_continue)
 /*
 Parse break.
 */
-__une_parser(une_parse_break)
+une_parser__(une_parse_break)
 {
   if (ps->loop_level == 0) {
     *error = UNE_ERROR_SET(UNE_ET_BREAK_OUTSIDE_LOOP, now(&ps->in).pos);
@@ -700,7 +706,7 @@ __une_parser(une_parse_break)
 /*
 Parse 'return' statement.
 */
-__une_parser(une_parse_return)
+une_parser__(une_parse_return)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -729,7 +735,7 @@ __une_parser(une_parse_return)
 /*
 Parse 'exit' statement.
 */
-__une_parser(une_parse_exit)
+une_parser__(une_parse_exit)
 {
   LOGPARSE(L"", now(&ps->in));
   
@@ -758,7 +764,7 @@ __une_parser(une_parse_exit)
 /*
 Parse set/expression statement.
 */
-__une_parser(une_parse_set_expstmt)
+une_parser__(une_parse_set_expstmt)
 {
   /* Check for global variable definition. */
   bool global = false;
@@ -769,7 +775,7 @@ __une_parser(une_parse_set_expstmt)
   
   /* Check for variable definition. */
   if (now(&ps->in).type == UNE_TT_ID) {
-    size_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable definition. */
+    ptrdiff_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable definition. */
 
     une_node *target = une_parse_id(error, ps);
     if (target == NULL)
@@ -829,7 +835,7 @@ __une_parser(une_parse_set_expstmt)
 /*
 Parse unary operation.
 */
-__une_parser(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)(une_error*, une_parser_state*)
+une_parser__(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)(une_error*, une_parser_state*)
 )
 {
   LOGPARSE(L"", now(&ps->in));
@@ -854,7 +860,7 @@ __une_parser(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)
 /*
 Parse binary operation.
 */
-__une_parser(une_parse_binary_operation,
+une_parser__(une_parse_binary_operation,
   une_token_type range_begin_tt,
   une_node_type range_begin_nt,
   une_token_type range_end_tt,
@@ -870,7 +876,7 @@ __une_parser(une_parse_binary_operation,
 
   while (now(&ps->in).type >= range_begin_tt && now(&ps->in).type <= range_end_tt)
   {
-    une_node_type type = range_begin_nt+now(&ps->in).type-range_begin_tt;
+    une_node_type type = range_begin_nt+(une_node_type)(now(&ps->in).type-range_begin_tt);
 
     pull(&ps->in);
 
@@ -896,7 +902,7 @@ __une_parser(une_parse_binary_operation,
 /*
 Parse sequence.
 */
-__une_parser(une_parse_sequence,
+une_parser__(une_parse_sequence,
   une_node_type node_type,
   une_token_type tt_begin, une_token_type tt_end_of_item, une_token_type tt_end,
   une_node *(*parser)(une_error*, une_parser_state*)
@@ -906,7 +912,7 @@ __une_parser(une_parse_sequence,
   
   /* Begin Sequence. */
   size_t pos_start = now(&ps->in).pos.start;
-  if (tt_begin != __UNE_TT_none__) {
+  if (tt_begin != UNE_TT_none__) {
     if (now(&ps->in).type != tt_begin) {
       *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
       return NULL;
@@ -968,7 +974,7 @@ __une_parser(une_parse_sequence,
 
   /* CREATE NODE. */
   une_node *counter = une_node_create(UNE_NT_SIZE);
-  counter->content.value._int = sequence_index-1;
+  counter->content.value._int = (une_int)sequence_index-1;
   sequence[0] = counter;
   une_node *node = une_node_create(node_type);
   node->pos = (une_position){

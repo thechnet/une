@@ -1,6 +1,6 @@
 /*
 memdbg.h - Une
-Modified 2021-08-22
+Modified 2022-08-04
 */
 
 #ifndef MEMDBG_H
@@ -20,18 +20,18 @@ implementation from mapping to themselves.
 #define free(memory) memdbg_free(__FILE__, __LINE__, memory)
 
 /* Manual functionality. */
-#define padchk(memory) __memdbg_allocations_padding_check(__FILE__, __LINE__)
+#define padchk(memory) memdbg_allocations_padding_check__(__FILE__, __LINE__)
 #define ARR(arr, idx)\
-  (*(typeof(arr[0])*)__memdbg_array_check(__FILE__, __LINE__, (char*)arr, sizeof(arr), sizeof(arr[0]), idx))
+  (*(typeof(arr[0])*)memdbg_array_check__(__FILE__, __LINE__, (char*)arr, sizeof(arr), sizeof(arr[0]), idx))
 
 /* Wrappers. */
-#define strdup(str) __memdbg_strdup(__FILE__, __LINE__, str)
-#define wcsdup(wcs) __memdbg_wcsdup(__FILE__, __LINE__, wcs)
-#define fopen(path, mode) __memdbg_fopen(__FILE__, __LINE__, path, mode)
-#define fclose(fp) __memdbg_fclose(__FILE__, __LINE__, fp)
+#define strdup(str) memdbg_strdup__(__FILE__, __LINE__, str)
+#define wcsdup(wcs) memdbg_wcsdup__(__FILE__, __LINE__, wcs)
+#define fopen(path, mode) memdbg_fopen__(__FILE__, __LINE__, path, mode)
+#define fclose(fp) memdbg_fclose__(__FILE__, __LINE__, fp)
 
 #undef memset
-#define memset(str, c, n) __memdbg_memset(__FILE__, __LINE__, str, c, n);
+#define memset(str, c, n) memdbg_memset__(__FILE__, __LINE__, str, c, n);
 
 #else /* MEMDBG_ENABLE */
 

@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2022-05-29
+Modified 2022-08-04
 */
 
 /* Header-specific includes. */
@@ -16,7 +16,7 @@ Modified 2022-05-29
 /*
 Interpreter function lookup table.
 */
-__une_interpreter(*__interpreter_table[]) = {
+une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_int,
   &une_interpret_flt,
   &une_interpret_str,
@@ -65,13 +65,13 @@ une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *
   
   LOGINTERPRET(une_node_type_to_wcs(node->type));
   
-  return __interpreter_table[(node->type)-UNE_R_BGN_LUT_NODES](error, is, node);
+  return interpreter_table__[(node->type)-UNE_R_BGN_LUT_NODES](error, is, node);
 }
 
 /*
 Interpret a une_node, expecting a specific une_result_type.
 */
-__une_interpreter(une_interpret_as, une_result_type type)
+une_interpreter__(une_interpret_as, une_result_type type)
 {
   une_result result = une_interpret(error, is, node);
   if (result.type != type && result.type != UNE_RT_ERROR) {
@@ -85,7 +85,7 @@ __une_interpreter(une_interpret_as, une_result_type type)
 /*
 Interpret a UNE_NT_INT une_node.
 */
-__une_interpreter(une_interpret_int)
+une_interpreter__(une_interpret_int)
 {
   return (une_result){
     .type = UNE_RT_INT,
@@ -96,7 +96,7 @@ __une_interpreter(une_interpret_int)
 /*
 Interpret a UNE_NT_FLT une_node.
 */
-__une_interpreter(une_interpret_flt)
+une_interpreter__(une_interpret_flt)
 {
   return (une_result){
     .type = UNE_RT_FLT,
@@ -107,7 +107,7 @@ __une_interpreter(une_interpret_flt)
 /*
 Interpret a UNE_NT_STR une_node.
 */
-__une_interpreter(une_interpret_str)
+une_interpreter__(une_interpret_str)
 {
   /* DOC: Memory Management: Here we can see that results DUPLICATE strings. */
   une_result result = {
@@ -121,7 +121,7 @@ __une_interpreter(une_interpret_str)
 /*
 Interpret a UNE_NT_LIST une_node.
 */
-__une_interpreter(une_interpret_list)
+une_interpreter__(une_interpret_list)
 {
   UNE_UNPACK_NODE_LIST(node, list, list_size);
 
@@ -148,7 +148,7 @@ __une_interpreter(une_interpret_list)
 /*
 Interpret a UNE_NT_FUNCTION une_node.
 */
-__une_interpreter(une_interpret_function)
+une_interpreter__(une_interpret_function)
 {
   UNE_UNPACK_NODE_LIST(node->content.branch.a, params_n, params_count);
   size_t function = une_function_create(is, (char*)node->content.branch.c, node->pos);
@@ -173,7 +173,7 @@ __une_interpreter(une_interpret_function)
 /*
 Interpret a UNE_NT_BUILTIN une_node.
 */
-__une_interpreter(une_interpret_builtin)
+une_interpreter__(une_interpret_builtin)
 {
   return (une_result){
     .type = UNE_RT_BUILTIN,
@@ -184,31 +184,31 @@ __une_interpreter(une_interpret_builtin)
 /*
 Interpret a UNE_NT_STMTS une_node.
 */
-__une_interpreter(une_interpret_stmts)
+une_interpreter__(une_interpret_stmts)
 {
-  une_result _result = une_result_create(UNE_RT_VOID);
+  une_result result_ = une_result_create(UNE_RT_VOID);
 
   UNE_UNPACK_NODE_LIST(node, nodes, nodes_size);
 
   UNE_FOR_NODE_LIST_ITEM(i, nodes_size) {
     /* Free previous result. */
-    une_result_free(_result);
+    une_result_free(result_);
     
     /* Interpret statement. */
-    _result = une_interpret(error, is, nodes[i]);
+    result_ = une_interpret(error, is, nodes[i]);
     
     /* Return if required. */
-    if (_result.type == UNE_RT_ERROR || _result.type == UNE_RT_CONTINUE || _result.type == UNE_RT_BREAK || is->should_return || is->should_exit)
-      return _result;
+    if (result_.type == UNE_RT_ERROR || result_.type == UNE_RT_CONTINUE || result_.type == UNE_RT_BREAK || is->should_return || is->should_exit)
+      return result_;
   }
   
-  return _result; /* Return last result. */
+  return result_; /* Return last result. */
 }
 
 /*
 Interpret a UNE_NT_COP une_node.
 */
-__une_interpreter(une_interpret_cop)
+une_interpreter__(une_interpret_cop)
 {
   /* Evaluate condition. */
   une_result condition = une_interpret(error, is, node->content.branch.a);
@@ -228,7 +228,7 @@ __une_interpreter(une_interpret_cop)
 /*
 Interpret a UNE_NT_NOT une_node.
 */
-__une_interpreter(une_interpret_not)
+une_interpreter__(une_interpret_not)
 {
   /* Evaluate expression. */
   une_result center = une_interpret(error, is, node->content.branch.a);
@@ -248,7 +248,7 @@ __une_interpreter(une_interpret_not)
 /*
 Interpret a UNE_NT_AND une_node.
 */
-__une_interpreter(une_interpret_and)
+une_interpreter__(une_interpret_and)
 {
   /* Check if branch A is true. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -263,7 +263,7 @@ __une_interpreter(une_interpret_and)
 /*
 Interpret a UNE_NT_OR une_node.
 */
-__une_interpreter(une_interpret_or)
+une_interpreter__(une_interpret_or)
 {
   /* Check if branch A is true. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -278,7 +278,7 @@ __une_interpreter(une_interpret_or)
 /*
 Interpret a UNE_NT_EQU une_node.
 */
-__une_interpreter(une_interpret_equ)
+une_interpreter__(une_interpret_equ)
 {
   /* Evalute branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -304,7 +304,7 @@ __une_interpreter(une_interpret_equ)
 /*
 Interpret a UNE_NT_NEQ une_node.
 */
-__une_interpreter(une_interpret_neq)
+une_interpreter__(une_interpret_neq)
 {
   une_result equ = une_interpret_equ(error, is, node);
   if (equ.type == UNE_RT_ERROR)
@@ -317,7 +317,7 @@ __une_interpreter(une_interpret_neq)
 /*
 Interpret a UNE_NT_GTR une_node.
 */
-__une_interpreter(une_interpret_gtr)
+une_interpreter__(une_interpret_gtr)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -348,7 +348,7 @@ __une_interpreter(une_interpret_gtr)
 /*
 Interpret a UNE_NT_GEQ une_node.
 */
-__une_interpreter(une_interpret_geq)
+une_interpreter__(une_interpret_geq)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -379,7 +379,7 @@ __une_interpreter(une_interpret_geq)
 /*
 Interpret a UNE_NT_LSS une_node.
 */
-__une_interpreter(une_interpret_lss)
+une_interpreter__(une_interpret_lss)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -410,7 +410,7 @@ __une_interpreter(une_interpret_lss)
 /*
 Interpret a UNE_NT_LEQ une_node.
 */
-__une_interpreter(une_interpret_leq)
+une_interpreter__(une_interpret_leq)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -441,7 +441,7 @@ __une_interpreter(une_interpret_leq)
 /*
 Interpret a UNE_NT_ADD une_node.
 */
-__une_interpreter(une_interpret_add)
+une_interpreter__(une_interpret_add)
 {
   /* Evalute branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -453,7 +453,7 @@ __une_interpreter(une_interpret_add)
     return right;
   }
   
-  une_result sum = une_result_create(__UNE_RT_none__);
+  une_result sum = une_result_create(UNE_RT_none__);
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
   if (dt_left.add != NULL)
     sum = dt_left.add(left, right);
@@ -469,7 +469,7 @@ __une_interpreter(une_interpret_add)
 /*
 Interpret a UNE_NT_SUB une_node.
 */
-__une_interpreter(une_interpret_sub)
+une_interpreter__(une_interpret_sub)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -481,7 +481,7 @@ __une_interpreter(une_interpret_sub)
     return right;
   }
   
-  une_result difference = une_result_create(__UNE_RT_none__);
+  une_result difference = une_result_create(UNE_RT_none__);
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
   if (dt_left.sub != NULL)
     difference = dt_left.sub(left, right);
@@ -497,7 +497,7 @@ __une_interpreter(une_interpret_sub)
 /*
 Interpret a UNE_NT_MUL une_node.
 */
-__une_interpreter(une_interpret_mul)
+une_interpreter__(une_interpret_mul)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -509,7 +509,7 @@ __une_interpreter(une_interpret_mul)
     return right;
   }
   
-  une_result product = une_result_create(__UNE_RT_none__);
+  une_result product = une_result_create(UNE_RT_none__);
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
   if (dt_left.mul != NULL)
     product = dt_left.mul(left, right);
@@ -525,7 +525,7 @@ __une_interpreter(une_interpret_mul)
 /*
 Interpret a UNE_NT_DIV une_node.
 */
-__une_interpreter(une_interpret_div)
+une_interpreter__(une_interpret_div)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -537,7 +537,7 @@ __une_interpreter(une_interpret_div)
     return right;
   }
   
-  une_result quotient = une_result_create(__UNE_RT_none__);
+  une_result quotient = une_result_create(UNE_RT_none__);
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
   if (dt_left.div != NULL)
     quotient = dt_left.div(left, right);
@@ -547,7 +547,7 @@ __une_interpreter(une_interpret_div)
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     quotient = une_result_create(UNE_RT_ERROR);
   }
-  if (quotient.type == UNE_RT_FLT && quotient.value._flt == INFINITY) {
+  if (quotient.type == UNE_RT_FLT && isinf(quotient.value._flt)) {
     /* Zero division. */
     *error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, node->pos);
     quotient = une_result_create(UNE_RT_ERROR);
@@ -558,7 +558,7 @@ __une_interpreter(une_interpret_div)
 /*
 Interpret a UNE_NT_FDIV une_node.
 */
-__une_interpreter(une_interpret_fdiv)
+une_interpreter__(une_interpret_fdiv)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -570,7 +570,7 @@ __une_interpreter(une_interpret_fdiv)
     return right;
   }
   
-  une_result quotient = une_result_create(__UNE_RT_none__);
+  une_result quotient = une_result_create(UNE_RT_none__);
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
   if (dt_left.fdiv != NULL)
     quotient = dt_left.fdiv(left, right);
@@ -580,7 +580,7 @@ __une_interpreter(une_interpret_fdiv)
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     quotient = une_result_create(UNE_RT_ERROR);
   }
-  if (quotient.type == UNE_RT_FLT && quotient.value._flt == INFINITY) {
+  if (quotient.type == UNE_RT_FLT && isinf(quotient.value._flt)) {
     /* Zero division. */
     *error = UNE_ERROR_SET(UNE_ET_ZERO_DIVISION, node->pos);
     quotient = une_result_create(UNE_RT_ERROR);
@@ -591,7 +591,7 @@ __une_interpreter(une_interpret_fdiv)
 /*
 Interpret a UNE_NT_MOD une_node.
 */
-__une_interpreter(une_interpret_mod)
+une_interpreter__(une_interpret_mod)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -603,7 +603,7 @@ __une_interpreter(une_interpret_mod)
     return right;
   }
   
-  une_result remainder = une_result_create(__UNE_RT_none__);
+  une_result remainder = une_result_create(UNE_RT_none__);
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
   if (dt_left.mod != NULL)
     remainder = dt_left.mod(left, right);
@@ -619,7 +619,7 @@ __une_interpreter(une_interpret_mod)
 /*
 Interpret a UNE_NT_POW une_node.
 */
-__une_interpreter(une_interpret_pow)
+une_interpreter__(une_interpret_pow)
 {
   /* Evaluate branches. */
   une_result left = une_interpret(error, is, node->content.branch.a);
@@ -631,7 +631,7 @@ __une_interpreter(une_interpret_pow)
     return right;
   }
   
-  une_result raised = une_result_create(__UNE_RT_none__);
+  une_result raised = une_result_create(UNE_RT_none__);
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
   if (dt_left.pow != NULL)
     raised = dt_left.pow(left, right);
@@ -652,7 +652,7 @@ __une_interpreter(une_interpret_pow)
 /*
 Interpret a UNE_NT_NEG une_node.
 */
-__une_interpreter(une_interpret_neg)
+une_interpreter__(une_interpret_neg)
 {
   /* Evaluate branch. */
   une_result center = une_interpret(error, is, node->content.branch.a);
@@ -673,7 +673,7 @@ __une_interpreter(une_interpret_neg)
 /*
 Interpret a UNE_NT_SET une_node.
 */
-__une_interpreter(une_interpret_set)
+une_interpreter__(une_interpret_set)
 {
   /* Evaluate result. */
   une_result result = une_interpret(error, is, node->content.branch.b);
@@ -701,7 +701,7 @@ __une_interpreter(une_interpret_set)
 /*
 Interpret a UNE_NT_SET_IDX une_node.
 */
-__une_interpreter(une_interpret_set_idx)
+une_interpreter__(une_interpret_set_idx)
 {
   /* Get name of variable and global. */
   bool global = (bool)node->content.branch.d;
@@ -733,7 +733,7 @@ __une_interpreter(une_interpret_set_idx)
     if (!dt_var.is_valid_index(var->content, index))
       *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
   }
-  if (error->type != __UNE_ET_none__) {
+  if (error->type != UNE_ET_none__) {
     une_result_free(index);
     return une_result_create(UNE_RT_ERROR);
   }
@@ -750,7 +750,7 @@ __une_interpreter(une_interpret_set_idx)
 /*
 Interpret a UNE_NT_GET une_node.
 */
-__une_interpreter(une_interpret_get)
+une_interpreter__(une_interpret_get)
 {
   /* Get name of variable. */
   wchar_t *name = node->content.branch.a->content.value._wcs;
@@ -768,7 +768,7 @@ __une_interpreter(une_interpret_get)
 /*
 Interpret a UNE_NT_GET_IDX une_node.
 */
-__une_interpreter(une_interpret_get_idx)
+une_interpreter__(une_interpret_get_idx)
 {
   /* Get base. */
   une_result base = une_interpret(error, is, node->content.branch.a);
@@ -795,7 +795,7 @@ __une_interpreter(une_interpret_get_idx)
     if (!dt_base.is_valid_index(base, index))
       *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
   }
-  if (error->type != __UNE_ET_none__) {
+  if (error->type != UNE_ET_none__) {
     une_result_free(base);
     une_result_free(index);
     return une_result_create(UNE_RT_ERROR);
@@ -812,7 +812,7 @@ __une_interpreter(une_interpret_get_idx)
 /*
 Interpret a UNE_NT_CALL une_node.
 */
-__une_interpreter(une_interpret_call)
+une_interpreter__(une_interpret_call)
 {
   /* Get callable. */
   une_result callable = une_interpret(error, is, node->content.branch.a);
@@ -843,7 +843,7 @@ __une_interpreter(une_interpret_call)
 /*
 Interpret a UNE_NT_FOR une_node.
 */
-__une_interpreter(une_interpret_for)
+une_interpreter__(une_interpret_for)
 {
   /* Get range. */
   une_result result = une_interpret_as(error, is, node->content.branch.b, UNE_RT_INT);
@@ -894,7 +894,7 @@ __une_interpreter(une_interpret_for)
 /*
 Interpret a UNE_NT_WHILE une_node.
 */
-__une_interpreter(une_interpret_while)
+une_interpreter__(une_interpret_while)
 {
   une_result result, condition;
   une_result_type result_type;
@@ -923,7 +923,7 @@ __une_interpreter(une_interpret_while)
 /*
 Interpret a UNE_NT_IF une_node.
 */
-__une_interpreter(une_interpret_if)
+une_interpreter__(une_interpret_if)
 {
   /* Check if predicate applies. */
   une_result predicate = une_interpret(error, is, node->content.branch.a);
@@ -942,7 +942,7 @@ __une_interpreter(une_interpret_if)
 /*
 Interpret a UNE_NT_CONTINUE une_node.
 */
-__une_interpreter(une_interpret_continue)
+une_interpreter__(une_interpret_continue)
 {
   return une_result_create(UNE_RT_CONTINUE);
 }
@@ -950,7 +950,7 @@ __une_interpreter(une_interpret_continue)
 /*
 Interpret a UNE_NT_BREAK une_node.
 */
-__une_interpreter(une_interpret_break)
+une_interpreter__(une_interpret_break)
 {
   return une_result_create(UNE_RT_BREAK);
 }
@@ -958,7 +958,7 @@ __une_interpreter(une_interpret_break)
 /*
 Interpret a UNE_NT_RETURN une_node.
 */
-__une_interpreter(une_interpret_return)
+une_interpreter__(une_interpret_return)
 {
   une_result result;
   if (node->content.branch.a != NULL)
@@ -972,7 +972,7 @@ __une_interpreter(une_interpret_return)
 /*
 Interpret a UNE_NT_EXIT une_node.
 */
-__une_interpreter(une_interpret_exit)
+une_interpreter__(une_interpret_exit)
 {
   une_result result;
   if (node->content.branch.a != NULL)
