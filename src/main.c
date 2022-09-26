@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2022-08-04
+Modified 2022-09-26
 */
 
 /* Import public Une interface. */
@@ -166,7 +166,7 @@ void main_sigint_fired(int signal)
 void main_cli(void)
 {
   signal(SIGINT, &main_sigint_fired);
-  une_context *context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
+  une_context *context = une_context_create(-1);
   wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
   bool did_exit = false;
   verify(stmts);

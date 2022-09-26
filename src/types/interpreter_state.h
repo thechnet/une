@@ -1,6 +1,6 @@
 /*
 interpreter_state.h - Une
-Modified 2022-08-04
+Modified 2022-09-26
 */
 
 #ifndef UNE_INTERPRETER_STATE_H
@@ -26,7 +26,7 @@ typedef struct une_interpreter_state_ {
 *** Interface.
 */
 
-une_interpreter_state une_interpreter_state_create(une_context *context, size_t functions_size);
+une_interpreter_state une_interpreter_state_create(une_context *context);
 void une_interpreter_state_free(une_interpreter_state *is);
 
 size_t une_function_create(une_interpreter_state *is, char *definition_file, une_position definition_point);

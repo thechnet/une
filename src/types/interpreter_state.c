@@ -1,6 +1,6 @@
 /*
 interpreter_state.c - Une
-Modified 2022-05-29
+Modified 2022-09-26
 */
 
 /* Header-specific includes. */
@@ -10,16 +10,16 @@ Modified 2022-05-29
 /*
 Initialize a une_interpreter_state struct.
 */
-une_interpreter_state une_interpreter_state_create(une_context *context, size_t functions_size)
+une_interpreter_state une_interpreter_state_create(une_context *context)
 {
-  une_function *functions = malloc(functions_size*sizeof(*functions));
+  une_function *functions = malloc(UNE_SIZE_FUNCTION_BUF*sizeof(*functions));
   verify(functions);
   return (une_interpreter_state){
     .context = context,
     .should_return = false,
     .should_exit = false,
     .functions = functions,
-    .functions_size = functions_size,
+    .functions_size = UNE_SIZE_FUNCTION_BUF,
     .functions_count = 0
   };
 }

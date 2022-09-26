@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2022-08-04
+Modified 2022-09-26
 */
 
 /* Header-specific includes. */
@@ -12,7 +12,7 @@ Modified 2022-08-04
 /*
 Allocates, initializes, and returns a pointer to a une_context struct.
 */
-une_context *une_context_create(ptrdiff_t function, size_t variables_size)
+une_context *une_context_create(ptrdiff_t function)
 {
   /* Allocate une_context. */
   une_context *context = malloc(sizeof(*context));
@@ -22,8 +22,8 @@ une_context *une_context_create(ptrdiff_t function, size_t variables_size)
   *context = (une_context){
     .parent = NULL,
     .function = function,
-    .variables = malloc(variables_size*sizeof(*context->variables)),
-    .variables_size = variables_size,
+    .variables = malloc(UNE_SIZE_VARIABLE_BUF*sizeof(*context->variables)),
+    .variables_size = UNE_SIZE_VARIABLE_BUF,
     .variables_count = 0
   };
   verify(context->variables);

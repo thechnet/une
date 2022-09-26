@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2021-09-28
+Modified 2022-09-26
 */
 
 /* Header-specific includes. */
@@ -46,7 +46,7 @@ une_result une_datatype_function_call(une_error *error, une_interpreter_state *i
   
   /* Create function context. */
   une_context *parent = is->context;
-  is->context = une_context_create((ptrdiff_t)fn, UNE_SIZE_VARIABLE_BUF);
+  is->context = une_context_create((ptrdiff_t)fn);
   is->context->parent = parent;
 
   /* Define parameters. */

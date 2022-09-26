@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2022-08-04
+Modified 2022-09-26
 */
 
 /* Header-specific includes. */
@@ -62,9 +62,9 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *
   if (external_context)
     context = external_context;
   else
-    context = une_context_create(-1, UNE_SIZE_VARIABLE_BUF);
+    context = une_context_create(-1);
   
-  une_interpreter_state is = une_interpreter_state_create(context, UNE_SIZE_FUNCTION_BUF);
+  une_interpreter_state is = une_interpreter_state_create(context);
   une_result result = une_result_create(UNE_RT_ERROR);
   #ifndef UNE_NO_INTERPRET
   if (ast != NULL)
