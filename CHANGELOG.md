@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+- New escape sequences (#2):
+  - `\e` translates to `U+001B` ("Escape").
+  - `\a` translates to `U+0007` ("Alert").
+
 ### Changed
 - The CLI mode is now referred to as interactive mode, and its command line switch is now `-i` instead of `-c`.
 
