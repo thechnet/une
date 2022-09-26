@@ -395,6 +395,7 @@ cases = [
   # SET
   Case('a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('global a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=function(){global b=46};a();return b', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=[1]**2', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   # SET_IDX

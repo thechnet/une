@@ -8,6 +8,7 @@
 ### Fixed
 - Multiplying a string or list with a negative number causes a crash.
 - Functions do not persist in interactive mode.
+- New variables are not created in the global context when the `global` keyword is used (#1).
 
 ## [0.9.0]
 

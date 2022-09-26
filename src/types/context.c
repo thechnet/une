@@ -32,6 +32,16 @@ une_context *une_context_create(ptrdiff_t function)
 }
 
 /*
+Find and return the oldest parent of the incoming context.
+*/
+une_context *une_context_get_oldest_parent(une_context *context)
+{
+  while (context->parent != NULL)
+    context = context->parent;
+  return context;
+}
+
+/*
 Frees all une_contexts, starting at youngest_child and up to, but not including, parent.
 */
 void une_context_free_children(une_context *parent, une_context *youngest_child)
@@ -140,6 +150,6 @@ une_variable_itf__(une_variable_find_or_create_global)
   if (variable != NULL)
     return variable;
   
-  /* une_variable doesn't exist yet, create it. */
-  return une_variable_create(context, name);
+  /* une_variable doesn't exist yet, create it in the oldest parent context. */
+  return une_variable_create(une_context_get_oldest_parent(context), name);
 }
