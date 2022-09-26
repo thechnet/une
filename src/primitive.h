@@ -56,7 +56,7 @@ Modified 2022-09-26
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_WATCHDOG)
 #define WATCHDOG
 #endif
-#include "../watchdog/watchdog.h"
+#include "../watchdog/build/watchdog.h"
 
 /*
 *** Constants.
