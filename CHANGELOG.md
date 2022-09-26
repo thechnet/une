@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+### Changed
+- The CLI mode is now referred to as interactive mode, and its command line switch is now `-i` instead of `-c`.
+
 ### Fixed
 - Multiplying a string or list with a negative number causes a crash.
-- Functions do not persist in the CLI.
+- Functions do not persist in interactive mode.
 
 ## [0.9.0]
 

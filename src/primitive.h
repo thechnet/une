@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2022-08-04
+Modified 2022-09-26
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -66,10 +66,11 @@ Modified 2022-08-04
 #define UNE_VERSION_PATCH "1"
 #define UNE_VERSION UNE_VERSION_MAJOR L"." UNE_VERSION_MINOR L"." UNE_VERSION_PATCH
 #define UNE_COMMAND_LINE_NAME "<args>"
-#define UNE_SWITCH_CLSCRIPT "-s"
-#define UNE_SWITCH_CLI "-c"
-#define UNE_CLI_PREFIX L">>> "
-#define UNE_CLI_WELCOME L"Une " UNE_VERSION "\nUse \"exit\" or CTRL + C to exit.\n"
+#define UNE_SWITCH_SCRIPT "-s"
+#define UNE_SWITCH_INTERACTIVE "-i"
+#define UNE_INTERACTIVE_PREFIX L">>> "
+#define UNE_HEADER L"Une " UNE_VERSION
+#define UNE_INTERACTIVE_INFO L"Use \"exit\" or CTRL + C to exit."
 #define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
 #define UNE_FOPEN_AFLAGS "a,ccs=UTF-8"
@@ -79,7 +80,7 @@ Modified 2022-08-04
 #define UNE_PRINTF_UNE_FLT L"%.3f"
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
-#define UNE_ERROR_USAGE L"Usage: %hs {<script>|-s <string>|-c}"
+#define UNE_ERROR_USAGE L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */

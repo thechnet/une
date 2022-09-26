@@ -14,7 +14,7 @@ Modified 2022-09-26
 
 #define UNE_MAIN_ERROR 1
 
-void main_cli(void);
+void main_interactive(void);
 
 int main(int argc, char *argv[])
 {
@@ -57,12 +57,12 @@ int main(int argc, char *argv[])
     goto end;
   }
   
-  if (strcmp(argv[1], UNE_SWITCH_CLI) == 0) {
-    main_cli();
+  if (strcmp(argv[1], UNE_SWITCH_INTERACTIVE) == 0) {
+    main_interactive();
     return 0;
   }
   
-  if (strcmp(argv[1], UNE_SWITCH_CLSCRIPT) == 0) {
+  if (strcmp(argv[1], UNE_SWITCH_SCRIPT) == 0) {
     if (argc < 3) {
       main_error = true;
       goto end;
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   end:
   /* main Error. */
   if (main_error) {
-    wprintf(RESET UNE_ERROR_USAGE L"\n", argv[0]);
+    wprintf(RESET UNE_HEADER L"\n" UNE_ERROR_USAGE L"\n", argv[0]);
     result = (une_result){
       .type = UNE_RT_ERROR,
       .value._int = UNE_MAIN_ERROR
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 }
 
 /*
-*** CLI.
+*** Interactive mode.
 */
 
 volatile sig_atomic_t sigint_fired = false;
@@ -163,7 +163,7 @@ void main_sigint_fired(int signal)
   sigint_fired = true;
 }
 
-void main_cli(void)
+void main_interactive(void)
 {
   signal(SIGINT, &main_sigint_fired);
   une_interpreter_state is = une_interpreter_state_create();
@@ -171,10 +171,10 @@ void main_cli(void)
   bool did_exit = false;
   verify(stmts);
   
-  fputws(UNE_CLI_WELCOME, stdout);
+  fputws(RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
   
   while (!sigint_fired && !did_exit) {
-    fputws(UNE_CLI_PREFIX, stdout);
+    fputws(UNE_INTERACTIVE_PREFIX, stdout);
     fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin);
     size_t len = wcslen(stmts);
     stmts[--len] = L'\0'; /* Remove trailing newline. */
