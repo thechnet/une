@@ -558,7 +558,7 @@ if ENUMERATE_CASES:
 
 cd = os.getcwd()
 os.chdir(DIR)
-print("\33[33m\33[1mEnsure UNE_DEBUG_MEMDBG is enabled.\33[0m")
+print("\33[33m\33[1mEnsure UNE_DEBUG_WATCHDOG is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_SIZES is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_REPORT is enabled.\33[0m")
 i = 0
