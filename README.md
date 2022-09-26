@@ -4,7 +4,7 @@
 
 ## What is Une?
 
-Une */ˈjun/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my Matura paper (2021).
+Une */ˈjun/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my 2021 Matura paper.
 
 ## What can Une do?
 
@@ -13,9 +13,13 @@ Some demo programs can be found in [examples](examples).
 
 ## How do I run Une?
 
-### 1. Building the executable
+### 1. Getting the executable
 
-<details open>
+To get Une, you can download the latest binary from [the releases page](https://github.com/thechnet/une/releases/latest).
+
+Alternatively, you can build it yourself:
+
+<details>
 <summary><b>Windows</b></summary>
 
 - Download the latest prebuilt [LLVM-MinGW toolchain by GitHub user *mstorsjo*](https://github.com/mstorsjo/llvm-mingw/releases). The recommended configurations are `msvcrt-x86_64` for 64-bit, and `msvcrt-i686` for 32-bit systems.
@@ -36,7 +40,7 @@ Some demo programs can be found in [examples](examples).
 
 </details>
 
-<details open>
+<details>
 <summary><b>macOS (and similarly for other Unix-based systems)</b></summary>
 
 - Download and extract this repository.
@@ -86,7 +90,8 @@ Enter the interactive mode using the `-i` flag:
 
 To run the test suite, first build the debug version of Une (see 1.), checking `src/primitive.h` to ensure that the following preprocessor directives are `#define`d:
 
-- `UNE_DEBUG_MEMDBG` *(enables memdbg to catch memory-related issues)*
+- `UNE_DEBUG_MEMDBG` *(enables memdbg to catch memory-related issues)*  
+  (Optionally, you can replace this with `UNE_DEBUG_WATCHDOG` to experiment with [Watchdog](https://github.com/thechnet/watchdog).)
 - `UNE_DEBUG_SIZES` *(defaults most sizes to `1` to check if sufficient memory is allocated)*
 - `UNE_DEBUG_REPORT` *(enables communication between Une and `test.py`)*
 
@@ -94,12 +99,10 @@ Then, `cd` into `testing` and run `test.py` using Python 3.
 
 The Python script will ask for manual input twice for the first test case. The remaining cases will not require manual input.
 
----
-
 ## Visual Studio Code Language Support
 
 If you're using Visual Studio Code, make sure to install [the Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une) to get syntax highlighting and general language support. Its repository can be found [here](https://github.com/thechnet/une-vscode).
 
----
+<br/>
 
-<img src="res/icon.png" width=10%>
+<img src="res/icon.png" width=5%>
