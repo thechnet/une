@@ -10,7 +10,7 @@
 - Functions do not persist in interactive mode.
 - New variables are not created in the global context when the `global` keyword is used (#1).
 
-## [0.9.0]
+## [0.9.0] - 2022-05-29
 
 ### Added
 - New built-in function `append()`.  
@@ -33,7 +33,7 @@
 ### Fixed
 - Return statement without return value has no effect.
 
-## [0.8.0] - 2022-05-29
+## [0.8.0] - 2021-11-23
 
 ### Added
 - Added CLI.  
