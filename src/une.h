@@ -1,6 +1,6 @@
 /*
 une.h - Une
-Modified 2022-05-29
+Modified 2022-09-26
 */
 
 #ifndef UNE_UNE_H
@@ -8,12 +8,12 @@ Modified 2022-05-29
 
 /* Header-specific includes. */
 #include "types/result.h"
-#include "types/context.h"
+#include "types/interpreter_state.h"
 
 /*
 *** Interface.
 */
 
-une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *external_context, bool *did_exit);
+une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exit, une_interpreter_state *existing_interpreter_state);
 
 #endif /* !UNE_UNE_H */

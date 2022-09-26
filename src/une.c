@@ -12,7 +12,6 @@ Modified 2022-09-26
 #include "types/node.h"
 #include "types/lexer_state.h"
 #include "types/parser_state.h"
-#include "types/interpreter_state.h"
 #include "types/error.h"
 #include "lexer.h"
 #include "parser.h"
@@ -22,7 +21,7 @@ Modified 2022-09-26
 /*
 Run a Une program.
 */
-une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *external_context, bool *did_exit)
+une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exit, une_interpreter_state *existing_interpreter_state)
 {
   /* Setup. */
   une_error error = une_error_create();
@@ -58,20 +57,28 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *
   #endif
   
   /* Interpret. */
-  une_context *context;
-  if (external_context)
-    context = external_context;
-  else
-    context = une_context_create(-1);
   
-  une_interpreter_state is = une_interpreter_state_create(context);
+  /* Get interpreter state. */
+  une_interpreter_state _is;
+  une_interpreter_state *is;
+  if (existing_interpreter_state) {
+    is = existing_interpreter_state;
+  } else {
+    _is = une_interpreter_state_create();
+    is = &_is;
+  }
+  
   une_result result = une_result_create(UNE_RT_ERROR);
   #ifndef UNE_NO_INTERPRET
   if (ast != NULL)
-    result = une_interpret(&error, &is, ast);
+    result = une_interpret(&error, is, ast);
   #else
   result = une_result_create(UNE_RT_VOID);
   #endif
+  if (did_exit != NULL)
+    *did_exit = is->should_exit;
+  is->should_return = false;
+  is->should_exit = false;
   #ifdef UNE_DEBUG_LOG_INTERPRET
   success("interpret done.");
   #endif
@@ -91,14 +98,10 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, une_context *
   #endif
   if (error_cases > 0) {
     assert(error.type != UNE_ET_none__);
-    une_error_display(&error, &ls, &is);
+    une_error_display(&error, &ls, is);
   }
-  if (did_exit != NULL)
-    *did_exit = is.should_exit;
-  une_interpreter_state_free(&is);
-  
-  if (!external_context)
-    une_context_free_children(NULL, is.context);
+  if (!existing_interpreter_state)
+    une_interpreter_state_free(is);
   une_node_free(ast, false);
   une_tokens_free(tokens);
   

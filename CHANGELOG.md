@@ -4,6 +4,7 @@
 
 ### Fixed
 - Multiplying a string or list with a negative number causes a crash.
+- Functions do not persist in the CLI.
 
 ## [0.9.0]
 

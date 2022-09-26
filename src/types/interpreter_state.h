@@ -26,7 +26,7 @@ typedef struct une_interpreter_state_ {
 *** Interface.
 */
 
-une_interpreter_state une_interpreter_state_create(une_context *context);
+une_interpreter_state une_interpreter_state_create(void);
 void une_interpreter_state_free(une_interpreter_state *is);
 
 size_t une_function_create(une_interpreter_state *is, char *definition_file, une_position definition_point);

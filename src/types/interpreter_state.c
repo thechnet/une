@@ -10,12 +10,12 @@ Modified 2022-09-26
 /*
 Initialize a une_interpreter_state struct.
 */
-une_interpreter_state une_interpreter_state_create(une_context *context)
+une_interpreter_state une_interpreter_state_create(void)
 {
   une_function *functions = malloc(UNE_SIZE_FUNCTION_BUF*sizeof(*functions));
   verify(functions);
   return (une_interpreter_state){
-    .context = context,
+    .context = une_context_create(-1),
     .should_return = false,
     .should_exit = false,
     .functions = functions,
@@ -29,6 +29,10 @@ Free all members of a une_interpreter_state struct.
 */
 void une_interpreter_state_free(une_interpreter_state *is)
 {
+  /* Context. */
+  une_context_free_children(NULL, is->context);
+  
+  /* Functions. */
   assert(is->functions != NULL);
   for (size_t i=0; i<is->functions_count; i++)
     une_function_free(is->functions+i);

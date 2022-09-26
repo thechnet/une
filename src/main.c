@@ -166,7 +166,7 @@ void main_sigint_fired(int signal)
 void main_cli(void)
 {
   signal(SIGINT, &main_sigint_fired);
-  une_context *context = une_context_create(-1);
+  une_interpreter_state is = une_interpreter_state_create();
   wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
   bool did_exit = false;
   verify(stmts);
@@ -178,7 +178,7 @@ void main_cli(void)
     fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin);
     size_t len = wcslen(stmts);
     stmts[--len] = L'\0'; /* Remove trailing newline. */
-    une_result result = une_run(false, NULL, stmts, context, &did_exit);
+    une_result result = une_run(false, NULL, stmts, &did_exit, &is);
     if (result.type != UNE_RT_VOID && result.type != UNE_RT_ERROR) {
       if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
         une_result_represent(stdout, result);
@@ -191,5 +191,5 @@ void main_cli(void)
     une_result_free(result);
   }
   free(stmts);
-  une_context_free_children(NULL, context);
+  une_interpreter_state_free(&is);
 }
