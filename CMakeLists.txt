@@ -13,25 +13,26 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Options.
-list(APPEND options "DEBUG_DISPLAY_EXTENDED_ERROR|Show extended error information|ON")
-list(APPEND options "DEBUG_WATCHDOG|Use Watchdog|ON")
-list(APPEND options "DEBUG_SIZES|Default most sizes to 1|ON")
-list(APPEND options "DEBUG_REPORT|Enable communication with test.py|ON")
-list(APPEND options "DEBUG_MEMDBG|Use memdbg|OFF")
-list(APPEND options "DISPLAY_TOKENS|Display processed tokens|OFF")
-list(APPEND options "DISPLAY_NODES|Display processed nodes|OFF")
-list(APPEND options "DISPLAY_RESULT|Display processed result|ON")
-list(APPEND options "DEBUG_LOG_PARSE|Log parse calls|OFF")
-list(APPEND options "DEBUG_LOG_INTERPRET|Log interpretation calls|OFF")
-list(APPEND options "NO_LEX|Skip lexing|OFF")
-list(APPEND options "NO_PARSE|Skip parsing|OFF")
-list(APPEND options "NO_INTERPRET|Skip interpretation|OFF")
+list(APPEND options "32BIT|Build for 32-bit machines|OFF")
+list(APPEND options "DEBUG_DISPLAY_EXTENDED_ERROR|Debug: Show extended error information|ON")
+list(APPEND options "DEBUG_WATCHDOG|Debug: Use Watchdog|ON")
+list(APPEND options "DEBUG_SIZES|Debug: Default most sizes to 1|ON")
+list(APPEND options "DEBUG_REPORT|Debug: Enable communication with test.py|ON")
+list(APPEND options "DEBUG_MEMDBG|Debug: Use memdbg|OFF")
+list(APPEND options "DISPLAY_TOKENS|Debug: Display processed tokens|OFF")
+list(APPEND options "DISPLAY_NODES|Debug: Display processed nodes|OFF")
+list(APPEND options "DISPLAY_RESULT|Debug: Display processed result|ON")
+list(APPEND options "DEBUG_LOG_PARSE|Debug: Log parse calls|OFF")
+list(APPEND options "DEBUG_LOG_INTERPRET|Debug: Log interpretation calls|OFF")
+list(APPEND options "NO_LEX|Debug: Skip lexing|OFF")
+list(APPEND options "NO_PARSE|Debug: Skip parsing|OFF")
+list(APPEND options "NO_INTERPRET|Debug: Skip interpretation|OFF")
 foreach(option IN LISTS options)
   string(REPLACE "|" ";" option_list ${option})
   list(GET option_list 0 id)
   list(GET option_list 1 desc)
   list(GET option_list 2 val)
-  option(UNE_${id} "Debug: ${desc}." ${val})
+  option(UNE_${id} "${desc}." ${val})
 endforeach()
 
 # Source.
@@ -69,6 +70,9 @@ add_executable(une
 target_include_directories(une PUBLIC
   "${PROJECT_BINARY_DIR}"
 )
+
+# 32-bit
+set_target_properties(une PROPERTIES COMPILE_OPTIONS "-m32" LINK_FLAGS "-m32")
 
 # Standard flags.
 target_compile_options(une PRIVATE
