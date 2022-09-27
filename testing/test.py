@@ -172,7 +172,7 @@ cases = [
   Case('\r1 $', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('1.', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('"ab', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
-  Case('"\\a"', UNE_RT_ERROR, UNE_ET_SYNTAX, [ATTR_NO_SECOND_ESCAPE]),
+  Case('"\\q"', UNE_RT_ERROR, UNE_ET_SYNTAX, [ATTR_NO_SECOND_ESCAPE]),
   Case('def 1', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('1 ? +', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('1 ? 1,', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
