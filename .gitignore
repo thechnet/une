@@ -5,6 +5,8 @@ desktop.ini
 private
 tests
 build
+release
+debug
 
 __pycache__
 une

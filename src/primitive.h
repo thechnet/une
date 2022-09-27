@@ -6,64 +6,30 @@ Modified 2022-09-27
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
 
-/*
-*** Options.
-*/
-// #define UNE_DEBUG_MEMDBG
-#define UNE_DEBUG_WATCHDOG
-#define UNE_DEBUG_SIZES
-#define UNE_DEBUG_REPORT
-
-// #define UNE_NO_LEX
-// #define UNE_NO_PARSE
-// #define UNE_NO_INTERPRET
-
-// #define UNE_DISPLAY_TOKENS
-// #define UNE_DISPLAY_NODES
-#define UNE_DISPLAY_RESULT
-#define UNE_DEBUG_DISPLAY_EXTENDED_ERROR
-
-// #define UNE_DEBUG_LOG_INTERPRET
-// #define UNE_DEBUG_LOG_PARSE
-
-/* TO TOGGLE ESCAPE SEQUENCES, SEE ESCSEQ.H. */
-
 /* Universal includes. */
+#include "cmake.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
 #include <stdint.h>
 #include <stdbool.h>
-#ifndef UNE_DEBUG
-#define NDEBUG
-#endif
 #include <assert.h>
 #include <stddef.h>
 
 #define ESCSEQ_WIDE
 #include "../logging/escseq/include/escseq.h"
-
 #define LOGGING_WIDE
 #define LOGGING_ID "une"
 #include "../logging/include/logging.h"
 
-#if defined(UNE_DEBUG) && defined(UNE_DEBUG_MEMDBG)
-#define MEMDBG_ENABLE
-#endif
 #include "util/memdbg.h"
-
-#if defined(UNE_DEBUG) && defined(UNE_DEBUG_WATCHDOG)
-#define WATCHDOG
-#endif
 #include "../watchdog/build/watchdog.h"
 
 /*
 *** Constants.
 */
-#define UNE_VERSION_MAJOR "0"
-#define UNE_VERSION_MINOR "9"
-#define UNE_VERSION_PATCH "1"
 #define UNE_VERSION UNE_VERSION_MAJOR L"." UNE_VERSION_MINOR L"." UNE_VERSION_PATCH
 #define UNE_COMMAND_LINE_NAME "<args>"
 #define UNE_SWITCH_SCRIPT "-s"

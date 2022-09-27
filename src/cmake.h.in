@@ -1,0 +1,13 @@
+/*
+cmake(.in).h - Une
+Modified 2022-09-27
+*/
+
+#ifndef UNE_CMAKE_H
+#define UNE_CMAKE_H
+
+#define UNE_VERSION_MAJOR "@une_VERSION_MAJOR@"
+#define UNE_VERSION_MINOR "@une_VERSION_MINOR@"
+#define UNE_VERSION_PATCH "@une_VERSION_PATCH@"
+
+#endif /* !UNE_CMAKE_H */

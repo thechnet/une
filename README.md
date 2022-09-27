@@ -19,41 +19,14 @@ To get Une, you can download the latest binary from [the releases page](https://
 
 Alternatively, you can build it yourself:
 
-<details>
-<summary><b>Windows</b></summary>
-
-- Download the latest prebuilt [LLVM-MinGW toolchain by GitHub user *mstorsjo*](https://github.com/mstorsjo/llvm-mingw/releases). The recommended configurations are `msvcrt-x86_64` for 64-bit, and `msvcrt-i686` for 32-bit systems.
-- Extract the directory contained in the download, and move it to a permanent location (for example into the program files).
-- Add the toolchain to your `PATH` environment variable:
-  - Inside the directory, <kbd>Shift</kbd>-right-click on the `bin` folder and choose *Copy as path*.
-  - Search Windows for "Edit the system environment variables", and open the first result.
-  - Choose *Environment Variables…*.
-  - Ensure that under *User variables*, "Path" is selected.
-  - Choose *Edit* → *New*, and insert the copied path using <kbd>Ctrl</kbd>+<kbd>V</kbd>.
-  - Choose *OK* 3x.
-- Download and extract this repository.
-- Open a *Command Prompt* instance inside the downloaded repository.  
-  An easy way to do this is to navigate inside the repository, click on the address bar, type `cmd`, and press <kbd>Enter</kbd>.
-- Build `une.exe` using `clang @win`.  
-  To build the debug version, use `clang @win-dbg`.
-
-
-</details>
-
-<details>
-<summary><b>macOS (and similarly for other Unix-based systems)</b></summary>
-
-- Download and extract this repository.
-- Open a *Terminal* instance inside the downloaded repository.  
-  An easy way to do this is to select the repository in *Finder*, and – in the menu bar – choose *Finder* → *Services* → *New Terminal at Folder*.
-- Install the *Developer Tools*:
-  - In *Terminal*, type `clang` and press <kbd>Enter</kbd>.
-  - In the dialog that appears, choose *Install* → *Agree*.
-  - Once the installation is complete, choose *Done*.
-- Build `une` using `clang @unix`.  
-  To build the debug version, use `clang @unix-dbg`.
-
-</details>
+- Install [LLVM Clang](https://clang.llvm.org), [CMake](https://cmake.org), and the build system of your choice (*make* is recommended).
+- For the release version:
+  - Create a "release" directory in the repository.
+  - Inside the "release" directory, run `cmake .. -G <gen>` (where `<gen>` is your build system of choice).
+- For the debug version:
+  - Create a "debug" directory in the repository.
+  - Inside the "debug" directory, run the same command as above but append `-DCMAKE_BUILD_TYPE=Debug`.
+- In the same directory, compile the binary using your build system.
 
 ### 2. Running a script
 
@@ -61,10 +34,9 @@ Running Une without any arguments will give you its usage:
 
 ```
 > une
-...
+…
 Usage: une {<script>|-s <string>|-i}
 ```
-> Note: On macOS, write `./une` instead of `une`.
 
 Run the `arithmetic_interpreter.une` example. It should print `7`:
 
@@ -86,16 +58,11 @@ Enter the interactive mode using the `-i` flag:
 > une -i
 ```
 
+For more information, refer to the documentation or check out some of the examples.
+
 ### 3. Running the test suite
 
-To run the test suite, first build the debug version of Une (see 1.), checking `src/primitive.h` to ensure that the following preprocessor directives are `#define`d:
-
-- `UNE_DEBUG_MEMDBG` *(enables memdbg to catch memory-related issues)*  
-  (Optionally, you can replace this with `UNE_DEBUG_WATCHDOG` to experiment with [Watchdog](https://github.com/thechnet/watchdog).)
-- `UNE_DEBUG_SIZES` *(defaults most sizes to `1` to check if sufficient memory is allocated)*
-- `UNE_DEBUG_REPORT` *(enables communication between Une and `test.py`)*
-
-Then, `cd` into `testing` and run `test.py` using Python 3.
+To run the test suite, build the debug version of Une (see 1.), `cd` into `testing`, and run `test.py` using Python 3.
 
 The Python script will ask for manual input twice for the first test case. The remaining cases will not require manual input.
 
