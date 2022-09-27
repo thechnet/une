@@ -1,3 +1,6 @@
 [submodule "watchdog"]
 	path = watchdog
 	url = https://github.com/thechnet/watchdog
+[submodule "logging"]
+	path = logging
+	url = https://github.com/thechnet/logging

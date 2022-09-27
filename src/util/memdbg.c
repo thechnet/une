@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2022-08-04
+Modified 2022-09-27
 */
 
 /* Header-specific includes. */
@@ -13,10 +13,10 @@ Modified 2022-08-04
 #include <time.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "escseq.h"
+#include "../../logging/escseq/include/escseq.h"
 #define LOGGING_WIDE
 #define LOGGING_ID "memdbg"
-#include "logging.h"
+#include "../../logging/include/logging.h"
 
 #define STDOUT_FILENO 1
 

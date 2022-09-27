@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2022-09-26
+Modified 2022-09-27
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -42,11 +42,11 @@ Modified 2022-09-26
 #include <stddef.h>
 
 #define ESCSEQ_WIDE
-#include "util/escseq.h"
+#include "../logging/escseq/include/escseq.h"
 
 #define LOGGING_WIDE
 #define LOGGING_ID "une"
-#include "util/logging.h"
+#include "../logging/include/logging.h"
 
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_MEMDBG)
 #define MEMDBG_ENABLE
