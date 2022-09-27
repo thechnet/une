@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.10.0] - 2022-09-27
 
 ### Added
 - New escape sequences (#2):
@@ -572,9 +572,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.10.0...HEAD
 
 <!-- Releases -->
+[0.10.0]: https://github.com/thechnet/une/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/thechnet/une/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/thechnet/une/compare/v0.7.3...v0.8.0
 [0.7.3]: https://github.com/thechnet/une/compare/v0.7.2...v0.7.3
