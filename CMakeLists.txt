@@ -72,7 +72,9 @@ target_include_directories(une PUBLIC
 )
 
 # 32-bit
-set_target_properties(une PROPERTIES COMPILE_OPTIONS "-m32" LINK_FLAGS "-m32")
+if(UNE_32BIT)
+  set_target_properties(une PROPERTIES COMPILE_OPTIONS "-m32" LINK_FLAGS "-m32")
+endif()
 
 # Standard flags.
 target_compile_options(une PRIVATE
