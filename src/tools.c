@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2022-08-04
+Modified 2022-10-05
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -130,7 +130,7 @@ wchar_t *une_file_read(char *path)
     }
     if (c == WEOF)
       break;
-    text[cursor] = c;
+    text[cursor] = (wchar_t)c;
     cursor++;
   }
   fclose(f);

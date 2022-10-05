@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2022-09-26
+Modified 2022-10-05
 */
 
 /* Header-specific includes. */
@@ -355,7 +355,7 @@ une_builtin_fn__(input)
   une_datatype_str_represent(stdout, args[prompt]);
   wchar_t *instr = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*instr));
   verify(instr);
-  fgetws(instr, UNE_SIZE_FGETWS_BUFFER, stdin);
+  if (!fgetws(instr, UNE_SIZE_FGETWS_BUFFER, stdin)) assert(false);
   size_t len = wcslen(instr);
   instr[--len] = L'\0'; /* Remove trailing newline. */
 

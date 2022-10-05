@@ -1,16 +1,14 @@
 /*
 main.c - Une
-Modified 2022-09-26
+Modified 2022-10-05
 */
-
-/* Import public Une interface. */
-#include "une.h"
 
 /* Implementation-specific includes. */
 #include <string.h>
+#include <signal.h>
+#include "une.h"
 #include "tools.h"
 #include "datatypes/datatypes.h"
-#include <signal.h>
 
 #define UNE_MAIN_ERROR 1
 
@@ -175,7 +173,7 @@ void main_interactive(void)
   
   while (!sigint_fired && !did_exit) {
     fputws(UNE_INTERACTIVE_PREFIX, stdout);
-    fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin);
+    if (!fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin)) assert(false);
     size_t len = wcslen(stmts);
     stmts[--len] = L'\0'; /* Remove trailing newline. */
     une_result result = une_run(false, NULL, stmts, &did_exit, &is);

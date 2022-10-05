@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2022-08-04
+Modified 2022-10-05
 */
 
 /* Header-specific includes. */
@@ -61,9 +61,9 @@ une_static__ const wchar_t *une_error_type_to_wcs(une_error_type type)
 Display error.
 */
 
-UNE_ISTREAM_ARRAY_PULLER_VAL(une_error_display_array_pull__, wint_t, wchar_t, WEOF, true)
-UNE_ISTREAM_ARRAY_ACCESS_VAL(une_error_display_array_now__, wint_t, wchar_t, WEOF, true)
-UNE_ISTREAM_ARRAY_PEEKER_VAL(une_error_display_array_peek__, wint_t, wchar_t, WEOF, true)
+UNE_ISTREAM_ARRAY_PULLER_VAL(une_error_display_array_pull__, wint_t, wint_t, WEOF, true)
+UNE_ISTREAM_ARRAY_ACCESS_VAL(une_error_display_array_now__, wint_t, wint_t, WEOF, true)
+UNE_ISTREAM_ARRAY_PEEKER_VAL(une_error_display_array_peek__, wint_t, wint_t, WEOF, true)
 UNE_ISTREAM_WFILE_PULLER(une_error_display_wfile_pull__)
 UNE_ISTREAM_WFILE_ACCESS(une_error_display_wfile_now__)
 UNE_ISTREAM_WFILE_PEEKER(une_error_display_wfile_peek__)
@@ -195,7 +195,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   while (text.index < (ptrdiff_t)error_line.end) {
     if (pull(&text) == WEOF)
       break;
-    putwc(now(&text), stdout);
+    putwc((wchar_t)now(&text), stdout);
   }
   putwc(L'\n', stdout);
 

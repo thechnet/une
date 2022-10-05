@@ -66,6 +66,9 @@ add_executable(une
   src/main.c
 )
 
+# libm
+target_link_libraries(une m)
+
 # Include directories.
 target_include_directories(une PUBLIC
   "${PROJECT_BINARY_DIR}"
@@ -77,8 +80,13 @@ if(UNE_32BIT)
 endif()
 
 # Standard flags.
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(une PRIVATE -Wall -Wextra -Wno-unused-value -Wno-implicit-fallthrough)
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  target_compile_options(une PRIVATE -Weverything)
+endif()
 target_compile_options(une PRIVATE
-  -pedantic -Weverything -Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused -Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations
+  -pedantic -Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused -Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations
 )
 
 # Build types.
@@ -90,9 +98,10 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
   if(UNE_DEBUG_WATCHDOG)
     add_definitions(-DWATCHDOG)
     target_link_libraries(une "${PROJECT_SOURCE_DIR}/watchdog/build/libwatchdog.a")
-    target_compile_options(une PRIVATE
-      -Wno-keyword-macro -Werror=embedded-directive
-    )
+    target_compile_options(une PRIVATE -Wno-keyword-macro)
+    if(CMAKE_C_COMPILE_ID MATCHES "Clang")
+      target_compile_options(une PRIVATE -Werror=embedded-directive)
+    endif()
   endif()
   if(UNE_DEBUG_MEMDBG)
     add_definitions(-DMEMDBG_ENABLE)

@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2022-09-26
+Modified 2022-10-05
 */
 
 /* Header-specific includes. */
@@ -67,9 +67,9 @@ Public lexer interface.
 UNE_ISTREAM_WFILE_PULLER(une_lex_wfile_pull__)
 UNE_ISTREAM_WFILE_PEEKER(une_lex_wfile_peek__)
 UNE_ISTREAM_WFILE_ACCESS(une_lex_wfile_now__)
-UNE_ISTREAM_ARRAY_PULLER_VAL(une_lex_array_pull__, wint_t, wchar_t, WEOF, true)
-UNE_ISTREAM_ARRAY_PEEKER_VAL(une_lex_array_peek__, wint_t, wchar_t, WEOF, true)
-UNE_ISTREAM_ARRAY_ACCESS_VAL(une_lex_array_now__, wint_t, wchar_t, WEOF, true)
+UNE_ISTREAM_ARRAY_PULLER_VAL(une_lex_array_pull__, wint_t, wint_t, WEOF, true)
+UNE_ISTREAM_ARRAY_PEEKER_VAL(une_lex_array_peek__, wint_t, wint_t, WEOF, true)
+UNE_ISTREAM_ARRAY_ACCESS_VAL(une_lex_array_now__, wint_t, wint_t, WEOF, true)
 UNE_OSTREAM_PUSHER(une_lex_push__, une_token)
 UNE_OSTREAM_PEEKER_REF(une_lex_out_peek__, une_token, NULL)
 
@@ -220,7 +220,7 @@ une_lexer__(une_lex_num)
     }
   
     /* Add character to buffer. */
-    buffer[(size_t)ls->in.index-idx_start] = ls->now(&ls->in);
+    buffer[(size_t)ls->in.index-idx_start] = (wchar_t)ls->now(&ls->in);
     ls->pull(&ls->in);
   } while (UNE_LEXER_WC_IS_DIGIT(ls->now(&ls->in)));
   
@@ -241,7 +241,7 @@ une_lexer__(une_lex_num)
   
   /* Try to lex floating point number. */
   
-  buffer[(size_t)ls->in.index-idx_start] = ls->now(&ls->in); /* '.'. */
+  buffer[(size_t)ls->in.index-idx_start] = (wchar_t)ls->now(&ls->in); /* '.'. */
   ls->pull(&ls->in);
   
   size_t idx_before_decimals = (size_t)ls->in.index;
@@ -255,7 +255,7 @@ une_lexer__(une_lex_num)
     }
   
     /* Add character to buffer. */
-    buffer[(size_t)ls->in.index-idx_start] = ls->now(&ls->in);
+    buffer[(size_t)ls->in.index-idx_start] = (wchar_t)ls->now(&ls->in);
     ls->pull(&ls->in);
   }
   
@@ -320,7 +320,7 @@ une_lexer__(une_lex_str)
       switch (ls->now(&ls->in)) {
         case L'\\':
         case L'"':
-          buffer[buffer_index++] = ls->now(&ls->in);
+          buffer[buffer_index++] = (wchar_t)ls->now(&ls->in);
           continue;
         case L'n':
           buffer[buffer_index++] = L'\n';
@@ -354,7 +354,7 @@ une_lexer__(une_lex_str)
     }
     
     /* Add character to string buffer. */
-    buffer[buffer_index++] = ls->now(&ls->in);
+    buffer[buffer_index++] = (wchar_t)ls->now(&ls->in);
   }
   
   buffer[buffer_index] = L'\0';
@@ -387,7 +387,7 @@ une_lexer__(une_lex_id)
     }
     
     /* Add character to string buffer. */
-    buffer[buffer_index++] = ls->now(&ls->in);
+    buffer[buffer_index++] = (wchar_t)ls->now(&ls->in);
     ls->pull(&ls->in);
   }
   
@@ -485,7 +485,18 @@ une_lexer__(une_lex_1c_token)
     }
     i++;
   }
+#ifdef __GNUC__
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type"
 }
 #pragma clang diagnostic pop
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+}
+#pragma GCC diagnostic pop
+#endif
+#else
+}
+#endif
