@@ -119,11 +119,12 @@ else()
   message(FATAL_ERROR "Illegal build type '${CMAKE_BUILD_TYPE}'.")
 endif()
 
+# Preprocessor definitions.
 foreach(option IN LISTS options)
   string(REPLACE "|" ";" option_list ${option})
   list(GET option_list 0 id)
   list(GET option_list 2 val)
-  if("${JSON_${id}}" STREQUAL "ON")
+  if("${UNE_${id}}" STREQUAL "ON")
     add_definitions(-DUNE_${id})
   endif()
 endforeach()
