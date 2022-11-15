@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Interactive mode directives.
+  - `#clear` clears the console.
+  - `#header` displays the header.
+  - `#symbols` displays all accessible symbols.
+
 ## [0.10.0] - 2022-09-27
 
 ### Added

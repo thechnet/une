@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2022-10-05
+Modified 2022-11-15
 */
 
 /* Implementation-specific includes. */
@@ -166,14 +166,39 @@ void main_interactive(void)
   signal(SIGINT, &main_sigint_fired);
   une_interpreter_state is = une_interpreter_state_create();
   wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
-  bool did_exit = false;
   verify(stmts);
+  bool did_exit = false;
   
   fputws(RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
   
   while (!sigint_fired && !did_exit) {
     fputws(UNE_INTERACTIVE_PREFIX, stdout);
     if (!fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin)) assert(false);
+    /* Directives. */
+    if (!wcscmp(stmts, L"#clear\n")) {
+      fputws(L"\033[H\033[J", stdout);
+      continue;
+    } else if (!wcscmp(stmts, L"#header\n")) {
+      fputws(RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
+      continue;
+    } else if (!wcscmp(stmts, L"#symbols\n")) {
+      for (size_t i=0; i<is.context->variables_count; i++) {
+        fputws(is.context->variables[i].name, stdout);
+        if (is.context->variables[i].content.type == UNE_RT_FUNCTION) {
+          size_t fi = (size_t)is.context->variables[i].content.value._int;
+          une_function *fn = is.functions+fi;
+          fputwc(L'(', stdout);
+          if (fn->params_count) {
+            fwprintf(stdout, L"%ls", fn->params[0]);
+            for (size_t j=1; j<fn->params_count; j++)
+              fwprintf(stdout, L", %ls", fn->params[j]);
+          }
+          fputwc(L')', stdout);
+        }
+        fputwc(L'\n', stdout);
+      }
+      continue;
+    }
     size_t len = wcslen(stmts);
     stmts[--len] = L'\0'; /* Remove trailing newline. */
     une_result result = une_run(false, NULL, stmts, &did_exit, &is);
