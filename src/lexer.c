@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2022-10-05
+Modified 2022-11-15
 */
 
 /* Header-specific includes. */
@@ -129,8 +129,11 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     }
     
     /* Skip whitespace. */
-    while (UNE_LEXER_WC_IS_SOFT_WHITESPACE(ls->now(&ls->in)))
-      ls->pull(&ls->in);
+    if (UNE_LEXER_WC_IS_SOFT_WHITESPACE(ls->now(&ls->in))) {
+      while (UNE_LEXER_WC_IS_SOFT_WHITESPACE(ls->now(&ls->in)))
+        ls->pull(&ls->in);
+      continue;
+    }
     
     /* Number. */
     if (UNE_LEXER_WC_IS_DIGIT(ls->now(&ls->in))) {

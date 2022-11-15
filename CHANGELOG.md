@@ -8,6 +8,9 @@
   - `#header` displays the header.
   - `#symbols` displays all accessible symbols.
 
+### Fixed
+- Soft whitespace at the end of the script causes a syntax error.
+
 ## [0.10.0] - 2022-09-27
 
 ### Added
