@@ -10,6 +10,7 @@
 
 ### Fixed
 - Soft whitespace at the end of the script causes a syntax error.
+- <kbd>CTRL</kbd>+<kbd>C</kbd> to exit the interactive mode is unreliable in various cases.
 
 ## [0.10.0] - 2022-09-27
 

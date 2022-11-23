@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2022-11-15
+Modified 2022-11-23
 */
 
 /* Implementation-specific includes. */
@@ -173,7 +173,8 @@ void main_interactive(void)
   
   while (!sigint_fired && !did_exit) {
     fputws(UNE_INTERACTIVE_PREFIX, stdout);
-    if (!fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin)) assert(false);
+    if (!fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin))
+      break;
     /* Directives. */
     if (!wcscmp(stmts, L"#clear\n")) {
       fputws(L"\033[H\033[J", stdout);
