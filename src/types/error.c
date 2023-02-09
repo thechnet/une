@@ -10,6 +10,8 @@ Modified 2023-02-09
 #include "../stream.h"
 #include "../lexer.h"
 
+#define ERROR_MESSAGE_TAB_WIDTH 8
+
 /*
 Error message table.
 */
@@ -73,6 +75,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
 {
   /* Setup. */
   size_t invisible_characters = 0;
+  size_t additional_characters = 0;
   une_istream text;
   wint_t (*pull)(une_istream*);
   wint_t (*peek)(une_istream*, ptrdiff_t);
@@ -119,6 +122,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   /* Print traceback. */
   contexts = (une_context**)s_contexts.array; /* Reobtain up-to-date pointer. */
   for (int i=0; i<=s_contexts.index; i++) {
+    
     /* Get stored information. */
     une_function *function;
     if (contexts[i]->function < 0)
@@ -148,8 +152,12 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
     while (true) {
       if (pull(&text) == WEOF)
         break;
-      if (main_context && UNE_LEXER_WC_IS_INVISIBLE(now(&text)) && text.index < (ptrdiff_t)position.end)
-        invisible_characters++;
+      if (main_context && text.index >= (ptrdiff_t)position.start && text.index < (ptrdiff_t)position.end) {
+        if (UNE_LEXER_WC_IS_INVISIBLE(now(&text)))
+          invisible_characters++;
+        if (now(&text) == L'\t')
+          additional_characters += ERROR_MESSAGE_TAB_WIDTH-1;
+      }
       if (text.index >= (ptrdiff_t)position.start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
         break;
       if (now(&text) == L'\n') {
@@ -160,6 +168,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
       }
     }
     line_end = (size_t)text.index;
+    
     /* Print position. */
     if (main_context) {
       error_line.start = line_begin;
@@ -168,6 +177,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
       #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
       wprintf(UNE_COLOR_HINT L"\n(%hs @ %d)\n", error->meta_file, error->meta_line);
       wprintf(L"(invisible_characters: %d)\n", invisible_characters);
+      wprintf(L"(additional_characters: %d)\n", additional_characters);
       wprintf(L"(error_line.start/end: %d, %d)", error_line.start, error_line.end);
       #endif
     } else {
@@ -201,7 +211,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
 
   /* Underline error position within line. */
   wprintf(UNE_COLOR_FAIL);
-  for (size_t i=error->pos.start-error_line.start-invisible_characters; i>0; i--)
+  for (size_t i=error->pos.start-error_line.start-invisible_characters+additional_characters; i>0; i--)
     putwc(L' ', stdout);
   for (size_t i=0; i<error->pos.end-error->pos.start; i++)
     putwc(L'~', stdout);
