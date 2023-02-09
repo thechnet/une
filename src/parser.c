@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-02-08
+Modified 2023-02-09
 */
 
 /* Header-specific includes. */
@@ -529,35 +529,16 @@ une_parser__(une_parse_for)
   if (counter == NULL)
     return NULL;
   
-  /* From. */
-  if (now(&ps->in).type != UNE_TT_FROM) {
+  /* Realm. */
+  une_node *loop = NULL;
+  if (now(&ps->in).type == UNE_TT_FROM)
+    loop = une_parse_for_range(error, ps);
+  else if (now(&ps->in).type == UNE_TT_IN)
+    loop = une_parse_for_element(error, ps);
+  else
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+  if (!loop) {
     une_node_free(counter, false);
-    return NULL;
-  }
-  pull(&ps->in);
-  
-  /* Expression. */
-  une_node *from = une_parse_expression(error, ps);
-  if (from == NULL) {
-    une_node_free(counter, false);
-    return NULL;
-  }
-  
-  /* Till. */
-  if (now(&ps->in).type != UNE_TT_TILL) {
-    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
-    une_node_free(counter, false);
-    une_node_free(from, false);
-    return NULL;
-  }
-  pull(&ps->in);
-  
-  /* Expression. */
-  une_node *to = une_parse_expression(error, ps);
-  if (to == NULL) {
-    une_node_free(counter, false);
-    une_node_free(from, false);
     return NULL;
   }
   
@@ -567,21 +548,78 @@ une_parser__(une_parse_for)
   ps->loop_level--;
   if (body == NULL) {
     une_node_free(counter, false);
-    une_node_free(from, false);
-    une_node_free(to, false);
+    une_node_free(loop, false);
     return NULL;
   }
   
-  une_node *node = une_node_create(UNE_NT_FOR);
-  node->pos = (une_position){
+  loop->pos = (une_position){
     .start = pos_start,
     .end = peek(&ps->in, -1).pos.end
   };
-  node->content.branch.a = counter;
-  node->content.branch.b = from;
-  node->content.branch.c = to;
-  node->content.branch.d = body;
-  return node;
+  loop->content.branch.a = counter;
+  if (loop->type == UNE_NT_FOR_RANGE)
+    loop->content.branch.d = body;
+  else
+    loop->content.branch.c = body;
+  return loop;
+}
+
+/*
+Parse 'from till' realm.
+*/
+une_parser__(une_parse_for_range)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  /* From. */
+  assert(now(&ps->in).type == UNE_TT_FROM);
+  pull(&ps->in);
+  
+  /* Expression. */
+  une_node *from = une_parse_expression(error, ps);
+  if (from == NULL)
+    return NULL;
+  
+  /* Till. */
+  if (now(&ps->in).type != UNE_TT_TILL) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+    une_node_free(from, false);
+    return NULL;
+  }
+  pull(&ps->in);
+  
+  /* Expression. */
+  une_node *till = une_parse_expression(error, ps);
+  if (till == NULL) {
+    une_node_free(from, false);
+    return NULL;
+  }
+  
+  une_node *loop = une_node_create(UNE_NT_FOR_RANGE);
+  loop->content.branch.b = from;
+  loop->content.branch.c = till;
+  return loop;
+}
+
+/*
+Parse 'in' realm.
+*/
+une_parser__(une_parse_for_element)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  /* In. */
+  assert(now(&ps->in).type == UNE_TT_IN);
+  pull(&ps->in);
+  
+  /* Expression. */
+  une_node *elements = une_parse_expression(error, ps);
+  if (elements == NULL)
+    return NULL;
+  
+  une_node *loop = une_node_create(UNE_NT_FOR_ELEMENT);
+  loop->content.branch.b = elements;
+  return loop;
 }
 
 /*

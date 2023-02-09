@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-02-08
+Modified 2023-02-09
 */
 
 /* Header-specific includes. */
@@ -410,6 +410,8 @@ une_lexer__(une_lex_id)
     tk.type = UNE_TT_FROM;
   else if (!wcscmp(buffer, L"till"))
     tk.type = UNE_TT_TILL;
+  else if (!wcscmp(buffer, L"in"))
+    tk.type = UNE_TT_IN;
   else if (!wcscmp(buffer, L"while"))
     tk.type = UNE_TT_WHILE;
   else if (!wcscmp(buffer, L"return"))

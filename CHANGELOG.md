@@ -5,6 +5,7 @@
 ### Added
 - New `cover` operator.  
   The `cover` operator is used to provide an alternative value for an expression in case of an error during evaluation.
+- `for-in` loops.
 - New built-in function `eval()`.  
   Same as `script()`, but accepts a string instead of a file path.
 - New built-in function `replace()`.  

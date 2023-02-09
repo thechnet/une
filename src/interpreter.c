@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-08
+Modified 2023-02-09
 */
 
 /* Header-specific includes. */
@@ -47,7 +47,8 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_get,
   &une_interpret_get_idx,
   &une_interpret_call,
-  &une_interpret_for,
+  &une_interpret_for_range,
+  &une_interpret_for_element,
   &une_interpret_while,
   &une_interpret_if,
   &une_interpret_continue,
@@ -842,9 +843,9 @@ une_interpreter__(une_interpret_call)
 }
 
 /*
-Interpret a UNE_NT_FOR une_node.
+Interpret a UNE_NT_FOR_RANGE une_node.
 */
-une_interpreter__(une_interpret_for)
+une_interpreter__(une_interpret_for_range)
 {
   /* Get range. */
   une_result result = une_interpret_as(error, is, node->content.branch.b, UNE_RT_INT);
@@ -889,6 +890,51 @@ une_interpreter__(une_interpret_for)
     une_result_free(result);
   }
   
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_FOR_ELEMENT une_node.
+*/
+une_interpreter__(une_interpret_for_element)
+{
+  /* Get range. */
+  une_result elements = une_interpret(error, is, node->content.branch.b);
+  if (elements.type == UNE_RT_ERROR)
+    return elements;
+  une_datatype elements_dt = UNE_DATATYPE_FOR_RESULT(elements);
+  if (!elements_dt.get_len) {
+    une_result_free(elements);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  une_int length = (une_int)elements_dt.get_len(elements);
+  assert(elements_dt.get_index);
+  
+  /* Get loop variable. */
+  wchar_t *id = node->content.branch.a->content.value._wcs;
+  une_variable *var = une_variable_find_or_create(is->context, id); /* We only check the *local* variables. */
+  
+  /* Prepare internal index. */
+  une_result index = une_result_create(UNE_RT_INT);
+  index.value._int = 0;
+  
+  /* Loop. */
+  for (; index.value._int<length; index.value._int++) {
+    var = une_variable_find(is->context, id); /* Avoid stale pointer if variable buffer grows. */
+    une_result_free(var->content);
+    var->content = elements_dt.get_index(elements, index);
+    une_result result = une_interpret(error, is, node->content.branch.c);
+    if (result.type == UNE_RT_ERROR || is->should_return || is->should_exit)
+      return result;
+    if (result.type == UNE_RT_BREAK) {
+      une_result_free(result);
+      break;
+    }
+    une_result_free(result);
+  }
+  
+  une_result_free(elements);
   return une_result_create(UNE_RT_VOID);
 }
 

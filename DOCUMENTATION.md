@@ -347,6 +347,14 @@ for iterator_variable from starting_integer till concluding_integer {
 
 Here, `iterator_variable` is the name for the variable that will hold the iteration inside the body. It can be accessed like any other variable. `starting_integer` is the integer the iterator has at the beginning of the loop. `concluding_integer` is the integer that, when reached, will conclude the loop; it is important to note here that once the concluding integer was reached, the body is **not** executed one last time. The operation applied to the iterator for every iteration depends on the starting and concluding integers: if the concluding integer is smaller than the starting integer, the iterator is decremented by `1` every loop — otherwise, it is incremented by `1` every loop.
 
+Alternatively, the `for` loop also accepts the `in` keyword in place of `from-till`. This simplifies the act of iterating over items in a list or characters in a string; instead of having to access the current element *via* the iterator variable, the current element is instead placed directly *into* the iterator variable:
+
+```
+for element in list_or_string {
+  statement
+}
+```
+
 Using the `while` keyword, statement(s) can be repeated until a conditional expression no longer evaluates to 'true':
 
 ```

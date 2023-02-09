@@ -194,6 +194,8 @@ cases = [
   Case('for i from 0 ,', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('for i from 0 till', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('for i from 0 till 1 ,', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
+  Case('for i in ,', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
+  Case('for i in "a" ,', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('while 1 {+}', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('if 1 )', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('if 1 1 else', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
@@ -444,6 +446,8 @@ cases = [
   Case('for i from [1] till 3 print(i)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('for i from 0 till [1]**2 print(i)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('for i from 0 till 3 print([i]**2)', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('for i in 0 print(i)', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('a=0;for i in [1,2,3] a=a+i;return a', UNE_RT_INT, '6', [ATTR_NO_IMPLICIT_RETURN]),
   
   # WHILE
   Case('i=3;while i>0 i=i-1;return i', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),

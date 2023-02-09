@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-02-08
+Modified 2023-02-09
 */
 
 /* Header-specific includes. */
@@ -46,7 +46,8 @@ const wchar_t *une_node_table[] = {
   L"GET",
   L"GET_IDX",
   L"CALL",
-  L"FOR",
+  L"FOR_RANGE",
+  L"FOR_ELEMENT",
   L"WHILE",
   L"IF",
   L"CONTINUE",
@@ -388,6 +389,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     
     /* Ternary operations. */
     case UNE_NT_COP:
+    case UNE_NT_FOR_ELEMENT:
     case UNE_NT_IF: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
@@ -414,7 +416,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     }
     
     /* Quaternary operations. */
-    case UNE_NT_FOR: {
+    case UNE_NT_FOR_RANGE: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
       wchar_t *branch3 = une_node_to_wcs(node->content.branch.c);
