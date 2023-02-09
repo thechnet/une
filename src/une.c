@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2022-09-26
+Modified 2023-02-09
 */
 
 /* Header-specific includes. */
@@ -114,6 +114,40 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
     };
   }
   #endif /* UNE_DEBUG_REPORT */
+  
+  return result;
+}
+
+/*
+Run a Une program, without handling errors or freeing memory.
+*/
+une_result une_run_bare(une_error *error, une_interpreter_state *is, char *path, wchar_t *text)
+{
+  /* Prepare. */
+  *error = une_error_create();
+  
+  /* Lex. */
+  une_lexer_state ls = une_lexer_state_create(path ? true : false, path, text);
+  une_token *tokens = une_lex(error, &ls);
+  if (!tokens)
+    return une_result_create(UNE_RT_ERROR);
+  
+  /* Parse. */
+  une_parser_state ps = une_parser_state_create();
+  une_node *ast = une_parse(error, &ps, tokens);
+  if (!ast) {
+    une_tokens_free(tokens);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Interpret. */
+  if (!is->context)
+    *is = une_interpreter_state_create();
+  une_result result = une_interpret(error, is, ast);
+  
+  /* Finalize. */
+  une_node_free(ast, false);
+  une_tokens_free(tokens);
   
   return result;
 }
