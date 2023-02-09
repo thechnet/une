@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2022-08-04
+Modified 2023-02-08
 */
 
 /* Header-specific includes. */
@@ -54,6 +54,7 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_break,
   &une_interpret_return,
   &une_interpret_exit,
+  &une_interpret_cover,
 };
 
 /*
@@ -981,4 +982,19 @@ une_interpreter__(une_interpret_exit)
     result = une_result_create(UNE_RT_VOID);
   is->should_exit = true;
   return result;
+}
+
+/*
+Interpret a UNE_NT_COVER une_node.
+*/
+une_interpreter__(une_interpret_cover)
+{
+  /* Try to interpret branch A. */
+  une_result left = une_interpret(error, is, node->content.branch.a);
+  if (left.type != UNE_RT_ERROR)
+    return left;
+  une_result_free(left);
+
+  /* Now that we checked branch A, branch B will always hold the outcome of this function. */
+  return une_interpret(error, is, node->content.branch.b);
 }

@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2022-08-04
+Modified 2023-02-08
 */
 
 #ifndef UNE_TOKEN_H
@@ -68,6 +68,7 @@ typedef enum une_token_type_ {
   UNE_TT_GLOBAL,
   UNE_TT_QMARK,
   UNE_TT_COLON,
+  UNE_TT_COVER,
   UNE_TT_FUNCTION,
   UNE_TT_BUILTIN,
   

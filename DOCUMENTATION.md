@@ -229,6 +229,13 @@ Using the multiplication operator between a string or list and an integer repeat
 3 * [46] == [46, 46, 46]
 ```
 
+An additional operator, `cover`, can be used to provide an alternative value for an expression that results in an error:
+
+```
+10/5 cover "Zero division" == 2
+10/0 cover "Zero division" == "Zero division"
+```
+
 ## 5. Variables
 
 Variable names can consist of any alphanumeric characters plus underscores (`_`). They are defined as follows:

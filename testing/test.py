@@ -299,6 +299,10 @@ cases = [
   Case('1<=unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]<=1', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
+  # COVER
+  Case('1/0 cover 46', UNE_RT_INT, '46', []),
+  Case('1/0 cover 2/0 cover 96', UNE_RT_INT, '96', []),
+  
   # ADD
   Case('1+1', UNE_RT_INT, '2', []),
   Case('1+1.0', UNE_RT_FLT, '2.000', []),

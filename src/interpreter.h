@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2022-08-04
+Modified 2023-02-08
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -66,5 +66,6 @@ une_interpreter__(une_interpret_continue);
 une_interpreter__(une_interpret_break);
 une_interpreter__(une_interpret_return);
 une_interpreter__(une_interpret_exit);
+une_interpreter__(une_interpret_cover);
 
 #endif /* !UNE_INTERPRETER_H */

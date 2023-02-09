@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2022-10-05
+Modified 2023-02-08
 */
 
 /* Header-specific includes. */
@@ -175,6 +175,22 @@ une_parser__(une_parse_condition)
     UNE_R_BGN_CONDITION_TOKENS,
     UNE_R_BGN_CONDITION_NODES,
     UNE_R_END_CONDITION_TOKENS,
+    &une_parse_cover,
+    &une_parse_cover
+  );
+}
+
+/*
+Parse cover.
+*/
+une_parser__(une_parse_cover)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  return une_parse_binary_operation(error, ps,
+    UNE_TT_COVER,
+    UNE_NT_COVER,
+    UNE_TT_COVER,
     &une_parse_add_sub,
     &une_parse_add_sub
   );
