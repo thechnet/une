@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- New built-in function `eval()`.  
+  Same as `script()`, but accepts a string instead of a file path.
 - Interactive mode directives.
   - `#clear` clears the console.
   - `#header` displays the header.

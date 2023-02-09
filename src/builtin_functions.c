@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2022-10-05
+Modified 2023-02-06
 */
 
 /* Header-specific includes. */
@@ -49,7 +49,8 @@ const size_t une_builtin_functions_params_count[] = {
   1, /* input */
   1, /* script */
   1, /* exist */
-  2 /* split */
+  2, /* split */
+  1 /* eval */
 };
 
 /*
@@ -418,7 +419,9 @@ une_builtin_fn__(exist)
   };
 }
 
-/* Split a string into a list of substrings. */
+/*
+Split a string into a list of substrings.
+*/
 UNE_OSTREAM_PUSHER(une_builtin_split_push__, une_result)
 une_builtin_fn__(split)
 {
@@ -500,4 +503,18 @@ une_builtin_fn__(split)
     .type = UNE_RT_LIST,
     .value._vp = (void*)tokens
   };
+}
+
+/*
+Evaluate a Une script in string form.
+*/
+une_builtin_fn__(eval)
+{
+  une_builtin_param eval = 0;
+  
+  UNE_BUILTIN_VERIFY_ARG_TYPE(eval, UNE_RT_STR);
+
+  /* Run script. */
+  une_result out = une_run(false, NULL, args[eval].value._wcs, NULL, is);
+  return out;
 }

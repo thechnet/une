@@ -440,6 +440,10 @@ for i from 0 till 11 {
     ```
     script("test.txt") == 46
     ```
+- `eval(string)` – Same as `script()`, but accepts a string instead:
+    ```
+    eval("23*2") == 46
+    ```
 - `input(prompt)` – Prints `prompt` and requests input from the user, returning the entered string:
     ```
     > une -s "print(\"You wrote '\" + input(\"Write something: \") + \"'\")"
