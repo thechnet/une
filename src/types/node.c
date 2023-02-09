@@ -27,6 +27,7 @@ const wchar_t *une_node_table[] = {
   L"NOT",
   L"AND",
   L"OR",
+  L"NULLISH",
   L"EQU",
   L"NEQ",
   L"GTR",

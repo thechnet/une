@@ -197,18 +197,25 @@ For a value *A* to be considered greater than a value *B* of the same type, the 
 
 Conditions can be chained together.
 
-Using `&&`, the entire expression only evaluates to *true* if both conditions evaluated to *true*.
+Using `&&`, the expression only evaluates to *true* if both conditions are *true*.
 
 ```
 1 && 1 # 'true'
 0 && 1 # 'false'
 ```
 
-Using `||`, the entire expression evaluates to *true* if at least one condition evaluated to *true*. 
+Using `||`, the expression evaluates to the left-hand side if the left condition is *true*; otherwise, it evaluates to the right-hand side.
 
 ```
 1 || 0 # 'true'
 0 || 0 # 'false'
+```
+
+Using `??`, the expression evaluates to the left-hand side if the left condition is not `Void`; otherwise, it evaluates to the right-hand side.
+
+```
+1 ?? 2 # 1
+print("Something") ?? 2 # 2
 ```
 
 ## 4. Operations

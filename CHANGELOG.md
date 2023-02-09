@@ -5,6 +5,8 @@
 ### Added
 - New `cover` operator.  
   The `cover` operator is used to provide an alternative value for an expression in case of an error during evaluation.
+- New nullish (`??`) operator.  
+  The nullish operator returns the left result if it is not 'Void', otherwise the right.
 - `for-in` loops.
 - New built-in function `eval()`.  
   Same as `script()`, but accepts a string instead of a file path.

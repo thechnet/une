@@ -28,6 +28,7 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_not,
   &une_interpret_and,
   &une_interpret_or,
+  &une_interpret_nullish,
   &une_interpret_equ,
   &une_interpret_neq,
   &une_interpret_gtr,
@@ -270,6 +271,21 @@ une_interpreter__(une_interpret_or)
   /* Check if branch A is true. */
   une_result left = une_interpret(error, is, node->content.branch.a);
   if (left.type == UNE_RT_ERROR || une_result_is_true(left))
+    return left;
+  une_result_free(left);
+
+  /* Now that we checked branch A, branch B will always hold the outcome of this function. */
+  return une_interpret(error, is, node->content.branch.b);
+}
+
+/*
+Interpret a UNE_NT_NULLISH une_node.
+*/
+une_interpreter__(une_interpret_nullish)
+{
+  /* Check if branch A is not VOID. */
+  une_result left = une_interpret(error, is, node->content.branch.a);
+  if (left.type != UNE_RT_VOID)
     return left;
   une_result_free(left);
 
@@ -1039,6 +1055,7 @@ une_interpreter__(une_interpret_cover)
   une_result left = une_interpret(error, is, node->content.branch.a);
   if (left.type != UNE_RT_ERROR)
     return left;
+  *error = une_error_create();
   une_result_free(left);
 
   /* Now that we checked branch A, branch B will always hold the outcome of this function. */

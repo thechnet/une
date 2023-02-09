@@ -29,7 +29,8 @@ typedef enum une_node_type_ {
   #define UNE_R_BGN_AND_OR_NODES UNE_NT_AND
   UNE_NT_AND,
   UNE_NT_OR,
-  #define UNE_R_END_AND_OR_NODES UNE_NT_OR
+  UNE_NT_NULLISH,
+  #define UNE_R_END_AND_OR_NODES UNE_NT_NULLISH
   #define UNE_R_BGN_CONDITION_NODES UNE_NT_EQU
   UNE_NT_EQU,
   UNE_NT_NEQ,

@@ -31,6 +31,7 @@ const wchar_t *une_token_table[] = {
   L"!",
   L"&&",
   L"||",
+  L"??",
   L"==",
   L"!=",
   L">",

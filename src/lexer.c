@@ -15,7 +15,7 @@ Modified 2023-02-09
 /*
 Two-character token characters.
 */
-const wchar_t *une_2c_tokens_wc = L"==!=>=<=//**&&||";
+const wchar_t *une_2c_tokens_wc = L"==!=>=<=//**&&||??";
 
 /*
 Two-character token types.
@@ -29,6 +29,7 @@ const une_token_type une_2c_tokens_tt[] = {
   UNE_TT_POW,
   UNE_TT_AND,
   UNE_TT_OR,
+  UNE_TT_NULLISH,
 };
 
 /*

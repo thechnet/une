@@ -40,6 +40,7 @@ une_interpreter__(une_interpret_cop);
 une_interpreter__(une_interpret_not);
 une_interpreter__(une_interpret_and);
 une_interpreter__(une_interpret_or);
+une_interpreter__(une_interpret_nullish);
 une_interpreter__(une_interpret_equ);
 une_interpreter__(une_interpret_neq);
 une_interpreter__(une_interpret_gtr);
