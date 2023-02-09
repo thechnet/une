@@ -1016,8 +1016,13 @@ une_parser__(une_parse_sequence,
     }
     sequence_index++;
     
+    /* ADDITIONAL WHITESPACE. */
+    if (tt_end_of_item != UNE_TT_NEW)
+      while (now(&ps->in).type == UNE_TT_NEW)
+        pull(&ps->in);
+    
     /* ITEM DELIMITER. */
-    if (now(&ps->in).type == tt_end || now(&ps->in).type == tt_end_of_item || now(&ps->in).type == UNE_TT_NEW)
+    if (now(&ps->in).type == tt_end || now(&ps->in).type == tt_end_of_item)
       continue;
     for (size_t i=1; i<sequence_index; i++)
       une_node_free(sequence[i], false);
