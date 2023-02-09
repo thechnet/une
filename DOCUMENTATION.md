@@ -466,7 +466,10 @@ for i from 0 till 11 {
     ```
     split("1,2;3", [",", ";"]) == ["1", "2", "3"]
     ```
-
+- `replace(search, replace, subject)` – Replace string `search` with string `replace` in string `subject`:
+    ```
+    replace("+", "*", "2+23") == "2*23"
+    ```
 
 ---
 

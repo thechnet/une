@@ -164,6 +164,9 @@ cases = [
   Case('eval(0)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('eval("23*2")', UNE_RT_INT, '46', []),
   
+  Case('replace("a","b","xax")', UNE_RT_STR, 'xbx', []),
+  Case('replace("","","")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
+  
   # main
   Case('unknown', UNE_RT_ERROR, UNE_ET_FILE_NOT_FOUND, [ATTR_DIRECT_ARG]),
   Case('', UNE_RT_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),

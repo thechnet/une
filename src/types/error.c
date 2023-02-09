@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2022-10-05
+Modified 2023-02-09
 */
 
 /* Header-specific includes. */
@@ -24,7 +24,7 @@ const wchar_t *une_error_message_table[] = {
   L"Unreal number.",
   L"Wrong number of arguments.",
   L"File not found.",
-  L"Encoding or conversion error.",
+  L"Encoding, conversion, or pattern error.",
   L"Type error.",
   L"Unknown error! (Internal Error)",
 };

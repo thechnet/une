@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-02-06
+Modified 2023-02-09
 */
 
 /* Header-specific includes. */
@@ -50,7 +50,8 @@ const size_t une_builtin_functions_params_count[] = {
   1, /* script */
   1, /* exist */
   2, /* split */
-  1 /* eval */
+  1, /* eval */
+  3 /* replace */
 };
 
 /*
@@ -517,4 +518,50 @@ une_builtin_fn__(eval)
   /* Run script. */
   une_result out = une_run(false, NULL, args[eval].value._wcs, NULL, is);
   return out;
+}
+
+/*
+Replace string 'search' with string 'replace' in string 'subject'.
+*/
+une_builtin_fn__(replace)
+{
+  une_builtin_param search_arg = 0;
+  une_builtin_param replace_arg = 1;
+  une_builtin_param subject_arg = 2;
+  
+  UNE_BUILTIN_VERIFY_ARG_TYPE(search_arg, UNE_RT_STR);
+  UNE_BUILTIN_VERIFY_ARG_TYPE(replace_arg, UNE_RT_STR);
+  UNE_BUILTIN_VERIFY_ARG_TYPE(subject_arg, UNE_RT_STR);
+  
+  wchar_t *search = args[search_arg].value._wcs;
+  wchar_t *replace = args[replace_arg].value._wcs;
+  wchar_t *subject = args[subject_arg].value._wcs;
+  
+  size_t search_len = wcslen(search);
+  if (!search_len) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(search_arg));
+    return une_result_create(UNE_RT_ERROR);
+  }
+  size_t replace_len = wcslen(replace);
+  size_t subject_len = wcslen(subject);
+  size_t new_size = subject_len*replace_len+1;
+  
+  /* Allocate memory for new string. */
+  wchar_t *new = malloc(new_size*sizeof(wchar_t));
+  
+  /* Create new string. */
+  size_t new_idx = 0, subject_idx = 0;
+  while (subject_idx < subject_len)
+    if (wcsncmp(subject+subject_idx, search, search_len) == 0) {
+      subject_idx += search_len;
+      wcsncpy(new+new_idx, replace, replace_len);
+      new_idx += replace_len;
+    } else {
+      new[new_idx++] = subject[subject_idx++];
+    }
+  new[new_idx] = L'\0';
+  
+  une_result result = une_result_create(UNE_RT_STR);
+  result.value._wcs = new;
+  return result;
 }
