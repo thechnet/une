@@ -392,7 +392,7 @@ une_builtin_fn__(script)
   }
 
   /* Run script. */
-  une_result out = une_run(true, path, NULL, NULL, is);
+  une_result out = une_run_bare(error, is, NULL, args[script].value._wcs);
   free(path);
   return out;
 }
@@ -511,13 +511,12 @@ Evaluate a Une script in string form.
 */
 une_builtin_fn__(eval)
 {
-  une_builtin_param eval = 0;
+  une_builtin_param script = 0;
   
-  UNE_BUILTIN_VERIFY_ARG_TYPE(eval, UNE_RT_STR);
+  UNE_BUILTIN_VERIFY_ARG_TYPE(script, UNE_RT_STR);
 
   /* Run script. */
-  une_result out = une_run(false, NULL, args[eval].value._wcs, NULL, is);
-  return out;
+  return une_run_bare(error, is, NULL, args[script].value._wcs);
 }
 
 /*
