@@ -152,7 +152,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
     while (true) {
       if (pull(&text) == WEOF)
         break;
-      if (main_context && text.index >= (ptrdiff_t)position.start && text.index < (ptrdiff_t)position.end) {
+      if (main_context && text.index < (ptrdiff_t)position.end) {
         if (UNE_LEXER_WC_IS_INVISIBLE(now(&text)))
           invisible_characters++;
         if (now(&text) == L'\t')
@@ -162,8 +162,10 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
         break;
       if (now(&text) == L'\n') {
         line_begin = (size_t)text.index+1;
-        if (main_context)
+        if (main_context) {
           invisible_characters = 0;
+          additional_characters = 0;
+        }
         line++;
       }
     }
