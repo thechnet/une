@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-02-09
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -56,6 +56,7 @@ const wchar_t *une_node_table[] = {
   L"RETURN",
   L"EXIT",
   L"COVER",
+  L"CONCATENATE",
 };
 
 /*
@@ -367,6 +368,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_CALL:
     case UNE_NT_WHILE:
     case UNE_NT_COVER:
+    case UNE_NT_CONCATENATE:
     case UNE_NT_FUNCTION: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);

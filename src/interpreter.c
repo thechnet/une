@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-09
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -57,6 +57,7 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_return,
   &une_interpret_exit,
   &une_interpret_cover,
+  &une_interpret_concatenate,
 };
 
 /*
@@ -1060,4 +1061,42 @@ une_interpreter__(une_interpret_cover)
 
   /* Now that we checked branch A, branch B will always hold the outcome of this function. */
   return une_interpret(error, is, node->content.branch.b);
+}
+
+/*
+Interpret a UNE_NT_CONCATENATE une_node.
+*/
+une_interpreter__(une_interpret_concatenate)
+{
+  /* Evalute branches. */
+  une_result left = une_interpret(error, is, node->content.branch.a);
+  if (left.type == UNE_RT_ERROR)
+    return left;
+  une_result right = une_interpret(error, is, node->content.branch.b);
+  if (right.type == UNE_RT_ERROR) {
+    une_result_free(left);
+    return right;
+  }
+  
+  /* Convert both branches to strings and add them. */
+  une_result concatenated;
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  une_datatype dt_right = UNE_DATATYPE_FOR_RESULT(right);
+  if (!dt_left.as_str) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    concatenated = une_result_create(UNE_RT_ERROR);
+  } else if (!dt_right.as_str) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
+    concatenated = une_result_create(UNE_RT_ERROR);
+  } else {
+    une_result left_as_str = dt_left.as_str(left);
+    une_result right_as_str = dt_right.as_str(right);
+    concatenated = une_datatype_str_add(left_as_str, right_as_str);
+    une_result_free(left_as_str);
+    une_result_free(right_as_str);
+  }
+  
+  une_result_free(left);
+  une_result_free(right);
+  return concatenated;
 }
