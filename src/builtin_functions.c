@@ -51,7 +51,8 @@ const size_t une_builtin_functions_params_count[] = {
   1, /* exist */
   2, /* split */
   1, /* eval */
-  3 /* replace */
+  3, /* replace */
+  2 /* join */
 };
 
 /*
@@ -562,5 +563,44 @@ une_builtin_fn__(replace)
   
   une_result result = une_result_create(UNE_RT_STR);
   result.value._wcs = new;
+  return result;
+}
+
+/*
+Join the strings in list 'list' with seperator 'seperator'.
+*/
+une_builtin_fn__(join)
+{
+  une_builtin_param list = 0;
+  une_builtin_param seperator = 1;
+  
+  UNE_BUILTIN_VERIFY_ARG_TYPE(list, UNE_RT_LIST);
+  UNE_UNPACK_RESULT_LIST(args[list], elements, count);
+  UNE_FOR_RESULT_LIST_ITEM(i, count)
+    if (elements[i].type != UNE_RT_STR) {
+      *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(list));
+      return une_result_create(UNE_RT_ERROR);
+    }
+  UNE_BUILTIN_VERIFY_ARG_TYPE(seperator, UNE_RT_STR);
+  
+  /* Prepare lengths and sizes. */
+  size_t seperator_length = wcslen(args[seperator].value._wcs);
+  size_t joined_length = (count > 1 ? count-1 : 0) * seperator_length;
+  UNE_FOR_RESULT_LIST_ITEM(i, count)
+    joined_length += wcslen(elements[i].value._wcs);
+  wchar_t *joined_string = malloc((joined_length+1)*sizeof(*joined_string));
+  verify(joined_string);
+  
+  /* Assemble string. */
+  joined_string[0] = L'\0';
+  UNE_FOR_RESULT_LIST_ITEM(i, count) {
+    wcscat(joined_string, elements[i].value._wcs);
+    if (i < count)
+      wcscat(joined_string, args[seperator].value._wcs);
+  }
+  joined_string[joined_length] = L'\0';
+  
+  une_result result = une_result_create(UNE_RT_STR);
+  result.value._wcs = joined_string;
   return result;
 }

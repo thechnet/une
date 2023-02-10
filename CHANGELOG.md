@@ -15,6 +15,8 @@
   Same as `script()`, but accepts a string instead of a file path.
 - New built-in function `replace()`.  
   Replace strings in strings.
+- New built-in function `join()`.  
+  Join strings using seperators.
 - Interactive mode directives.
   - `#clear` clears the console.
   - `#header` displays the header.

@@ -161,6 +161,12 @@ cases = [
   Case('split("1.2.3", 1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('split("1.2.3", [1])', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
+  Case('join(["1","2","3"], ".")', UNE_RT_STR, "1.2.3", []),
+  Case('join(["1","2",3], ".")', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('join(["1","2","3"], 0)', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('join(["1"], ".")', UNE_RT_STR, "1", []),
+  Case('join([], ".")', UNE_RT_STR, "", []),
+  
   Case('eval(0)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('eval("23*2")', UNE_RT_INT, '46', []),
   
