@@ -493,6 +493,10 @@ for i from 0 till 11 {
     ```
     replace("+", "*", "2+23") == "2*23"
     ```
+- `substr(string, lower, upper)` – Get substring from string `string` ranging from index `lower` up to but not including index `upper`:
+    ```
+    substr("substring", 3, -3) == "str"
+    ```
 
 ---
 

@@ -43,7 +43,8 @@ Every built-in function.
   enumerator(split) \
   enumerator(eval) \
   enumerator(replace) \
-  enumerator(join)
+  enumerator(join) \
+  enumerator(substr)
 
 /*
 The index of a built-in function.

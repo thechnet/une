@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2022-08-04
+Modified 2023-02-10
 */
 
 #ifndef UNE_TOOLS_H
@@ -41,6 +41,10 @@ void une_sleep_ms(int ms);
 int une_out_of_memory(void);
 
 bool une_flts_equal(une_flt a, une_flt b);
+
+une_int une_min(une_int num, une_int min);
+une_int une_max(une_int num, une_int max);
+une_int une_clamp(une_int num, une_int min, une_int max);
 
 #ifdef _WIN32
 void une_win_vt_proc(bool enable);

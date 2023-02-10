@@ -16,6 +16,7 @@
   - `eval()` – Same as `script()`, but accepts a string instead of a file path.
   - `replace()` – Replace a string in a string.
   - `join()` – Join strings using a seperator.
+  - `substr()` – Get substrings.
 - Interactive mode directives.
   - `#clear` clears the console.
   - `#header` displays the header.

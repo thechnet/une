@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2022-10-05
+Modified 2023-02-10
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -171,6 +171,38 @@ bool une_flts_equal(une_flt a, une_flt b)
 {
   double epsilon = nextafter(0, 1);
   return fabs(a - b) < epsilon;
+}
+
+/*
+Clamps a une_int to a minimum.
+*/
+une_int une_min(une_int num, une_int min)
+{
+  if (num < min)
+    return min;
+  return num;
+}
+
+/*
+Clamps a une_int to a maximum.
+*/
+une_int une_max(une_int num, une_int max)
+{
+  if (num > max)
+    return max;
+  return num;
+}
+
+/*
+Clamps a une_int between a minimum and a maximum.
+*/
+une_int une_clamp(une_int num, une_int min, une_int max)
+{
+  if (num < min)
+    return min;
+  if (num > max)
+    return max;
+  return num;
 }
 
 #ifdef _WIN32
