@@ -19,6 +19,8 @@ const wchar_t *une_token_table[] = {
   L"flt",
   L"id",
   L"str",
+  L"True",
+  L"False",
   L"(",
   L")",
   L"{",

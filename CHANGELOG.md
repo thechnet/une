@@ -13,6 +13,7 @@
 - `for-in` loops.
 - Strings are now editable via index, like lists.
 - `Void` is now accessible via a keyword and comparable to itself.
+- `True` and `False` are available as keywords. They are identical to `1` and `0`.
 - New built-in functions:
   - `eval()` – Same as `script()`, but accepts a string instead of a file path.
   - `replace()` – Replace a string in a string.

@@ -19,6 +19,8 @@ typedef enum une_token_type_ {
   UNE_TT_FLT,
   UNE_TT_ID,
   UNE_TT_STR,
+  UNE_TT_TRUE,
+  UNE_TT_FALSE,
   UNE_TT_LPAR,
   UNE_TT_RPAR,
   UNE_TT_LBRC,

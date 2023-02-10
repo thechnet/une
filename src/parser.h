@@ -42,6 +42,8 @@ une_parser__(une_parse_void);
 une_parser__(une_parse_int);
 une_parser__(une_parse_flt);
 une_parser__(une_parse_str);
+une_parser__(une_parse_true);
+une_parser__(une_parse_false);
 une_parser__(une_parse_get);
 une_parser__(une_parse_seek, bool global);
 une_parser__(une_parse_builtin);

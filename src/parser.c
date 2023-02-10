@@ -362,6 +362,12 @@ une_parser__(une_parse_atom)
     case UNE_TT_STR:
       return une_parse_str(error, ps);
     
+    case UNE_TT_TRUE:
+      return une_parse_true(error, ps);
+    
+    case UNE_TT_FALSE:
+      return une_parse_false(error, ps);
+    
     case UNE_TT_BUILTIN:
       return une_parse_builtin(error, ps);
     
@@ -494,6 +500,32 @@ une_parser__(une_parse_str)
   }
   
   return left;
+}
+
+/*
+Parse 'True'.
+*/
+une_parser__(une_parse_true)
+{
+  LOGPARSE(L"", now(&ps->in));
+  une_node *num = une_node_create(UNE_NT_INT);
+  num->pos = now(&ps->in).pos;
+  num->content.value._int = 1;
+  pull(&ps->in);
+  return num;
+}
+
+/*
+Parse 'False'.
+*/
+une_parser__(une_parse_false)
+{
+  LOGPARSE(L"", now(&ps->in));
+  une_node *num = une_node_create(UNE_NT_INT);
+  num->pos = now(&ps->in).pos;
+  num->content.value._int = 0;
+  pull(&ps->in);
+  return num;
 }
 
 /*
