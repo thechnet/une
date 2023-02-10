@@ -903,11 +903,12 @@ une_parser__(une_parse_assignment_or_expr_stmt)
   une_node *assignee = une_parse_assignee(error, ps);
   bool is_assignment = assignee && now(&ps->in).type == UNE_TT_SET;
   if (!is_assignment) {
-    une_node_free(assignee, false);
     ps->in.index = token_index_before;
   } else {
     pull(&ps->in); /* '='. */
   }
+  
+  LOGPARSE(L"expression", now(&ps->in));
   
   /* Expression. */
   une_node *expression = une_parse_expression(error, ps);
@@ -925,6 +926,7 @@ une_parser__(une_parse_assignment_or_expr_stmt)
     assignment_or_expression_statement->content.branch.a = assignee;
     assignment_or_expression_statement->content.branch.b = expression;
   } else {
+    une_node_free(assignee, false);
     assignment_or_expression_statement = expression;
   }
   

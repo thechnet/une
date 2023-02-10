@@ -578,7 +578,8 @@ if CLEAR:
   
 if ENUMERATE_CASES:
   for i, j in enumerate(cases):
-    print(i, j)
+    print(i, j.input)
+  exit()
 
 cd = os.getcwd()
 os.chdir(DIR)
