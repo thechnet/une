@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-02-09
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -428,14 +428,50 @@ Parse string.
 */
 une_parser__(une_parse_str)
 {
-  LOGPARSE(L"str", now(&ps->in));
-  une_node *str = une_node_create(UNE_NT_STR);
-  str->pos = now(&ps->in).pos;
-  /* DOC: Memory Management: This shows that nodes reference tokens' WCS
-  instead of storing their own. */
-  str->content.value._wcs = now(&ps->in).value._wcs;
-  pull(&ps->in);
-  return str;
+  /* Guaranteed first string. */
+  une_node *left = une_node_create(UNE_NT_STR);
+  left->pos = now(&ps->in).pos;
+  left->content.value._wcs = now(&ps->in).value._wcs;
+  
+  while (pull(&ps->in).type == UNE_TT_STR_EXPRESSION_BEGIN) {
+    /* '{'. */
+    pull(&ps->in);
+    
+    /* String expression. */
+    une_node *expression = une_parse_expression(error, ps);
+    if (!expression) {
+      une_node_free(left, false);
+      return NULL;
+    }
+    
+    /* '}'. */
+    if (now(&ps->in).type != UNE_TT_STR_EXPRESSION_END) {
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+      une_node_free(left, false);
+      une_node_free(expression, false);
+      return NULL;
+    }
+    assert(pull(&ps->in).type == UNE_TT_STR);
+    
+    /* Next string. */
+    une_node *post_expression_string = une_node_create(UNE_NT_STR);
+    post_expression_string->pos = now(&ps->in).pos;
+    post_expression_string->content.value._wcs = now(&ps->in).value._wcs;
+    
+    /* Combine nodes. */
+    une_node *string_with_expression = une_node_create(UNE_NT_CONCATENATE);
+    string_with_expression->pos.start = expression->pos.start;
+    string_with_expression->pos.end = post_expression_string->pos.end;
+    string_with_expression->content.branch.a = expression;
+    string_with_expression->content.branch.b = post_expression_string;
+    
+    une_node *new_left = une_node_create(UNE_NT_CONCATENATE);
+    new_left->content.branch.a = left;
+    new_left->content.branch.b = string_with_expression;
+    left = new_left;
+  }
+  
+  return left;
 }
 
 /*

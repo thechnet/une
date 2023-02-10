@@ -63,6 +63,8 @@ const wchar_t *une_token_table[] = {
   L"cover",
   L"function",
   L"builtin",
+  L"str{",
+  L"}str",
 };
 
 /*

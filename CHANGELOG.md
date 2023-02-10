@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Added
+- Expressions embedded in strings.  
+  To embed an expression in a string, surround it with curly braces: `"2 * 2 = {2*2}"`  
+  To include literal curly braces in a string, escape them: `"\{\}"`
 - New `cover` operator.  
   The `cover` operator is used to provide an alternative value for an expression in case of an error during evaluation.
 - New nullish (`??`) operator.  

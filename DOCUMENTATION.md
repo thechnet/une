@@ -75,19 +75,23 @@ For example `-4.6`, `0.0`, `3.46`.
 
 For example `"This is a string."`.
 
-Strings can contain a few special sequences:
+Strings can contain embedded expressions:
 
-- `\n`  
-  A literal newline.
+```
+"2 * 2 = {2 * 2}" == "2 * 2 = 4"
+```
 
-- `\"`  
-  A literal double quote.
+The following characters must be escaped using a backslash (`\`) to be used inside strings:
+- `\`
+- `"`
+- `{`
+- `}`
 
-- `\\`  
-  A literal backslash.
-
-- `\newline`  
-    Where `newline` is a literal newline in the code, placing a backslash before it will prevent it from appearing in the string.
+Also, the following sequences have special meaning:
+- `\n` – Insert a new line.
+- `\e` – Inserts the *ESC* character.
+- `\a` – Inserts the *BEL* character.
+- `\` new line – Does not include the new line in the string.
 
 ### 2.4 Functions
 

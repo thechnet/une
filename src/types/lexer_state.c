@@ -1,6 +1,6 @@
 /*
 lexer_state.c - Une
-Modified 2021-07-25
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -18,6 +18,8 @@ une_lexer_state une_lexer_state_create(bool read_from_file, char *path, wchar_t 
     .in = (une_istream){ 0 },
     .pull = NULL,
     .peek = NULL,
-    .now = NULL
+    .now = NULL,
+    .in_str_expression = false,
+    .begin_str_expression = false
   };
 }

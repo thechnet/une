@@ -14,12 +14,10 @@ Type of une_token.
 */
 typedef enum une_token_type_ {
   UNE_TT_none__, /* Undefined token type. */
-  
   UNE_TT_INT,
   UNE_TT_FLT,
   UNE_TT_ID,
   UNE_TT_STR,
-  
   UNE_TT_LPAR,
   UNE_TT_RPAR,
   UNE_TT_LBRC,
@@ -73,7 +71,8 @@ typedef enum une_token_type_ {
   UNE_TT_COVER,
   UNE_TT_FUNCTION,
   UNE_TT_BUILTIN,
-  
+  UNE_TT_STR_EXPRESSION_BEGIN,
+  UNE_TT_STR_EXPRESSION_END,
   UNE_TT_max__,
 } une_token_type;
 

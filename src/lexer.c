@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-02-09
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -113,6 +113,17 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
       break;
     }
     
+    /* Begin string expression. */
+    if (ls->begin_str_expression) {
+      ls->begin_str_expression = false;
+      ls->in_str_expression = true;
+      push(&out, (une_token){
+        .type = UNE_TT_STR_EXPRESSION_BEGIN,
+        .pos = (une_position){ .start = (size_t)ls->in.index-1, .end = (size_t)ls->in.index },
+        .value._vp = 0
+      });
+    }
+    
     /* Expected end of file. */
     if (ls->now(&ls->in) == WEOF) {
       if (out.index > -1 && tkpeek(&out, -1)->type != UNE_TT_NEW)
@@ -144,6 +155,16 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     
     /* String. */
     if (ls->now(&ls->in) == L'"') {
+      push(&out, une_lex_str(error, ls));
+      continue;
+    }
+    if (ls->in_str_expression && ls->now(&ls->in) == L'}') {
+      push(&out, (une_token){
+        .type = UNE_TT_STR_EXPRESSION_END,
+        .pos = (une_position){ .start = (size_t)ls->in.index, .end = (size_t)ls->in.index+1 },
+        .value._vp = 0
+      });
+      ls->in_str_expression = false;
       push(&out, une_lex_str(error, ls));
       continue;
     }
@@ -324,6 +345,8 @@ une_lexer__(une_lex_str)
       switch (ls->now(&ls->in)) {
         case L'\\':
         case L'"':
+        case L'{':
+        case L'}':
           buffer[buffer_index++] = (wchar_t)ls->now(&ls->in);
           continue;
         case L'n':
@@ -354,6 +377,18 @@ une_lexer__(une_lex_str)
     /* End of string. */
     if (ls->now(&ls->in) == L'"') {
       ls->pull(&ls->in);
+      break;
+    }
+    
+    /* Beginning of string expression (end of this string). */
+    if (ls->now(&ls->in) == L'{') {
+      if (ls->in_str_expression) {
+        *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){(size_t)ls->in.index, (size_t)ls->in.index+1}));
+        free(buffer);
+        return une_token_create(UNE_TT_none__);
+      }
+      ls->pull(&ls->in);
+      ls->begin_str_expression = true;
       break;
     }
     

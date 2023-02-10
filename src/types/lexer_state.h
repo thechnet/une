@@ -1,6 +1,6 @@
 /*
 lexer_state.h - Une
-Modified 2022-08-04
+Modified 2023-02-10
 */
 
 #ifndef UNE_LEXER_STATE_H
@@ -22,6 +22,8 @@ typedef struct une_lexer_state_ {
   wint_t (*pull)(une_istream*);
   wint_t (*peek)(une_istream*, ptrdiff_t);
   wint_t (*now)(une_istream*);
+  bool in_str_expression;
+  bool begin_str_expression;
 } une_lexer_state;
 
 /*
