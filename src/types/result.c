@@ -16,11 +16,6 @@ Result name table.
 */
 const wchar_t *une_result_table[] = {
   L"ERROR",
-  L"CONTINUE",
-  L"BREAK",
-  L"SIZE",
-  L"GENERIC_REFERENCE",
-  L"STR_ELEMENT_REFERENCE",
   L"VOID",
   L"INT",
   L"FLT",
@@ -28,6 +23,11 @@ const wchar_t *une_result_table[] = {
   L"LIST",
   L"FUNCTION",
   L"BUILTIN",
+  L"CONTINUE",
+  L"BREAK",
+  L"SIZE",
+  L"GENERIC_REFERENCE",
+  L"STR_ELEMENT_REFERENCE",
 };
 
 /*
