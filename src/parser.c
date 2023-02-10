@@ -432,8 +432,9 @@ une_parser__(une_parse_str)
   une_node *left = une_node_create(UNE_NT_STR);
   left->pos = now(&ps->in).pos;
   left->content.value._wcs = now(&ps->in).value._wcs;
+  pull(&ps->in);
   
-  while (pull(&ps->in).type == UNE_TT_STR_EXPRESSION_BEGIN) {
+  while (now(&ps->in).type == UNE_TT_STR_EXPRESSION_BEGIN) {
     /* '{'. */
     pull(&ps->in);
     
@@ -451,12 +452,14 @@ une_parser__(une_parse_str)
       une_node_free(expression, false);
       return NULL;
     }
-    assert(pull(&ps->in).type == UNE_TT_STR);
+    pull(&ps->in);
     
     /* Next string. */
+    assert(now(&ps->in).type == UNE_TT_STR);
     une_node *post_expression_string = une_node_create(UNE_NT_STR);
     post_expression_string->pos = now(&ps->in).pos;
     post_expression_string->content.value._wcs = now(&ps->in).value._wcs;
+    pull(&ps->in);
     
     /* Combine nodes. */
     une_node *string_with_expression = une_node_create(UNE_NT_CONCATENATE);
