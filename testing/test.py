@@ -228,6 +228,7 @@ cases = [
   Case('[1, 2]', UNE_RT_LIST, '[1, 2]', []),
   Case('[int([])]', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('"str"', UNE_RT_STR, 'str', []),
+  Case('"s{1+2}t"', UNE_RT_STR, 's3t', []),
   
   # COP
   Case('1 ? 2 : 3', UNE_RT_INT, '2', []),
