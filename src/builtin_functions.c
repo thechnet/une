@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-02-09
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -392,7 +392,7 @@ une_builtin_fn__(script)
   }
 
   /* Run script. */
-  une_result out = une_run_bare(error, is, NULL, args[script].value._wcs);
+  une_result out = une_run_bare(error, is, path, NULL);
   free(path);
   return out;
 }
