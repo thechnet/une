@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2022-08-04
+Modified 2023-02-10
 */
 
 #ifndef UNE_DATATYPES_H
@@ -48,8 +48,9 @@ typedef struct une_datatype_ {
   
   bool (*is_valid_index_type)(une_result_type);
   bool (*is_valid_index)(une_result, une_result);
+  bool (*is_valid_element)(une_result);
   une_result (*get_index)(une_result, une_result);
-  void (*set_index)(une_result*, une_result, une_result);
+  une_result (*seek_index)(une_result*, une_result);
   
   une_result (*copy)(une_result);
   void (*free_members)(une_result);
@@ -64,6 +65,9 @@ extern une_datatype une_datatypes[];
 */
 
 #define UNE_DATATYPE_FOR_RESULT(result) \
-  (une_datatypes[result.type-UNE_R_BGN_DATA_RESULT_TYPES])
+  (une_datatypes[(result).type-UNE_R_BGN_DATA_RESULT_TYPES])
+
+#define UNE_DATATYPE_FOR_RESULT_TYPE(result_type) \
+  (une_datatypes[(result_type)-UNE_R_BGN_DATA_RESULT_TYPES])
 
 #endif /* UNE_DATATYPES_H */

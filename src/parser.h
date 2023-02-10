@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2023-02-09
+Modified 2023-02-10
 */
 
 #ifndef UNE_PARSER_H
@@ -42,6 +42,7 @@ une_parser__(une_parse_int);
 une_parser__(une_parse_flt);
 une_parser__(une_parse_str);
 une_parser__(une_parse_get);
+une_parser__(une_parse_seek, bool global);
 une_parser__(une_parse_builtin);
 une_parser__(une_parse_list);
 une_parser__(une_parse_function);
@@ -54,7 +55,8 @@ une_parser__(une_parse_continue);
 une_parser__(une_parse_break);
 une_parser__(une_parse_return);
 une_parser__(une_parse_exit);
-une_parser__(une_parse_set_expstmt);
+une_parser__(une_parse_assignment_or_expr_stmt);
+une_parser__(une_parse_assignee);
 
 une_parser__(une_parse_unary_operation,
   une_node_type node_t,

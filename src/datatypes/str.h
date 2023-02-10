@@ -1,6 +1,6 @@
 /*
 str.h - Une
-Modified 2021-08-11
+Modified 2023-02-10
 */
 
 #ifndef UNE_DATATYPES_STR_H
@@ -29,7 +29,9 @@ size_t une_datatype_str_get_len(une_result result);
 
 bool une_datatype_str_is_valid_index_type(une_result_type type);
 bool une_datatype_str_is_valid_index(une_result target, une_result index);
+bool une_datatype_str_is_valid_element(une_result element);
 une_result une_datatype_str_get_index(une_result target, une_result index);
+une_result une_datatype_str_seek_index(une_result *target, une_result index);
 
 une_result une_datatype_str_copy(une_result result);
 void une_datatype_str_free_members(une_result result);

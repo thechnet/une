@@ -11,16 +11,19 @@
 - New nullish (`??`) operator.  
   The nullish operator returns the left result if it is not 'Void', otherwise the right.
 - `for-in` loops.
-- New built-in function `eval()`.  
-  Same as `script()`, but accepts a string instead of a file path.
-- New built-in function `replace()`.  
-  Replace strings in strings.
-- New built-in function `join()`.  
-  Join strings using seperators.
+- Strings are now editable via index, like lists.
+- New built-in functions:
+  - `eval()` – Same as `script()`, but accepts a string instead of a file path.
+  - `replace()` – Replace a string in a string.
+  - `join()` – Join strings using a seperator.
 - Interactive mode directives.
   - `#clear` clears the console.
   - `#header` displays the header.
   - `#symbols` displays all accessible symbols.
+
+### Changed
+- Overhauled variable assignment internals.  
+  The left-hand side of assignment statements is now parsed recursively. This change introduces the ability to set indices *inside indices*, a capability which has been missing so far.
 
 ### Fixed
 - Soft whitespace at the end of the script causes a syntax error.

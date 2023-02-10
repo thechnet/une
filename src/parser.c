@@ -63,7 +63,7 @@ une_parser__(une_parse_stmt)
       break;
   }
   
-  return une_parse_set_expstmt(error, ps);
+  return une_parse_assignment_or_expr_stmt(error, ps);
 }
 
 /*
@@ -82,6 +82,7 @@ une_parser__(une_parse_id)
   id->pos = now(&ps->in).pos;
   id->content.value._wcs = now(&ps->in).value._wcs;
   pull(&ps->in);
+  
   return id;
 }
 
@@ -102,7 +103,7 @@ une_parser__(une_parse_expression)
   
   /* Condition. */
   une_node *cond = une_parse_and_or(error, ps);
-  if (cond == NULL || now(&ps->in).type != UNE_TT_QMARK)
+  if (!cond || now(&ps->in).type != UNE_TT_QMARK)
     return cond;
 
   /* ?. */
@@ -271,7 +272,7 @@ une_parser__(une_parse_index_or_call)
     switch (now(&ps->in).type) {
       
       /*
-      GET_IDX.
+      IDX_GET.
       */
       case UNE_TT_LSQB: {
         LOGPARSE(L"index", now(&ps->in));
@@ -281,10 +282,12 @@ une_parser__(une_parse_index_or_call)
         
         /* Index. */
         une_node *index = une_parse_expression(error, ps);
-        if (index == NULL)
+        if (index == NULL) {
+          une_node_free(base, false);
           return NULL;
+        }
         
-        une_node *get_idx = une_node_create(UNE_NT_GET_IDX);
+        une_node *get_idx = une_node_create(UNE_NT_IDX_GET);
         get_idx->pos = (une_position){
           .start = base->pos.start,
           .end = now(&ps->in).pos.end
@@ -402,7 +405,7 @@ Parse integer.
 */
 une_parser__(une_parse_int)
 {
-  LOGPARSE(L"int", now(&ps->in));
+  LOGPARSE(L"", now(&ps->in));
   une_node *num = une_node_create(UNE_NT_INT);
   num->pos = now(&ps->in).pos;
   num->content.value._int = now(&ps->in).value._int;
@@ -415,7 +418,7 @@ Parse floating point number.
 */
 une_parser__(une_parse_flt)
 {
-  LOGPARSE(L"flt", now(&ps->in));
+  LOGPARSE(L"", now(&ps->in));
   une_node *num = une_node_create(UNE_NT_FLT);
   num->pos = now(&ps->in).pos;
   num->content.value._flt = now(&ps->in).value._flt;
@@ -478,11 +481,11 @@ une_parser__(une_parse_str)
 }
 
 /*
-Parse variable.
+Parse variable get.
 */
 une_parser__(une_parse_get)
 {
-  LOGPARSE(L"get", now(&ps->in));
+  LOGPARSE(L"", now(&ps->in));
   une_node *id = une_parse_id(error, ps);
   assert(id != NULL);
   une_node *get = une_node_create(UNE_NT_GET);
@@ -492,13 +495,31 @@ une_parser__(une_parse_get)
 }
 
 /*
+Parse variable seek.
+*/
+une_parser__(une_parse_seek, bool global)
+{
+  LOGPARSE(L"", now(&ps->in));
+  une_node *id = une_parse_id(error, ps);
+  if (!id) {
+    *error = une_error_create(); /* une_parse_id normally returns an error, but here we want to ignore it. */
+    return NULL;
+  }
+  une_node *seek = une_node_create(UNE_NT_SEEK);
+  seek->pos = id->pos;
+  seek->content.branch.a = id;
+  seek->content.branch.b = (une_node*)global;
+  return seek;
+}
+
+/*
 Parse builtin-function.
 */
 une_parser__(une_parse_builtin)
 {
+  LOGPARSE(L"", now(&ps->in));
   if (!UNE_BUILTIN_FUNCTION_IS_VALID(now(&ps->in).value._int))
     return NULL;
-  LOGPARSE(L"builtin", now(&ps->in));
   une_node *builtin = une_node_create(UNE_NT_BUILTIN);
   builtin->pos = now(&ps->in).pos;
   builtin->content.value._int = now(&ps->in).value._int;
@@ -511,7 +532,7 @@ Parse list.
 */
 une_parser__(une_parse_list)
 {
-  LOGPARSE(L"list", now(&ps->in));
+  LOGPARSE(L"", now(&ps->in));
   
   return une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB, &une_parse_expression);
 }
@@ -521,7 +542,7 @@ Parse function.
 */
 une_parser__(une_parse_function)
 {
-  LOGPARSE(L"function", now(&ps->in));
+  LOGPARSE(L"", now(&ps->in));
   
   /* function. */
   size_t pos_start = now(&ps->in).pos.start;
@@ -857,72 +878,90 @@ une_parser__(une_parse_exit)
 /*
 Parse set/expression statement.
 */
-une_parser__(une_parse_set_expstmt)
+une_parser__(une_parse_assignment_or_expr_stmt)
 {
-  /* Check for global variable definition. */
+  LOGPARSE(L"", now(&ps->in));
+  
+  /* Check for variable assignment. */
+  ptrdiff_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable assignment. */
+  une_node *assignee = une_parse_assignee(error, ps);
+  bool is_assignment = assignee && now(&ps->in).type == UNE_TT_SET;
+  if (!is_assignment) {
+    une_node_free(assignee, false);
+    ps->in.index = token_index_before;
+  } else {
+    pull(&ps->in); /* '='. */
+  }
+  
+  /* Expression. */
+  une_node *expression = une_parse_expression(error, ps);
+  if (!expression) {
+    une_node_free(assignee, false);
+    return NULL;
+  }
+  
+  /* Resolve final node type. */
+  une_node *assignment_or_expression_statement;
+  if (is_assignment) {
+    assignment_or_expression_statement = une_node_create(UNE_NT_ASSIGN);
+    assignment_or_expression_statement->pos.start = assignee->pos.start;
+    assignment_or_expression_statement->pos.end = expression->pos.end;
+    assignment_or_expression_statement->content.branch.a = assignee;
+    assignment_or_expression_statement->content.branch.b = expression;
+  } else {
+    assignment_or_expression_statement = expression;
+  }
+  
+  return assignment_or_expression_statement;
+}
+
+/*
+Parse container.
+*/
+une_parser__(une_parse_assignee)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
   bool global = false;
   if (now(&ps->in).type == UNE_TT_GLOBAL) {
     pull(&ps->in);
     global = true;
   }
   
-  /* Check for variable definition. */
-  if (now(&ps->in).type == UNE_TT_ID) {
-    ptrdiff_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable definition. */
-
-    une_node *target = une_parse_id(error, ps);
-    if (target == NULL)
-      return NULL;
-
-    une_node *varset = une_node_create(UNE_NT_SET);
-    varset->pos.start = target->pos.start;
-    varset->content.branch.d = (une_node*)global;
-    varset->content.branch.a = target;
-
+  une_node *left = une_parse_seek(error, ps, global);
+  if (!left)
+    return NULL;
+  
+  while (now(&ps->in).type == UNE_TT_LSQB) {
+    /* '['. */
+    pull(&ps->in);
+    
     /* Index. */
-    if (now(&ps->in).type == UNE_TT_LSQB) {
-      varset->type = UNE_NT_SET_IDX;
-      pull(&ps->in);
-
-      une_node *position = une_parse_expression(error, ps);
-      if (position == NULL) {
-        une_node_free(varset, false);
-        return NULL;
-      }
-      varset->content.branch.b = position;
-
-      if (now(&ps->in).type != UNE_TT_RSQB) {
-        une_node_free(varset, false);
-        *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
-        return NULL;
-      }
-      pull(&ps->in);
+    une_node *index = une_parse_expression(error, ps);
+    if (!index) {
+      une_node_free(left, false);
+      return NULL;
     }
-
-    /* Expression. */
-    if (now(&ps->in).type == UNE_TT_SET) {
-      pull(&ps->in);
-
-      une_node *expression = une_parse_expression(error, ps);
-      if (expression == NULL) {
-        une_node_free(varset, false);
-        return NULL;
-      }
-
-      varset->pos.end = expression->pos.end;
-      if (varset->type == UNE_NT_SET_IDX)
-        varset->content.branch.c = expression;
-      else
-        varset->content.branch.b = expression;
-      return varset;
+    
+    /* ']'. */
+    if (now(&ps->in).type != UNE_TT_RSQB) {
+      une_node_free(left, false);
+      une_node_free(index, false);
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+      return NULL;
     }
-
-    /* Not a variable definition -> Expression. */
-    une_node_free(varset, false);
-    ps->in.index = token_index_before;
+    
+    une_node *new_left = une_node_create(UNE_NT_IDX_SEEK);
+    new_left->pos.start = left->pos.start;
+    new_left->pos.end = now(&ps->in).pos.end;
+    new_left->content.branch.a = left;
+    new_left->content.branch.b = index;
+    left = new_left;
+    
+    pull(&ps->in); /* Pull after defining the position. */
   }
-
-  return une_parse_expression(error, ps);
+  
+  return left;
 }
 
 /*

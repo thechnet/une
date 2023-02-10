@@ -1,6 +1,6 @@
 /*
 list.c - Une
-Modified 2022-08-04
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -194,6 +194,15 @@ bool une_datatype_list_is_valid_index(une_result target, une_result index)
 }
 
 /*
+Check if an element is valid.
+*/
+bool une_datatype_list_is_valid_element(une_result element)
+{
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(element.type));
+  return true;
+}
+
+/*
 Get the value at index.
 */
 une_result une_datatype_list_get_index(une_result target, une_result index)
@@ -204,14 +213,15 @@ une_result une_datatype_list_get_index(une_result target, une_result index)
 }
 
 /*
-Set the value at index.
+Seek the value at index.
 */
-void une_datatype_list_set_index(une_result *target, une_result index, une_result value)
+une_result une_datatype_list_seek_index(une_result *target, une_result index)
 {
   assert(target->type == UNE_RT_LIST);
   assert(index.type == UNE_RT_INT);
-  une_result_free(((une_result*)target->value._vp)[1+index.value._int]);
-  ((une_result*)target->value._vp)[1+index.value._int] = value;
+  une_result ref = une_result_create(UNE_RT_GENERIC_REFERENCE);
+  ref.value._vp = (void*)( (une_result*)target->value._vp + 1 + index.value._int );
+  return ref;
 }
 
 /*

@@ -43,10 +43,11 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_mod,
   &une_interpret_pow,
   &une_interpret_neg,
-  &une_interpret_set,
-  &une_interpret_set_idx,
+  NULL, /* une_interpret_seek. */
+  &une_interpret_idx_seek,
+  &une_interpret_assign,
   &une_interpret_get,
-  &une_interpret_get_idx,
+  &une_interpret_idx_get,
   &une_interpret_call,
   &une_interpret_for_range,
   &une_interpret_for_element,
@@ -690,80 +691,142 @@ une_interpreter__(une_interpret_neg)
 }
 
 /*
-Interpret a UNE_NT_SET une_node.
+Interpret a UNE_NT_SEEK une_node.
 */
-une_interpreter__(une_interpret_set)
+une_interpreter__(une_interpret_seek, bool existing_only)
 {
-  /* Evaluate result. */
-  une_result result = une_interpret(error, is, node->content.branch.b);
-  if (result.type == UNE_RT_ERROR)
-    return result;
-
-  /* Get variable name and global. */
-  bool global = (bool)node->content.branch.d;
+  /* Extract information. */
   wchar_t *name = node->content.branch.a->content.value._wcs;
-
-  /* Find (global) or create (local) the variable. */
-  une_variable *var;
-  if (global)
-    var = une_variable_find_or_create_global(is->context, name);
-  else
-    var = une_variable_find_or_create(is->context, name);
+  bool global = (une_node*)node->content.branch.b;
   
-  /* Populate variable. */
-  une_result_free(var->content);
-  var->content = result;
-
-  return une_result_create(UNE_RT_VOID);
-}
-
-/*
-Interpret a UNE_NT_SET_IDX une_node.
-*/
-une_interpreter__(une_interpret_set_idx)
-{
-  /* Get name of variable and global. */
-  bool global = (bool)node->content.branch.d;
-  wchar_t *name = node->content.branch.a->content.value._wcs;
-
-  /* Find variable in all contexts. */
+  /* Find variable. */
   une_variable *var;
-  if (global)
-    var = une_variable_find_global(is->context, name);
-  else
-    var = une_variable_find(is->context, name);
+  if (global) {
+    if (existing_only)
+      var = une_variable_find_global(is->context, name);
+    else
+      var = une_variable_find_or_create_global(is->context, name);
+  } else {
+    if (existing_only)
+      var = une_variable_find(is->context, name);
+    else
+      var = une_variable_find_or_create(is->context, name);
+  }
   if (var == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
   }
-  une_datatype dt_var = UNE_DATATYPE_FOR_RESULT(var->content);
-  if (dt_var.set_index == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+  
+  /* Return pointer to result container. */
+  une_result result = une_result_create(UNE_RT_GENERIC_REFERENCE);
+  result.value._vp = (void*)&var->content;
+  return result;
+}
+
+/*
+Interpret a UNE_NT_ASSIGN une_node.
+*/
+une_interpreter__(une_interpret_assign)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  
+  /* Evaluate result. */
+  une_result result = une_interpret(error, is, node->content.branch.b);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return result;
+  }
+  
+  /* Check if result is valid element. */
+  une_datatype dt_assignee = UNE_DATATYPE_FOR_RESULT_TYPE(assignee.type == UNE_RT_GENERIC_REFERENCE ? UNE_RT_LIST : UNE_RT_STR);
+  assert(dt_assignee.is_valid_element);
+  if (!dt_assignee.is_valid_element(result)) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
+    une_result_free(assignee);
+    une_result_free(result);
     return une_result_create(UNE_RT_ERROR);
   }
-
-  /* Get index to variable and check if it is valid. */
-  une_result index = une_interpret(error, is, node->content.branch.b);
-  assert(dt_var.is_valid_index_type != NULL);
-  if (!dt_var.is_valid_index_type(index.type)) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
-  } else {
-    assert(dt_var.is_valid_index != NULL);
-    if (!dt_var.is_valid_index(var->content, index))
-      *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
+  
+  /* Assign. */
+  if (assignee.type == UNE_RT_GENERIC_REFERENCE) {
+    une_result *target = (une_result*)assignee.value._vp;
+    une_result_free(*target);
+    *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
+  } else if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *assignee.value._wcs = result.value._wcs[0];
+    une_result_free(result);
   }
-  if (error->type != UNE_ET_none__) {
+  une_result_free(assignee);
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_IDX_SEEK une_node.
+*/
+une_interpreter__(une_interpret_idx_seek)
+{
+  /* Evaluate container. */
+  une_result container;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    container = une_interpret_seek(error, is, node->content.branch.a, true);
+  else
+    container = une_interpret(error, is, node->content.branch.a);
+  if (container.type == UNE_RT_ERROR)
+    return container;
+  
+  /* Fail if container cannot be indexed into. */
+  if (container.type != UNE_RT_GENERIC_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(container);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Access contained result. */
+  assert(container.value._vp);
+  une_result *result = (une_result*)container.value._vp;
+  
+  /* Check if container result supports indexing. */
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(*result);
+  if (!dt_result.seek_index) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(container);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate index. */
+  une_result index = une_interpret(error, is, node->content.branch.b);
+  if (index.type == UNE_RT_ERROR)
+    return index;
+  
+  /* Check if index type is valid. */
+  assert(dt_result.is_valid_index_type);
+  if (!dt_result.is_valid_index_type(index.type)) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
+    une_result_free(container);
     une_result_free(index);
     return une_result_create(UNE_RT_ERROR);
   }
-
-  /* Set index. */
-  une_result result = une_interpret(error, is, node->content.branch.c);
-  if (result.type == UNE_RT_ERROR)
-    return result;
-  dt_var.set_index(&var->content, index, result);
-  une_result_free(index);
-  return une_result_create(UNE_RT_VOID);
+  
+  /* Check if index is valid. */
+  assert(dt_result.is_valid_index);
+  if (!dt_result.is_valid_index(*result, index)) {
+    *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
+    une_result_free(container);
+    une_result_free(index);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Return seeked index. */
+  assert(dt_result.seek_index);
+  return dt_result.seek_index(result, index);
 }
 
 /*
@@ -785,9 +848,9 @@ une_interpreter__(une_interpret_get)
 }
 
 /*
-Interpret a UNE_NT_GET_IDX une_node.
+Interpret a UNE_NT_IDX_GET une_node.
 */
-une_interpreter__(une_interpret_get_idx)
+une_interpreter__(une_interpret_idx_get)
 {
   /* Get base. */
   une_result base = une_interpret(error, is, node->content.branch.a);

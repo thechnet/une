@@ -42,10 +42,11 @@ const wchar_t *une_node_table[] = {
   L"MOD",
   L"POW",
   L"NEG",
-  L"SET",
-  L"SET_IDX",
+  L"SEEK",
+  L"IDX_SEEK",
+  L"ASSIGN",
   L"GET",
-  L"GET_IDX",
+  L"IDX_GET",
   L"CALL",
   L"FOR_RANGE",
   L"FOR_ELEMENT",
@@ -131,15 +132,15 @@ une_node *une_node_copy(une_node *src)
     /* Nodes. */
     default:
       dest->content.branch.a = une_node_copy(src->content.branch.a);
-      dest->content.branch.b = une_node_copy(src->content.branch.b);
+      if (src->type == UNE_NT_SEEK)
+        dest->content.branch.b = src->content.branch.b;
+      else
+        dest->content.branch.b = une_node_copy(src->content.branch.b);
       if (src->type == UNE_NT_FUNCTION)
         dest->content.branch.c = src->content.branch.c;
       else
         dest->content.branch.c = une_node_copy(src->content.branch.c);
-      if (src->type == UNE_NT_SET || src->type == UNE_NT_SET_IDX)
-        dest->content.branch.d = src->content.branch.d;
-      else
-        dest->content.branch.d = une_node_copy(src->content.branch.d);
+      dest->content.branch.d = une_node_copy(src->content.branch.d);
       break;
   
   }
@@ -195,11 +196,11 @@ void une_node_free(une_node *node, bool free_wcs)
     /* Nodes. */
     default:
       une_node_free(node->content.branch.a, free_wcs);
-      une_node_free(node->content.branch.b, free_wcs);
+      if (node->type != UNE_NT_SEEK)
+        une_node_free(node->content.branch.b, free_wcs);
       if (node->type != UNE_NT_FUNCTION)
         une_node_free(node->content.branch.c, free_wcs);
-      if (node->type != UNE_NT_SET && node->type != UNE_NT_SET_IDX)
-        une_node_free(node->content.branch.d, free_wcs);
+      une_node_free(node->content.branch.d, free_wcs);
       break;
   
   }
@@ -356,7 +357,9 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_FDIV:
     case UNE_NT_MOD:
     case UNE_NT_POW:
-    case UNE_NT_GET_IDX:
+    case UNE_NT_IDX_SEEK:
+    case UNE_NT_ASSIGN:
+    case UNE_NT_IDX_GET:
     case UNE_NT_EQU:
     case UNE_NT_NEQ:
     case UNE_NT_GTR:
@@ -379,14 +382,12 @@ wchar_t *une_node_to_wcs(une_node *node)
       free(branch2);
       break;
     }
-    case UNE_NT_SET: {
+    case UNE_NT_SEEK: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
-      wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
-        RESET L" %ls" RESET L", %ls" RESET L", GLOBAL:%d)",
-        une_node_type_to_wcs(node->type), branch1, branch2, ((bool)node->content.branch.d == true) ? 1 : 0);
+        RESET " %ls" RESET L", GLOBAL:%d)",
+        une_node_type_to_wcs(node->type), branch1, ((bool)node->content.branch.b == true) ? 1 : 0);
       free(branch1);
-      free(branch2);
       break;
     }
     
@@ -400,18 +401,6 @@ wchar_t *une_node_to_wcs(une_node *node)
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
         RESET L" %ls" RESET L", %ls" RESET L", %ls" RESET L")",
         une_node_type_to_wcs(node->type), branch1, branch2, branch3);
-      free(branch1);
-      free(branch2);
-      free(branch3);
-      break;
-    }
-    case UNE_NT_SET_IDX: {
-      wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
-      wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
-      wchar_t *branch3 = une_node_to_wcs(node->content.branch.c);
-      buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"
-        RESET L" %ls" RESET L", %ls" RESET L", %ls" RESET L", GLOBAL:%d)",
-        une_node_type_to_wcs(node->type), branch1, branch2, branch3, ((bool)node->content.branch.d == true) ? 1 : 0);
       free(branch1);
       free(branch2);
       free(branch3);

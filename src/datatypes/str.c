@@ -1,6 +1,6 @@
 /*
 str.c - Une
-Modified 2022-08-04
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -191,7 +191,19 @@ size_t une_datatype_str_get_len(une_result result)
 }
 
 /*
-Check if a index type is valid.
+Seek the value at index.
+*/
+une_result une_datatype_str_seek_index(une_result *target, une_result index)
+{
+  assert(target->type == UNE_RT_STR);
+  assert(index.type == UNE_RT_INT);
+  une_result ref = une_result_create(UNE_RT_STR_ELEMENT_REFERENCE);
+  ref.value._wcs = target->value._wcs + index.value._int;
+  return ref;
+}
+
+/*
+Check if an index type is valid.
 */
 bool une_datatype_str_is_valid_index_type(une_result_type type)
 {
@@ -205,6 +217,14 @@ bool une_datatype_str_is_valid_index(une_result target, une_result index)
 {
   assert(index.type == UNE_RT_INT);
   return index.value._int >= 0 && (une_uint)index.value._int < une_datatype_str_get_len(target);
+}
+
+/*
+Check if an element is valid.
+*/
+bool une_datatype_str_is_valid_element(une_result element)
+{
+  return element.type == UNE_RT_STR && wcslen(element.value._wcs) == 1;
 }
 
 /*

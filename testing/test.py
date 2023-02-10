@@ -27,7 +27,7 @@ DIR = '.'
 UNE = '..\\\\debug\\\\une.exe' if is_win() else '../debug/une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
-UNE_R_END_DATA_RESULT_TYPES = 11
+UNE_R_END_DATA_RESULT_TYPES = 8
 
 # UNCOMMENT THESE LINES WHEN USING GCOV:
 # DIR = '..\\private\\gcov' if is_win() else '../private/gcov'
@@ -43,13 +43,13 @@ ATTR_NO_SECOND_ESCAPE = 5
 
 # Result Types
 UNE_RT_ERROR = 1
-UNE_RT_VOID = 5
-UNE_RT_INT = 6
-UNE_RT_FLT = 7
-UNE_RT_STR = 8
-UNE_RT_LIST = 9
-UNE_RT_FUNCTION = 10
-UNE_RT_BUILTIN = 11
+UNE_RT_VOID = 2
+UNE_RT_INT = 3
+UNE_RT_FLT = 4
+UNE_RT_STR = 5
+UNE_RT_LIST = 6
+UNE_RT_FUNCTION = 7
+UNE_RT_BUILTIN = 8
 result_types = {
   UNE_RT_ERROR: 'UNE_RT_ERROR',
   UNE_RT_VOID: 'UNE_RT_VOID',
@@ -420,6 +420,7 @@ cases = [
   # SET_IDX
   Case('a=[0];a[0]=1;return a', UNE_RT_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=[0];global a[0]=1;return a', UNE_RT_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=[[0]];a[0][0]=46;a', UNE_RT_LIST, "[[46]]", [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=[0];a[0]=[1]**2', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('a[0]=1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('a=1;a[0]=1', UNE_RT_ERROR, UNE_ET_TYPE, []),

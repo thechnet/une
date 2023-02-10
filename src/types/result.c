@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2022-08-03
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -19,6 +19,8 @@ const wchar_t *une_result_table[] = {
   L"CONTINUE",
   L"BREAK",
   L"SIZE",
+  L"GENERIC_REFERENCE",
+  L"STR_ELEMENT_REFERENCE",
   L"VOID",
   L"INT",
   L"FLT",
