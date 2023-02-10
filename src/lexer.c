@@ -462,6 +462,8 @@ une_lexer__(une_lex_id)
     tk.type = UNE_TT_GLOBAL;
   else if (!wcscmp(buffer, L"cover"))
     tk.type = UNE_TT_COVER;
+  else if (!wcscmp(buffer, L"Void"))
+    tk.type = UNE_TT_VOID;
   else if (!wcscmp(buffer, L"function")) {
     tk.type = UNE_TT_FUNCTION;
     if (ls->read_from_file)

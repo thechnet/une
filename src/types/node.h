@@ -16,7 +16,8 @@ typedef enum une_node_type_ {
   UNE_NT_none__,
   UNE_NT_ID,
   UNE_NT_SIZE,
-  #define UNE_R_BGN_LUT_NODES UNE_NT_INT /* (!) Order-sensitive. */
+  #define UNE_R_BGN_LUT_NODES UNE_NT_VOID /* (!) Order-sensitive. */
+  UNE_NT_VOID,
   UNE_NT_INT,
   UNE_NT_FLT,
   UNE_NT_STR,

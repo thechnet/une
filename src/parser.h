@@ -38,6 +38,7 @@ une_parser__(une_parse_negation);
 une_parser__(une_parse_power);
 une_parser__(une_parse_index_or_call);
 une_parser__(une_parse_atom);
+une_parser__(une_parse_void);
 une_parser__(une_parse_int);
 une_parser__(une_parse_flt);
 une_parser__(une_parse_str);

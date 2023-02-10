@@ -199,7 +199,7 @@ Check if an element is valid.
 bool une_datatype_list_is_valid_element(une_result element)
 {
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(element.type));
-  return true;
+  return 1;
 }
 
 /*

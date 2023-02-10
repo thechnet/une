@@ -29,6 +29,7 @@ une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *
 
 une_interpreter__(une_interpret_as, une_result_type type);
 
+une_interpreter__(une_interpret_void);
 une_interpreter__(une_interpret_int);
 une_interpreter__(une_interpret_flt);
 une_interpreter__(une_interpret_str);

@@ -129,7 +129,7 @@ print(argument)
 
 ### 2.6 Void
 
-Not expressable, used to communicate the absence of a value (see 6.2).
+`Void`, used to communicate the absence of a value (see 6.2).
 
 ### 2.7 Lists
 

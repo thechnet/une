@@ -350,6 +350,9 @@ une_parser__(une_parse_atom)
   
   switch (now(&ps->in).type) {
     
+    case UNE_TT_VOID:
+      return une_parse_void(error, ps);
+    
     case UNE_TT_INT:
       return une_parse_int(error, ps);
     
@@ -398,6 +401,19 @@ une_parser__(une_parse_atom)
   
   *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
   return NULL;
+}
+
+/*
+Parse Void.
+*/
+une_parser__(une_parse_void)
+{
+  LOGPARSE(L"", now(&ps->in));
+  une_node *void_ = une_node_create(UNE_NT_VOID);
+  void_->pos = now(&ps->in).pos;
+  void_->content.value._int = 0;
+  pull(&ps->in);
+  return void_;
 }
 
 /*

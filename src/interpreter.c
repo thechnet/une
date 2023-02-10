@@ -17,6 +17,7 @@ Modified 2023-02-10
 Interpreter function lookup table.
 */
 une_interpreter__(*interpreter_table__[]) = {
+  &une_interpret_void,
   &une_interpret_int,
   &une_interpret_flt,
   &une_interpret_str,
@@ -85,6 +86,17 @@ une_interpreter__(une_interpret_as, une_result_type type)
     result = une_result_create(UNE_RT_ERROR);
   }
   return result;
+}
+
+/*
+Interpret a UNE_NT_VOID une_node.
+*/
+une_interpreter__(une_interpret_void)
+{
+  return (une_result){
+    .type = UNE_RT_VOID,
+    .value._int = node->content.value._int
+  };
 }
 
 /*

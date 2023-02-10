@@ -99,12 +99,12 @@ cases = [
   Case('input(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('input()', UNE_RT_ERROR, UNE_ET_CALLABLE_ARG_COUNT, []),
   
-  Case('print(100.9)', UNE_RT_VOID, 'VOID', []),
-  Case('print("str")', UNE_RT_VOID, 'VOID', []),
-  Case('print([1])', UNE_RT_VOID, 'VOID', []),
-  Case('print([1, "str"])', UNE_RT_VOID, 'VOID', []),
+  Case('print(100.9)', UNE_RT_VOID, 'Void', []),
+  Case('print("str")', UNE_RT_VOID, 'Void', []),
+  Case('print([1])', UNE_RT_VOID, 'Void', []),
+  Case('print([1, "str"])', UNE_RT_VOID, 'Void', []),
   
-  Case('put(1)', UNE_RT_VOID, 'VOID', []),
+  Case('put(1)', UNE_RT_VOID, 'Void', []),
   
   Case('int(100)', UNE_RT_INT, '100', []),
   Case('int(100.9)', UNE_RT_INT, '100', []),
@@ -127,7 +127,7 @@ cases = [
   Case('len([1, 2, 3])', UNE_RT_INT, '3', []),
   Case('len(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
-  Case('sleep(1)', UNE_RT_VOID, 'VOID', []),
+  Case('sleep(1)', UNE_RT_VOID, 'Void', []),
   Case('sleep(1.1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   Case('chr(65)', UNE_RT_STR, 'A', []),
@@ -137,7 +137,7 @@ cases = [
   Case('ord("A")', UNE_RT_INT, '65', []),
   Case('ord(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
-  Case('write("script.une", "return 46")', UNE_RT_VOID, 'VOID', []),
+  Case('write("script.une", "return 46")', UNE_RT_VOID, 'Void', []),
   Case('write(1, "test")', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('write("test", 1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('write("/", "test")', UNE_RT_ERROR, UNE_ET_FILE_NOT_FOUND, []),
@@ -179,7 +179,7 @@ cases = [
   Case('-s', UNE_RT_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),
   
   # Syntax
-  Case('\r# comment', UNE_RT_VOID, 'VOID', []),
+  Case('\r# comment', UNE_RT_VOID, 'Void', []),
   Case('"\\\\\\"\\n\\\n"', UNE_RT_STR, '\\"\n', [ATTR_FILE_ONLY]),
   Case('\r1 $', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('1.', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
@@ -221,6 +221,7 @@ cases = [
   Case('function()', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   
   # Data
+  Case('Void', UNE_RT_VOID, 'Void', []),
   Case('100', UNE_RT_INT, '100', []),
   Case('100.9', UNE_RT_FLT, '100.900', []),
   Case('[]', UNE_RT_LIST, '[]', []),
@@ -469,12 +470,12 @@ cases = [
   Case('if 1 return 1 elif 0 return 0 else return 0', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
   Case('if 0 return 0 elif 2 return 2 else return 0', UNE_RT_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
   Case('if 0 return 0 elif 0 return 0 else return 3', UNE_RT_INT, '3', [ATTR_NO_IMPLICIT_RETURN]),
-  Case('if 0 return 0 elif 0 return 0;return', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('if 0 return 0 elif 0 return 0;return', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
   Case('if [1]**2 1', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   # CALLABLES
-  Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
-  Case('a=function(){return};a=function(){return}', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=function(){return};a=function(){return}', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
   Case('int=function(){return}', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   
   # CALL
@@ -485,9 +486,9 @@ cases = [
   Case('1()', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   # DATATYPES
-  Case('print(int)', UNE_RT_VOID, 'VOID', []),
+  Case('print(int)', UNE_RT_VOID, 'Void', []),
   Case('if int{return 1}else{return 0}', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
-  Case('print(function(){})', UNE_RT_VOID, 'VOID', []),
+  Case('print(function(){})', UNE_RT_VOID, 'Void', []),
   Case('if function(){}{return 1}else{return 0}', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
   Case('if print(1){return 1}else{return 0}', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
   
@@ -512,10 +513,10 @@ cases = [
   Case('46', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   
   # RETURN WITHOUT RETURN VALUE
-  Case('return;return 46', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('return;return 46', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
   
   # EXIT
-  Case('exit;return 0', UNE_RT_VOID, 'VOID', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('exit;return 0', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
   Case('exit 46;return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('exit "string"', UNE_RT_ERROR, UNE_ET_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
   Case('function(){exit(46)}();return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),

@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-02-09
+Modified 2023-02-10
 */
 
 /* Header-specific includes. */
@@ -14,6 +14,7 @@ Modified 2023-02-09
 Token name table.
 */
 const wchar_t *une_token_table[] = {
+  L"Void",
   L"int",
   L"flt",
   L"id",
