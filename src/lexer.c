@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-02-10
+Modified 2023-02-11
 */
 
 /* Header-specific includes. */
@@ -35,7 +35,7 @@ const une_token_type une_2c_tokens_tt[] = {
 /*
 One-character token characters.
 */
-const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%!?:";
+const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%!?:.";
 
 /*
 One-character token types.
@@ -59,6 +59,7 @@ const une_token_type une_1c_tokens_tt[] = {
   UNE_TT_NOT,
   UNE_TT_QMARK,
   UNE_TT_COLON,
+  UNE_TT_DOT,
 };
 
 /*

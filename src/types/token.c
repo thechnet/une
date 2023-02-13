@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-02-10
+Modified 2023-02-11
 */
 
 /* Header-specific includes. */
@@ -68,6 +68,7 @@ const wchar_t *une_token_table[] = {
   L"builtin",
   L"str{",
   L"}str",
+  L".",
 };
 
 /*

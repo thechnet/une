@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2023-02-10
+Modified 2023-02-11
 */
 
 #ifndef UNE_RESULT_H
@@ -21,6 +21,7 @@ typedef enum une_result_type_ {
   UNE_RT_FLT,
   UNE_RT_STR,
   UNE_RT_LIST,
+  UNE_RT_OBJECT,
   UNE_RT_FUNCTION,
   UNE_RT_BUILTIN,
   #define UNE_R_END_DATA_RESULT_TYPES UNE_RT_BUILTIN

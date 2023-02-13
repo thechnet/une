@@ -27,7 +27,7 @@ DIR = '.'
 UNE = '..\\\\debug\\\\une.exe' if is_win() else '../debug/une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
-UNE_R_END_DATA_RESULT_TYPES = 8
+UNE_R_END_DATA_RESULT_TYPES = 9
 
 # UNCOMMENT THESE LINES WHEN USING GCOV:
 # DIR = '..\\private\\gcov' if is_win() else '../private/gcov'
@@ -48,8 +48,9 @@ UNE_RT_INT = 3
 UNE_RT_FLT = 4
 UNE_RT_STR = 5
 UNE_RT_LIST = 6
-UNE_RT_FUNCTION = 7
-UNE_RT_BUILTIN = 8
+UNE_RT_OBJECT = 7
+UNE_RT_FUNCTION = 8
+UNE_RT_BUILTIN = 9
 result_types = {
   UNE_RT_ERROR: 'UNE_RT_ERROR',
   UNE_RT_VOID: 'UNE_RT_VOID',
@@ -57,6 +58,7 @@ result_types = {
   UNE_RT_FLT: 'UNE_RT_FLT',
   UNE_RT_STR: 'UNE_RT_STR',
   UNE_RT_LIST: 'UNE_RT_LIST',
+  UNE_RT_OBJECT: 'UNE_RT_OBJECT',
   UNE_RT_FUNCTION: 'UNE_RT_FUNCTION',
   UNE_RT_BUILTIN: 'UNE_RT_BUILTIN',
 }
@@ -230,6 +232,7 @@ cases = [
   Case('[int([])]', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('"str"', UNE_RT_STR, 'str', []),
   Case('"s{1+2}t"', UNE_RT_STR, 's3t', []),
+  Case('({a:1,b:{c:2}})', UNE_RT_OBJECT, '{a: 1, b: {c: 2}}', []),
   
   # COP
   Case('1 ? 2 : 3', UNE_RT_INT, '2', []),
@@ -445,6 +448,14 @@ cases = [
   Case('[0][1]', UNE_RT_ERROR, UNE_ET_INDEX_OUT_OF_RANGE, []),
   Case('"a"[-1]', UNE_RT_ERROR, UNE_ET_INDEX_OUT_OF_RANGE, []),
   Case('"a"[1]', UNE_RT_ERROR, UNE_ET_INDEX_OUT_OF_RANGE, []),
+  
+  # Get member.
+  Case('({a:{b:46}}).a.b', UNE_RT_INT, '46', []),
+  Case('({a:46}).b', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
+  
+  # Set member.
+  Case('a={b:0};a.b=46;return a.b', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  # Case('a={b:23};a.c=2;return a.b*a.c', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   
   # FOR
   Case('a=0;for i from 0 till 3 a=a+i;return a', UNE_RT_INT, '3', [ATTR_NO_IMPLICIT_RETURN]),

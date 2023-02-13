@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- Beginnings of object implementation.  
+  As of this release, it is possible to create objects. Currently, they cannot be extended with new members and don't support methods.
 - Expressions embedded in strings.  
   To embed an expression in a string, surround it with curly braces: `"2 * 2 = {2*2}"`  
   To include literal curly braces in a string, escape them: `"\{\}"`

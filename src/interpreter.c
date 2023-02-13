@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-10
+Modified 2023-02-12
 */
 
 /* Header-specific includes. */
@@ -22,6 +22,7 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_flt,
   &une_interpret_str,
   &une_interpret_list,
+  &une_interpret_object,
   &une_interpret_function,
   &une_interpret_builtin,
   &une_interpret_stmts,
@@ -46,9 +47,11 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_neg,
   NULL, /* une_interpret_seek. */
   &une_interpret_idx_seek,
+  &une_interpret_member_seek,
   &une_interpret_assign,
   &une_interpret_get,
   &une_interpret_idx_get,
+  &une_interpret_member_get,
   &une_interpret_call,
   &une_interpret_for_range,
   &une_interpret_for_element,
@@ -159,6 +162,43 @@ une_interpreter__(une_interpret_list)
   return (une_result){
     .type = UNE_RT_LIST,
     .value._vp = (void*)result_list,
+  };
+}
+
+/*
+Interpret a UNE_NT_OBJECT une_node.
+*/
+une_interpreter__(une_interpret_object)
+{
+  UNE_UNPACK_NODE_LIST(node, list, list_size);
+
+  /* Create une_variable list. */
+  une_variable *associations = malloc((list_size+1)*sizeof(*associations));
+  verify(associations);
+  
+  /* Store list size. */
+  associations[0].name = NULL;
+  associations[0].content = (une_result){
+    .type = UNE_RT_SIZE,
+    .value._int = (une_int)list_size
+  };
+
+  /* Store associations. */
+  UNE_FOR_NODE_LIST_ITEM(i, list_size) {
+    associations[i].name = wcsdup(list[i]->content.branch.a->content.value._wcs);
+    verify(associations[i].name);
+    associations[i].content = une_interpret(error, is, list[i]->content.branch.b);
+    if (associations[i].content.type == UNE_RT_ERROR) {
+      une_result result = une_result_copy(associations[i].content);
+      for (size_t j=0; j<=i; j++)
+        une_result_free(associations[j].content);
+      free(associations);
+      return result;
+    }
+  }
+  return (une_result){
+    .type = UNE_RT_OBJECT,
+    .value._vp = (void*)associations,
   };
 }
 
@@ -842,6 +882,56 @@ une_interpreter__(une_interpret_idx_seek)
 }
 
 /*
+Interpret a UNE_NT_MEMBER_SEEK une_node.
+*/
+une_interpreter__(une_interpret_member_seek)
+{
+  /* Evaluate container. */
+  une_result container;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    container = une_interpret_seek(error, is, node->content.branch.a, true);
+  else
+    container = une_interpret(error, is, node->content.branch.a);
+  if (container.type == UNE_RT_ERROR)
+    return container;
+  
+  /* Fail if container cannot contain members. */
+  if (container.type != UNE_RT_GENERIC_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(container);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Access contained result. */
+  assert(container.value._vp);
+  une_result *result = (une_result*)container.value._vp;
+  
+  /* Check if container result supports members. */
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(*result);
+  if (!dt_result.seek_member) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(container);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Extract member name. */
+  assert(node->content.branch.b->type == UNE_NT_ID);
+  wchar_t *name = node->content.branch.b->content.value._wcs;
+  
+  /* Seek member. */
+  assert(dt_result.member_exists && dt_result.add_member);
+  if (dt_result.member_exists(*result, name))
+    return dt_result.seek_member(result, name);
+  else {
+    // FIXME: add_member may realloc the une_variable array, but cannot update the pointer in the context.
+    // return dt_result.add_member(result, name);
+    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
+    une_result_free(container);
+    return une_result_create(UNE_RT_ERROR);
+  }
+}
+
+/*
 Interpret a UNE_NT_GET une_node.
 */
 une_interpreter__(une_interpret_get)
@@ -900,6 +990,41 @@ une_interpreter__(une_interpret_idx_get)
   une_result result = dt_base.get_index(base, index);
   une_result_free(base);
   une_result_free(index);
+  return result;
+}
+
+/*
+Interpret a UNE_NT_MEMBER_GET une_node.
+*/
+une_interpreter__(une_interpret_member_get)
+{
+  /* Get base. */
+  une_result base = une_interpret(error, is, node->content.branch.a);
+  if (base.type == UNE_RT_ERROR)
+    return base;
+  une_datatype dt_base = UNE_DATATYPE_FOR_RESULT(base);
+  if (dt_base.get_member == NULL) {
+    une_result_free(base);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Extract member name. */
+  assert(node->content.branch.b->type == UNE_NT_ID);
+  wchar_t *name = node->content.branch.b->content.value._wcs;
+  
+  /* Check if member exists. */
+  assert(dt_base.member_exists);
+  if (!dt_base.member_exists(base, name)) {
+    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
+    une_result_free(base);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Get member. */
+  assert(dt_base.get_member);
+  une_result result = dt_base.get_member(base, name);
+  une_result_free(base);
   return result;
 }
 

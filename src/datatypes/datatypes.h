@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2023-02-10
+Modified 2023-02-11
 */
 
 #ifndef UNE_DATATYPES_H
@@ -15,6 +15,7 @@ Modified 2023-02-10
 #include "flt.h"
 #include "str.h"
 #include "list.h"
+#include "object.h"
 #include "void.h"
 
 /*
@@ -46,11 +47,17 @@ typedef struct une_datatype_ {
   
   size_t (*get_len)(une_result);
   
+  bool (*is_valid_element)(une_result);
+  
   bool (*is_valid_index_type)(une_result_type);
   bool (*is_valid_index)(une_result, une_result);
-  bool (*is_valid_element)(une_result);
   une_result (*get_index)(une_result, une_result);
   une_result (*seek_index)(une_result*, une_result);
+  
+  bool (*member_exists)(une_result, wchar_t*);
+  une_result (*add_member)(une_result*, wchar_t*);
+  une_result (*get_member)(une_result, wchar_t*);
+  une_result (*seek_member)(une_result*, wchar_t*);
   
   une_result (*copy)(une_result);
   void (*free_members)(une_result);

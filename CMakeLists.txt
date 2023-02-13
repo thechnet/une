@@ -56,6 +56,7 @@ add_executable(une
   src/datatypes/flt.c
   src/datatypes/str.c
   src/datatypes/list.c
+  src/datatypes/object.c
   src/datatypes/void.c
   src/datatypes/function.c
   src/datatypes/builtin.c

@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-02-10
+Modified 2023-02-11
 */
 
 /* Header-specific includes. */
@@ -21,6 +21,7 @@ const wchar_t *une_node_table[] = {
   L"FLT",
   L"STR",
   L"LIST",
+  L"OBJECT",
   L"FUNCTION",
   L"BUILTIN",
   L"STMTS",
@@ -45,9 +46,11 @@ const wchar_t *une_node_table[] = {
   L"NEG",
   L"SEEK",
   L"IDX_SEEK",
+  L"MEMBER_SEEK",
   L"ASSIGN",
   L"GET",
   L"IDX_GET",
+  L"MEMBER_GET",
   L"CALL",
   L"FOR_RANGE",
   L"FOR_ELEMENT",
@@ -59,6 +62,7 @@ const wchar_t *une_node_table[] = {
   L"EXIT",
   L"COVER",
   L"CONCATENATE",
+  L"OBJECT_ASSOCIATION",
 };
 
 /*
@@ -120,8 +124,9 @@ une_node *une_node_copy(une_node *src)
       verify(dest->content.value._wcs);
       break;
     
-    /* List. */
+    /* Node lists. */
     case UNE_NT_LIST:
+    case UNE_NT_OBJECT:
     case UNE_NT_STMTS: {
       UNE_UNPACK_NODE_LIST(src, list, size);
       une_node **new_list = une_node_list_create(size);
@@ -183,8 +188,9 @@ void une_node_free(une_node *node, bool free_wcs)
         free(node->content.value._wcs);
       break;
     
-    /* List. */
+    /* Node lists. */
     case UNE_NT_LIST:
+    case UNE_NT_OBJECT:
     case UNE_NT_STMTS: {
       une_node **list = (une_node**)node->content.value._vpp;
       if (list == NULL)
@@ -281,21 +287,24 @@ wchar_t *une_node_to_wcs(une_node *node)
       buffer_len += offset + swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, RESET L"}");
       break;
     }
+    case UNE_NT_OBJECT:
     case UNE_NT_LIST: {
+      wchar_t open = node->type == UNE_NT_OBJECT ? L'{' : L'[';
+      wchar_t close = node->type == UNE_NT_OBJECT ? L'}' : L']';
       UNE_UNPACK_NODE_LIST(node, list, list_size);
       if (list_size == 0) {
-        buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"[]");
+        buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"%c%c", open, close);
         break;
       }
       wchar_t *node_as_wcs = une_node_to_wcs(list[1]);
-      int offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"[%ls", node_as_wcs);
+      int offset = swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"%c%ls", open, node_as_wcs);
       free(node_as_wcs);
       for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, RESET L", %ls", node_as_wcs);
         free(node_as_wcs);
       }
-      buffer_len += offset + swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, RESET L"]");
+      buffer_len += offset + swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, RESET L"%c", close);
       break;
     }
   
@@ -362,8 +371,10 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_MOD:
     case UNE_NT_POW:
     case UNE_NT_IDX_SEEK:
+    case UNE_NT_MEMBER_SEEK:
     case UNE_NT_ASSIGN:
     case UNE_NT_IDX_GET:
+    case UNE_NT_MEMBER_GET:
     case UNE_NT_EQU:
     case UNE_NT_NEQ:
     case UNE_NT_GTR:
@@ -376,6 +387,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_WHILE:
     case UNE_NT_COVER:
     case UNE_NT_CONCATENATE:
+    case UNE_NT_OBJECT_ASSOCIATION:
     case UNE_NT_FUNCTION: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);

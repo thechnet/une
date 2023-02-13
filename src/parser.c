@@ -278,6 +278,10 @@ une_parser__(une_parse_accessor)
       accessor = une_parse_call(error, ps);
       if (accessor)
         accessor->type = UNE_NT_CALL;
+    } else if (now(&ps->in).type == UNE_TT_DOT) {
+      accessor = une_parse_member(error, ps);
+      if (accessor)
+        accessor->type = UNE_NT_MEMBER_GET;
     } else {
       break;
     }
@@ -328,6 +332,9 @@ une_parser__(une_parse_atom)
     
     case UNE_TT_LSQB:
       return une_parse_list(error, ps);
+    
+    case UNE_TT_LBRC:
+      return une_parse_object(error, ps);
 
     case UNE_TT_FUNCTION:
       return une_parse_function(error, ps);
@@ -940,6 +947,10 @@ une_parser__(une_parse_assignee)
       accessor = une_parse_index(error, ps);
       if (accessor)
         accessor->type = UNE_NT_IDX_SEEK;
+    } else if (now(&ps->in).type == UNE_TT_DOT) {
+      accessor = une_parse_member(error, ps);
+      if (accessor)
+        accessor->type = UNE_NT_MEMBER_SEEK;
     } else {
       break;
     }
@@ -1001,6 +1012,74 @@ une_parser__(une_parse_call)
   call->pos.end = arguments->pos.end; /* The caller is required to provide the start position. */
   call->content.branch.b = arguments; /* The caller is required to provide branch A. */
   return call;
+}
+
+/*
+Parse member.
+*/
+une_parser__(une_parse_member)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  /* '.'. */
+  assert(now(&ps->in).type == UNE_TT_DOT);
+  pull(&ps->in);
+  
+  /* Identifier. */
+  une_node *identifier = une_parse_id(error, ps);
+  if (!identifier)
+    return NULL;
+  
+  une_node *member = une_node_create(UNE_NT_none__); /* The caller is required to provide the node type. */
+  member->pos.end = identifier->pos.end; /* The caller is required to provide the start position. */
+  member->content.branch.b = identifier; /* The caller is required to provide branch A. */
+  return member;
+}
+
+/*
+Parse object association.
+*/
+une_parser__(une_parse_object_association)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  /* Name. */
+  une_node *name = une_parse_id(error, ps);
+  if (!name)
+    return NULL;
+  
+  /* ':'. */
+  if (now(&ps->in).type != UNE_TT_COLON) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+    une_node_free(name, false);
+    return NULL;
+  }
+  pull(&ps->in);
+  
+  /* Expression. */
+  une_node *expression = une_parse_expression(error, ps);
+  if (!expression) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+    une_node_free(name, false);
+    return NULL;
+  }
+  
+  une_node *object_association = une_node_create(UNE_NT_OBJECT_ASSOCIATION);
+  object_association->pos.start = name->pos.start;
+  object_association->pos.end = expression->pos.end;
+  object_association->content.branch.a = name;
+  object_association->content.branch.b = expression;
+  return object_association;
+}
+
+/*
+Parse object.
+*/
+une_parser__(une_parse_object)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  return une_parse_sequence(error, ps, UNE_NT_OBJECT, UNE_TT_LBRC, UNE_TT_SEP, UNE_TT_RBRC, &une_parse_object_association);
 }
 
 /*

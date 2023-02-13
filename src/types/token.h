@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2023-02-10
+Modified 2023-02-11
 */
 
 #ifndef UNE_TOKEN_H
@@ -76,6 +76,7 @@ typedef enum une_token_type_ {
   UNE_TT_BUILTIN,
   UNE_TT_STR_EXPRESSION_BEGIN,
   UNE_TT_STR_EXPRESSION_END,
+  UNE_TT_DOT,
   UNE_TT_max__,
 } une_token_type;
 

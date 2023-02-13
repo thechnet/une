@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2023-02-10
+Modified 2023-02-11
 */
 
 #ifndef UNE_NODE_H
@@ -22,6 +22,7 @@ typedef enum une_node_type_ {
   UNE_NT_FLT,
   UNE_NT_STR,
   UNE_NT_LIST,
+  UNE_NT_OBJECT,
   UNE_NT_FUNCTION,
   UNE_NT_BUILTIN,
   UNE_NT_STMTS,
@@ -54,9 +55,11 @@ typedef enum une_node_type_ {
   UNE_NT_NEG,
   UNE_NT_SEEK,
   UNE_NT_IDX_SEEK,
+  UNE_NT_MEMBER_SEEK,
   UNE_NT_ASSIGN,
   UNE_NT_GET,
   UNE_NT_IDX_GET,
+  UNE_NT_MEMBER_GET,
   UNE_NT_CALL,
   UNE_NT_FOR_RANGE,
   UNE_NT_FOR_ELEMENT,
@@ -69,6 +72,7 @@ typedef enum une_node_type_ {
   UNE_NT_COVER,
   UNE_NT_CONCATENATE,
   #define UNE_R_END_LUT_NODES UNE_NT_CONCATENATE /* (!) Order-sensitive. */
+  UNE_NT_OBJECT_ASSOCIATION,
   UNE_NT_max__,
 } une_node_type;
 

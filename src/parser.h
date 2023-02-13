@@ -62,6 +62,9 @@ une_parser__(une_parse_assignment_or_expr_stmt);
 une_parser__(une_parse_assignee);
 une_parser__(une_parse_index);
 une_parser__(une_parse_call);
+une_parser__(une_parse_member);
+une_parser__(une_parse_object_association);
+une_parser__(une_parse_object);
 
 une_parser__(une_parse_unary_operation,
   une_node_type node_t,

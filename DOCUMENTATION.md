@@ -61,7 +61,7 @@ keyword
 
 ## 2. Data Types
 
-There are six types of data.
+There are eight types of data.
 
 ### 2.1 Integers
 
@@ -146,6 +146,19 @@ To access an element of a list, follow it by the offset of the item from the fir
 ```
 [1, 2, 3][0] # Retrieves '1'
 [1, 2, 3][1] # Retrieves '2'.
+```
+
+### 2.8 Objects
+
+Much like lists, objects can hold any number of any kind of data, including objects, with the difference being that objects hold *members*, accessed using names instead of indices:
+
+```
+person = {
+  name: "Mia",
+  age: 30
+}
+person.name == "Mia"
+person.age == 30
 ```
 
 ## 3. Conditional Expressions
