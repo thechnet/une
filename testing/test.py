@@ -233,6 +233,7 @@ cases = [
   Case('"str"', UNE_RT_STR, 'str', []),
   Case('"s{1+2}t"', UNE_RT_STR, 's3t', []),
   Case('({a:1,b:{c:2}})', UNE_RT_OBJECT, '{a: 1, b: {c: 2}}', []),
+  Case('({a:b})', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   
   # COP
   Case('1 ? 2 : 3', UNE_RT_INT, '2', []),

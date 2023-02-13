@@ -181,13 +181,21 @@ une_interpreter__(une_interpret_object)
 
   /* Store associations. */
   UNE_FOR_NODE_LIST_ITEM(i, list_size) {
-    object->members[i-1].name = wcsdup(list[i]->content.branch.a->content.value._wcs);
-    verify(object->members[i-1].name);
-    object->members[i-1].content = une_interpret(error, is, list[i]->content.branch.b);
-    if (object->members[i-1].content.type == UNE_RT_ERROR) {
-      une_result result = une_result_copy(object->members[i-1].content);
-      for (size_t j=1; j<=i; j++) // FIXME: Unsure?
-        une_result_free(object->members[j-1].content);
+    /* Add association. */
+    une_association *association = malloc(sizeof(*association));
+    verify(association);
+    object->members[i-1] = association;
+    /* Populate association. */
+    association->name = wcsdup(list[i]->content.branch.a->content.value._wcs);
+    verify(association->name);
+    association->content = une_interpret(error, is, list[i]->content.branch.b);
+    if (association->content.type == UNE_RT_ERROR) {
+      une_result result = une_result_copy(association->content);
+      UNE_FOR_NODE_LIST_ITEM(j, i) { // FIXME: Unsure?
+        free(object->members[j-1]->name);
+        une_result_free(object->members[j-1]->content);
+        free(object->members[j-1]);
+      }
       free(object->members);
       free(object);
       return result;

@@ -34,7 +34,7 @@ Object.
   for (size_t iterator_=0; iterator_<object_ptr_->members_length; iterator_++)
 
 typedef struct une_object_ {
-  une_association *members;
+  une_association **members;
   size_t members_length;
 } une_object;
 

@@ -21,13 +21,13 @@ void une_datatype_object_represent(FILE *file, une_result result)
   
   fwprintf(file, L"{");
   UNE_FOR_OBJECT_MEMBER(i, object) {
-    if (!object->members[i].name)
+    if (!object->members[i]->name)
       continue;
-    fwprintf(file, L"%ls: ", object->members[i].name);
-    if (object->members[i].content.type == UNE_RT_STR)
+    fwprintf(file, L"%ls: ", object->members[i]->name);
+    if (object->members[i]->content.type == UNE_RT_STR)
       putwc(L'"', file);
-    une_result_represent(file, object->members[i].content);
-    if (object->members[i].content.type == UNE_RT_STR)
+    une_result_represent(file, object->members[i]->content);
+    if (object->members[i]->content.type == UNE_RT_STR)
       putwc(L'"', file);
     if (i < object->members_length-1)
       fwprintf(file, L", ");
@@ -46,7 +46,7 @@ une_int une_datatype_object_is_true(une_result result)
   une_object *object = (une_object*)result.value._vp;
   
   UNE_FOR_OBJECT_MEMBER(i, object)
-    if (object->members[0].name)
+    if (object->members[0]->name)
       return 1;
   return 0;
 }
@@ -70,13 +70,13 @@ une_int une_datatype_object_is_equal(une_result subject, une_result comparison)
   
   /* Compare associations. */
   UNE_FOR_OBJECT_MEMBER(i, subject_object) {
-    wchar_t *name = subject_object->members[i].name;
+    wchar_t *name = subject_object->members[i]->name;
     if (!name)
       continue;
     if (!une_datatype_object_member_exists(comparison, name))
       return 0;
     une_result member = une_datatype_object_get_member(comparison, name);
-    if (!une_results_are_equal(subject_object->members[i].content, member))
+    if (!une_results_are_equal(subject_object->members[i]->content, member))
       return 0;
   }
   return 1;
@@ -103,7 +103,7 @@ bool une_datatype_object_member_exists(une_result target, wchar_t *member)
   
   /* Check members. */
   UNE_FOR_OBJECT_MEMBER(i, object)
-    if (object->members[i].name && !wcscmp(object->members[i].name, member))
+    if (object->members[i]->name && !wcscmp(object->members[i]->name, member))
       return 1;
   return 0;
 }
@@ -121,7 +121,7 @@ une_result une_datatype_object_add_member(une_result *target, wchar_t *member)
   /* Find or create slot. */
   size_t slot = 0;
   UNE_FOR_OBJECT_MEMBER(i, object) {
-    if (!object->members[i].name)
+    if (!object->members[i]->name)
       break;
     slot++;
   }
@@ -133,17 +133,19 @@ une_result une_datatype_object_add_member(une_result *target, wchar_t *member)
     verify(object->members);
     /* Initialize new members. */
     for (size_t i=slot; i<object->members_length; i++) {
-      object->members[i].name = NULL;
-      object->members[i].content = une_result_create(UNE_RT_VOID);
+      object->members[i] = malloc(sizeof(*object->members[i]));
+      verify(object->members[i]);
+      object->members[i]->name = NULL;
+      object->members[i]->content = une_result_create(UNE_RT_VOID);
     }
     /* Name requested member. */
-    object->members[slot].name = wcsdup(member);
-    verify(object->members[slot].name);
+    object->members[slot]->name = wcsdup(member);
+    verify(object->members[slot]->name);
   }
   
   /* Return reference. */
   une_result reference = une_result_create(UNE_RT_GENERIC_REFERENCE);
-  reference.value._vp = (void*)&object->members[slot].content;
+  reference.value._vp = (void*)&object->members[slot]->content;
   return reference;
 }
 
@@ -160,9 +162,9 @@ une_result une_datatype_object_get_member(une_result target, wchar_t *member)
   /* Check members. */
   une_result result = une_result_create(UNE_RT_none__);
   UNE_FOR_OBJECT_MEMBER(i, object)
-    if (object->members[i].name && !wcscmp(object->members[i].name, member)) {
+    if (object->members[i]->name && !wcscmp(object->members[i]->name, member)) {
       assert(result.type == UNE_RT_none__);
-      result = une_result_copy(object->members[i].content);
+      result = une_result_copy(object->members[i]->content);
     }
   assert(result.type != UNE_RT_none__);
   return result;
@@ -181,9 +183,9 @@ une_result une_datatype_object_seek_member(une_result *target, wchar_t *member)
   /* Check members. */
   une_result reference = une_result_create(UNE_RT_GENERIC_REFERENCE);
   UNE_FOR_OBJECT_MEMBER(i, object)
-    if (object->members[i].name && !wcscmp(object->members[i].name, member)) {
+    if (object->members[i]->name && !wcscmp(object->members[i]->name, member)) {
       assert(!reference.value._vp);
-      reference.value._vp = (void*)&object->members[i].content;
+      reference.value._vp = (void*)&object->members[i]->content;
     }
   return reference;
 }
@@ -204,13 +206,15 @@ une_result une_datatype_object_copy(une_result original)
   copy_object->members = malloc(copy_object->members_length*sizeof(*copy_object->members));
   verify(copy_object->members);
   UNE_FOR_OBJECT_MEMBER(i, original_object) {
-    if (original_object->members[i].name) {
-      copy_object->members[i].name = wcsdup(original_object->members[i].name);
-      verify(copy_object->members[i].name);
+    copy_object->members[i] = malloc(sizeof(*copy_object->members[i]));
+    verify(copy_object->members[i]);
+    if (original_object->members[i]->name) {
+      copy_object->members[i]->name = wcsdup(original_object->members[i]->name);
+      verify(copy_object->members[i]->name);
     } else {
-      copy_object->members[i].name = NULL;
+      copy_object->members[i]->name = NULL;
     }
-    copy_object->members[i].content = une_result_copy(original_object->members[i].content);
+    copy_object->members[i]->content = une_result_copy(original_object->members[i]->content);
   }
   une_result copy = une_result_create(UNE_RT_OBJECT);
   copy.value._vp = (void*)copy_object;
@@ -228,9 +232,10 @@ void une_datatype_object_free_members(une_result result)
   une_object *object = (une_object*)result.value._vp;
   
   UNE_FOR_OBJECT_MEMBER(i, object) {
-    if (object->members[i].name)
-      free(object->members[i].name);
-    une_result_free(object->members[i].content);
+    if (object->members[i]->name)
+      free(object->members[i]->name);
+    une_result_free(object->members[i]->content);
+    free(object->members[i]);
   }
   
   free(object->members);
