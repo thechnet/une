@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2022-09-26
+Modified 2023-02-13
 */
 
 /* Header-specific includes. */
@@ -51,7 +51,7 @@ une_result une_datatype_function_call(une_error *error, une_interpreter_state *i
 
   /* Define parameters. */
   for (size_t i=0; i<(is->functions)[fn].params_count; i++) {
-    une_variable *var = une_variable_create(is->context, ((is->functions)[fn].params)[i]);
+    une_association *var = une_variable_create(is->context, ((is->functions)[fn].params)[i]);
     var->content = une_result_copy(args_p[i+1]);
   }
 

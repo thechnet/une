@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2022-09-26
+Modified 2023-02-13
 */
 
 /* Header-specific includes. */
@@ -59,7 +59,7 @@ Frees a une_context and its owned members.
 */
 void une_context_free(une_context *context)
 {
-  /* Free une_variable buffer. */
+  /* Free une_association buffer. */
   if (context->variables != NULL) {
     for (size_t i=0; i<context->variables_count; i++)
       une_variable_free(context->variables[i]);
@@ -70,21 +70,21 @@ void une_context_free(une_context *context)
 }
 
 /*
-Initializes a new une_variable in a une_context's variable buffer.
+Initializes a new une_association in a une_context's variable buffer.
 */
 une_variable_itf__(une_variable_create)
 {
-  /* Ensure sufficient space in une_variable buffer. */
+  /* Ensure sufficient space in une_association buffer. */
   if (context->variables_count >= context->variables_size) {
     context->variables_size *= 2;
     context->variables = realloc(context->variables, context->variables_size*sizeof(*context->variables));
     verify(context->variables);
   }
   
-  /* Initialize une_variable. */
-  une_variable *var = &((context->variables)[context->variables_count]);
+  /* Initialize une_association. */
+  une_association *var = &((context->variables)[context->variables_count]);
   (context->variables_count)++;
-  *var = (une_variable){
+  *var = (une_association){
     .name = wcsdup(name),
     .content = une_result_create(UNE_RT_VOID) /* Don't use UNE_RT_none__ because this will be freed using une_result_free. */
   };
@@ -94,11 +94,11 @@ une_variable_itf__(une_variable_create)
 }
 
 /*
-Returns a pointer to a une_variable in a une_context's variable buffer or NULL.
+Returns a pointer to a une_association in a une_context's variable buffer or NULL.
 */
 une_variable_itf__(une_variable_find)
 {
-  /* Find une_variable. */
+  /* Find une_association. */
   for (size_t i=0; i<context->variables_count; i++)
     if (wcscmp(context->variables[i].name, name) == 0)
       return &context->variables[i];
@@ -108,14 +108,14 @@ une_variable_itf__(une_variable_find)
 }
 
 /*
-Returns a pointer to a une_variable in a une_context's variable buffer and its parents or NULL.
+Returns a pointer to a une_association in a une_context's variable buffer and its parents or NULL.
 */
 une_variable_itf__(une_variable_find_global)
 {
   /* Return NULL by default. */
-  une_variable *var = NULL;
+  une_association *var = NULL;
   
-  /* Find une_variable. */
+  /* Find une_association. */
   while (var == NULL) {
     var = une_variable_find(context, name);
     if (context->parent == NULL)
@@ -127,29 +127,29 @@ une_variable_itf__(une_variable_find_global)
 }
 
 /*
-Returns a pointer to a une_variable in a une_context's variable buffer or creates and initializes it.
+Returns a pointer to a une_association in a une_context's variable buffer or creates and initializes it.
 */
 une_variable_itf__(une_variable_find_or_create)
 {
-  /* Find une_variable. */
-  une_variable *variable = une_variable_find(context, name);
+  /* Find une_association. */
+  une_association *variable = une_variable_find(context, name);
   if (variable != NULL)
     return variable;
   
-  /* une_variable doesn't exist yet, create it. */
+  /* une_association doesn't exist yet, create it. */
   return une_variable_create(context, name);
 }
 
 /*
-Returns a pointer to a une_variable in a une_context's variable buffer and its parents or creates and initializes it.
+Returns a pointer to a une_association in a une_context's variable buffer and its parents or creates and initializes it.
 */
 une_variable_itf__(une_variable_find_or_create_global)
 {
-  /* Find une_variable. */
-  une_variable *variable = une_variable_find_global(context, name);
+  /* Find une_association. */
+  une_association *variable = une_variable_find_global(context, name);
   if (variable != NULL)
     return variable;
   
-  /* une_variable doesn't exist yet, create it in the oldest parent context. */
+  /* une_association doesn't exist yet, create it in the oldest parent context. */
   return une_variable_create(une_context_get_oldest_parent(context), name);
 }

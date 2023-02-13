@@ -1,6 +1,6 @@
 /*
 symbols.c - Une
-Modified 2021-09-28
+Modified 2023-02-13
 */
 
 /* Header-specific includes. */
@@ -10,9 +10,9 @@ Modified 2021-09-28
 #include "../tools.h"
 
 /*
-Free all members of a une_variable.
+Free all members of a une_association.
 */
-void une_variable_free(une_variable variable)
+void une_variable_free(une_association variable)
 {
   free(variable.name);
   une_result_free(variable.content);

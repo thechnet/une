@@ -1,6 +1,6 @@
 /*
 symbols.h - Une
-Modified 2022-08-04
+Modified 2023-02-13
 */
 
 #ifndef UNE_SYMBOLS_H
@@ -14,10 +14,10 @@ Modified 2022-08-04
 /*
 Holds the information for a variable.
 */
-typedef struct une_variable_ {
+typedef struct une_association_ {
   wchar_t *name;
   une_result content;
-} une_variable;
+} une_association;
 
 /*
 Holds the information for a function.
@@ -34,7 +34,7 @@ typedef struct une_function_ {
 *** Interface.
 */
 
-void une_variable_free(une_variable variable);
+void une_variable_free(une_association variable);
 void une_function_free(une_function *function);
 
 #endif /* !UNE_SYMBOLS_H */

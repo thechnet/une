@@ -749,7 +749,7 @@ une_interpreter__(une_interpret_seek, bool existing_only)
   bool global = (une_node*)node->content.branch.b;
   
   /* Find variable. */
-  une_variable *var;
+  une_association *var;
   if (global) {
     if (existing_only)
       var = une_variable_find_global(is->context, name);
@@ -931,7 +931,7 @@ une_interpreter__(une_interpret_get)
   wchar_t *name = node->content.branch.a->content.value._wcs;
 
   /* Find variable in all contexts. */
-  une_variable *var = une_variable_find_global(is->context, name);
+  une_association *var = une_variable_find_global(is->context, name);
   if (var == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
     return une_result_create(UNE_RT_ERROR);
@@ -1078,7 +1078,7 @@ une_interpreter__(une_interpret_for_range)
   
   /* Get loop variable. */
   wchar_t *id = node->content.branch.a->content.value._wcs;
-  une_variable *var = une_variable_find_or_create(is->context, id); /* We only check the *local* variables. */
+  une_association *var = une_variable_find_or_create(is->context, id); /* We only check the *local* variables. */
   
   /* Loop. */
   for (une_int i=from; i!=till; i+=step) {
@@ -1121,7 +1121,7 @@ une_interpreter__(une_interpret_for_element)
   
   /* Get loop variable. */
   wchar_t *id = node->content.branch.a->content.value._wcs;
-  une_variable *var = une_variable_find_or_create(is->context, id); /* We only check the *local* variables. */
+  une_association *var = une_variable_find_or_create(is->context, id); /* We only check the *local* variables. */
   
   /* Prepare internal index. */
   une_result index = une_result_create(UNE_RT_INT);

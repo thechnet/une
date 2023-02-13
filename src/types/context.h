@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2022-09-26
+Modified 2023-02-13
 */
 
 #ifndef UNE_CONTEXT_H
@@ -18,7 +18,7 @@ typedef struct une_context_ {
   ptrdiff_t function;
   size_t variables_size;
   size_t variables_count;
-  une_variable *variables;
+  une_association *variables;
 } une_context;
 
 /*
@@ -28,7 +28,7 @@ typedef struct une_context_ {
 /*
 Variable interface function template.
 */
-#define une_variable_itf__(id__) une_variable *(id__)(une_context *context, wchar_t *name) 
+#define une_variable_itf__(id__) une_association *(id__)(une_context *context, wchar_t *name) 
 
 une_context *une_context_create(ptrdiff_t function);
 une_context *une_context_get_oldest_parent(une_context *context);
