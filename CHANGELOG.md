@@ -4,7 +4,7 @@
 
 ### Added
 - Beginnings of object implementation.  
-  As of this release, it is possible to create objects. Currently, they cannot be extended with new members and don't support methods.
+  As of this release, it is possible to create objects and use them as storage containers, but they don't support methods yet.
 - Expressions embedded in strings.  
   To embed an expression in a string, surround it with curly braces: `"2 * 2 = {2*2}"`  
   To include literal curly braces in a string, escape them: `"\{\}"`

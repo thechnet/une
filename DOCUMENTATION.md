@@ -155,10 +155,17 @@ Much like lists, objects can hold any number of any kind of data, including obje
 ```
 person = {
   name: "Mia",
-  age: 30
+  age: 24
 }
 person.name == "Mia"
-person.age == 30
+person.age == 24
+```
+
+To add new members to objects, just assign them a value:
+
+```
+person.surname = "Wallace"
+person.surname == "Wallace"
 ```
 
 ## 3. Conditional Expressions

@@ -455,7 +455,7 @@ cases = [
   
   # Set member.
   Case('a={b:0};a.b=46;return a.b', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-  # Case('a={b:23};a.c=2;return a.b*a.c', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a={b:23};a.c=2;return a.b*a.c', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   
   # FOR
   Case('a=0;for i from 0 till 3 a=a+i;return a', UNE_RT_INT, '3', [ATTR_NO_IMPLICIT_RETURN]),

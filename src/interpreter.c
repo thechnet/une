@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-12
+Modified 2023-02-13
 */
 
 /* Header-specific includes. */
@@ -172,33 +172,30 @@ une_interpreter__(une_interpret_object)
 {
   UNE_UNPACK_NODE_LIST(node, list, list_size);
 
-  /* Create une_variable list. */
-  une_variable *associations = malloc((list_size+1)*sizeof(*associations));
-  verify(associations);
-  
-  /* Store list size. */
-  associations[0].name = NULL;
-  associations[0].content = (une_result){
-    .type = UNE_RT_SIZE,
-    .value._int = (une_int)list_size
-  };
+  /* Create object. */
+  une_object *object = malloc(sizeof(*object));
+  verify(object);
+  object->members_length = list_size;
+  object->members = malloc(object->members_length*sizeof(*object->members));
+  verify(object->members);
 
   /* Store associations. */
   UNE_FOR_NODE_LIST_ITEM(i, list_size) {
-    associations[i].name = wcsdup(list[i]->content.branch.a->content.value._wcs);
-    verify(associations[i].name);
-    associations[i].content = une_interpret(error, is, list[i]->content.branch.b);
-    if (associations[i].content.type == UNE_RT_ERROR) {
-      une_result result = une_result_copy(associations[i].content);
-      for (size_t j=0; j<=i; j++)
-        une_result_free(associations[j].content);
-      free(associations);
+    object->members[i-1].name = wcsdup(list[i]->content.branch.a->content.value._wcs);
+    verify(object->members[i-1].name);
+    object->members[i-1].content = une_interpret(error, is, list[i]->content.branch.b);
+    if (object->members[i-1].content.type == UNE_RT_ERROR) {
+      une_result result = une_result_copy(object->members[i-1].content);
+      for (size_t j=1; j<=i; j++) // FIXME: Unsure?
+        une_result_free(object->members[j-1].content);
+      free(object->members);
+      free(object);
       return result;
     }
   }
   return (une_result){
     .type = UNE_RT_OBJECT,
-    .value._vp = (void*)associations,
+    .value._vp = (void*)object,
   };
 }
 
@@ -922,13 +919,7 @@ une_interpreter__(une_interpret_member_seek)
   assert(dt_result.member_exists && dt_result.add_member);
   if (dt_result.member_exists(*result, name))
     return dt_result.seek_member(result, name);
-  else {
-    // FIXME: add_member may realloc the une_variable array, but cannot update the pointer in the context.
-    // return dt_result.add_member(result, name);
-    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
-    une_result_free(container);
-    return une_result_create(UNE_RT_ERROR);
-  }
+  return dt_result.add_member(result, name);
 }
 
 /*
