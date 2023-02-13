@@ -82,15 +82,14 @@ une_variable_itf__(une_variable_create)
   }
   
   /* Initialize une_association. */
-  une_association *var = &((context->variables)[context->variables_count]);
-  (context->variables_count)++;
-  *var = (une_association){
-    .name = wcsdup(name),
-    .content = une_result_create(UNE_RT_VOID) /* Don't use UNE_RT_none__ because this will be freed using une_result_free. */
-  };
-  verify(var->name);
+  une_association *variable = malloc(sizeof(*variable));
+  verify(variable);
+  variable->name = wcsdup(name);
+  verify(variable->name);
+  variable->content = une_result_create(UNE_RT_VOID); /* Don't use UNE_RT_none__ because this will be freed using une_result_free. */
+  context->variables[context->variables_count++] = variable;
   
-  return var;
+  return variable;
 }
 
 /*
@@ -100,8 +99,8 @@ une_variable_itf__(une_variable_find)
 {
   /* Find une_association. */
   for (size_t i=0; i<context->variables_count; i++)
-    if (wcscmp(context->variables[i].name, name) == 0)
-      return &context->variables[i];
+    if (wcscmp(context->variables[i]->name, name) == 0)
+      return context->variables[i];
 
   /* Return NULL if no match was found. */
   return NULL;

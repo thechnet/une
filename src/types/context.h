@@ -18,7 +18,7 @@ typedef struct une_context_ {
   ptrdiff_t function;
   size_t variables_size;
   size_t variables_count;
-  une_association *variables;
+  une_association **variables;
 } une_context;
 
 /*

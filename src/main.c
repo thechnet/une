@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2022-11-23
+Modified 2023-02-13
 */
 
 /* Implementation-specific includes. */
@@ -184,9 +184,9 @@ void main_interactive(void)
       continue;
     } else if (!wcscmp(stmts, L"#symbols\n")) {
       for (size_t i=0; i<is.context->variables_count; i++) {
-        fputws(is.context->variables[i].name, stdout);
-        if (is.context->variables[i].content.type == UNE_RT_FUNCTION) {
-          size_t fi = (size_t)is.context->variables[i].content.value._int;
+        fputws(is.context->variables[i]->name, stdout);
+        if (is.context->variables[i]->content.type == UNE_RT_FUNCTION) {
+          size_t fi = (size_t)is.context->variables[i]->content.value._int;
           une_function *fn = is.functions+fi;
           fputwc(L'(', stdout);
           if (fn->params_count) {

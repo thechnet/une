@@ -34,7 +34,7 @@ typedef struct une_function_ {
 *** Interface.
 */
 
-void une_variable_free(une_association variable);
+void une_variable_free(une_association *variable);
 void une_function_free(une_function *function);
 
 #endif /* !UNE_SYMBOLS_H */
