@@ -172,6 +172,8 @@ Attributes required for each data type to be considered *true* are:
 - Integers: not being of value `0`.
 - Floating-point numbers: not being of value `0.0`.
 - Strings: not being empty.
+- Lists: containing at least one element.
+- Objects: having at least one member.
 - Functions: **always** *true*.
 - Built-in functions: **always** *true*.
 - Void: **never** *true*.
@@ -192,7 +194,7 @@ The following binary operators can be used between two values to compare them.
 
 #### 3.3.1 Equality and Inequality
 
-Integers, floating-point numbers, strings, and lists can be compared for equality using `==`. Each comparison evaluates to *true* if the data type and the value are the same.
+Integers, floating-point numbers, strings, lists, objects, and Void can be compared for equality using `==`. Each comparison evaluates to *true* if the data type and the value are the same.
 
 Exceptions are comparisons between integers and floating-point numbers with the same numerical value:
 
