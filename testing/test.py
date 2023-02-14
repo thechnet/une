@@ -583,6 +583,11 @@ def check_report(type, case: Case, i):
         return_value_have = f'\'{return_value}\''
       print(f'\33[0m[{i}/{CASES_LEN}] \33[31m\33[1m<{type}> RETURN (\33[7m{return_value_have}\33[27m != {return_value_want})\33[0m')
       passed = False
+  # Clear files after reading them.
+  with open(FILE_STATUS, mode='w', encoding='utf-8-sig') as report_status:
+    report_status.write("")
+  with open(FILE_RETURN, mode='w', encoding='utf-8-sig') as report_return:
+    report_return.write("")
   return passed
 
 if CLEAR:
