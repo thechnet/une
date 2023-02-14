@@ -1,0 +1,18 @@
+# Classes
+
+# 'Person' class.
+Person = function(name) return {
+	# Attributes.
+	name: name,
+	# Methods.
+	introduce: function()
+	{
+		print("Hello, my name is {this.name}!")
+	}
+}
+
+# Construct a Person instance.
+bob = Person("Bob")
+
+# Call an instance method.
+bob.introduce()
