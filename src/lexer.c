@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-02-11
+Modified 2023-02-14
 */
 
 /* Header-specific includes. */
@@ -469,6 +469,8 @@ une_lexer__(une_lex_id)
     tk.type = UNE_TT_TRUE;
   else if (!wcscmp(buffer, L"False"))
     tk.type = UNE_TT_FALSE;
+  else if (!wcscmp(buffer, L"this"))
+    tk.type = UNE_TT_THIS;
   else if (!wcscmp(buffer, L"function")) {
     tk.type = UNE_TT_FUNCTION;
     if (ls->read_from_file)

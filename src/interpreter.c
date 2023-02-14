@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-13
+Modified 2023-02-14
 */
 
 /* Header-specific includes. */
@@ -63,6 +63,7 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_exit,
   &une_interpret_cover,
   &une_interpret_concatenate,
+  &une_interpret_this,
 };
 
 /*
@@ -82,7 +83,7 @@ Interpret a une_node, expecting a specific une_result_type.
 */
 une_interpreter__(une_interpret_as, une_result_type type)
 {
-  une_result result = une_interpret(error, is, node);
+  une_result result = une_result_dereference(une_interpret(error, is, node));
   if (result.type != type && result.type != UNE_RT_ERROR) {
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
     une_result_free(result);
@@ -150,7 +151,7 @@ une_interpreter__(une_interpret_list)
 
   /* Populate une_result list. */
   UNE_FOR_NODE_LIST_ITEM(i, list_size) {
-    result_list[i] = une_interpret(error, is, list[i]);
+    result_list[i] = une_result_dereference(une_interpret(error, is, list[i]));
     if (result_list[i].type == UNE_RT_ERROR) {
       une_result result = une_result_copy(result_list[i]);
       for (size_t j=0; j<=i; j++)
@@ -188,10 +189,10 @@ une_interpreter__(une_interpret_object)
     /* Populate association. */
     association->name = wcsdup(list[i]->content.branch.a->content.value._wcs);
     verify(association->name);
-    association->content = une_interpret(error, is, list[i]->content.branch.b);
+    association->content = une_result_dereference(une_interpret(error, is, list[i]->content.branch.b));
     if (association->content.type == UNE_RT_ERROR) {
       une_result result = une_result_copy(association->content);
-      UNE_FOR_NODE_LIST_ITEM(j, i) { // FIXME: Unsure?
+      UNE_FOR_NODE_LIST_ITEM(j, i) {
         free(object->members[j-1]->name);
         une_result_free(object->members[j-1]->content);
         free(object->members[j-1]);
@@ -257,7 +258,7 @@ une_interpreter__(une_interpret_stmts)
     une_result_free(result_);
     
     /* Interpret statement. */
-    result_ = une_interpret(error, is, nodes[i]);
+    result_ = une_result_dereference(une_interpret(error, is, nodes[i]));
     
     /* Return if required. */
     if (result_.type == UNE_RT_ERROR || result_.type == UNE_RT_CONTINUE || result_.type == UNE_RT_BREAK || is->should_return || is->should_exit)
@@ -273,7 +274,7 @@ Interpret a UNE_NT_COP une_node.
 une_interpreter__(une_interpret_cop)
 {
   /* Evaluate condition. */
-  une_result condition = une_interpret(error, is, node->content.branch.a);
+  une_result condition = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (condition.type == UNE_RT_ERROR)
     return condition;
   
@@ -283,8 +284,8 @@ une_interpreter__(une_interpret_cop)
 
   /* Evaluate correct branch. */
   if (is_true)
-    return une_interpret(error, is, node->content.branch.b);
-  return une_interpret(error, is, node->content.branch.c);
+    return une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  return une_result_dereference(une_interpret(error, is, node->content.branch.c));
 }
 
 /*
@@ -293,7 +294,7 @@ Interpret a UNE_NT_NOT une_node.
 une_interpreter__(une_interpret_not)
 {
   /* Evaluate expression. */
-  une_result center = une_interpret(error, is, node->content.branch.a);
+  une_result center = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (center.type == UNE_RT_ERROR)
     return center;
   
@@ -313,13 +314,13 @@ Interpret a UNE_NT_AND une_node.
 une_interpreter__(une_interpret_and)
 {
   /* Check if branch A is true. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR || !une_result_is_true(left))
     return left;
   une_result_free(left);
 
   /* Now that we checked branch A, branch B will always hold the outcome of this function. */
-  return une_interpret(error, is, node->content.branch.b);
+  return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
 /*
@@ -328,13 +329,13 @@ Interpret a UNE_NT_OR une_node.
 une_interpreter__(une_interpret_or)
 {
   /* Check if branch A is true. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR || une_result_is_true(left))
     return left;
   une_result_free(left);
 
   /* Now that we checked branch A, branch B will always hold the outcome of this function. */
-  return une_interpret(error, is, node->content.branch.b);
+  return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
 /*
@@ -343,13 +344,13 @@ Interpret a UNE_NT_NULLISH une_node.
 une_interpreter__(une_interpret_nullish)
 {
   /* Check if branch A is not VOID. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type != UNE_RT_VOID)
     return left;
   une_result_free(left);
 
   /* Now that we checked branch A, branch B will always hold the outcome of this function. */
-  return une_interpret(error, is, node->content.branch.b);
+  return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
 /*
@@ -358,10 +359,10 @@ Interpret a UNE_NT_EQU une_node.
 une_interpreter__(une_interpret_equ)
 {
   /* Evalute branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -383,7 +384,7 @@ Interpret a UNE_NT_NEQ une_node.
 */
 une_interpreter__(une_interpret_neq)
 {
-  une_result equ = une_interpret_equ(error, is, node);
+  une_result equ = une_result_dereference(une_interpret_equ(error, is, node));
   if (equ.type == UNE_RT_ERROR)
     return equ;
 
@@ -397,10 +398,10 @@ Interpret a UNE_NT_GTR une_node.
 une_interpreter__(une_interpret_gtr)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -428,10 +429,10 @@ Interpret a UNE_NT_GEQ une_node.
 une_interpreter__(une_interpret_geq)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -459,10 +460,10 @@ Interpret a UNE_NT_LSS une_node.
 une_interpreter__(une_interpret_lss)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -490,10 +491,10 @@ Interpret a UNE_NT_LEQ une_node.
 une_interpreter__(une_interpret_leq)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -521,10 +522,10 @@ Interpret a UNE_NT_ADD une_node.
 une_interpreter__(une_interpret_add)
 {
   /* Evalute branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -549,10 +550,10 @@ Interpret a UNE_NT_SUB une_node.
 une_interpreter__(une_interpret_sub)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -577,10 +578,10 @@ Interpret a UNE_NT_MUL une_node.
 une_interpreter__(une_interpret_mul)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -605,10 +606,10 @@ Interpret a UNE_NT_DIV une_node.
 une_interpreter__(une_interpret_div)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -638,10 +639,10 @@ Interpret a UNE_NT_FDIV une_node.
 une_interpreter__(une_interpret_fdiv)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -671,10 +672,10 @@ Interpret a UNE_NT_MOD une_node.
 une_interpreter__(une_interpret_mod)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -699,10 +700,10 @@ Interpret a UNE_NT_POW une_node.
 une_interpreter__(une_interpret_pow)
 {
   /* Evaluate branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -732,7 +733,7 @@ Interpret a UNE_NT_NEG une_node.
 une_interpreter__(une_interpret_neg)
 {
   /* Evaluate branch. */
-  une_result center = une_interpret(error, is, node->content.branch.a);
+  une_result center = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (center.type == UNE_RT_ERROR)
     return center;
   
@@ -750,11 +751,11 @@ une_interpreter__(une_interpret_neg)
 /*
 Interpret a UNE_NT_SEEK une_node.
 */
-une_interpreter__(une_interpret_seek, bool existing_only)
+une_interpreter__(une_interpret_seek, bool existing_only, bool force_global)
 {
   /* Extract information. */
   wchar_t *name = node->content.branch.a->content.value._wcs;
-  bool global = (une_node*)node->content.branch.b;
+  bool global = (une_node*)node->content.branch.b || force_global;
   
   /* Find variable. */
   une_association *var;
@@ -788,14 +789,14 @@ une_interpreter__(une_interpret_assign)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
   /* Evaluate result. */
-  une_result result = une_interpret(error, is, node->content.branch.b);
+  une_result result = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     return result;
@@ -833,7 +834,7 @@ une_interpreter__(une_interpret_idx_seek)
   /* Evaluate container. */
   une_result container;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    container = une_interpret_seek(error, is, node->content.branch.a, true);
+    container = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     container = une_interpret(error, is, node->content.branch.a);
   if (container.type == UNE_RT_ERROR)
@@ -859,7 +860,7 @@ une_interpreter__(une_interpret_idx_seek)
   }
   
   /* Evaluate index. */
-  une_result index = une_interpret(error, is, node->content.branch.b);
+  une_result index = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (index.type == UNE_RT_ERROR)
     return index;
   
@@ -894,7 +895,7 @@ une_interpreter__(une_interpret_member_seek)
   /* Evaluate container. */
   une_result container;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    container = une_interpret_seek(error, is, node->content.branch.a, true);
+    container = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     container = une_interpret(error, is, node->content.branch.a);
   if (container.type == UNE_RT_ERROR)
@@ -935,17 +936,19 @@ Interpret a UNE_NT_GET une_node.
 */
 une_interpreter__(une_interpret_get)
 {
-  /* Get name of variable. */
-  wchar_t *name = node->content.branch.a->content.value._wcs;
+  return une_interpret_seek(error, is, node, true, true);
+  
+  // /* Get name of variable. */
+  // wchar_t *name = node->content.branch.a->content.value._wcs;
 
-  /* Find variable in all contexts. */
-  une_association *var = une_variable_find_global(is->context, name);
-  if (var == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
+  // /* Find variable in all contexts. */
+  // une_association *var = une_variable_find_global(is->context, name);
+  // if (var == NULL) {
+  //   *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
+  //   return une_result_create(UNE_RT_ERROR);
+  // }
 
-  return une_result_copy(var->content);
+  // return une_result_copy(var->content);
 }
 
 /*
@@ -954,7 +957,7 @@ Interpret a UNE_NT_IDX_GET une_node.
 une_interpreter__(une_interpret_idx_get)
 {
   /* Get base. */
-  une_result base = une_interpret(error, is, node->content.branch.a);
+  une_result base = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (base.type == UNE_RT_ERROR)
     return base;
   une_datatype dt_base = UNE_DATATYPE_FOR_RESULT(base);
@@ -965,7 +968,7 @@ une_interpreter__(une_interpret_idx_get)
   }
 
   /* Get index. */
-  une_result index = une_interpret(error, is, node->content.branch.b);
+  une_result index = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (index.type == UNE_RT_ERROR) {
     une_result_free(base);
     return index;
@@ -998,7 +1001,8 @@ Interpret a UNE_NT_MEMBER_GET une_node.
 une_interpreter__(une_interpret_member_get)
 {
   /* Get base. */
-  une_result base = une_interpret(error, is, node->content.branch.a);
+  une_result base_raw = une_interpret(error, is, node->content.branch.a);
+  une_result base = une_result_dereference(base_raw);
   if (base.type == UNE_RT_ERROR)
     return base;
   une_datatype dt_base = UNE_DATATYPE_FOR_RESULT(base);
@@ -1023,7 +1027,14 @@ une_interpreter__(une_interpret_member_get)
   /* Get member. */
   assert(dt_base.get_member);
   une_result result = dt_base.get_member(base, name);
-  une_result_free(base);
+  
+  /* Register base_raw as 'this' contestant. */
+  une_result_free(is->this_contestant);
+  is->this_contestant = base_raw;
+  /* If the type of base_raw matches the type of base, we interpreted a literal. In this case, base *is* base_raw, and we should not free it. */
+  if (base_raw.type != base.type)
+    une_result_free(base);
+  
   return result;
 }
 
@@ -1033,9 +1044,21 @@ Interpret a UNE_NT_CALL une_node.
 une_interpreter__(une_interpret_call)
 {
   /* Get callable. */
-  une_result callable = une_interpret(error, is, node->content.branch.a);
+  une_result callable = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (callable.type == UNE_RT_ERROR)
     return callable;
+  
+  /* Determine if this is a method call. */
+  bool is_method_call = node->content.branch.a->type == UNE_NT_MEMBER_GET;
+  une_result this_before = une_result_create(UNE_RT_VOID);
+  if (is_method_call) {
+    /* Protect current 'this'. */
+    this_before = is->this;
+    /* Promote 'this' contestant to actual 'this'. */
+    assert(is->this_contestant.type == UNE_RT_GENERIC_REFERENCE || is->this_contestant.type == UNE_RT_OBJECT);
+    is->this = is->this_contestant;
+    is->this_contestant = une_result_create(UNE_RT_VOID);
+  }
   
   /* Ensure result type is callable. */
   une_datatype dt_callable = UNE_DATATYPE_FOR_RESULT(callable);
@@ -1045,7 +1068,7 @@ une_interpreter__(une_interpret_call)
   }
 
   /* Interpret arguments. */
-  une_result args = une_interpret_list(error, is, node->content.branch.b);
+  une_result args = une_result_dereference(une_interpret_list(error, is, node->content.branch.b));
   if (args.type == UNE_RT_ERROR) {
     une_result_free(callable);
     return args;
@@ -1055,6 +1078,13 @@ une_interpreter__(une_interpret_call)
   une_result result = dt_callable.call(error, is, node, callable, args);
   une_result_free(callable);
   une_result_free(args);
+  
+  /* Free our 'this' and reinstate the previous 'this'. */
+  if (is_method_call) {
+    une_result_free(is->this);
+    is->this = this_before;
+  }
+  
   return result;
 }
 
@@ -1096,7 +1126,7 @@ une_interpreter__(une_interpret_for_range)
       .type = UNE_RT_INT,
       .value._int = i
     };
-    result = une_interpret(error, is, node->content.branch.d);
+    result = une_result_dereference(une_interpret(error, is, node->content.branch.d));
     if (result.type == UNE_RT_ERROR || is->should_return || is->should_exit)
       return result;
     if (result.type == UNE_RT_BREAK) {
@@ -1115,7 +1145,7 @@ Interpret a UNE_NT_FOR_ELEMENT une_node.
 une_interpreter__(une_interpret_for_element)
 {
   /* Get range. */
-  une_result elements = une_interpret(error, is, node->content.branch.b);
+  une_result elements = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (elements.type == UNE_RT_ERROR)
     return elements;
   une_datatype elements_dt = UNE_DATATYPE_FOR_RESULT(elements);
@@ -1140,7 +1170,7 @@ une_interpreter__(une_interpret_for_element)
     var = une_variable_find(is->context, id); /* Avoid stale pointer if variable buffer grows. */
     une_result_free(var->content);
     var->content = elements_dt.get_index(elements, index);
-    une_result result = une_interpret(error, is, node->content.branch.c);
+    une_result result = une_result_dereference(une_interpret(error, is, node->content.branch.c));
     if (result.type == UNE_RT_ERROR || is->should_return || is->should_exit)
       return result;
     if (result.type == UNE_RT_BREAK) {
@@ -1164,14 +1194,14 @@ une_interpreter__(une_interpret_while)
   une_int condition_is_true;
 
   while (true) {
-    condition = une_interpret(error, is, node->content.branch.a);
+    condition = une_result_dereference(une_interpret(error, is, node->content.branch.a));
     if (condition.type == UNE_RT_ERROR)
       return condition;
     condition_is_true = une_result_is_true(condition);
     une_result_free(condition);
     if (!condition_is_true)
       break;
-    result = une_interpret(error, is, node->content.branch.b);
+    result = une_result_dereference(une_interpret(error, is, node->content.branch.b));
     if (result.type == UNE_RT_ERROR || is->should_return || is->should_exit)
       return result;
     result_type = result.type;
@@ -1189,16 +1219,16 @@ Interpret a UNE_NT_IF une_node.
 une_interpreter__(une_interpret_if)
 {
   /* Check if predicate applies. */
-  une_result predicate = une_interpret(error, is, node->content.branch.a);
+  une_result predicate = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (predicate.type == UNE_RT_ERROR)
     return predicate;
   une_int is_true = une_result_is_true(predicate);
   une_result_free(predicate);
   
   if (is_true)
-    return une_interpret(error, is, node->content.branch.b);
+    return une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (node->content.branch.c != NULL)
-    return une_interpret(error, is, node->content.branch.c);
+    return une_result_dereference(une_interpret(error, is, node->content.branch.c));
   return une_result_create(UNE_RT_VOID);
 }
 
@@ -1225,7 +1255,7 @@ une_interpreter__(une_interpret_return)
 {
   une_result result;
   if (node->content.branch.a != NULL)
-    result = une_interpret(error, is, node->content.branch.a);
+    result = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   else
     result = une_result_create(UNE_RT_VOID);
   is->should_return = true;
@@ -1252,14 +1282,14 @@ Interpret a UNE_NT_COVER une_node.
 une_interpreter__(une_interpret_cover)
 {
   /* Try to interpret branch A. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type != UNE_RT_ERROR)
     return left;
   *error = une_error_create();
   une_result_free(left);
 
   /* Now that we checked branch A, branch B will always hold the outcome of this function. */
-  return une_interpret(error, is, node->content.branch.b);
+  return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
 /*
@@ -1268,10 +1298,10 @@ Interpret a UNE_NT_CONCATENATE une_node.
 une_interpreter__(une_interpret_concatenate)
 {
   /* Evalute branches. */
-  une_result left = une_interpret(error, is, node->content.branch.a);
+  une_result left = une_result_dereference(une_interpret(error, is, node->content.branch.a));
   if (left.type == UNE_RT_ERROR)
     return left;
-  une_result right = une_interpret(error, is, node->content.branch.b);
+  une_result right = une_result_dereference(une_interpret(error, is, node->content.branch.b));
   if (right.type == UNE_RT_ERROR) {
     une_result_free(left);
     return right;
@@ -1298,4 +1328,16 @@ une_interpreter__(une_interpret_concatenate)
   une_result_free(left);
   une_result_free(right);
   return concatenated;
+}
+
+/*
+Interpret a UNE_NT_THIS une_node.
+*/
+une_interpreter__(une_interpret_this)
+{
+  if (is->this.type == UNE_RT_GENERIC_REFERENCE)
+    return is->this;
+  une_result reference = une_result_create(UNE_RT_GENERIC_REFERENCE);
+  reference.value._vp = (void*)&is->this;
+  return reference;
 }

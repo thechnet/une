@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-02-11
+Modified 2023-02-14
 */
 
 /* Header-specific includes. */
@@ -62,6 +62,7 @@ const wchar_t *une_node_table[] = {
   L"EXIT",
   L"COVER",
   L"CONCATENATE",
+  L"THIS",
   L"OBJECT_ASSOCIATION",
 };
 
@@ -114,6 +115,7 @@ une_node *une_node_copy(une_node *src)
     case UNE_NT_CONTINUE:
     case UNE_NT_SIZE:
     case UNE_NT_BUILTIN:
+    case UNE_NT_THIS:
       dest->content.value = src->content.value;
       break;
     
@@ -176,6 +178,7 @@ void une_node_free(une_node *node, bool free_wcs)
     case UNE_NT_BREAK:
     case UNE_NT_CONTINUE:
     case UNE_NT_SIZE:
+    case UNE_NT_THIS:
       break;
     
     /* Heap data. */
@@ -340,8 +343,9 @@ wchar_t *une_node_to_wcs(une_node *node)
         une_node_type_to_wcs(node->type), une_builtin_function_to_wcs((une_builtin_function)node->content.value._int));
       break;
     
-    /* Nullary operations/Void. */
+    /* Nullary operations/Void/this. */
     case UNE_NT_VOID:
+    case UNE_NT_THIS:
     case UNE_NT_BREAK:
     case UNE_NT_CONTINUE: {
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_BRANCH_TYPE L"%ls" RESET,

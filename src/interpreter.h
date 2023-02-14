@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2023-02-11
+Modified 2023-02-14
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -57,7 +57,7 @@ une_interpreter__(une_interpret_fdiv);
 une_interpreter__(une_interpret_mod);
 une_interpreter__(une_interpret_pow);
 une_interpreter__(une_interpret_neg);
-une_interpreter__(une_interpret_seek, bool existing_only);
+une_interpreter__(une_interpret_seek, bool existing_only, bool force_global);
 une_interpreter__(une_interpret_idx_seek);
 une_interpreter__(une_interpret_member_seek);
 une_interpreter__(une_interpret_assign);
@@ -75,5 +75,6 @@ une_interpreter__(une_interpret_return);
 une_interpreter__(une_interpret_exit);
 une_interpreter__(une_interpret_cover);
 une_interpreter__(une_interpret_concatenate);
+une_interpreter__(une_interpret_this);
 
 #endif /* !UNE_INTERPRETER_H */

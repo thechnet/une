@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-02-11
+Modified 2023-02-14
 */
 
 /* Header-specific includes. */
@@ -21,6 +21,7 @@ const wchar_t *une_token_table[] = {
   L"str",
   L"True",
   L"False",
+  L"this",
   L"(",
   L")",
   L"{",

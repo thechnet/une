@@ -234,6 +234,9 @@ cases = [
   Case('"s{1+2}t"', UNE_RT_STR, 's3t', []),
   Case('({a:1,b:{c:2}})', UNE_RT_OBJECT, '{a: 1, b: {c: 2}}', []),
   Case('({a:b})', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
+  Case('({a:46,b:function() return this.a,c:function(n){this.a=n;return this}}).c(128).b()', UNE_RT_INT, '128', []),
+  Case('a={b:0,c:function() return this.b,d:function(n) this.b=n};a.d(46);return a.c()', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('main={attr:0,with_set_attr:function(value){this.attr=value;return this}};return main.with_set_attr(({value:23,double:function()return this.value*2}).double()).attr;', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   
   # COP
   Case('1 ? 2 : 3', UNE_RT_INT, '2', []),

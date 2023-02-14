@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2023-02-12
+Modified 2023-02-14
 */
 
 /* Header-specific includes. */
@@ -122,4 +122,18 @@ une_int une_results_are_equal(une_result left, une_result right)
   if (UNE_DATATYPE_FOR_RESULT(left).is_equal == NULL)
     return 0;
   return UNE_DATATYPE_FOR_RESULT(left).is_equal(left, right);
+}
+
+/*
+Dereference reference results.
+*/
+une_result une_result_dereference(une_result result)
+{
+  assert(UNE_RESULT_TYPE_IS_VALID(result.type));
+  if (result.type != UNE_RT_GENERIC_REFERENCE)
+    return result;
+  une_result *referenced = (une_result*)result.value._vp;
+  assert(referenced);
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(referenced->type));
+  return une_result_copy(*referenced);
 }

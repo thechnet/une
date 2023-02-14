@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-02-13
+Modified 2023-02-14
 */
 
 /* Implementation-specific includes. */
@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
   warn("UNE_NO_INTERPRET enabled.");
   #endif
   #endif
-  
   une_result result;
   bool read_from_file;
   bool main_error = false;

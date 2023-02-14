@@ -2,7 +2,7 @@
 
 > Note: This documentation is written for people with previous programming experience. It does not explain basic ideas, but merely describe how they are used in Une.
 
-Une's syntax is a combination of features from *C*, *JavaScript*, and *Python*. Any programmer, but especially one with previous experience in the above-mentioned languages, should find their way into the language quickly and easily.
+Une's syntax is a combination of *C*, *JavaScript*, and *Python*. Any programmer, but especially one with previous experience in the above-mentioned languages, should find their way into the language quickly and easily.
 
 ## 1. General Concepts
 
@@ -155,17 +155,26 @@ Much like lists, objects can hold any number of any kind of data, including obje
 ```
 person = {
   name: "Mia",
-  age: 24
+  age: Void
 }
-person.name == "Mia"
-person.age == 24
+print(person.name) # Prints 'Mia'.
 ```
 
 To add new members to objects, just assign them a value:
 
 ```
 person.surname = "Wallace"
-person.surname == "Wallace"
+```
+
+When a function is stored in an object member, that function becomes a *method* of the object. During a method call, the enclosing object is available via the `this` keyword.
+
+```
+person.set_age = function(new_age)
+{
+  this.age = new_age
+}
+person.set_age(24)
+print(person.age) # Prints '24'.
 ```
 
 ## 3. Conditional Expressions

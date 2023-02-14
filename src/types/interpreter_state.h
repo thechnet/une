@@ -1,6 +1,6 @@
 /*
 interpreter_state.h - Une
-Modified 2022-09-26
+Modified 2023-02-14
 */
 
 #ifndef UNE_INTERPRETER_STATE_H
@@ -20,6 +20,8 @@ typedef struct une_interpreter_state_ {
   une_function *functions;
   size_t functions_size;
   size_t functions_count;
+  une_result this_contestant;
+  une_result this;
 } une_interpreter_state;
 
 /*

@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2023-02-11
+Modified 2023-02-13
 */
 
 #ifndef UNE_RESULT_H
@@ -97,5 +97,7 @@ void une_result_represent(FILE *file, une_result result);
 
 une_int une_result_is_true(une_result result);
 une_int une_results_are_equal(une_result left, une_result right);
+
+une_result une_result_dereference(une_result result);
 
 #endif /* !UNE_RESULT_H */

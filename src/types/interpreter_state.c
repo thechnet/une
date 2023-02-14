@@ -1,6 +1,6 @@
 /*
 interpreter_state.c - Une
-Modified 2022-09-26
+Modified 2023-02-14
 */
 
 /* Header-specific includes. */
@@ -20,7 +20,9 @@ une_interpreter_state une_interpreter_state_create(void)
     .should_exit = false,
     .functions = functions,
     .functions_size = UNE_SIZE_FUNCTION_BUF,
-    .functions_count = 0
+    .functions_count = 0,
+    .this_contestant = une_result_create(UNE_RT_VOID),
+    .this = une_result_create(UNE_RT_VOID)
   };
 }
 
@@ -37,6 +39,9 @@ void une_interpreter_state_free(une_interpreter_state *is)
   for (size_t i=0; i<is->functions_count; i++)
     une_function_free(is->functions+i);
   free(is->functions);
+  
+  /* 'this' contestant. */
+  une_result_free(is->this_contestant);
 }
 
 /*

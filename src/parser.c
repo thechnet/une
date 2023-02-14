@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-02-11
+Modified 2023-02-14
 */
 
 /* Header-specific includes. */
@@ -324,6 +324,9 @@ une_parser__(une_parse_atom)
     case UNE_TT_FALSE:
       return une_parse_false(error, ps);
     
+    case UNE_TT_THIS:
+      return une_parse_this(error, ps);
+    
     case UNE_TT_BUILTIN:
       return une_parse_builtin(error, ps);
     
@@ -488,6 +491,18 @@ une_parser__(une_parse_false)
 }
 
 /*
+Parse 'this'.
+*/
+une_parser__(une_parse_this)
+{
+  LOGPARSE(L"", now(&ps->in));
+  une_node *num = une_node_create(UNE_NT_THIS);
+  num->pos = now(&ps->in).pos;
+  pull(&ps->in);
+  return num;
+}
+
+/*
 Parse variable get.
 */
 une_parser__(une_parse_get)
@@ -517,6 +532,17 @@ une_parser__(une_parse_seek, bool global)
   seek->content.branch.a = id;
   seek->content.branch.b = (une_node*)global;
   return seek;
+}
+
+/*
+Parse variable seek or 'this'.
+*/
+une_parser__(une_parse_seek_or_this, bool global)
+{
+  LOGPARSE(L"", now(&ps->in));
+  if (now(&ps->in).type == UNE_TT_THIS)
+    return une_parse_this(error, ps);
+  return une_parse_seek(error, ps, global);
 }
 
 /*
@@ -937,7 +963,7 @@ une_parser__(une_parse_assignee)
     global = true;
   }
   
-  une_node *base = une_parse_seek(error, ps, global);
+  une_node *base = une_parse_seek_or_this(error, ps, global);
   if (!base)
     return NULL;
   

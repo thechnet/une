@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2023-02-11
+Modified 2023-02-14
 */
 
 #ifndef UNE_TOKEN_H
@@ -21,6 +21,7 @@ typedef enum une_token_type_ {
   UNE_TT_STR,
   UNE_TT_TRUE,
   UNE_TT_FALSE,
+  UNE_TT_THIS,
   UNE_TT_LPAR,
   UNE_TT_RPAR,
   UNE_TT_LBRC,
