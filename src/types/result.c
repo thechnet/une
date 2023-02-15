@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2023-02-14
+Modified 2023-02-15
 */
 
 /* Header-specific includes. */
@@ -130,6 +130,18 @@ Dereference reference results.
 une_result une_result_dereference(une_result result)
 {
   assert(UNE_RESULT_TYPE_IS_VALID(result.type));
+  if (result.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    wchar_t *target = (wchar_t*)result.value._vp;
+    assert(target);
+    wchar_t *substring = malloc(2*sizeof(*substring));
+    verify(substring);
+    substring[0] = *target;
+    substring[1] = L'\0';
+    return (une_result){
+      .type = UNE_RT_STR,
+      .value._wcs = substring
+    };
+  }
   if (result.type != UNE_RT_GENERIC_REFERENCE)
     return result;
   une_result *referenced = (une_result*)result.value._vp;

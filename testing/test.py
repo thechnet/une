@@ -237,6 +237,7 @@ cases = [
   Case('({a:46,b:function() return this.a,c:function(n){this.a=n;return this}}).c(128).b()', UNE_RT_INT, '128', []),
   Case('a={b:0,c:function() return this.b,d:function(n) this.b=n};a.d(46);return a.c()', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('main={attr:0,with_set_attr:function(value){this.attr=value;return this}};return main.with_set_attr(({value:23,double:function()return this.value*2}).double()).attr;', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('c=[{o:{a:0,s:function(n) this.a=n}}];c[0].o.s(46);return c[0].o.a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   
   # COP
   Case('1 ? 2 : 3', UNE_RT_INT, '2', []),
@@ -598,7 +599,7 @@ if CLEAR:
   
 if ENUMERATE_CASES:
   for i, j in enumerate(cases):
-    print(i, j.input)
+    print(i+1, j.input)
   exit()
 
 cd = os.getcwd()

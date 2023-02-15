@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-14
+Modified 2023-02-15
 */
 
 /* Header-specific includes. */
@@ -840,16 +840,18 @@ une_interpreter__(une_interpret_idx_seek)
   if (container.type == UNE_RT_ERROR)
     return container;
   
-  /* Fail if container cannot be indexed into. */
-  if (container.type != UNE_RT_GENERIC_REFERENCE) {
+  /* If the container contains a reference, unpack it. If it contains a data type, refer to it. Otherwise, fail. */
+  une_result *result;
+  if (container.type == UNE_RT_GENERIC_REFERENCE) {
+    assert(container.value._vp);
+    result = (une_result*)container.value._vp;
+  } else if (UNE_RESULT_TYPE_IS_DATA_TYPE(container.type)) {
+    result = &container;
+  } else {
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
     une_result_free(container);
     return une_result_create(UNE_RT_ERROR);
   }
-  
-  /* Access contained result. */
-  assert(container.value._vp);
-  une_result *result = (une_result*)container.value._vp;
   
   /* Check if container result supports indexing. */
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(*result);
@@ -882,15 +884,30 @@ une_interpreter__(une_interpret_idx_seek)
     return une_result_create(UNE_RT_ERROR);
   }
   
-  /* Return seeked index. */
+  /* Seek index. */
   assert(dt_result.seek_index);
-  return dt_result.seek_index(result, index);
+  une_result seeked = dt_result.seek_index(result, index);
+  
+  /* If the container contained data (i.e. we interpreted a literal), we need to dereference the seeked data *now*. */
+  if (UNE_RESULT_TYPE_IS_DATA_TYPE(container.type))
+    seeked = une_result_dereference(seeked);
+  
+  une_result_free(container);
+  return seeked;
 }
 
 /*
 Interpret a UNE_NT_MEMBER_SEEK une_node.
 */
 une_interpreter__(une_interpret_member_seek)
+{
+  return une_interpret_member_seek_or_get(error, is, node, false);
+}
+
+/*
+Interpret a UNE_NT_MEMBER_SEEK une_node.
+*/
+une_interpreter__(une_interpret_member_seek_or_get, bool existing_only)
 {
   /* Evaluate container. */
   une_result container;
@@ -901,18 +918,20 @@ une_interpreter__(une_interpret_member_seek)
   if (container.type == UNE_RT_ERROR)
     return container;
   
-  /* Fail if container cannot contain members. */
-  if (container.type != UNE_RT_GENERIC_REFERENCE) {
+  /* If the container contains a reference, unpack it. If it contains a data type, refer to it. Otherwise, fail. */
+  une_result *result;
+  if (container.type == UNE_RT_GENERIC_REFERENCE) {
+    assert(container.value._vp);
+    result = (une_result*)container.value._vp;
+  } else if (UNE_RESULT_TYPE_IS_DATA_TYPE(container.type)) {
+    result = &container;
+  } else {
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
     une_result_free(container);
     return une_result_create(UNE_RT_ERROR);
   }
   
-  /* Access contained result. */
-  assert(container.value._vp);
-  une_result *result = (une_result*)container.value._vp;
-  
-  /* Check if container result supports members. */
+  /* Check if result supports members. */
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(*result);
   if (!dt_result.seek_member) {
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
@@ -924,11 +943,27 @@ une_interpreter__(une_interpret_member_seek)
   assert(node->content.branch.b->type == UNE_NT_ID);
   wchar_t *name = node->content.branch.b->content.value._wcs;
   
-  /* Seek member. */
+  /* Seek member or add it if it doesn't exist yet. */
   assert(dt_result.member_exists && dt_result.add_member);
-  if (dt_result.member_exists(*result, name))
-    return dt_result.seek_member(result, name);
-  return dt_result.add_member(result, name);
+  une_result member;
+  if (dt_result.member_exists(*result, name)) {
+    member = dt_result.seek_member(result, name);
+  } else if (!existing_only) {
+    member = dt_result.add_member(result, name);
+  } else {
+    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
+    une_result_free(container);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Register container as 'this' contestant. */
+  une_result_free(is->this_contestant);
+  is->this_contestant = container;
+  /* If the container contained data (i.e. we interpreted a literal), that data now belongs to the interpreter state. Otherwise, free the reference. */
+  if (!UNE_RESULT_TYPE_IS_DATA_TYPE(container.type))
+    une_result_free(container);
+  
+  return member;
 }
 
 /*
@@ -937,18 +972,6 @@ Interpret a UNE_NT_GET une_node.
 une_interpreter__(une_interpret_get)
 {
   return une_interpret_seek(error, is, node, true, true);
-  
-  // /* Get name of variable. */
-  // wchar_t *name = node->content.branch.a->content.value._wcs;
-
-  // /* Find variable in all contexts. */
-  // une_association *var = une_variable_find_global(is->context, name);
-  // if (var == NULL) {
-  //   *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
-  //   return une_result_create(UNE_RT_ERROR);
-  // }
-
-  // return une_result_copy(var->content);
 }
 
 /*
@@ -956,43 +979,7 @@ Interpret a UNE_NT_IDX_GET une_node.
 */
 une_interpreter__(une_interpret_idx_get)
 {
-  /* Get base. */
-  une_result base = une_result_dereference(une_interpret(error, is, node->content.branch.a));
-  if (base.type == UNE_RT_ERROR)
-    return base;
-  une_datatype dt_base = UNE_DATATYPE_FOR_RESULT(base);
-  if (dt_base.get_index == NULL) {
-    une_result_free(base);
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-
-  /* Get index. */
-  une_result index = une_result_dereference(une_interpret(error, is, node->content.branch.b));
-  if (index.type == UNE_RT_ERROR) {
-    une_result_free(base);
-    return index;
-  }
-  assert(dt_base.is_valid_index_type != NULL);
-  if (!dt_base.is_valid_index_type(index.type)) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
-  } else {
-    assert(dt_base.is_valid_index != NULL);
-    if (!dt_base.is_valid_index(base, index))
-      *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
-  }
-  if (error->type != UNE_ET_none__) {
-    une_result_free(base);
-    une_result_free(index);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  
-  /* Get index of base. */
-  assert(dt_base.get_index != NULL);
-  une_result result = dt_base.get_index(base, index);
-  une_result_free(base);
-  une_result_free(index);
-  return result;
+  return une_interpret_idx_seek(error, is, node);
 }
 
 /*
@@ -1000,42 +987,7 @@ Interpret a UNE_NT_MEMBER_GET une_node.
 */
 une_interpreter__(une_interpret_member_get)
 {
-  /* Get base. */
-  une_result base_raw = une_interpret(error, is, node->content.branch.a);
-  une_result base = une_result_dereference(base_raw);
-  if (base.type == UNE_RT_ERROR)
-    return base;
-  une_datatype dt_base = UNE_DATATYPE_FOR_RESULT(base);
-  if (dt_base.get_member == NULL) {
-    une_result_free(base);
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  
-  /* Extract member name. */
-  assert(node->content.branch.b->type == UNE_NT_ID);
-  wchar_t *name = node->content.branch.b->content.value._wcs;
-  
-  /* Check if member exists. */
-  assert(dt_base.member_exists);
-  if (!dt_base.member_exists(base, name)) {
-    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
-    une_result_free(base);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  
-  /* Get member. */
-  assert(dt_base.get_member);
-  une_result result = dt_base.get_member(base, name);
-  
-  /* Register base_raw as 'this' contestant. */
-  une_result_free(is->this_contestant);
-  is->this_contestant = base_raw;
-  /* If the type of base_raw matches the type of base, we interpreted a literal. In this case, base *is* base_raw, and we should not free it. */
-  if (base_raw.type != base.type)
-    une_result_free(base);
-  
-  return result;
+  return une_interpret_member_seek_or_get(error, is, node, true);
 }
 
 /*
