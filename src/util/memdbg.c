@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2022-09-27
+Modified 2023-02-16
 */
 
 /* Header-specific includes. */
@@ -183,7 +183,7 @@ static void memdbg_init(void)
   memdbg_free_count = 0;
   memdbg_current_total_size = 0;
   memdbg_max_total_size = 0;
-  memdbg_allocations = malloc(memdbg_allocations_size*sizeof(*memdbg_allocations));
+  memdbg_allocations = malloc((size_t)memdbg_allocations_size*sizeof(*memdbg_allocations));
   if (memdbg_allocations == NULL) {
     memdbg_alert_count++;
     fail(MEMDBG_MSG_OUT_OF_MEMORY " (memdbg_init %zu b)", memdbg_allocations_size*sizeof(*memdbg_allocations));
@@ -357,7 +357,7 @@ static inline void memdbg_allocation_add(memdbg_allocation allocation)
   size_t index = memdbg_allocation_find(NULL);
   if (index == memdbg_allocations_size) {
     memdbg_allocations_size *= 2;
-    memdbg_allocations = realloc(memdbg_allocations, memdbg_allocations_size*sizeof(*memdbg_allocations));
+    memdbg_allocations = realloc(memdbg_allocations, (size_t)memdbg_allocations_size*sizeof(*memdbg_allocations));
     if (memdbg_allocations == NULL) {
       memdbg_alert_count++;
       fail(MEMDBG_MSG_OUT_OF_MEMORY " (memdbg_allocation_add %zu b)", memdbg_allocations_size*sizeof(*memdbg_allocations));
