@@ -437,6 +437,15 @@ cases = [
   Case('a=[0];a[-1]=1', UNE_RT_ERROR, UNE_ET_INDEX_OUT_OF_RANGE, []),
   Case('a=[0];a[1]=1', UNE_RT_ERROR, UNE_ET_INDEX_OUT_OF_RANGE, []),
   
+  # Assignment operations.
+  Case('a=23;a+=23;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=23;a-=23;return a', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=4;a**=2;return a', UNE_RT_INT, '16', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=4;a*=2;return a', UNE_RT_INT, '8', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=5;a//=2;return a', UNE_RT_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=5;a/=2;return a', UNE_RT_FLT, '2.500', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=5;a%=2;return a', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+  
   # GET
   Case('a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),

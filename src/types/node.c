@@ -48,6 +48,13 @@ const wchar_t *une_node_table[] = {
   L"IDX_SEEK",
   L"MEMBER_SEEK",
   L"ASSIGN",
+  L"ASSIGNADD",
+  L"ASSIGNSUB",
+  L"ASSIGNPOW",
+  L"ASSIGNMUL",
+  L"ASSIGNFDIV",
+  L"ASSIGNDIV",
+  L"ASSIGNMOD",
   L"GET",
   L"IDX_GET",
   L"MEMBER_GET",
@@ -377,6 +384,13 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_IDX_SEEK:
     case UNE_NT_MEMBER_SEEK:
     case UNE_NT_ASSIGN:
+    case UNE_NT_ASSIGNADD:
+    case UNE_NT_ASSIGNSUB:
+    case UNE_NT_ASSIGNPOW:
+    case UNE_NT_ASSIGNMUL:
+    case UNE_NT_ASSIGNFDIV:
+    case UNE_NT_ASSIGNDIV:
+    case UNE_NT_ASSIGNMOD:
     case UNE_NT_IDX_GET:
     case UNE_NT_MEMBER_GET:
     case UNE_NT_EQU:

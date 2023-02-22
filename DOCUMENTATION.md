@@ -282,6 +282,8 @@ An additional operator, `cover`, can be used to provide an alternative value for
 
 ## 5. Variables
 
+### 5.1 Assignment
+
 Variable names can consist of any alphanumeric characters plus underscores (`_`). They are defined as follows:
 
 ```
@@ -296,15 +298,28 @@ variable_name = value
 > add(40, 6) # Evaluates to '46'
 > ```
 
+All variables are mutable; to change their contents, simply assign them a new value.
+
+Elements at a specific index in a list or string can be modified as follows:
+
+```
+list[index] = value
+```
+
+### 5.2 Scope
+
 By default, variables defined within functions are limited to the context of the function, meaning they will be destroyed after the function concludes. The prevent this, or to change the value of a variable previously defined outside the function, add the `global` keyword before the statement:
 ```
 global variable_name = value
 ```
 
-Individual indices of lists can be redefined as follows:
+### 5.3 In-Place Operations
+
+All of the arithmetic operations (see 4.) can be performed on variables in-place as follows:
 
 ```
-list[index] = value
+number = 4
+number **= 2 # 'number' now holds 16.
 ```
 
 ## 6. Control Flow

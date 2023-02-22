@@ -49,6 +49,13 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_idx_seek,
   &une_interpret_member_seek,
   &une_interpret_assign,
+  &une_interpret_assignadd,
+  &une_interpret_assignsub,
+  &une_interpret_assignpow,
+  &une_interpret_assignmul,
+  &une_interpret_assignfdiv,
+  &une_interpret_assigndiv,
+  &une_interpret_assignmod,
   &une_interpret_get,
   &une_interpret_idx_get,
   &une_interpret_member_get,
@@ -822,6 +829,335 @@ une_interpreter__(une_interpret_assign)
     une_result_free(result);
   }
   une_result_free(assignee);
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_ASSIGNADD une_node.
+*/
+une_interpreter__(une_interpret_assignadd)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Check if operation is possible. */
+  une_result *target = (une_result*)assignee.value._vp;
+  une_datatype dt_target = UNE_DATATYPE_FOR_RESULT(*target);
+  if (!dt_target.add) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate operand. */
+  une_result operand = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (operand.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return operand;
+  }
+  
+  /* Perform operation. */
+  une_result result = dt_target.add(*target, operand);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    une_result_free(operand);
+    return result;
+  }
+  une_result_free(assignee);
+  une_result_free(*target);
+  *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_ASSIGNSUB une_node.
+*/
+une_interpreter__(une_interpret_assignsub)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Check if operation is possible. */
+  une_result *target = (une_result*)assignee.value._vp;
+  une_datatype dt_target = UNE_DATATYPE_FOR_RESULT(*target);
+  if (!dt_target.sub) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate operand. */
+  une_result operand = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (operand.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return operand;
+  }
+  
+  /* Perform operation. */
+  une_result result = dt_target.sub(*target, operand);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    une_result_free(operand);
+    return result;
+  }
+  une_result_free(assignee);
+  une_result_free(*target);
+  *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_ASSIGNPOW une_node.
+*/
+une_interpreter__(une_interpret_assignpow)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Check if operation is possible. */
+  une_result *target = (une_result*)assignee.value._vp;
+  une_datatype dt_target = UNE_DATATYPE_FOR_RESULT(*target);
+  if (!dt_target.pow) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate operand. */
+  une_result operand = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (operand.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return operand;
+  }
+  
+  /* Perform operation. */
+  une_result result = dt_target.pow(*target, operand);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    une_result_free(operand);
+    return result;
+  }
+  une_result_free(assignee);
+  une_result_free(*target);
+  *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_ASSIGNMUL une_node.
+*/
+une_interpreter__(une_interpret_assignmul)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Check if operation is possible. */
+  une_result *target = (une_result*)assignee.value._vp;
+  une_datatype dt_target = UNE_DATATYPE_FOR_RESULT(*target);
+  if (!dt_target.mul) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate operand. */
+  une_result operand = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (operand.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return operand;
+  }
+  
+  /* Perform operation. */
+  une_result result = dt_target.mul(*target, operand);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    une_result_free(operand);
+    return result;
+  }
+  une_result_free(assignee);
+  une_result_free(*target);
+  *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_ASSIGNFDIV une_node.
+*/
+une_interpreter__(une_interpret_assignfdiv)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Check if operation is possible. */
+  une_result *target = (une_result*)assignee.value._vp;
+  une_datatype dt_target = UNE_DATATYPE_FOR_RESULT(*target);
+  if (!dt_target.fdiv) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate operand. */
+  une_result operand = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (operand.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return operand;
+  }
+  
+  /* Perform operation. */
+  une_result result = dt_target.fdiv(*target, operand);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    une_result_free(operand);
+    return result;
+  }
+  une_result_free(assignee);
+  une_result_free(*target);
+  *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_ASSIGNDIV une_node.
+*/
+une_interpreter__(une_interpret_assigndiv)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Check if operation is possible. */
+  une_result *target = (une_result*)assignee.value._vp;
+  une_datatype dt_target = UNE_DATATYPE_FOR_RESULT(*target);
+  if (!dt_target.div) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate operand. */
+  une_result operand = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (operand.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return operand;
+  }
+  
+  /* Perform operation. */
+  une_result result = dt_target.div(*target, operand);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    une_result_free(operand);
+    return result;
+  }
+  une_result_free(assignee);
+  une_result_free(*target);
+  *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
+  
+  return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Interpret a UNE_NT_ASSIGNMOD une_node.
+*/
+une_interpreter__(une_interpret_assignmod)
+{
+  /* Evaluate assignee. */
+  une_result assignee;
+  if (node->content.branch.a->type == UNE_NT_SEEK)
+    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+  else
+    assignee = une_interpret(error, is, node->content.branch.a);
+  if (assignee.type == UNE_RT_ERROR)
+    return assignee;
+  if (assignee.type == UNE_RT_STR_ELEMENT_REFERENCE) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Check if operation is possible. */
+  une_result *target = (une_result*)assignee.value._vp;
+  une_datatype dt_target = UNE_DATATYPE_FOR_RESULT(*target);
+  if (!dt_target.mod) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Evaluate operand. */
+  une_result operand = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (operand.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    return operand;
+  }
+  
+  /* Perform operation. */
+  une_result result = dt_target.mod(*target, operand);
+  if (result.type == UNE_RT_ERROR) {
+    une_result_free(assignee);
+    une_result_free(operand);
+    return result;
+  }
+  une_result_free(assignee);
+  une_result_free(*target);
+  *target = result; /* Instead of copying this result, we just use the original; this way, we also don't need to worry about freeing it. */
   
   return une_result_create(UNE_RT_VOID);
 }
