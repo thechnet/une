@@ -1,7 +1,7 @@
 #!python3
 import os
 from os import system as cmd
-from sys import platform
+from sys import platform, argv
 
 def is_win():
   return platform=='win32' or platform=='cygwin' or platform=='msys'
@@ -21,7 +21,7 @@ SKIP_UNTIL = 0 # 0, 2
 HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
-ENUMERATE_CASES = False
+ENUMERATE_CASES = True if len(argv) > 1 and argv[1] == "enumerate_cases" else False
 FILE_SCRIPT = 'test.py.une'
 DIR = '.'
 UNE = '..\\\\debug\\\\une.exe' if is_win() else '../debug/une'
