@@ -12,7 +12,7 @@ Modified 2023-02-22
 #include "types/error.h"
 #include "types/node.h"
 #include "types/result.h"
-#include "types/symbols.h"
+#include "types/association.h"
 #include "builtin_functions.h"
 
 /*

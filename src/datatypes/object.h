@@ -1,6 +1,6 @@
 /*
 object.h - Une
-Modified 2023-02-13
+Modified 2023-02-22
 */
 
 #ifndef UNE_DATATYPES_OBJECT_H
@@ -9,7 +9,7 @@ Modified 2023-02-13
 /* Header-specific includes. */
 #include "../primitive.h"
 #include "../types/result.h"
-#include "../types/symbols.h"
+#include "../types/association.h"
 
 void une_datatype_object_represent(FILE *file, une_result result);
 

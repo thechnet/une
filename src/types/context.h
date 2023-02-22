@@ -8,7 +8,7 @@ Modified 2023-02-22
 
 /* Header-specific includes. */
 #include "../primitive.h"
-#include "symbols.h"
+#include "association.h"
 
 /*
 Holds information that changes depending on the execution context.

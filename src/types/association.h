@@ -1,10 +1,10 @@
 /*
-symbols.h - Une
+association.h - Une
 Modified 2023-02-22
 */
 
-#ifndef UNE_SYMBOLS_H
-#define UNE_SYMBOLS_H
+#ifndef UNE_ASSOCIATION_H
+#define UNE_ASSOCIATION_H
 
 /* Header-specific includes. */
 #include "../primitive.h"
@@ -12,7 +12,7 @@ Modified 2023-02-22
 #include "node.h"
 
 /*
-Holds the information for a variable.
+Associate a result with a given name.
 */
 typedef struct une_association_ {
   wchar_t *name;
@@ -23,6 +23,7 @@ typedef struct une_association_ {
 *** Interface.
 */
 
-void une_variable_free(une_association *variable);
+une_association *une_association_create(void);
+void une_association_free(une_association *association);
 
-#endif /* !UNE_SYMBOLS_H */
+#endif /* !UNE_ASSOCIATION_H */

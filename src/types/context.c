@@ -66,7 +66,7 @@ void une_context_free(une_context *context)
   /* Free une_association buffer. */
   if (context->variables != NULL) {
     for (size_t i=0; i<context->variables_count; i++)
-      une_variable_free(context->variables[i]);
+      une_association_free(context->variables[i]);
     free(context->variables);
   }
   
@@ -86,8 +86,7 @@ une_variable_itf__(une_variable_create)
   }
   
   /* Initialize une_association. */
-  une_association *variable = malloc(sizeof(*variable));
-  verify(variable);
+  une_association *variable = une_association_create();
   variable->name = wcsdup(name);
   verify(variable->name);
   variable->content = une_result_create(UNE_RT_VOID); /* Don't use UNE_RT_none__ because this will be freed using une_result_free. */

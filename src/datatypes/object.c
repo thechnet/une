@@ -1,6 +1,6 @@
 /*
 object.c - Une
-Modified 2023-02-13
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
@@ -132,12 +132,8 @@ une_result une_datatype_object_add_member(une_result *target, wchar_t *member)
     object->members = realloc(object->members, (object->members_length+1)*sizeof(*object->members));
     verify(object->members);
     /* Initialize new members. */
-    for (size_t i=slot; i<object->members_length; i++) {
-      object->members[i] = malloc(sizeof(*object->members[i]));
-      verify(object->members[i]);
-      object->members[i]->name = NULL;
-      object->members[i]->content = une_result_create(UNE_RT_VOID);
-    }
+    for (size_t i=slot; i<object->members_length; i++)
+      object->members[i] = une_association_create();
     /* Name requested member. */
     object->members[slot]->name = wcsdup(member);
     verify(object->members[slot]->name);
@@ -231,12 +227,8 @@ void une_datatype_object_free_members(une_result result)
   /* Extract object struct. */
   une_object *object = (une_object*)result.value._vp;
   
-  UNE_FOR_OBJECT_MEMBER(i, object) {
-    if (object->members[i]->name)
-      free(object->members[i]->name);
-    une_result_free(object->members[i]->content);
-    free(object->members[i]);
-  }
+  UNE_FOR_OBJECT_MEMBER(i, object)
+    une_association_free(object->members[i]);
   
   free(object->members);
   free(object);

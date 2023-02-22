@@ -43,7 +43,7 @@ add_executable(une
   src/parser.c
   src/lexer.c
   src/types/context.c
-  src/types/symbols.c
+  src/types/association.c
   src/types/error.c
   src/types/result.c
   src/types/node.c

@@ -7,7 +7,7 @@ Modified 2023-02-22
 #include "function.h"
 
 /* Implementation-specific includes. */
-#include "../types/symbols.h"
+#include "../types/association.h"
 #include "../interpreter.h"
 #include "../tools.h"
 

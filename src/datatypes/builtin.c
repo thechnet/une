@@ -1,13 +1,13 @@
 /*
 builtin.c - Une
-Modified 2021-11-22
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
 #include "builtin.h"
 
 /* Implementation-specific includes. */
-#include "../types/symbols.h"
+#include "../types/association.h"
 #include "../builtin_functions.h"
 
 /*
