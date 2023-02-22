@@ -1,6 +1,6 @@
 /*
 stream.h - Une
-Modified 2022-08-04
+Modified 2023-02-22
 */
 
 #ifndef UNE_STREAM_H
@@ -154,6 +154,9 @@ Peek an item in a wfile une_istream.
 #define UNE_ISTREAM_WFILE_PEEKER(id__)\
   une_static__ wint_t id__(une_istream *istream, ptrdiff_t offset)\
   {\
+    assert(offset >= 0);\
+    if (!offset)\
+      return UNE_ISTREAM_WFILE_ITEM__(istream);\
     wint_t wc_tmp = fgetwc(istream->data.wfile.file);\
     wint_t wc = wc_tmp;\
     if (offset-1 > 0)\

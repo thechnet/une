@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-02-14
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
@@ -11,56 +11,6 @@ Modified 2023-02-14
 #include "tools.h"
 #include "stream.h"
 #include "builtin_functions.h"
-
-/*
-Two-character token characters.
-*/
-const wchar_t *une_2c_tokens_wc = L"==!=>=<=//**&&||??";
-
-/*
-Two-character token types.
-*/
-const une_token_type une_2c_tokens_tt[] = {
-  UNE_TT_EQU,
-  UNE_TT_NEQ,
-  UNE_TT_GEQ,
-  UNE_TT_LEQ,
-  UNE_TT_FDIV,
-  UNE_TT_POW,
-  UNE_TT_AND,
-  UNE_TT_OR,
-  UNE_TT_NULLISH,
-};
-
-/*
-One-character token characters.
-*/
-const wchar_t *une_1c_tokens_wc = L"(){}[],=><+-*/%!?:.";
-
-/*
-One-character token types.
-*/
-const une_token_type une_1c_tokens_tt[] = {
-  UNE_TT_LPAR,
-  UNE_TT_RPAR,
-  UNE_TT_LBRC,
-  UNE_TT_RBRC,
-  UNE_TT_LSQB,
-  UNE_TT_RSQB,
-  UNE_TT_SEP,
-  UNE_TT_SET,
-  UNE_TT_GTR,
-  UNE_TT_LSS,
-  UNE_TT_ADD,
-  UNE_TT_SUB,
-  UNE_TT_MUL,
-  UNE_TT_DIV,
-  UNE_TT_MOD,
-  UNE_TT_NOT,
-  UNE_TT_QMARK,
-  UNE_TT_COLON,
-  UNE_TT_DOT,
-};
 
 /*
 Public lexer interface.
@@ -169,24 +119,17 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
       push(&out, une_lex_str(error, ls));
       continue;
     }
-
-    /* Identifier. */
-    if (UNE_LEXER_WC_CAN_BEGIN_ID(ls->now(&ls->in))) {
-      push(&out, une_lex_id(error, ls));
-      continue;
-    }
-
-    /* Two-character tokens. */
-    une_token tk = une_lex_2c_token(error, ls);
-    if (tk.type != UNE_TT_none__) {
-      push(&out, tk);
-      continue;
-    }
     
-    /* One-character tokens. */
-    tk = une_lex_1c_token(error, ls);
+    /* Operator. */
+    une_token tk = une_lex_operator(error, ls);
     if (tk.type != UNE_TT_none__) {
       push(&out, tk);
+      continue;
+    }
+
+    /* Keyword or identifier. */
+    if (UNE_LEXER_WC_CAN_BEGIN_ID(ls->now(&ls->in))) {
+      push(&out, une_lex_keyword_or_identifier(error, ls));
       continue;
     }
     
@@ -227,7 +170,30 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
 }
 
 /*
-Lex a numeric token.
+Lex an operator or keyword token.
+*/
+une_lexer__(une_lex_operator)
+{
+  for (une_token_type tt=UNE_R_BGN_OPERATOR_TOKENS; tt<=UNE_R_END_OPERATOR_TOKENS; tt++) {
+    ptrdiff_t i=0;
+    while (ls->peek(&ls->in, i) == (wint_t)une_token_table[tt-1][i]) {
+      if ((wint_t)une_token_table[tt-1][++i] == L'\0') {
+        ptrdiff_t starting_index = ls->in.index;
+        for (; i>0; i--)
+          ls->pull(&ls->in);
+        return (une_token){
+          .type = tt,
+          .pos.start = (size_t)starting_index,
+          .pos.end = (size_t)ls->in.index
+        };
+      }
+    }
+  }
+  return une_token_create(UNE_TT_none__);
+}
+
+/*
+Lex an integer or floating-point number.
 */
 une_lexer__(une_lex_num)
 {
@@ -307,7 +273,7 @@ une_lexer__(une_lex_num)
 }
 
 /*
-Lex a string token.
+Lex a string.
 */
 une_lexer__(une_lex_str)
 {
@@ -407,148 +373,54 @@ une_lexer__(une_lex_str)
 }
 
 /*
-Lex an id token.
+Lex an identifier, builtin function name, or 'function'.
 */
-une_lexer__(une_lex_id)
+une_lexer__(une_lex_keyword_or_identifier)
 {
-  /* Setup. */
   size_t buffer_size = UNE_SIZE_ID_LEN;
   wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
   verify(buffer);
   size_t idx_start = (size_t)ls->in.index;
   size_t buffer_index = 0;
   
+  /* Read keyword or identifier. */
   while (UNE_LEXER_WC_CAN_BE_IN_ID(ls->now(&ls->in))) {
-    /* Ensure sufficient space in string buffer. */
-    if (buffer_index >= buffer_size-1) { /* NUL. */
+    if (buffer_index >= buffer_size-1) {
       buffer_size *= 2;
       buffer = realloc(buffer, buffer_size*sizeof(*buffer));
       verify(buffer);
     }
-    
-    /* Add character to string buffer. */
     buffer[buffer_index++] = (wchar_t)ls->now(&ls->in);
     ls->pull(&ls->in);
   }
-  
   buffer[buffer_index] = L'\0';
   
-  /* Construct keyword or string token. */
+  /* Determine token type. */
   une_token tk;
-  if (!wcscmp(buffer, L"if"))
-    tk.type = UNE_TT_IF;
-  else if (!wcscmp(buffer, L"elif"))
-    tk.type = UNE_TT_ELIF;
-  else if (!wcscmp(buffer, L"else"))
-    tk.type = UNE_TT_ELSE;
-  else if (!wcscmp(buffer, L"for"))
-    tk.type = UNE_TT_FOR;
-  else if (!wcscmp(buffer, L"from"))
-    tk.type = UNE_TT_FROM;
-  else if (!wcscmp(buffer, L"till"))
-    tk.type = UNE_TT_TILL;
-  else if (!wcscmp(buffer, L"in"))
-    tk.type = UNE_TT_IN;
-  else if (!wcscmp(buffer, L"while"))
-    tk.type = UNE_TT_WHILE;
-  else if (!wcscmp(buffer, L"return"))
-    tk.type = UNE_TT_RETURN;
-  else if (!wcscmp(buffer, L"exit"))
-    tk.type = UNE_TT_EXIT;
-  else if (!wcscmp(buffer, L"break"))
-    tk.type = UNE_TT_BREAK;
-  else if (!wcscmp(buffer, L"continue"))
-    tk.type = UNE_TT_CONTINUE;
-  else if (!wcscmp(buffer, L"global"))
-    tk.type = UNE_TT_GLOBAL;
-  else if (!wcscmp(buffer, L"cover"))
-    tk.type = UNE_TT_COVER;
-  else if (!wcscmp(buffer, L"Void"))
-    tk.type = UNE_TT_VOID;
-  else if (!wcscmp(buffer, L"True"))
-    tk.type = UNE_TT_TRUE;
-  else if (!wcscmp(buffer, L"False"))
-    tk.type = UNE_TT_FALSE;
-  else if (!wcscmp(buffer, L"this"))
-    tk.type = UNE_TT_THIS;
-  else if (!wcscmp(buffer, L"function")) {
+  if (!wcscmp(buffer, une_token_table[UNE_TT_FUNCTION-1])) {
     tk.type = UNE_TT_FUNCTION;
-    if (ls->read_from_file)
-      tk.value._vp = (void*)ls->path;
-    else
-      tk.value._vp = (void*)UNE_COMMAND_LINE_NAME;
-  } else {
-    une_builtin_function builtin = une_builtin_wcs_to_function(buffer);
-    if (builtin != UNE_BUILTIN_none__) {
-      tk.type = UNE_TT_BUILTIN;
-      tk.value._int = (une_int)builtin;
-    } else {
-      tk.type = UNE_TT_ID;
-      tk.value._wcs = buffer;
-    }
+    tk.value._vp = (void*)(ls->read_from_file ? ls->path : UNE_COMMAND_LINE_NAME);
+    goto keyword_or_identifier_defined;
   }
+  for (une_token_type tt=UNE_R_BGN_KEYWORD_TOKENS; tt<=UNE_R_END_KEYWORD_TOKENS; tt++)
+    if (!wcscmp(buffer, une_token_table[tt-1])) {
+      tk.type = tt;
+      goto keyword_or_identifier_defined;
+    }
+  une_builtin_function builtin = une_builtin_wcs_to_function(buffer);
+  if (builtin != UNE_BUILTIN_none__) {
+    tk.type = UNE_TT_BUILTIN;
+    tk.value._int = (une_int)builtin;
+    goto keyword_or_identifier_defined;
+  }
+  tk.type = UNE_TT_ID;
+  tk.value._wcs = buffer;
+  
+  /* Finalize token. */
+  keyword_or_identifier_defined:
   if (tk.type != UNE_TT_ID)
     free(buffer);
-  
   tk.pos = (une_position){ .start = idx_start, .end = (size_t)ls->in.index };
+  
   return tk;
 }
-
-/*
-Attempt to lex a two-character token.
-*/
-une_lexer__(une_lex_2c_token)
-{
-  size_t i = 0;
-  while (true) {
-    if (une_2c_tokens_wc[i] == L'\0')
-      return une_token_create(UNE_TT_none__);
-    if ((wint_t)une_2c_tokens_wc[i] == ls->now(&ls->in) && ls->peek(&ls->in, 1) == (wint_t)une_2c_tokens_wc[i+1]) {
-      ls->pull(&ls->in);
-      ls->pull(&ls->in);
-      return (une_token){
-        .type = une_2c_tokens_tt[i/2],
-        .pos = (une_position){ .start = (size_t)ls->in.index-2, .end = (size_t)ls->in.index },
-        .value._vp = 0
-      };
-    }
-    i += 2;
-  }
-  assert(false);
-  return une_token_create(UNE_TT_none__);
-}
-
-/*
-Attempt to lex a one-character token.
-*/
-une_lexer__(une_lex_1c_token)
-{
-  size_t i = 0;
-  while (true) {
-    if (une_1c_tokens_wc[i] == L'\0')
-      return une_token_create(UNE_TT_none__);
-    if ((wint_t)une_1c_tokens_wc[i] == ls->now(&ls->in)) {
-      ls->pull(&ls->in);
-      return (une_token){
-        .type = une_1c_tokens_tt[i],
-        .pos = (une_position){ .start = (size_t)ls->in.index-1, .end = (size_t)ls->in.index },
-        .value._vp = 0
-      };
-    }
-    i++;
-  }
-#ifdef __GNUC__
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreturn-type"
-}
-#pragma clang diagnostic pop
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-}
-#pragma GCC diagnostic pop
-#endif
-#else
-}
-#endif

@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2023-02-14
+Modified 2023-02-22
 */
 
 #ifndef UNE_NODE_H
@@ -36,19 +36,19 @@ typedef enum une_node_type_ {
   #define UNE_R_BGN_CONDITION_NODES UNE_NT_EQU
   UNE_NT_EQU,
   UNE_NT_NEQ,
-  UNE_NT_GTR,
   UNE_NT_GEQ,
-  UNE_NT_LSS,
+  UNE_NT_GTR,
   UNE_NT_LEQ,
-  #define UNE_R_END_CONDITION_NODES UNE_NT_LEQ
+  UNE_NT_LSS,
+  #define UNE_R_END_CONDITION_NODES UNE_NT_LSS
   #define UNE_R_BGN_ADD_SUB_NODES UNE_NT_ADD
   UNE_NT_ADD,
   UNE_NT_SUB,
   #define UNE_R_END_ADD_SUB_NODES UNE_NT_SUB
   #define UNE_R_BEGIN_TERM_NODES UNE_NT_MUL
   UNE_NT_MUL,
-  UNE_NT_DIV,
   UNE_NT_FDIV,
+  UNE_NT_DIV,
   UNE_NT_MOD,
   #define UNE_R_END_TERM_NODES UNE_NT_MOD
   UNE_NT_POW,

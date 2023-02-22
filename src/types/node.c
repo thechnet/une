@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-02-14
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
@@ -32,15 +32,15 @@ const wchar_t *une_node_table[] = {
   L"NULLISH",
   L"EQU",
   L"NEQ",
-  L"GTR",
   L"GEQ",
-  L"LSS",
+  L"GTR",
   L"LEQ",
+  L"LSS",
   L"ADD",
   L"SUB",
   L"MUL",
-  L"DIV",
   L"FDIV",
+  L"DIV",
   L"MOD",
   L"POW",
   L"NEG",

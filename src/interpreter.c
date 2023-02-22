@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-15
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
@@ -33,15 +33,15 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_nullish,
   &une_interpret_equ,
   &une_interpret_neq,
-  &une_interpret_gtr,
   &une_interpret_geq,
-  &une_interpret_lss,
+  &une_interpret_gtr,
   &une_interpret_leq,
+  &une_interpret_lss,
   &une_interpret_add,
   &une_interpret_sub,
   &une_interpret_mul,
-  &une_interpret_div,
   &une_interpret_fdiv,
+  &une_interpret_div,
   &une_interpret_mod,
   &une_interpret_pow,
   &une_interpret_neg,
