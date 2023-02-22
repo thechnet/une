@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-02-14
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
@@ -918,11 +918,16 @@ une_parser__(une_parse_assignment_or_expr_stmt)
   /* Check for variable assignment. */
   ptrdiff_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable assignment. */
   une_node *assignee = une_parse_assignee(error, ps);
-  bool is_assignment = assignee && now(&ps->in).type == UNE_TT_SET;
-  if (!is_assignment) {
-    ps->in.index = token_index_before;
+  une_node_type assignment_operation = UNE_NT_none__;
+  if (
+    assignee &&
+    now(&ps->in).type >= UNE_R_BGN_ASSIGNMENT_TOKENS &&
+    now(&ps->in).type <= UNE_R_END_ASSIGNMENT_TOKENS
+  ) {
+    assignment_operation = UNE_R_BGN_ASSIGNMENT_NODES + (now(&ps->in).type - UNE_R_BGN_ASSIGNMENT_TOKENS);
+    pull(&ps->in);
   } else {
-    pull(&ps->in); /* '='. */
+    ps->in.index = token_index_before;
   }
   
   LOGPARSE(L"expression", now(&ps->in));
@@ -936,8 +941,8 @@ une_parser__(une_parse_assignment_or_expr_stmt)
   
   /* Resolve final node type. */
   une_node *assignment_or_expression_statement;
-  if (is_assignment) {
-    assignment_or_expression_statement = une_node_create(UNE_NT_ASSIGN);
+  if (assignment_operation) {
+    assignment_or_expression_statement = une_node_create(assignment_operation);
     assignment_or_expression_statement->pos.start = assignee->pos.start;
     assignment_or_expression_statement->pos.end = expression->pos.end;
     assignment_or_expression_statement->content.branch.a = assignee;
