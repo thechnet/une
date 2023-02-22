@@ -220,8 +220,8 @@ Interpret a UNE_NT_FUNCTION une_node.
 */
 une_interpreter__(une_interpret_function)
 {
+  /* Reduce parameter nodes to a vector of strings. */
   UNE_UNPACK_NODE_LIST(node->content.branch.a, params_n, params_count);
-  size_t function = une_function_create(is, (char*)node->content.branch.c, node->pos);
   wchar_t **params = NULL;
   if (params_count > 0) {
     params = malloc(params_count*sizeof(*params));
@@ -231,12 +231,23 @@ une_interpreter__(une_interpret_function)
     params[i] = wcsdup(params_n[i+1]->content.value._wcs);
     verify(params[i]);
   }
-  (is->functions)[function].params = params;
-  (is->functions)[function].params_count = params_count;
-  (is->functions)[function].body = une_node_copy(node->content.branch.b);
+  
+  /* Allocate function struct. */
+  une_function *function = malloc(sizeof(*function));
+  verify(function);
+  
+  /* Populate function struct. */
+  function->definition_file = strdup((char*)node->content.branch.c);
+  verify(function->definition_file);
+  function->definition_point = node->pos;
+  function->params_count = params_count;
+  function->params = params;
+  function->body = une_node_copy(node->content.branch.b);
+  
+  /* Return FUNCTION result. */
   return (une_result){
     .type = UNE_RT_FUNCTION,
-    .value._int = (une_int)function
+    .value._vp = (void*)function
   };
 }
 

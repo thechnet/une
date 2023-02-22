@@ -1,6 +1,6 @@
 /*
 datatypes.c - Une
-Modified 2023-02-11
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
@@ -250,8 +250,8 @@ une_datatype une_datatypes[] = {
     .add_member = NULL,
     .get_member = NULL,
     .seek_member = NULL,
-    .copy = NULL,
-    .free_members = NULL,
+    .copy = &une_datatype_function_copy,
+    .free_members = &une_datatype_function_free_members,
     .call = &une_datatype_function_call,
   },
   {

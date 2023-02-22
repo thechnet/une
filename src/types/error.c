@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-02-09
+Modified 2023-02-22
 */
 
 /* Header-specific includes. */
@@ -124,24 +124,19 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   for (int i=0; i<=s_contexts.index; i++) {
     
     /* Get stored information. */
-    une_function *function;
-    if (contexts[i]->function < 0)
-      function = NULL;
-    else
-      function = (is->functions)+((contexts[i])->function);
     char *name;
     une_position position;
     bool main_context = false;
-    if (function == NULL) {
+    if (contexts[i]->entry_file) {
+      name = contexts[i]->entry_file;
+      position = contexts[i]->entry_point;
+    } else {
       main_context = true;
       if (ls->read_from_file)
         name = ls->path;
       else
         name = UNE_COMMAND_LINE_NAME;
       position = error->pos;
-    } else {
-      name = function->definition_file;
-      position = function->definition_point;
     }
     
     /* Compute line number. */

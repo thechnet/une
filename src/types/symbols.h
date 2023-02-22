@@ -1,6 +1,6 @@
 /*
 symbols.h - Une
-Modified 2023-02-13
+Modified 2023-02-22
 */
 
 #ifndef UNE_SYMBOLS_H
@@ -20,21 +20,9 @@ typedef struct une_association_ {
 } une_association;
 
 /*
-Holds the information for a function.
-*/
-typedef struct une_function_ {
-  char *definition_file;
-  une_position definition_point;
-  size_t params_count;
-  wchar_t **params;
-  une_node *body;
-} une_function;
-
-/*
 *** Interface.
 */
 
 void une_variable_free(une_association *variable);
-void une_function_free(une_function *function);
 
 #endif /* !UNE_SYMBOLS_H */

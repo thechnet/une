@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-02-14
+Modified 2023-02-22
 */
 
 /* Implementation-specific includes. */
@@ -185,8 +185,7 @@ void main_interactive(void)
       for (size_t i=0; i<is.context->variables_count; i++) {
         fputws(is.context->variables[i]->name, stdout);
         if (is.context->variables[i]->content.type == UNE_RT_FUNCTION) {
-          size_t fi = (size_t)is.context->variables[i]->content.value._int;
-          une_function *fn = is.functions+fi;
+          une_function *fn = (une_function*)is.context->variables[i]->content.value._vp;
           fputwc(L'(', stdout);
           if (fn->params_count) {
             fwprintf(stdout, L"%ls", fn->params[0]);

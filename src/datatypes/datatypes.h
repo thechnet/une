@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2023-02-11
+Modified 2023-02-22
 */
 
 #ifndef UNE_DATATYPES_H
@@ -11,12 +11,14 @@ Modified 2023-02-11
 #include "../types/result.h"
 #include "../types/error.h"
 #include "../types/interpreter_state.h"
+#include "void.h"
 #include "int.h"
 #include "flt.h"
 #include "str.h"
 #include "list.h"
 #include "object.h"
-#include "void.h"
+#include "function.h"
+#include "builtin.h"
 
 /*
 Holds all the functionality a datatype can define.
