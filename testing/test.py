@@ -557,6 +557,9 @@ def dict_get(dictionary, value):
 
 def check_report(type, case: Case, i):
   passed = True
+  result_type_checked = False
+  alloc_count_checked = False
+  alert_count_checked = False
   with open(FILE_STATUS, mode='r', encoding='utf-8-sig') as report_status:
     for line in report_status:
       if line.startswith('result_type:'):
@@ -568,6 +571,7 @@ def check_report(type, case: Case, i):
           passed = False
           if STOP_AT_FAIL:
             return passed
+        result_type_checked = True
       elif line.startswith('alloc_count:'):
         alloc_count = int(line.split(':')[1])
         if alloc_count != 0:
@@ -575,6 +579,7 @@ def check_report(type, case: Case, i):
           passed = False
           if STOP_AT_FAIL:
             return passed
+        alloc_count_checked = True
       elif line.startswith('alert_count:'):
         alert_count = int(line.split(':')[1])
         if alert_count != 0:
@@ -582,9 +587,15 @@ def check_report(type, case: Case, i):
           passed = False
           if STOP_AT_FAIL:
             return passed
+        alert_count_checked = True
       else:
         print('Internal error.')
         exit(1)
+  if not result_type_checked or not alloc_count_checked or not alert_count_checked:
+    print(f'\33[0m[{i}/{CASES_LEN}] \33[31m\33[1mCRASH\33[0m')
+    passed = False
+    if STOP_AT_FAIL:
+      return passed
   with open(FILE_RETURN, mode='r', encoding='utf-8-sig') as report_return:
     return_value = report_return.read()
     if return_value != str(case.result_value):
