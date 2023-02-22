@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-02-10
+Modified 2023-02-22
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -35,7 +35,7 @@ Modified 2023-02-10
 #define UNE_SWITCH_SCRIPT "-s"
 #define UNE_SWITCH_INTERACTIVE "-i"
 #define UNE_INTERACTIVE_PREFIX L">>> "
-#define UNE_HEADER L"Une " UNE_VERSION
+#define UNE_HEADER L"Une " UNE_VERSION L" (" UNE_VERSION_HASH L")"
 #define UNE_INTERACTIVE_INFO L"Use \"exit\" or CTRL + C to exit."
 #define UNE_FOPEN_RFLAGS "r,ccs=UTF-8"
 #define UNE_FOPEN_WFLAGS "w,ccs=UTF-8"
