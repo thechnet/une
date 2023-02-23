@@ -1,7 +1,11 @@
+# Version.
+file(READ "VERSION" FILE_VERSION)
+string(REGEX REPLACE "\n$" "" VERSION_STRING "${FILE_VERSION}")
+
 # Project.
 cmake_minimum_required(VERSION 3.10)
 project(une
-  VERSION 0.11.0
+  VERSION ${VERSION_STRING}
   DESCRIPTION "The Une programming language"
   LANGUAGES C
 )
