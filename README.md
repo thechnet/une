@@ -1,74 +1,41 @@
 # Une
 
-[![Open in Visual Studio Code](https://img.shields.io/static/v1?logo=visualstudiocode&label=&message=Open%20in%20Visual%20Studio%20Code&labelColor=2c2c32&color=007acc&logoColor=007acc)](https://open.vscode.dev/thechnet/une)
+Une (as in *une*-iverse) is a simple interpreted programming language inspired by C, JavaScript, and Python.
 
-## What is Une?
+It was originally created as part of my 2021 Matura paper on creating a programming language, but has since turned into a personal playground for experimenting with software design and development tools.
 
-Une */ˈjun/* is an **unfinished, unpolished, and *very* simple** interpreted programming language written in C as part of my 2021 Matura paper.
+Pre-built binaries can be found under [releases](https://github.com/thechnet/une/releases).
 
-## What can Une do?
+## Building
 
-Une supports most basic language capabilities one expects from an interpreted programming language, but it doesn't go much further than that.
-Some demo programs can be found in [examples](examples).
-
-## How do I run Une?
-
-### 1. Getting the executable
-
-To get Une, you can download the latest binary from [the releases page](https://github.com/thechnet/une/releases/latest).
-
-Alternatively, you can build it yourself:
-
-- Install [LLVM Clang](https://clang.llvm.org), [CMake](https://cmake.org), and the build system of your choice (*make* is recommended).
+- Install [Clang](https://clang.llvm.org), [CMake](https://cmake.org), and a build system of your choice (for example, *make*).
 - For the release version:
   - Create a "release" directory in the repository.
-  - Inside the "release" directory, run `cmake .. -G <gen>` (where `<gen>` is your build system of choice).
+  - Inside this directory, run `cmake .. -G <gen>` (where `<gen>` is the generator for your build system).
 - For the debug version:
   - Create a "debug" directory in the repository.
-  - Inside the "debug" directory, run the same command as above but append `-DCMAKE_BUILD_TYPE=Debug`.
-- In the same directory, compile the binary using your build system.
+  - Inside this directory, run the same command as above but append `-DCMAKE_BUILD_TYPE=Debug`.
+- In the created directory, compile the binary using your build system.
 
-### 2. Running a script
+To run the test suite:
 
-Running Une without any arguments will give you its usage:
+- Install [Python 3](https://www.python.org).
+- Build the debug version.
+- Run `test.py` from within the "testing" directory.
 
-```
-> une
-…
-Usage: une {<script>|-s <string>|-i}
-```
+## Getting Started
 
-Run the `arithmetic_interpreter.une` example. It should print `7`:
+Run Une without any arguments to get its usage:
 
-```
-> une examples/arithmetic_interpreter.une
-7
-```
+- Run a script by passing a filename.
+- Provide a script as a string using `-s`.
+- Enter the interactive console using `-i`.
 
-Directly pass commands to Une using the `-s` flag:
+From there, check out some of the [examples](https://github.com/thechnet/une/tree/main/examples) or refer to the [documentation](DOCUMENTATION.md).
 
-```
-> une -s "print(\"Hello, Une\")"
-Hello, Une
-```
+## Language Support
 
-Enter the interactive mode using the `-i` flag:
-
-```
-> une -i
-```
-
-For more information, refer to the documentation or check out some of the examples.
-
-### 3. Running the test suite
-
-To run the test suite, build the debug version of Une (see 1.), `cd` into `testing`, and run `test.py` using Python 3.
-
-The Python script will ask for manual input twice for the first test case. The remaining cases will not require manual input.
-
-## Visual Studio Code Language Support
-
-If you're using Visual Studio Code, make sure to install [the Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une) to get syntax highlighting and general language support. Its repository can be found [here](https://github.com/thechnet/une-vscode).
+Visual Studio Code provides basic language support, including syntax highlighting, via the [Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une).
 
 <br/>
 
