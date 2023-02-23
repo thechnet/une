@@ -1,5 +1,5 @@
 # Version.
-file(READ "VERSION" FILE_VERSION)
+file(READ VERSION.txt FILE_VERSION)
 string(REGEX REPLACE "\n$" "" VERSION_STRING "${FILE_VERSION}")
 
 # Project.
