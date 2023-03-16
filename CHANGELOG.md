@@ -5,6 +5,9 @@
 ### Added
 - In-place assignment operations.
 
+### Fixed
+- Fix an uncaught type error when performing a bad assignment operation.
+
 ## [0.11.0] - 2023-02-15
 
 ### Added

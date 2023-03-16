@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-02-22
+Modified 2023-03-16
 */
 
 /* Header-specific includes. */
@@ -878,6 +878,7 @@ une_interpreter__(une_interpret_assignadd)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     une_result_free(operand);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
     return result;
   }
   une_result_free(assignee);
@@ -925,6 +926,7 @@ une_interpreter__(une_interpret_assignsub)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     une_result_free(operand);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
     return result;
   }
   une_result_free(assignee);
@@ -972,6 +974,7 @@ une_interpreter__(une_interpret_assignpow)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     une_result_free(operand);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
     return result;
   }
   une_result_free(assignee);
@@ -1019,6 +1022,7 @@ une_interpreter__(une_interpret_assignmul)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     une_result_free(operand);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
     return result;
   }
   une_result_free(assignee);
@@ -1066,6 +1070,7 @@ une_interpreter__(une_interpret_assignfdiv)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     une_result_free(operand);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
     return result;
   }
   une_result_free(assignee);
@@ -1113,6 +1118,7 @@ une_interpreter__(une_interpret_assigndiv)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     une_result_free(operand);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
     return result;
   }
   une_result_free(assignee);
@@ -1160,6 +1166,7 @@ une_interpreter__(une_interpret_assignmod)
   if (result.type == UNE_RT_ERROR) {
     une_result_free(assignee);
     une_result_free(operand);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
     return result;
   }
   une_result_free(assignee);
