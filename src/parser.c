@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-02-22
+Modified 2023-04-30
 */
 
 /* Header-specific includes. */
@@ -1275,4 +1275,17 @@ une_parser__(une_parse_sequence,
   if (tt_end != UNE_TT_EOF)
     pull(&ps->in);
   return node;
+}
+
+/*
+Parse imaginary node.
+*/
+une_parser__(une_parse_phony,
+  une_node_type node_type
+)
+{
+  une_node *phony = une_node_create(node_type);
+  phony->pos.start = now(&ps->in).pos.start;
+  phony->pos.end = phony->pos.start;
+  return phony;
 }

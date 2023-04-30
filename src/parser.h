@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2023-02-14
+Modified 2023-04-30
 */
 
 #ifndef UNE_PARSER_H
@@ -86,6 +86,10 @@ une_parser__(une_parse_sequence,
   une_token_type tt_end_of_item,
   une_token_type tt_end,
   une_node *(*parser)(une_error*, une_parser_state*)
+);
+
+une_parser__(une_parse_phony,
+  une_node_type node_type
 );
 
 #endif /* !UNE_PARSER_H */
