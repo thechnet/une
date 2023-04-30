@@ -91,7 +91,7 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
   target_compile_options(une PRIVATE -Weverything)
 endif()
 target_compile_options(une PRIVATE
-  -pedantic -Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused -Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations
+  -pedantic -Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused -Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations -Wno-unsafe-buffer-usage
 )
 
 # Build types.
