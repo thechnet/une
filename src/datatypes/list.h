@@ -1,6 +1,6 @@
 /*
 list.h - Une
-Modified 2023-02-10
+Modified 2023-05-04
 */
 
 #ifndef UNE_DATATYPES_LIST_H
@@ -24,11 +24,12 @@ une_result une_datatype_list_mul(une_result left, une_result right);
 
 size_t une_datatype_list_get_len(une_result result);
 
-bool une_datatype_list_is_valid_index_type(une_result_type type);
-bool une_datatype_list_is_valid_index(une_result target, une_result index);
-bool une_datatype_list_is_valid_element(une_result element);
-une_result une_datatype_list_get_index(une_result target, une_result index);
-une_result une_datatype_list_seek_index(une_result *target, une_result index);
+bool une_datatype_list_is_valid_index(une_result subject, une_result index);
+une_result une_datatype_list_refer_to_index(une_result subject, une_result index);
+bool une_datatype_list_is_valid_range(une_result subject, une_result begin, une_result end);
+une_result une_datatype_list_refer_to_range(une_result subject, une_result begin, une_result end);
+bool une_datatype_list_can_assign(une_reference subject, une_result value);
+void une_datatype_list_assign(une_reference subject, une_result value);
 
 une_result une_datatype_list_copy(une_result result);
 void une_datatype_list_free_members(une_result result);

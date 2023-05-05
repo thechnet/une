@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2023-02-13
+Modified 2023-05-02
 */
 
 #ifndef UNE_RESULT_H
@@ -8,6 +8,7 @@ Modified 2023-02-13
 
 /* Header-specific includes. */
 #include "../primitive.h"
+#include "reference.h"
 
 /*
 Type of une_result.
@@ -28,8 +29,7 @@ typedef enum une_result_type_ {
   UNE_RT_CONTINUE,
   UNE_RT_BREAK,
   UNE_RT_SIZE,
-  UNE_RT_GENERIC_REFERENCE,
-  UNE_RT_STR_ELEMENT_REFERENCE,
+  UNE_RT_REFERENCE,
   UNE_RT_max__,
 } une_result_type;
 
@@ -38,7 +38,10 @@ Holds data resulting from interpretation.
 */
 typedef struct une_result_ {
   une_result_type type;
-  une_value value;
+  union {
+    une_value value;
+    une_reference reference;
+  };
 } une_result;
 
 /*

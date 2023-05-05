@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2023-02-22
+Modified 2023-05-04
 */
 
 #ifndef UNE_DATATYPES_H
@@ -49,17 +49,17 @@ typedef struct une_datatype_ {
   
   size_t (*get_len)(une_result);
   
-  bool (*is_valid_element)(une_result);
-  
-  bool (*is_valid_index_type)(une_result_type);
   bool (*is_valid_index)(une_result, une_result);
-  une_result (*get_index)(une_result, une_result);
-  une_result (*seek_index)(une_result*, une_result);
+  une_result (*refer_to_index)(une_result, une_result);
+  bool (*is_valid_range)(une_result, une_result, une_result);
+  une_result (*refer_to_range)(une_result, une_result, une_result);
   
   bool (*member_exists)(une_result, wchar_t*);
-  une_result (*add_member)(une_result*, wchar_t*);
-  une_result (*get_member)(une_result, wchar_t*);
-  une_result (*seek_member)(une_result*, wchar_t*);
+  une_result (*add_member)(une_result, wchar_t*);
+  une_result (*refer_to_member)(une_result, wchar_t*);
+  
+  bool (*can_assign)(une_reference, une_result);
+  void (*assign)(une_reference, une_result);
   
   une_result (*copy)(une_result);
   void (*free_members)(une_result);
@@ -73,10 +73,7 @@ extern une_datatype une_datatypes[];
 *** Interface.
 */
 
-#define UNE_DATATYPE_FOR_RESULT(result) \
-  (une_datatypes[(result).type-UNE_R_BGN_DATA_RESULT_TYPES])
-
-#define UNE_DATATYPE_FOR_RESULT_TYPE(result_type) \
-  (une_datatypes[(result_type)-UNE_R_BGN_DATA_RESULT_TYPES])
+une_datatype UNE_DATATYPE_FOR_RESULT_TYPE(une_result_type type);
+une_datatype UNE_DATATYPE_FOR_RESULT(une_result result);
 
 #endif /* UNE_DATATYPES_H */

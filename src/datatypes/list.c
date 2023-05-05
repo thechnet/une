@@ -1,10 +1,44 @@
 /*
 list.c - Une
-Modified 2023-02-10
+Modified 2023-05-04
 */
 
 /* Header-specific includes. */
 #include "list.h"
+
+/* Implementation-specific includes. */
+#include "../tools.h"
+
+/*
+*** Helpers.
+*/
+
+static une_reference result_as_listview(une_result subject)
+{
+  une_result *container;
+  if (subject.type == UNE_RT_REFERENCE) {
+    if (subject.reference.type == UNE_FT_LISTVIEW)
+      return subject.reference;
+    assert(subject.reference.type == UNE_FT_SINGLE);
+    container = (une_result*)subject.reference.root;
+  } else {
+    assert(subject.type == UNE_RT_LIST);
+    container = &subject;
+  }
+  assert(container->type == UNE_RT_LIST);
+  une_result *root = (une_result*)container->value._vp;
+  assert(root[0].type == UNE_RT_SIZE);
+  size_t width = (size_t)root++[0].value._int;
+  return (une_reference){
+    .type = UNE_FT_LISTVIEW,
+    .root = root,
+    .width = width
+  };
+}
+
+/*
+*** Interface.
+*/
 
 /*
 Print a text representation to file.
@@ -177,51 +211,97 @@ size_t une_datatype_list_get_len(une_result result)
 }
 
 /*
-Check if an index type is valid.
-*/
-bool une_datatype_list_is_valid_index_type(une_result_type type)
-{
-  return type == UNE_RT_INT;
-}
-
-/*
 Check if an index is valid.
 */
-bool une_datatype_list_is_valid_index(une_result target, une_result index)
+bool une_datatype_list_is_valid_index(une_result subject, une_result index)
 {
-  assert(index.type == UNE_RT_INT);
-  return index.value._int >= 0 && (une_uint)index.value._int < une_datatype_list_get_len(target);
+  if (index.type != UNE_RT_INT)
+    return false;
+  une_reference listview = result_as_listview(subject);
+  return index.value._int >= 0 && index.value._int < (une_int)listview.width;
 }
 
 /*
-Check if an element is valid.
+Refer to an element.
 */
-bool une_datatype_list_is_valid_element(une_result element)
+une_result une_datatype_list_refer_to_index(une_result subject, une_result index)
 {
-  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(element.type));
-  return 1;
+  une_reference listview = result_as_listview(subject);
+  return (une_result){
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_SINGLE,
+      .root = (une_result*)listview.root + index.value._int
+    }
+  };
 }
 
 /*
-Get the value at index.
+Check if a range is valid.
 */
-une_result une_datatype_list_get_index(une_result target, une_result index)
+bool une_datatype_list_is_valid_range(une_result subject, une_result begin, une_result end)
 {
-  assert(target.type == UNE_RT_LIST);
-  assert(index.type == UNE_RT_INT);
-  return une_result_copy(((une_result*)target.value._vp)[1+index.value._int]);
+  if (begin.type != UNE_RT_INT)
+    return false;
+  if (end.type != UNE_RT_INT && end.type != UNE_RT_VOID)
+    return false;
+  une_reference listview = result_as_listview(subject);
+  une_range range = une_range_from_relative_indices(begin, end, listview.width);
+  return range.valid;
 }
 
 /*
-Seek the value at index.
+Refer to a range of elements.
 */
-une_result une_datatype_list_seek_index(une_result *target, une_result index)
+une_result une_datatype_list_refer_to_range(une_result subject, une_result begin, une_result end)
 {
-  assert(target->type == UNE_RT_LIST);
-  assert(index.type == UNE_RT_INT);
-  une_result ref = une_result_create(UNE_RT_GENERIC_REFERENCE);
-  ref.value._vp = (void*)( (une_result*)target->value._vp + 1 + index.value._int );
-  return ref;
+  une_reference listview = result_as_listview(subject);
+  une_range range = une_range_from_relative_indices(begin, end, listview.width);
+  return (une_result){
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_LISTVIEW,
+      .root = (une_result*)listview.root + range.first,
+      .width = range.length
+    }
+  };
+}
+
+/*
+Check if a value can be assigned to a reference.
+*/
+bool une_datatype_list_can_assign(une_reference subject, une_result value)
+{
+  if (subject.type == UNE_FT_SINGLE) {
+    assert(UNE_RESULT_TYPE_IS_DATA_TYPE(value.type));
+    return true;
+  }
+  assert(subject.type == UNE_FT_LISTVIEW);
+  assert(value.type == UNE_RT_LIST);
+  UNE_UNPACK_RESULT_LIST(value, value_list, value_size);
+  return value_size == subject.width;
+}
+
+/*
+Assign a value to a reference.
+*/
+void une_datatype_list_assign(une_reference subject, une_result value)
+{
+  if (subject.type == UNE_FT_SINGLE) {
+    une_result *root = (une_result*)subject.root;
+    une_result_free(*root); /* Free the old value. */
+    *root = une_result_copy(value);
+    return;
+  }
+  assert(subject.type == UNE_FT_LISTVIEW);
+  assert(value.type == UNE_RT_LIST);
+  une_result *destination = (une_result*)subject.root;
+  UNE_UNPACK_RESULT_LIST(value, source, source_size);
+  assert(source_size == subject.width);
+  UNE_FOR_RESULT_LIST_ITEM(i, source_size) {
+    une_result_free(destination[i-1]); /* Free the old value. */
+    destination[i-1] = une_result_copy(source[i]);
+  }
 }
 
 /*

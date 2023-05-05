@@ -95,6 +95,8 @@ Also, the following sequences have special meaning:
 - `\a` – Inserts the *BEL* character.
 - `\` new line – Does not include the new line in the string.
 
+For information on how to access or modify the characters making up a string, see 2.9.
+
 ### 2.4 Functions
 
 For example:
@@ -135,18 +137,13 @@ print(argument)
 
 ### 2.7 Lists
 
-Lists can hold any number of any kind of data, including lists. The items are separated using commas (`,`):
+Lists can hold any number of any kind of data, including other lists. The items are separated using commas (`,`):
 
 ```
 [46, 4.6, "string", function(){return}, print, [46]]
 ```
 
-To access an element of a list, follow it by the offset of the item from the first item in square brackets (`[`, `]`):
-
-```
-[1, 2, 3][0] # Retrieves '1'
-[1, 2, 3][1] # Retrieves '2'.
-```
+For information on how to access or modify the elements making up a list, see 2.9.
 
 ### 2.8 Objects
 
@@ -175,6 +172,42 @@ person.set_age = function(new_age)
 }
 person.set_age(24)
 print(person.age) # Prints '24'.
+```
+
+### 2.9 Indices and slices
+
+To access an element of a list or string, follow it by the offset of the item from the first item in square brackets (`[`, `]`):
+
+```
+[1, 2, 3][0] # Retrieves '1'
+"string"[1] # Retrieves '"t"'.
+```
+
+To retrieve multiple elements (called a *slice*) at once, provide a range:
+
+```
+[1, 2, 3, 4, 5][1..4] # Retrieves '[2, 3, 4]'. The range end is excluded from the slice.
+```
+
+> You can also use `Void` as the range end to represent the *end* of the list or string.
+
+You can also use negative indices to represent an offset from the end of the list or string:
+
+```
+"string"[1..-1] # Retrieves '"trin"'.
+```
+
+Finally, you can omit either boundary. If the range start is omitted, it defaults to `0`. If the range end is omitted, it defaults to `Void`.
+
+```
+"string"[3..] # Retrieves '"ing"'.
+```
+
+All of the above rules also apply when *assigning* to a list or string. As long as the right-hand value matches the pattern defined in the left-hand slice, the values will be modified.
+
+```
+a = [1, 2, 3, 4, 5]
+a[2..4] = [23, 46] # 'a' is now '[1, 2, 23, 46, 5]'.
 ```
 
 ## 3. Conditional Expressions

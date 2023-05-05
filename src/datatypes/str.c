@@ -1,6 +1,6 @@
 /*
 str.c - Une
-Modified 2023-02-10
+Modified 2023-05-05
 */
 
 /* Header-specific includes. */
@@ -10,6 +10,36 @@ Modified 2023-02-10
 #include "../tools.h"
 #include "str.h"
 #include "list.h"
+
+/*
+*** Helpers.
+*/
+
+static une_reference result_as_strview(une_result subject)
+{
+  une_result *container;
+  if (subject.type == UNE_RT_REFERENCE) {
+    if (subject.reference.type == UNE_FT_STRVIEW)
+      return subject.reference;
+    assert(subject.reference.type == UNE_FT_SINGLE);
+    container = (une_result*)subject.reference.root;
+  } else {
+    assert(subject.type == UNE_RT_STR);
+    container = &subject;
+  }
+  assert(container->type == UNE_RT_STR);
+  wchar_t *root = (wchar_t*)container->value._vp;
+  size_t width = wcslen(root);
+  return (une_reference){
+    .type = UNE_FT_STRVIEW,
+    .root = root,
+    .width = width
+  };
+}
+
+/*
+*** Interface.
+*/
 
 /*
 Convert to INT.
@@ -191,57 +221,85 @@ size_t une_datatype_str_get_len(une_result result)
 }
 
 /*
-Seek the value at index.
+Check if an index is valid.
 */
-une_result une_datatype_str_seek_index(une_result *target, une_result index)
+bool une_datatype_str_is_valid_index(une_result subject, une_result index)
 {
-  assert(target->type == UNE_RT_STR);
-  assert(index.type == UNE_RT_INT);
-  une_result ref = une_result_create(UNE_RT_STR_ELEMENT_REFERENCE);
-  ref.value._wcs = target->value._wcs + index.value._int;
-  return ref;
+  if (index.type != UNE_RT_INT)
+    return false;
+  une_reference strview = result_as_strview(subject);
+  return index.value._int >= 0 && index.value._int < (une_int)strview.width;
 }
 
 /*
-Check if an index type is valid.
+Refer to an element.
 */
-bool une_datatype_str_is_valid_index_type(une_result_type type)
+une_result une_datatype_str_refer_to_index(une_result subject, une_result index)
 {
-  return type == UNE_RT_INT;
-}
-
-/*
-Check if a index is valid.
-*/
-bool une_datatype_str_is_valid_index(une_result target, une_result index)
-{
-  assert(index.type == UNE_RT_INT);
-  return index.value._int >= 0 && (une_uint)index.value._int < une_datatype_str_get_len(target);
-}
-
-/*
-Check if an element is valid.
-*/
-bool une_datatype_str_is_valid_element(une_result element)
-{
-  return element.type == UNE_RT_STR && wcslen(element.value._wcs) == 1;
-}
-
-/*
-Get the value at index.
-*/
-une_result une_datatype_str_get_index(une_result target, une_result index)
-{
-  assert(target.type == UNE_RT_STR);
-  assert(index.type == UNE_RT_INT);
-  wchar_t *substring = malloc(2*sizeof(*substring));
-  verify(substring);
-  substring[0] = target.value._wcs[index.value._int];
-  substring[1] = L'\0';
+  une_reference strview = result_as_strview(subject);
   return (une_result){
-    .type = UNE_RT_STR,
-    .value._wcs = substring
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_STRVIEW,
+      .root = (wchar_t*)strview.root + index.value._int,
+      .width = 1
+    }
   };
+}
+
+/*
+Check if a range is valid.
+*/
+bool une_datatype_str_is_valid_range(une_result subject, une_result begin, une_result end)
+{
+  if (begin.type != UNE_RT_INT)
+    return false;
+  if (end.type != UNE_RT_INT && end.type != UNE_RT_VOID)
+    return false;
+  une_reference strview = result_as_strview(subject);
+  une_range range = une_range_from_relative_indices(begin, end, strview.width);
+  return range.valid;
+}
+
+/*
+Refer to a range of elements.
+*/
+une_result une_datatype_str_refer_to_range(une_result subject, une_result begin, une_result end)
+{
+  une_reference strview = result_as_strview(subject);
+  une_range range = une_range_from_relative_indices(begin, end, strview.width);
+  return (une_result){
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_STRVIEW,
+      .root = (wchar_t*)strview.root + range.first,
+      .width = range.length
+    }
+  };
+}
+
+/*
+Check if a value can be assigned to a reference.
+*/
+bool une_datatype_str_can_assign(une_reference subject, une_result value)
+{
+  assert(subject.type == UNE_FT_STRVIEW);
+  assert(value.type == UNE_RT_STR);
+  return wcslen(value.value._wcs) == subject.width;
+}
+
+/*
+Assign a value to a reference.
+*/
+void une_datatype_str_assign(une_reference subject, une_result value)
+{
+  assert(subject.type == UNE_FT_STRVIEW);
+  assert(value.type == UNE_RT_STR);
+  wchar_t *destination = (wchar_t*)subject.root;
+  wchar_t *source = value.value._wcs;
+  assert(wcslen(source) == subject.width);
+  for (size_t i=0; i<subject.width; i++)
+    destination[i] = source[i];
 }
 
 /*

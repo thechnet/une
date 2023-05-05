@@ -4,6 +4,8 @@
 
 ### Added
 - In-place assignment operations.
+- Slicing.  
+  Lists and strings now support slicing via `list_or_string[start..stop]`, where `start` is the index of the first element to be included in the slice, and `stop` is the index of the element *after* the last one to be included. Negative indices can be used to select offsets starting from the back instead of the front. Also, either of these indices can be omitted (implicitly setting their value zo `Void`), in which case they are left open-ended.
 
 ### Fixed
 - Fix an uncaught type error when performing a bad assignment operation.

@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-02-22
+Modified 2023-04-30
 */
 
 /* Header-specific includes. */
@@ -381,7 +381,6 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_FDIV:
     case UNE_NT_MOD:
     case UNE_NT_POW:
-    case UNE_NT_IDX_SEEK:
     case UNE_NT_MEMBER_SEEK:
     case UNE_NT_ASSIGN:
     case UNE_NT_ASSIGNADD:
@@ -391,7 +390,6 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_ASSIGNFDIV:
     case UNE_NT_ASSIGNDIV:
     case UNE_NT_ASSIGNMOD:
-    case UNE_NT_IDX_GET:
     case UNE_NT_MEMBER_GET:
     case UNE_NT_EQU:
     case UNE_NT_NEQ:
@@ -428,6 +426,8 @@ wchar_t *une_node_to_wcs(une_node *node)
     /* Ternary operations. */
     case UNE_NT_COP:
     case UNE_NT_FOR_ELEMENT:
+    case UNE_NT_IDX_SEEK:
+    case UNE_NT_IDX_GET:
     case UNE_NT_IF: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);
