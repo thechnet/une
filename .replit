@@ -1,2 +1,0 @@
-language = "c"
-run = "clear && clang @unix && ./une tests/1.une"
