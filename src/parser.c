@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-04-30
+Modified 2023-05-02
 */
 
 /* Header-specific includes. */
@@ -1008,22 +1008,45 @@ une_parser__(une_parse_index)
   assert(now(&ps->in).type == UNE_TT_LSQB);
   pull(&ps->in);
   
-  /* Expression. */
-  une_node *expression = une_parse_expression(error, ps);
-  if (!expression)
+  /* Begin? */
+  une_node *begin = NULL;
+  if (now(&ps->in).type == UNE_TT_DOTDOT) {
+    begin = une_parse_phony(error, ps, UNE_NT_INT);
+    begin->content.value._int = 0;
+  } else {
+    begin = une_parse_expression(error, ps);
+  }
+  if (!begin)
     return NULL;
+  
+  /* Range? */
+  une_node *end = NULL;
+  if (now(&ps->in).type == UNE_TT_DOTDOT) {
+    pull(&ps->in); /* '..'. */
+    /* End? */
+    if (now(&ps->in).type == UNE_TT_RSQB)
+      end = une_parse_phony(error, ps, UNE_NT_VOID);
+    else
+      end = une_parse_expression(error, ps);
+    if (!end) {
+      une_node_free(begin, false);
+      return NULL;
+    }
+  }
   
   /* ']'. */
   if (now(&ps->in).type != UNE_TT_RSQB) {
     *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
-    une_node_free(expression, false);
+    une_node_free(begin, false);
+    une_node_free(end, false);
     return NULL;
   }
   pull(&ps->in);
   
   une_node *index = une_node_create(UNE_NT_none__); /* The caller is required to provide the node type. */
   index->pos.end = peek(&ps->in, -1).pos.end; /* The caller is required to provide the start position. */
-  index->content.branch.b = expression; /* The caller is required to provide branch A. */
+  index->content.branch.b = begin; /* The caller is required to provide branch A. */
+  index->content.branch.c = end;
   return index;
 }
 
