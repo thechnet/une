@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-02-22
+Modified 2023-04-30
 */
 
 /* Header-specific includes. */
@@ -216,7 +216,7 @@ une_lexer__(une_lex_num)
     ls->pull(&ls->in);
   } while (UNE_LEXER_WC_IS_DIGIT(ls->now(&ls->in)));
   
-  if (ls->now(&ls->in) != L'.') {
+  if (ls->now(&ls->in) != L'.' || ls->peek(&ls->in, 1) == L'.') { /* This alternative case catches situations where an integer is followed by two dots - this is not a decimal point, but instead the beginning of a DOTDOT token. */
     /* Return integer. */
     buffer[(size_t)ls->in.index-idx_start] = L'\0';
     une_int int_;

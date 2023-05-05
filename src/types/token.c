@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-02-22
+Modified 2023-04-30
 */
 
 /* Header-specific includes. */
@@ -78,6 +78,7 @@ const wchar_t *une_token_table[] = {
   L"%",
   L"?",
   L":",
+  L"..",
   L".",
 };
 

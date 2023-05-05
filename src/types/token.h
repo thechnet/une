@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2023-02-22
+Modified 2023-04-30
 */
 
 #ifndef UNE_TOKEN_H
@@ -89,6 +89,7 @@ typedef enum une_token_type_ {
   #define UNE_R_END_TERM_TOKENS UNE_TT_MOD
   UNE_TT_QMARK,
   UNE_TT_COLON,
+  UNE_TT_DOTDOT,
   UNE_TT_DOT,
   #define UNE_R_END_OPERATOR_TOKENS UNE_TT_DOT
   UNE_TT_max__,
