@@ -1,6 +1,6 @@
 /*
 object.c - Une
-Modified 2023-02-22
+Modified 2023-05-04
 */
 
 /* Header-specific includes. */
@@ -8,6 +8,24 @@ Modified 2023-02-22
 
 /* Implementation-specific includes. */
 #include "../tools.h"
+
+/*
+*** Helpers.
+*/
+
+static une_object *result_as_object_pointer(une_result subject)
+{
+  if (subject.type == UNE_RT_OBJECT)
+    return (une_object*)subject.value._vp;
+  assert(subject.type == UNE_RT_REFERENCE && subject.reference.type == UNE_FT_SINGLE);
+  une_result *container = (une_result*)subject.reference.root;
+  assert(container->type == UNE_RT_OBJECT);
+  return (une_object*)container->value._vp;
+}
+
+/*
+*** Interface.
+*/
 
 /*
 Print a text representation to file.
@@ -75,7 +93,7 @@ une_int une_datatype_object_is_equal(une_result subject, une_result comparison)
       continue;
     if (!une_datatype_object_member_exists(comparison, name))
       return 0;
-    une_result member = une_datatype_object_get_member(comparison, name);
+    une_result member = une_result_dereference(une_datatype_object_refer_to_member(comparison, name));
     if (!une_results_are_equal(subject_object->members[i]->content, member))
       return 0;
   }
@@ -94,29 +112,21 @@ bool une_datatype_object_is_valid_element(une_result element)
 /*
 Check if a member exists.
 */
-bool une_datatype_object_member_exists(une_result target, wchar_t *member)
+bool une_datatype_object_member_exists(une_result subject, wchar_t *name)
 {
-  assert(target.type == UNE_RT_OBJECT);
-  
-  /* Extract object struct. */
-  une_object *object = (une_object*)target.value._vp;
-  
-  /* Check members. */
+  une_object *object = result_as_object_pointer(subject);
   UNE_FOR_OBJECT_MEMBER(i, object)
-    if (object->members[i]->name && !wcscmp(object->members[i]->name, member))
-      return 1;
-  return 0;
+    if (object->members[i]->name && !wcscmp(object->members[i]->name, name))
+      return true;
+  return false;
 }
 
 /*
 Add a member.
 */
-une_result une_datatype_object_add_member(une_result *target, wchar_t *member)
+une_result une_datatype_object_add_member(une_result subject, wchar_t *name)
 {
-  assert(target->type == UNE_RT_OBJECT);
-  
-  /* Extract object struct. */
-  une_object *object = (une_object*)target->value._vp;
+  une_object *object = result_as_object_pointer(subject);
   
   /* Find or create slot. */
   size_t slot = 0;
@@ -135,55 +145,40 @@ une_result une_datatype_object_add_member(une_result *target, wchar_t *member)
     for (size_t i=slot; i<object->members_length; i++)
       object->members[i] = une_association_create();
     /* Name requested member. */
-    object->members[slot]->name = wcsdup(member);
+    object->members[slot]->name = wcsdup(name);
     verify(object->members[slot]->name);
   }
   
   /* Return reference. */
-  une_result reference = une_result_create(UNE_RT_GENERIC_REFERENCE);
-  reference.value._vp = (void*)&object->members[slot]->content;
-  return reference;
+  return (une_result){
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_SINGLE,
+      .root = &object->members[slot]->content
+    }
+  };
 }
 
 /*
-Get the value at member.
+Refer to a member.
 */
-une_result une_datatype_object_get_member(une_result target, wchar_t *member)
+une_result une_datatype_object_refer_to_member(une_result subject, wchar_t *name)
 {
-  assert(target.type == UNE_RT_OBJECT);
-  
-  /* Extract object struct. */
-  une_object *object = (une_object*)target.value._vp;
-  
-  /* Check members. */
-  une_result result = une_result_create(UNE_RT_none__);
+  une_object *object = result_as_object_pointer(subject);
+  une_result *root = NULL;
   UNE_FOR_OBJECT_MEMBER(i, object)
-    if (object->members[i]->name && !wcscmp(object->members[i]->name, member)) {
-      assert(result.type == UNE_RT_none__);
-      result = une_result_copy(object->members[i]->content);
+    if (object->members[i]->name && !wcscmp(object->members[i]->name, name)) {
+      assert(!root);
+      root = &object->members[i]->content;
     }
-  assert(result.type != UNE_RT_none__);
-  return result;
-}
-
-/*
-Seek the value at member.
-*/
-une_result une_datatype_object_seek_member(une_result *target, wchar_t *member)
-{
-  assert(target->type == UNE_RT_OBJECT);
-  
-  /* Extract object struct. */
-  une_object *object = (une_object*)target->value._vp;
-  
-  /* Check members. */
-  une_result reference = une_result_create(UNE_RT_GENERIC_REFERENCE);
-  UNE_FOR_OBJECT_MEMBER(i, object)
-    if (object->members[i]->name && !wcscmp(object->members[i]->name, member)) {
-      assert(!reference.value._vp);
-      reference.value._vp = (void*)&object->members[i]->content;
+  assert(root);
+  return (une_result){
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_SINGLE,
+      .root = root
     }
-  return reference;
+  };
 }
 
 /*

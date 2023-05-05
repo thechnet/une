@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2023-02-15
+Modified 2023-05-05
 */
 
 /* Header-specific includes. */
@@ -27,8 +27,7 @@ const wchar_t *une_result_table[] = {
   L"CONTINUE",
   L"BREAK",
   L"SIZE",
-  L"GENERIC_REFERENCE",
-  L"STR_ELEMENT_REFERENCE",
+  L"REFERENCE",
 };
 
 /*
@@ -129,22 +128,34 @@ Dereference reference results.
 */
 une_result une_result_dereference(une_result result)
 {
-  assert(UNE_RESULT_TYPE_IS_VALID(result.type));
-  if (result.type == UNE_RT_STR_ELEMENT_REFERENCE) {
-    wchar_t *target = (wchar_t*)result.value._vp;
-    assert(target);
-    wchar_t *substring = malloc(2*sizeof(*substring));
-    verify(substring);
-    substring[0] = *target;
-    substring[1] = L'\0';
-    return (une_result){
-      .type = UNE_RT_STR,
-      .value._wcs = substring
-    };
-  }
-  if (result.type != UNE_RT_GENERIC_REFERENCE)
+  if (result.type != UNE_RT_REFERENCE)
     return result;
-  une_result *referenced = (une_result*)result.value._vp;
+  assert(UNE_REFERENCE_TYPE_IS_VALID(result.reference.type));
+  switch (result.reference.type) {
+    case UNE_FT_STRVIEW: {
+      wchar_t *strview = (wchar_t*)result.reference.root;
+      wchar_t *string = malloc((result.reference.width+1)*sizeof(*string));
+      verify(string);
+      wcsncpy(string, strview, result.reference.width);
+      string[result.reference.width] = L'\0';
+      return (une_result){
+        .type = UNE_RT_STR,
+        .value._wcs = string
+      };
+    }
+    case UNE_FT_LISTVIEW: {
+      une_result *listview = (une_result*)result.reference.root;
+      une_result *list = une_result_list_create(result.reference.width);
+      UNE_FOR_RESULT_LIST_ITEM(i, result.reference.width)
+        list[i] = une_result_copy(listview[i-1]) /* Listviews don't know their size. */;
+      return (une_result){
+        .type = UNE_RT_LIST,
+        .value._vp = (void*)list
+      };
+    }
+  }
+  assert(result.reference.type == UNE_FT_SINGLE);
+  une_result *referenced = (une_result*)result.reference.root;
   assert(referenced);
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(referenced->type));
   return une_result_copy(*referenced);

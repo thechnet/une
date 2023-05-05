@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-02-10
+Modified 2023-05-04
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -203,6 +203,51 @@ une_int une_clamp(une_int num, une_int min, une_int max)
   if (num > max)
     return max;
   return num;
+}
+
+/*
+Get range from relative indices.
+*/
+une_range une_range_from_relative_indices(une_result begin, une_result end, size_t scope)
+{
+  assert(begin.type == UNE_RT_INT);
+  assert(end.type == UNE_RT_INT || end.type == UNE_RT_VOID);
+  
+  /* Unpack results. */
+  une_int begin_index = begin.value._int;
+  une_int end_index = end.type == UNE_RT_INT ? end.value._int : (une_int)scope;
+  
+  /* Map relative indices to absolute ones. */
+  une_int absolute_begin = begin_index >= 0 ? begin_index : (une_int)scope + begin_index;
+  une_int absolute_end = end_index >= 0 ? end_index : (une_int)scope + end_index;
+  
+  /* Clamp indices to scope. */
+  bool valid = false;
+  if (absolute_begin < 0)
+    absolute_begin = 0;
+  else if (absolute_end < 0)
+    absolute_end = 0;
+  else if (absolute_begin > (une_int)scope)
+    absolute_begin = (une_int)scope;
+  else if (absolute_end > (une_int)scope)
+    absolute_end = (une_int)scope;
+  else
+    valid = true;
+  
+  /* Determine step and length. */
+  /* TODO: In the future, I'd like to support backwards ranges.
+  This would either be expressed through a .step member in une_range
+  or via a negative .length (for usability purposes, preferably the first). */
+  if (absolute_begin > absolute_end)
+    absolute_begin = absolute_end;
+  size_t length = (size_t)(absolute_end - absolute_begin);
+  
+  return (une_range){
+    .valid = valid,
+    .first = (size_t)absolute_begin,
+    .guard = (size_t)absolute_end,
+    .length = length
+  };
 }
 
 #ifdef _WIN32

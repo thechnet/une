@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2023-02-10
+Modified 2023-05-03
 */
 
 #ifndef UNE_TOOLS_H
@@ -8,6 +8,7 @@ Modified 2023-02-10
 
 /* Header-specific includes. */
 #include "primitive.h"
+#include "types/result.h"
 #include <math.h>
 
 /*
@@ -15,6 +16,16 @@ une_flt-compatible INFINITY.
 */
 #undef INFINITY
 #define INFINITY __builtin_inf()
+
+/*
+A range, produced by une_range_from_relative_indices.
+*/
+typedef struct une_range_ {
+  bool valid;
+  size_t first;
+  size_t guard;
+  size_t length;
+} une_range;
 
 /*
 *** Interface.
@@ -45,6 +56,8 @@ bool une_flts_equal(une_flt a, une_flt b);
 une_int une_min(une_int num, une_int min);
 une_int une_max(une_int num, une_int max);
 une_int une_clamp(une_int num, une_int min, une_int max);
+
+une_range une_range_from_relative_indices(une_result begin, une_result end, size_t scope);
 
 #ifdef _WIN32
 void une_win_vt_proc(bool enable);
