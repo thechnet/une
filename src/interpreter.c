@@ -1316,7 +1316,7 @@ une_interpreter__(une_interpret_idx_seek_index)
   
   /* Check if provided index is valid. */
   if (!dt_result.is_valid_index(subject, index)) {
-    *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
+    *error = UNE_ERROR_SET(UNE_ET_INDEX, node->content.branch.b->pos);
     une_result_free(subject);
     une_result_free(index);
     return une_result_create(UNE_RT_ERROR);
@@ -1375,7 +1375,7 @@ une_interpreter__(une_interpret_idx_seek_range)
   
   /* Check if provided range is valid. */
   if (!dt_result.is_valid_range(subject, begin, end)) {
-    *error = UNE_ERROR_SET(UNE_ET_INDEX_OUT_OF_RANGE, node->content.branch.b->pos);
+    *error = UNE_ERROR_SET(UNE_ET_INDEX, node->content.branch.b->pos);
     une_result_free(subject);
     une_result_free(begin);
     une_result_free(end);

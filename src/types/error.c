@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-02-22
+Modified 2023-05-05
 */
 
 /* Header-specific includes. */
@@ -21,7 +21,7 @@ const wchar_t *une_error_message_table[] = {
   L"Break outside loop.",
   L"Continue outside loop.",
   L"Symbol not defined.",
-  L"Index out of range.",
+  L"Invalid index or slice.",
   L"Zero division.",
   L"Unreal number.",
   L"Wrong number of arguments.",
