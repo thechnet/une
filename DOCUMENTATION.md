@@ -1,7 +1,5 @@
 # Une Documentation
 
-> Note: This documentation is written for people with previous programming experience. It does not explain basic ideas, but merely describe how they are used in Une.
-
 Une's syntax is a combination of *C*, *JavaScript*, and *Python*. Any programmer, but especially one with previous experience in the above-mentioned languages, should find their way into the language quickly and easily.
 
 ## 1. General Concepts
