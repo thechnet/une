@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-02-10
+Modified 2023-05-07
 */
 
 /* Header-specific includes. */
@@ -53,7 +53,6 @@ const size_t une_builtin_functions_params_count[] = {
   1, /* eval */
   3, /* replace */
   2, /* join */
-  3 /* substr */
 };
 
 /*
@@ -603,38 +602,5 @@ une_builtin_fn__(join)
   
   une_result result = une_result_create(UNE_RT_STR);
   result.value._wcs = joined_string;
-  return result;
-}
-
-/*
-Get substring.
-*/
-une_builtin_fn__(substr)
-{
-  une_builtin_param string_arg = 0;
-  une_builtin_param lower_arg = 1;
-  une_builtin_param upper_arg = 2;
-  
-  UNE_BUILTIN_VERIFY_ARG_TYPE(string_arg, UNE_RT_STR);
-  UNE_BUILTIN_VERIFY_ARG_TYPE(lower_arg, UNE_RT_INT);
-  UNE_BUILTIN_VERIFY_ARG_TYPE(upper_arg, UNE_RT_INT);
-  
-  wchar_t *string = args[string_arg].value._wcs;
-  une_int string_length = (une_int)wcslen(string);
-  une_int lower = une_clamp(args[lower_arg].value._int, -string_length, string_length);
-  une_int upper = une_clamp(args[upper_arg].value._int, -string_length, string_length);
-  if (lower < 0)
-    lower = string_length + lower;
-  if (upper < 0)
-    upper = string_length + upper;
-  size_t nstring_length = (size_t)une_min(upper-lower, 0);
-  wchar_t *nstring = malloc((nstring_length+1)*sizeof(*nstring));
-  verify(nstring);
-  for (une_int i=lower; i<upper; i++)
-    nstring[i-lower] = string[i];
-  nstring[nstring_length] = L'\0';
-  
-  une_result result = une_result_create(UNE_RT_STR);
-  result.value._wcs = nstring;
   return result;
 }
