@@ -1,21 +1,23 @@
 # Changelog
 
-## [Unreleased]
+## [0.12.0] - 2023-05-07
 
 ### Added
-- In-place assignment operations.
+- In-place arithmetics.  
+  Any arithmetic operation can now be performed in-place via `variable += 1`, where `+` is the desired arithmetic operator.
 - Slicing.  
   Lists and strings now support slicing via `list_or_string[start..stop]`, where `start` is the index of the first element to be included in the slice, and `stop` is the index of the element *after* the last one to be included. Negative indices can be used to select offsets starting from the back instead of the front. Also, either of these indices can be omitted (implicitly setting their value zo `Void`), in which case they are left open-ended.
-- As with slices, regular indices can now also be negative.
+- Like with slices, regular indices can now also be negative.
 
 ### Fixed
-- Fix an uncaught type error when performing a bad assignment operation.
+- Fixed an uncaught type error when performing a bad assignment operation.
 
 ## [0.11.0] - 2023-02-15
 
 ### Added
-- Objects.
-- Expressions embedded in strings.  
+- Objects.  
+  Objects are compound datatypes used to represent complex structures. For the most part, they behave like unordered lists with named members in place of indices. The true power of objects lies in methods: when calling a function within an object, the object is accessible via the `this` keyword. This allows methods to modify the object they're contained in, enabling basic object-oriented programming.
+- Expressions in string literals.  
   To embed an expression in a string, surround it with curly braces: `"2 * 2 = {2*2}"`  
   To include literal curly braces in a string, escape them: `"\{\}"`
 - New `cover` operator.  
@@ -570,7 +572,7 @@
 ## [0.0.0-python.6.2] - 2021-02-25
 
 ### Added
-- '`^`' (exponent) operator.
+- '`^`' (power) operator.
 - Comments.
 - `AND`, `OR`.
 - `for` loops.
@@ -580,13 +582,13 @@
 
 ### Added
 - `if`, `elif`, `else` statements (including `NOT`, `EQU`, `NEQ`, `GTR`, `LSS`, `GEQ`, `LEQ` – still missing is `AND`, `OR`).
-- `while` loops (including `BREAK`, `CONTINUE`).
-- functions (including context switching, `RETURN`).
+- `while` loops (including `break`, `continue`).
+- functions (including context switching, `return`).
 
 ## [0.0.0-python.6] - 2021-02-20
 
 ### Added
-- Sixth Python test. This is a rebuild of [0.0.0-python.5], focusing less on Python-specific language features. It also implements variable assigments and references, strings, some string operations, the seperation of commands using '`;`', and multiline input.
+- Sixth Python test. This is a rebuild of [0.0.0-python.5], focusing less on Python-specific language features. It also implements variables, strings, some string operations, the seperation of commands using '`;`', and multiline input.
 
 ## [0.0.0-python.5] - 2021-02-20
 
@@ -616,9 +618,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.12.0...HEAD
 
 <!-- Releases -->
+[0.12.0]: https://github.com/thechnet/une/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/thechnet/une/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/thechnet/une/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/thechnet/une/compare/v0.8.0...v0.9.0
