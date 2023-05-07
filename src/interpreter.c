@@ -853,7 +853,7 @@ une_interpreter__(une_interpret_assignadd)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
@@ -914,7 +914,7 @@ une_interpreter__(une_interpret_assignsub)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
@@ -975,7 +975,7 @@ une_interpreter__(une_interpret_assignpow)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
@@ -1036,7 +1036,7 @@ une_interpreter__(une_interpret_assignmul)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
@@ -1097,7 +1097,7 @@ une_interpreter__(une_interpret_assignfdiv)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
@@ -1158,7 +1158,7 @@ une_interpreter__(une_interpret_assigndiv)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
@@ -1219,7 +1219,7 @@ une_interpreter__(une_interpret_assignmod)
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
