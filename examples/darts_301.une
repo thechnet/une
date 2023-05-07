@@ -7,7 +7,7 @@ pop = function(list, index)
 	new = []
 	for i from 0 till len(list)
 		if i != index
-			new = new + [list[i]]
+			new += [list[i]]
 	return new
 }
 
@@ -23,20 +23,19 @@ widest = function(list)
 {
 	max = 0
 	for element in list {
-		this = len(str(element))
-		if this > max
-			max = this
+		length = len(str(element))
+		if length > max
+			max = length
 	}
 	return max
 }
 
 sum = function(expression)
 {
-	replacements = [ [" ", "+"], [",", "+"], [";", "+"], ["x", "*"] ]
+	replacements = [[" ", "+"], [",", "+"], [";", "+"], ["x", "*"]]
 	for replacement in replacements
 		expression = replace(replacement[0], replacement[1], expression)
-	result = eval(expression) cover "EVAL_ERROR" ?? 0
-	return result == "EVAL_ERROR" ? Void : result
+	return (eval(expression) ?? 0) cover Void
 }
 
 reevaluate_turn = function()
@@ -65,9 +64,9 @@ commands = [
 	[
 		"add", "Add player",
 		function(name) {
-			global names = names + [name]
-			global scores = scores + [stake]
-			global plays = plays + [""]
+			global names += [name]
+			global scores += [stake]
+			global plays += [""]
 		}
 	],
 	[
@@ -81,7 +80,7 @@ commands = [
 	],
 	[
 		"reset", "Reset all scores",
-		function(discard) {
+		function(_) {
 			for i from 0 till len(scores) {
 				global scores[i] = stake
 				global plays[i] = ""
@@ -99,8 +98,8 @@ commands = [
 				name = names[turn]
 				score = name_and_score
 			} else {
-				name = substr(name_and_score, separation+1, len(name_and_score))
-				score = substr(name_and_score, 0, separation)
+				name = name_and_score[separation+1..]
+				score = name_and_score[..separation]
 			}
 			new = sum(score)
 			if new != Void {
@@ -112,7 +111,7 @@ commands = [
 	],
 	[
 		"?", "Toggle this board",
-		function(discard) {
+		function(_) {
 			global show_help = !show_help
 		}
 	]
@@ -138,8 +137,8 @@ for color in colors
 command_names = []
 command_descriptions = []
 for command in commands {
-	command_names = command_names + [command[0]]
-	command_descriptions = command_descriptions + [command[1]]
+	command_names += [command[0]]
+	command_descriptions += [command[1]]
 }
 widest_command_name = widest(command_names)
 widest_command_description = widest(command_descriptions)
@@ -153,36 +152,36 @@ show_help = True
 
 while True {
 	buffer = "\e[H\e[?12l\e[40m\e[K\n"
-	buffer = buffer + "\e[K  \e[90mDARTS {stake}\n\e[K\n"
+	buffer += "\e[K  \e[90mDARTS {stake}\n\e[K\n"
 	stop_1 = 3 + widest(names) + 3
 	stop_2 = stop_1 + widest(scores) + 3
 	if !len(names)
-		buffer = buffer + "\e[K  \e7\n"
+		buffer += "\e[K  \e7\n"
 	else
 		for i from 0 till len(names) {
-			buffer = buffer + "\e[K  "
+			buffer += "\e[K  "
 			if scores[i] == 0
-				buffer = buffer + "\e[93m\e[9m"
+				buffer += "\e[93m\e[9m"
 			elif i == turn
-				buffer = buffer + "\e[92m\e[1m"
+				buffer += "\e[92m\e[1m"
 			else
-				buffer = buffer + "\e[32m"
-			buffer = buffer + names[i] + "\e[{stop_1}G\e[29m\e[22m\e[97m{i == turn ? "\e[5m" : ""}{scores[i]}\e[25m"
+				buffer += "\e[32m"
+			buffer += names[i] + "\e[{stop_1}G\e[29m\e[22m\e[97m{i == turn ? "\e[5m" : ""}{scores[i]}\e[25m"
 			if i == turn
-				buffer = buffer + "\e[{stop_2}G\e7"
+				buffer += "\e[{stop_2}G\e7"
 			elif plays[i]
-				buffer = buffer + "\e[{stop_2}G  \e[35m{plays[i]} / {sum(plays[i])}"
-			buffer = buffer + "\n"
+				buffer += "\e[{stop_2}G  \e[35m{plays[i]} / {sum(plays[i])}"
+			buffer += "\n"
 		}
 	if show_help {
 		stop_1 = 6 + widest_command_name + 3
 		stop_2 = stop_1 + widest_command_description + 3
-		buffer = buffer + "\e[K\n\e[K  \e[44m\e[94m\e[K\e[{stop_2}G\e[40m\e[K\n"
+		buffer += "\e[K\n\e[K  \e[44m\e[94m\e[K\e[{stop_2}G\e[40m\e[K\n"
 		for command in commands
-			buffer = buffer + "\e[K  \e[44m\e[K   {command[0]}\e[{stop_1}G\e[3m{command[1]}\e[23m\e[{stop_2}G\e[40m\e[K\n"
-		buffer = buffer + "\e[K  \e[44m\e[K\e[{stop_2}G\e[40m\e[K\n"
+			buffer += "\e[K  \e[44m\e[K   {command[0]}\e[{stop_1}G\e[3m{command[1]}\e[23m\e[{stop_2}G\e[40m\e[K\n"
+		buffer += "\e[K  \e[44m\e[K\e[{stop_2}G\e[40m\e[K\n"
 	}
-	buffer = buffer + "\e[J\e[H"
+	buffer += "\e[J\e[H"
 	print(buffer)
 	
 	# Get request.
@@ -193,9 +192,9 @@ while True {
 	command_function = Void
 	argument = Void
 	for command in commands
-		if substr(request, 0, len(command[0])) == command[0] {
+		if request[..len(command[0])] == command[0] {
 			command_function = command[2]
-			argument = substr(request, len(command[0])+1, len(request))
+			argument = request[len(command[0])+1..]
 			break
 		}
 	
@@ -211,7 +210,7 @@ while True {
 			scores[turn] = score
 			plays[turn] = request
 		}
-		global turn = turn + 1
+		global turn += 1
 	}
 	reevaluate_turn()
 }

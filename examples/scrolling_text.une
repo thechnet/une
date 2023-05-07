@@ -2,28 +2,23 @@
 
 move = function(string)
 {
-  new = ""
-  amt = len(string)
-  for i from 0 till amt
-    new = new + string[(i + 1) % amt]
-  return new
+	return string[1..] + string[0]
 }
 
 cursor = function(show)
 {
-  print(show ? "[?25h" : "[?25l")
+	print("[?25{show ? "h" : "l"}")
 }
 
-in = "scrolling text! --- "
+text = "scrolling text! --- "
 revolutions = 3
-speed = 50 # ms between each step.
+delay = 50 # ms between each step.
 
-cursor(0)
-_in = in
+cursor(False)
 for i from 0 till revolutions
-  for j from 0 till len(in) {
-    _in = move(_in)
-    print("[F|" + _in + "| " + str(i+1) + "/" + str(revolutions) + "[K")
-    sleep(speed)
-  }
-cursor(1)
+	for j from 0 till len(text) {
+		text = move(text)
+		print("[F|{text}| {i+1}/{revolutions}[K")
+		sleep(delay)
+	}
+cursor(True)

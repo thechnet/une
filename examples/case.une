@@ -1,50 +1,50 @@
 # Text Case Manipulation
 
-case_difference = ord("a") - ord("A")
+CASE_DIFFERENCE = ord("a") - ord("A")
 
 char_upper = function(char)
 {
-  if ord(char) >= ord("a") && ord(char) <= ord("z")
-    return chr(ord(char)-case_difference)
-  return char
+	if ord(char) >= ord("a") && ord(char) <= ord("z")
+		return chr(ord(char) - CASE_DIFFERENCE)
+	return char
 }
 
 char_lower = function(char)
 {
-  if ord(char) >= ord("A") && ord(char) <= ord("Z")
-    return chr(ord(char)+case_difference)
-  return char
+	if ord(char) >= ord("A") && ord(char) <= ord("Z")
+		return chr(ord(char) + CASE_DIFFERENCE)
+	return char
 }
 
 upper = function(string)
 {
-  out = ""
-  for i from 0 till len(string)
-    out = out + char_upper(string[i])
-  return out
+	out = ""
+	for char in string
+		out += char_upper(char)
+	return out
 }
 
 lower = function(string)
 {
-  out = ""
-  for i from 0 till len(string)
-    out = out + char_lower(string[i])
-  return out
+	out = ""
+	for char in string
+		out += char_lower(char)
+	return out
 }
 
 vary = function(string)
 {
-  out = ""
-  for i from 0 till len(string)
-    if i % 2
-      out = out + char_upper(string[i])
-    else
-      out = out + char_lower(string[i])
-  return out
+	out = ""
+	for i from 0 till len(string)
+		if i % 2
+			out += char_upper(string[i])
+		else
+			out += char_lower(string[i])
+	return out
 }
 
 string = "Example"
-print("Original: " + string)
-print("All uppercase: " + upper(string))
-print("All lowercase: " + lower(string))
-print("Varied case: " + vary(string))
+print("Original: {string}")
+print("Uppercase: {upper(string)}")
+print("Lowercase: {lower(string)}")
+print("Varied case: {vary(string)}")

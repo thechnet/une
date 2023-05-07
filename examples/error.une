@@ -1,8 +1,8 @@
-# Zero Division Example
+# Error Example
 
 divide = function(dividend, divisor)
 {
-  return dividend/divisor
+	return dividend/divisor
 }
 
 return divide(1, 0)
