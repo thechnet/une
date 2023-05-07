@@ -547,6 +547,7 @@ cases = [
   Case('function(){exit(46)}();return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   
   # Slices
+  Case('a="";a="b"+"c"', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
   Case('[1, 2, 3, 4, 5][1..-1][1..Void]', UNE_RT_LIST, '[3, 4]', []),
   Case('a=[1, 2, 3, 4, 5];return a[1..-1][1..Void]', UNE_RT_LIST, '[3, 4]', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=[1, 2, 3, 4, 5];a[1..-1][1..Void]=[23, 46];return a', UNE_RT_LIST, "[1, 2, 23, 46, 5]", [ATTR_NO_IMPLICIT_RETURN]),

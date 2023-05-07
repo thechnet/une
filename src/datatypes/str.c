@@ -1,6 +1,6 @@
 /*
 str.c - Une
-Modified 2023-05-05
+Modified 2023-05-07
 */
 
 /* Header-specific includes. */
@@ -283,6 +283,10 @@ Check if a value can be assigned to a reference.
 */
 bool une_datatype_str_can_assign(une_reference subject, une_result value)
 {
+  if (subject.type == UNE_FT_SINGLE) {
+    assert(UNE_RESULT_TYPE_IS_DATA_TYPE(value.type));
+    return true;
+  }
   assert(subject.type == UNE_FT_STRVIEW);
   assert(value.type == UNE_RT_STR);
   return wcslen(value.value._wcs) == subject.width;
@@ -293,6 +297,12 @@ Assign a value to a reference.
 */
 void une_datatype_str_assign(une_reference subject, une_result value)
 {
+  if (subject.type == UNE_FT_SINGLE) {
+    une_result *root = (une_result*)subject.root;
+    une_result_free(*root); /* Free the old value. */
+    *root = une_result_copy(value);
+    return;
+  }
   assert(subject.type == UNE_FT_STRVIEW);
   assert(value.type == UNE_RT_STR);
   wchar_t *destination = (wchar_t*)subject.root;
