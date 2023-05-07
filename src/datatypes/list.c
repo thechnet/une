@@ -1,6 +1,6 @@
 /*
 list.c - Une
-Modified 2023-05-04
+Modified 2023-05-07
 */
 
 /* Header-specific includes. */
@@ -245,9 +245,7 @@ bool une_datatype_list_is_valid_range(une_result subject, une_result begin, une_
     return false;
   if (end.type != UNE_RT_INT && end.type != UNE_RT_VOID)
     return false;
-  une_reference listview = result_as_listview(subject);
-  une_range range = une_range_from_relative_indices(begin, end, listview.width);
-  return range.valid;
+  return true;
 }
 
 /*

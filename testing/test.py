@@ -550,10 +550,12 @@ cases = [
   Case('a="";a="b"+"c"', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
   Case('[1, 2, 3, 4, 5][1..-1][1..Void]', UNE_RT_LIST, '[3, 4]', []),
   Case('a=[1, 2, 3, 4, 5];return a[1..-1][1..Void]', UNE_RT_LIST, '[3, 4]', [ATTR_NO_IMPLICIT_RETURN]),
-  Case('a=[1, 2, 3, 4, 5];a[1..-1][1..Void]=[23, 46];return a', UNE_RT_LIST, "[1, 2, 23, 46, 5]", [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=[1, 2, 3, 4, 5];a[1..-1][1..Void]=[23, 46];return a', UNE_RT_LIST, '[1, 2, 23, 46, 5]', [ATTR_NO_IMPLICIT_RETURN]),
   Case('"string"[1..-1][1..Void]', UNE_RT_STR, 'rin', []),
   Case('a="string";return a[1..-1][1..Void]', UNE_RT_STR, 'rin', [ATTR_NO_IMPLICIT_RETURN]),
-  Case('a="string";a[1..-1][1..Void]="4t6";return a', UNE_RT_STR, "st4t6g", [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a="string";a[1..-1][1..Void]="4t6";return a', UNE_RT_STR, 'st4t6g', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('"string"[100..]', UNE_RT_STR, '', []),
+  Case('[1, 2, 3][100..]', UNE_RT_LIST, '[]', []),
 ]
 CASES_LEN = len(cases)
 

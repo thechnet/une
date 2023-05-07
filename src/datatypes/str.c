@@ -256,9 +256,7 @@ bool une_datatype_str_is_valid_range(une_result subject, une_result begin, une_r
     return false;
   if (end.type != UNE_RT_INT && end.type != UNE_RT_VOID)
     return false;
-  une_reference strview = result_as_strview(subject);
-  une_range range = une_range_from_relative_indices(begin, end, strview.width);
-  return range.valid;
+  return true;
 }
 
 /*
