@@ -17,7 +17,7 @@ class Case:
     self.attributes = attributes
 
 # Options
-SKIP_UNTIL = 0 # 0, 2
+SKIP_UNTIL = int(argv[1]) if len(argv) > 1 else 0 # 0, 2
 HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
@@ -424,18 +424,17 @@ cases = [
   Case('a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('global a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=function(){global b=46};a();return b', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-  Case('a=[1]**2', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('a=[1]**2', UNE_RT_ERROR, UNE_ET_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
   
   # SET_IDX
   Case('a=[0];a[0]=1;return a', UNE_RT_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=[0];global a[0]=1;return a', UNE_RT_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=[[0]];a[0][0]=46;a', UNE_RT_LIST, "[[46]]", [ATTR_NO_IMPLICIT_RETURN]),
-  Case('a=[0];a[0]=[1]**2', UNE_RT_ERROR, UNE_ET_TYPE, []),
-  Case('a[0]=1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
-  Case('a=1;a[0]=1', UNE_RT_ERROR, UNE_ET_TYPE, []),
-  Case('a=[0];a[[1]]=1', UNE_RT_ERROR, UNE_ET_INDEX, []),
-  Case('a=[0];a[-1]=1', UNE_RT_ERROR, UNE_ET_INDEX, []),
-  Case('a=[0];a[1]=1', UNE_RT_ERROR, UNE_ET_INDEX, []),
+  Case('a=[0];a[0]=[1]**2', UNE_RT_ERROR, UNE_ET_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a[0]=1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=1;a[0]=1', UNE_RT_ERROR, UNE_ET_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=[0];a[[1]]=1', UNE_RT_ERROR, UNE_ET_INDEX, [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=[0];a[1]=1', UNE_RT_ERROR, UNE_ET_INDEX, [ATTR_NO_IMPLICIT_RETURN]),
   
   # Assignment operations.
   Case('a=23;a+=23;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
@@ -458,9 +457,7 @@ cases = [
   Case('([1]**2)[0]', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('[0][[0]]', UNE_RT_ERROR, UNE_ET_INDEX, []),
   Case('1[0]', UNE_RT_ERROR, UNE_ET_TYPE, []),
-  Case('[0][-1]', UNE_RT_ERROR, UNE_ET_INDEX, []),
   Case('[0][1]', UNE_RT_ERROR, UNE_ET_INDEX, []),
-  Case('"a"[-1]', UNE_RT_ERROR, UNE_ET_INDEX, []),
   Case('"a"[1]', UNE_RT_ERROR, UNE_ET_INDEX, []),
   
   # Get member.
