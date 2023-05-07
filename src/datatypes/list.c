@@ -218,7 +218,8 @@ bool une_datatype_list_is_valid_index(une_result subject, une_result index)
   if (index.type != UNE_RT_INT)
     return false;
   une_reference listview = result_as_listview(subject);
-  return index.value._int >= 0 && index.value._int < (une_int)listview.width;
+  une_range range = une_range_from_relative_index(index, listview.width);
+  return range.valid;
 }
 
 /*
@@ -227,11 +228,12 @@ Refer to an element.
 une_result une_datatype_list_refer_to_index(une_result subject, une_result index)
 {
   une_reference listview = result_as_listview(subject);
+  une_range range = une_range_from_relative_index(index, listview.width);
   return (une_result){
     .type = UNE_RT_REFERENCE,
     .reference = (une_reference){
       .type = UNE_FT_SINGLE,
-      .root = (une_result*)listview.root + index.value._int
+      .root = (une_result*)listview.root + range.first
     }
   };
 }

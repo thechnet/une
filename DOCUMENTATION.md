@@ -197,6 +197,8 @@ You can also use negative indices to represent an offset from the end of the lis
 "string"[1..-1] # Retrieves '"trin"'.
 ```
 
+> Negative indices can also be used when retrieving a *single* element.
+
 Finally, you can omit either boundary. If the range start is omitted, it defaults to `0`. If the range end is omitted, it defaults to `Void`.
 
 ```
@@ -573,10 +575,6 @@ for i from 0 till 11 {
 - `replace(search, replace, subject)` – Replace string `search` with string `replace` in string `subject`:
     ```
     replace("+", "*", "2+23") == "2*23"
-    ```
-- `substr(string, lower, upper)` – Get substring from string `string` ranging from index `lower` up to but not including index `upper`:
-    ```
-    substr("substring", 3, -3) == "str"
     ```
 
 ---

@@ -228,7 +228,8 @@ bool une_datatype_str_is_valid_index(une_result subject, une_result index)
   if (index.type != UNE_RT_INT)
     return false;
   une_reference strview = result_as_strview(subject);
-  return index.value._int >= 0 && index.value._int < (une_int)strview.width;
+  une_range range = une_range_from_relative_index(index, strview.width);
+  return range.valid;
 }
 
 /*
@@ -237,11 +238,12 @@ Refer to an element.
 une_result une_datatype_str_refer_to_index(une_result subject, une_result index)
 {
   une_reference strview = result_as_strview(subject);
+  une_range range = une_range_from_relative_index(index, strview.width);
   return (une_result){
     .type = UNE_RT_REFERENCE,
     .reference = (une_reference){
       .type = UNE_FT_STRVIEW,
-      .root = (wchar_t*)strview.root + index.value._int,
+      .root = (wchar_t*)strview.root + range.first,
       .width = 1
     }
   };

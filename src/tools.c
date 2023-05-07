@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-05-04
+Modified 2023-05-07
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -203,6 +203,34 @@ une_int une_clamp(une_int num, une_int min, une_int max)
   if (num > max)
     return max;
   return num;
+}
+
+/*
+Get absolute index from relative one.
+*/
+une_range une_range_from_relative_index(une_result index, size_t scope)
+{
+  assert(index.type == UNE_RT_INT);
+  
+  /* Unpack index. */
+  une_int relative_index = index.value._int;
+  
+  /* Map relative index to absolute one. */
+  une_int absolute_index = relative_index >= 0 ? relative_index : (une_int)scope + relative_index;
+  
+  /* Clamp index to scope. */
+  bool valid = false;
+  if (absolute_index < 0)
+    absolute_index = 0;
+  else if (absolute_index >= (une_int)scope)
+    absolute_index = (une_int)scope - 1;
+  else
+    valid = true;
+  
+  return (une_range){
+    .valid = valid,
+    .first = (size_t)absolute_index
+  };
 }
 
 /*
