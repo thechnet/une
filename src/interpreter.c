@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-05-05
+Modified 2023-05-07
 */
 
 /* Header-specific includes. */
@@ -80,7 +80,7 @@ une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *
 {
   assert(UNE_NODE_TYPE_IS_IN_LUT(node->type));
   
-  LOGINTERPRET(une_node_type_to_wcs(node->type));
+  LOGINTERPRET(une_node_type_to_wcs(node->type), node);
   
   return interpreter_table__[(node->type)-UNE_R_BGN_LUT_NODES](error, is, node);
 }

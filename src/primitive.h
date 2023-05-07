@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-05-05
+Modified 2023-05-07
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -119,7 +119,7 @@ typedef union une_value_ {
 *** Logging.
 */
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
-#define LOGINTERPRET(str) wprintf(L"I %ls\n", str)
+#define LOGINTERPRET(str, node) wprintf(L"I %ls @ %zu-%zu\n", str, node->pos.start, node->pos.end)
 #else
 #define LOGINTERPRET(...)
 #endif
