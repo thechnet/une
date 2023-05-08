@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-04-30
+Modified 2023-05-08
 */
 
 /* Header-specific includes. */
@@ -55,9 +55,6 @@ const wchar_t *une_node_table[] = {
   L"ASSIGNFDIV",
   L"ASSIGNDIV",
   L"ASSIGNMOD",
-  L"GET",
-  L"IDX_GET",
-  L"MEMBER_GET",
   L"CALL",
   L"FOR_RANGE",
   L"FOR_ELEMENT",
@@ -363,7 +360,6 @@ wchar_t *une_node_to_wcs(une_node *node)
     /* Unary operations. */
     case UNE_NT_NEG:
     case UNE_NT_NOT:
-    case UNE_NT_GET:
     case UNE_NT_RETURN:
     case UNE_NT_EXIT: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
@@ -390,7 +386,6 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_ASSIGNFDIV:
     case UNE_NT_ASSIGNDIV:
     case UNE_NT_ASSIGNMOD:
-    case UNE_NT_MEMBER_GET:
     case UNE_NT_EQU:
     case UNE_NT_NEQ:
     case UNE_NT_GTR:
@@ -427,7 +422,6 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_COP:
     case UNE_NT_FOR_ELEMENT:
     case UNE_NT_IDX_SEEK:
-    case UNE_NT_IDX_GET:
     case UNE_NT_IF: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       wchar_t *branch2 = une_node_to_wcs(node->content.branch.b);

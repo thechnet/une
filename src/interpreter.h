@@ -16,18 +16,20 @@ Modified 2023-05-08
 #include "builtin_functions.h"
 
 /*
-*** Interface.
-*/
-
-/*
 Interpreter function template.
 */
 #define une_interpreter__(id__, ...)\
   une_static__ une_result (id__)(une_error *error, une_interpreter_state *is, une_node *node, ##__VA_ARGS__)
 
+/*
+*** Interface.
+*/
+
 une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *node);
 
-une_interpreter__(une_interpret_as, une_result_type type);
+/*
+*** Interpreter table.
+*/
 
 une_interpreter__(une_interpret_void);
 une_interpreter__(une_interpret_int);
@@ -57,23 +59,17 @@ une_interpreter__(une_interpret_fdiv);
 une_interpreter__(une_interpret_mod);
 une_interpreter__(une_interpret_pow);
 une_interpreter__(une_interpret_neg);
-une_interpreter__(une_interpret_seek, bool existing_only, bool force_global);
+une_interpreter__(une_interpret_seek);
 une_interpreter__(une_interpret_idx_seek);
-une_interpreter__(une_interpret_idx_seek_index);
-une_interpreter__(une_interpret_idx_seek_range);
-une_interpreter__(une_interpret_member_seek_or_get);
 une_interpreter__(une_interpret_member_seek);
 une_interpreter__(une_interpret_assign);
-une_interpreter__(une_interpret_assignadd);
-une_interpreter__(une_interpret_assignsub);
-une_interpreter__(une_interpret_assignpow);
-une_interpreter__(une_interpret_assignmul);
-une_interpreter__(une_interpret_assignfdiv);
-une_interpreter__(une_interpret_assigndiv);
-une_interpreter__(une_interpret_assignmod);
-une_interpreter__(une_interpret_get);
-une_interpreter__(une_interpret_idx_get);
-une_interpreter__(une_interpret_member_get);
+une_interpreter__(une_interpret_assign_add);
+une_interpreter__(une_interpret_assign_sub);
+une_interpreter__(une_interpret_assign_pow);
+une_interpreter__(une_interpret_assign_mul);
+une_interpreter__(une_interpret_assign_fdiv);
+une_interpreter__(une_interpret_assign_div);
+une_interpreter__(une_interpret_assign_mod);
 une_interpreter__(une_interpret_call);
 une_interpreter__(une_interpret_for_range);
 une_interpreter__(une_interpret_for_element);
@@ -86,5 +82,14 @@ une_interpreter__(une_interpret_exit);
 une_interpreter__(une_interpret_cover);
 une_interpreter__(une_interpret_concatenate);
 une_interpreter__(une_interpret_this);
+
+/*
+*** Helpers.
+*/
+
+une_interpreter__(une_interpret_as, une_result_type type);
+une_interpreter__(une_interpret_seek_or_create, bool existing_only);
+une_interpreter__(une_interpret_idx_seek_index);
+une_interpreter__(une_interpret_idx_seek_range);
 
 #endif /* !UNE_INTERPRETER_H */

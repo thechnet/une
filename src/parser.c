@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-05-02
+Modified 2023-05-08
 */
 
 /* Header-specific includes. */
@@ -30,9 +30,6 @@ une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
   return une_parse_sequence(error, ps, UNE_NT_STMTS, UNE_TT_none__, UNE_TT_NEW, UNE_TT_EOF, &une_parse_stmt);
 }
 
-/*
-Parse statement.
-*/
 une_parser__(une_parse_stmt)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -66,9 +63,6 @@ une_parser__(une_parse_stmt)
   return une_parse_assignment_or_expr_stmt(error, ps);
 }
 
-/*
-Parse id.
-*/
 une_parser__(une_parse_id)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -86,17 +80,11 @@ une_parser__(une_parse_id)
   return id;
 }
 
-/*
-Parse block.
-*/
 une_parser__(une_parse_block)
 {
   return une_parse_sequence(error, ps, UNE_NT_STMTS, UNE_TT_LBRC, UNE_TT_NEW, UNE_TT_RBRC, &une_parse_stmt);
 }
 
-/*
-Parse expression.
-*/
 une_parser__(une_parse_expression)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -144,9 +132,6 @@ une_parser__(une_parse_expression)
   return cop;
 }
 
-/*
-Parse and/or.
-*/
 une_parser__(une_parse_and_or)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -160,9 +145,6 @@ une_parser__(une_parse_and_or)
   );
 }
 
-/*
-Parse condition.
-*/
 une_parser__(une_parse_condition)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -181,9 +163,6 @@ une_parser__(une_parse_condition)
   );
 }
 
-/*
-Parse cover.
-*/
 une_parser__(une_parse_cover)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -197,9 +176,6 @@ une_parser__(une_parse_cover)
   );
 }
 
-/*
-Parse add/sub.
-*/
 une_parser__(une_parse_add_sub)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -213,9 +189,6 @@ une_parser__(une_parse_add_sub)
   );
 }
 
-/*
-Parse term.
-*/
 une_parser__(une_parse_term)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -229,9 +202,6 @@ une_parser__(une_parse_term)
   );
 }
 
-/*
-Parse negation.
-*/
 une_parser__(une_parse_negation)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -241,9 +211,6 @@ une_parser__(une_parse_negation)
   return une_parse_power(error, ps);
 }
 
-/*
-Parse power.
-*/
 une_parser__(une_parse_power)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -257,9 +224,6 @@ une_parser__(une_parse_power)
   );
 }
 
-/*
-Parse index or call.
-*/
 une_parser__(une_parse_accessor)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -273,7 +237,7 @@ une_parser__(une_parse_accessor)
     if (now(&ps->in).type == UNE_TT_LSQB) {
       accessor = une_parse_index(error, ps);
       if (accessor)
-        accessor->type = UNE_NT_IDX_GET;
+        accessor->type = UNE_NT_IDX_SEEK;
     } else if (now(&ps->in).type == UNE_TT_LPAR) {
       accessor = une_parse_call(error, ps);
       if (accessor)
@@ -281,7 +245,7 @@ une_parser__(une_parse_accessor)
     } else if (now(&ps->in).type == UNE_TT_DOT) {
       accessor = une_parse_member(error, ps);
       if (accessor)
-        accessor->type = UNE_NT_MEMBER_GET;
+        accessor->type = UNE_NT_MEMBER_SEEK;
     } else {
       break;
     }
@@ -297,9 +261,6 @@ une_parser__(une_parse_accessor)
   return base;
 }
 
-/*
-Parse atom.
-*/
 une_parser__(une_parse_atom)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -331,7 +292,7 @@ une_parser__(une_parse_atom)
       return une_parse_builtin(error, ps);
     
     case UNE_TT_ID:
-      return une_parse_get(error, ps);
+      return une_parse_seek(error, ps, true);
     
     case UNE_TT_LSQB:
       return une_parse_list(error, ps);
@@ -371,9 +332,6 @@ une_parser__(une_parse_atom)
   return NULL;
 }
 
-/*
-Parse Void.
-*/
 une_parser__(une_parse_void)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -384,9 +342,6 @@ une_parser__(une_parse_void)
   return void_;
 }
 
-/*
-Parse integer.
-*/
 une_parser__(une_parse_int)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -397,9 +352,6 @@ une_parser__(une_parse_int)
   return num;
 }
 
-/*
-Parse floating point number.
-*/
 une_parser__(une_parse_flt)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -410,9 +362,6 @@ une_parser__(une_parse_flt)
   return num;
 }
 
-/*
-Parse string.
-*/
 une_parser__(une_parse_str)
 {
   /* Guaranteed first string. */
@@ -464,9 +413,6 @@ une_parser__(une_parse_str)
   return left;
 }
 
-/*
-Parse 'True'.
-*/
 une_parser__(une_parse_true)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -477,9 +423,6 @@ une_parser__(une_parse_true)
   return num;
 }
 
-/*
-Parse 'False'.
-*/
 une_parser__(une_parse_false)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -490,9 +433,6 @@ une_parser__(une_parse_false)
   return num;
 }
 
-/*
-Parse 'this'.
-*/
 une_parser__(une_parse_this)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -502,23 +442,6 @@ une_parser__(une_parse_this)
   return num;
 }
 
-/*
-Parse variable get.
-*/
-une_parser__(une_parse_get)
-{
-  LOGPARSE(L"", now(&ps->in));
-  une_node *id = une_parse_id(error, ps);
-  assert(id != NULL);
-  une_node *get = une_node_create(UNE_NT_GET);
-  get->pos = id->pos;
-  get->content.branch.a = id;
-  return get;
-}
-
-/*
-Parse variable seek.
-*/
 une_parser__(une_parse_seek, bool global)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -534,9 +457,6 @@ une_parser__(une_parse_seek, bool global)
   return seek;
 }
 
-/*
-Parse variable seek or 'this'.
-*/
 une_parser__(une_parse_seek_or_this, bool global)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -545,9 +465,6 @@ une_parser__(une_parse_seek_or_this, bool global)
   return une_parse_seek(error, ps, global);
 }
 
-/*
-Parse builtin-function.
-*/
 une_parser__(une_parse_builtin)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -560,9 +477,6 @@ une_parser__(une_parse_builtin)
   return builtin;
 }
 
-/*
-Parse list.
-*/
 une_parser__(une_parse_list)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -570,9 +484,6 @@ une_parser__(une_parse_list)
   return une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB, &une_parse_expression);
 }
 
-/*
-Parse function.
-*/
 une_parser__(une_parse_function)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -605,9 +516,6 @@ une_parser__(une_parse_function)
   return function;
 }
 
-/*
-Parse 'for' loop.
-*/
 une_parser__(une_parse_for)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -657,9 +565,6 @@ une_parser__(une_parse_for)
   return loop;
 }
 
-/*
-Parse 'from till' realm.
-*/
 une_parser__(une_parse_for_range)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -694,9 +599,6 @@ une_parser__(une_parse_for_range)
   return loop;
 }
 
-/*
-Parse 'in' realm.
-*/
 une_parser__(une_parse_for_element)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -715,9 +617,6 @@ une_parser__(une_parse_for_element)
   return loop;
 }
 
-/*
-Parse 'while' loop.
-*/
 une_parser__(une_parse_while)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -751,9 +650,6 @@ une_parser__(une_parse_while)
   return node;
 }
 
-/*
-Parse 'if' statement.
-*/
 une_parser__(une_parse_if)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -820,9 +716,6 @@ une_parser__(une_parse_if)
   return ifstmt;
 }
 
-/*
-Parse continue.
-*/
 une_parser__(une_parse_continue)
 {
   if (ps->loop_level == 0) {
@@ -835,9 +728,6 @@ une_parser__(une_parse_continue)
   return continue_;
 }
 
-/*
-Parse break.
-*/
 une_parser__(une_parse_break)
 {
   if (ps->loop_level == 0) {
@@ -850,9 +740,6 @@ une_parser__(une_parse_break)
   return break_;
 }
 
-/*
-Parse 'return' statement.
-*/
 une_parser__(une_parse_return)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -879,9 +766,6 @@ une_parser__(une_parse_return)
   return return_;
 }
 
-/*
-Parse 'exit' statement.
-*/
 une_parser__(une_parse_exit)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -908,9 +792,6 @@ une_parser__(une_parse_exit)
   return exit;
 }
 
-/*
-Parse set/expression statement.
-*/
 une_parser__(une_parse_assignment_or_expr_stmt)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -955,9 +836,6 @@ une_parser__(une_parse_assignment_or_expr_stmt)
   return assignment_or_expression_statement;
 }
 
-/*
-Parse container.
-*/
 une_parser__(une_parse_assignee)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -997,9 +875,6 @@ une_parser__(une_parse_assignee)
   return base;
 }
 
-/*
-Parse index.
-*/
 une_parser__(une_parse_index)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -1050,9 +925,6 @@ une_parser__(une_parse_index)
   return index;
 }
 
-/*
-Parse call.
-*/
 une_parser__(une_parse_call)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -1068,9 +940,6 @@ une_parser__(une_parse_call)
   return call;
 }
 
-/*
-Parse member.
-*/
 une_parser__(une_parse_member)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -1090,9 +959,6 @@ une_parser__(une_parse_member)
   return member;
 }
 
-/*
-Parse object association.
-*/
 une_parser__(une_parse_object_association)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -1126,9 +992,6 @@ une_parser__(une_parse_object_association)
   return object_association;
 }
 
-/*
-Parse object.
-*/
 une_parser__(une_parse_object)
 {
   LOGPARSE(L"", now(&ps->in));
@@ -1136,9 +999,6 @@ une_parser__(une_parse_object)
   return une_parse_sequence(error, ps, UNE_NT_OBJECT, UNE_TT_LBRC, UNE_TT_SEP, UNE_TT_RBRC, &une_parse_object_association);
 }
 
-/*
-Parse unary operation.
-*/
 une_parser__(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)(une_error*, une_parser_state*)
 )
 {
@@ -1161,9 +1021,6 @@ une_parser__(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)
   return unop;
 }
 
-/*
-Parse binary operation.
-*/
 une_parser__(une_parse_binary_operation,
   une_token_type range_begin_tt,
   une_node_type range_begin_nt,
@@ -1203,9 +1060,6 @@ une_parser__(une_parse_binary_operation,
   return left;
 }
 
-/*
-Parse sequence.
-*/
 une_parser__(une_parse_sequence,
   une_node_type node_type,
   une_token_type tt_begin, une_token_type tt_end_of_item, une_token_type tt_end,
@@ -1300,9 +1154,6 @@ une_parser__(une_parse_sequence,
   return node;
 }
 
-/*
-Parse imaginary node.
-*/
 une_parser__(une_parse_phony,
   une_node_type node_type
 )

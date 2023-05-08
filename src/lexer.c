@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-04-30
+Modified 2023-05-08
 */
 
 /* Header-specific includes. */
@@ -169,9 +169,6 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
   return tokens;
 }
 
-/*
-Lex an operator or keyword token.
-*/
 une_lexer__(une_lex_operator)
 {
   for (une_token_type tt=UNE_R_BGN_OPERATOR_TOKENS; tt<=UNE_R_END_OPERATOR_TOKENS; tt++) {
@@ -192,9 +189,6 @@ une_lexer__(une_lex_operator)
   return une_token_create(UNE_TT_none__);
 }
 
-/*
-Lex an integer or floating-point number.
-*/
 une_lexer__(une_lex_num)
 {
   /* Setup. */
@@ -272,9 +266,6 @@ une_lexer__(une_lex_num)
   return tk;
 }
 
-/*
-Lex a string.
-*/
 une_lexer__(une_lex_str)
 {
   /* Setup. */
@@ -372,9 +363,6 @@ une_lexer__(une_lex_str)
   };
 }
 
-/*
-Lex an identifier, builtin function name, or 'function'.
-*/
 une_lexer__(une_lex_keyword_or_identifier)
 {
   size_t buffer_size = UNE_SIZE_ID_LEN;

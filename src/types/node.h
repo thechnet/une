@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2023-02-22
+Modified 2023-05-08
 */
 
 #ifndef UNE_NODE_H
@@ -66,9 +66,6 @@ typedef enum une_node_type_ {
   UNE_NT_ASSIGNDIV,
   UNE_NT_ASSIGNMOD,
   #define UNE_R_END_ASSIGNMENT_NODES UNE_NT_ASSIGNMOD
-  UNE_NT_GET,
-  UNE_NT_IDX_GET,
-  UNE_NT_MEMBER_GET,
   UNE_NT_CALL,
   UNE_NT_FOR_RANGE,
   UNE_NT_FOR_ELEMENT,

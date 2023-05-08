@@ -45,20 +45,17 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_mod,
   &une_interpret_pow,
   &une_interpret_neg,
-  NULL, /* une_interpret_seek. */
+  &une_interpret_seek,
   &une_interpret_idx_seek,
   &une_interpret_member_seek,
   &une_interpret_assign,
-  &une_interpret_assignadd,
-  &une_interpret_assignsub,
-  &une_interpret_assignpow,
-  &une_interpret_assignmul,
-  &une_interpret_assignfdiv,
-  &une_interpret_assigndiv,
-  &une_interpret_assignmod,
-  &une_interpret_get,
-  &une_interpret_idx_get,
-  &une_interpret_member_get,
+  &une_interpret_assign_add,
+  &une_interpret_assign_sub,
+  &une_interpret_assign_pow,
+  &une_interpret_assign_mul,
+  &une_interpret_assign_fdiv,
+  &une_interpret_assign_div,
+  &une_interpret_assign_mod,
   &une_interpret_call,
   &une_interpret_for_range,
   &une_interpret_for_element,
@@ -74,8 +71,9 @@ une_interpreter__(*interpreter_table__[]) = {
 };
 
 /*
-Public interpreter interface.
+*** Interface.
 */
+
 une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *node)
 {
   assert(UNE_NODE_TYPE_IS_IN_LUT(node->type));
@@ -86,22 +84,9 @@ une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *
 }
 
 /*
-Interpret a une_node, expecting a specific une_result_type.
+*** Interpreter table.
 */
-une_interpreter__(une_interpret_as, une_result_type type)
-{
-  une_result result = une_result_dereference(une_interpret(error, is, node));
-  if (result.type != type && result.type != UNE_RT_ERROR) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    une_result_free(result);
-    result = une_result_create(UNE_RT_ERROR);
-  }
-  return result;
-}
 
-/*
-Interpret a UNE_NT_VOID une_node.
-*/
 une_interpreter__(une_interpret_void)
 {
   return (une_result){
@@ -110,9 +95,6 @@ une_interpreter__(une_interpret_void)
   };
 }
 
-/*
-Interpret a UNE_NT_INT une_node.
-*/
 une_interpreter__(une_interpret_int)
 {
   return (une_result){
@@ -121,9 +103,6 @@ une_interpreter__(une_interpret_int)
   };
 }
 
-/*
-Interpret a UNE_NT_FLT une_node.
-*/
 une_interpreter__(une_interpret_flt)
 {
   return (une_result){
@@ -132,9 +111,6 @@ une_interpreter__(une_interpret_flt)
   };
 }
 
-/*
-Interpret a UNE_NT_STR une_node.
-*/
 une_interpreter__(une_interpret_str)
 {
   /* DOC: Memory Management: Here we can see that results DUPLICATE strings. */
@@ -146,9 +122,6 @@ une_interpreter__(une_interpret_str)
   return result;
 }
 
-/*
-Interpret a UNE_NT_LIST une_node.
-*/
 une_interpreter__(une_interpret_list)
 {
   UNE_UNPACK_NODE_LIST(node, list, list_size);
@@ -173,9 +146,6 @@ une_interpreter__(une_interpret_list)
   };
 }
 
-/*
-Interpret a UNE_NT_OBJECT une_node.
-*/
 une_interpreter__(une_interpret_object)
 {
   UNE_UNPACK_NODE_LIST(node, list, list_size);
@@ -211,9 +181,6 @@ une_interpreter__(une_interpret_object)
   };
 }
 
-/*
-Interpret a UNE_NT_FUNCTION une_node.
-*/
 une_interpreter__(une_interpret_function)
 {
   /* Reduce parameter nodes to a vector of strings. */
@@ -247,9 +214,6 @@ une_interpreter__(une_interpret_function)
   };
 }
 
-/*
-Interpret a UNE_NT_BUILTIN une_node.
-*/
 une_interpreter__(une_interpret_builtin)
 {
   return (une_result){
@@ -258,9 +222,6 @@ une_interpreter__(une_interpret_builtin)
   };
 }
 
-/*
-Interpret a UNE_NT_STMTS une_node.
-*/
 une_interpreter__(une_interpret_stmts)
 {
   une_result result_ = une_result_create(UNE_RT_VOID);
@@ -282,9 +243,6 @@ une_interpreter__(une_interpret_stmts)
   return result_; /* Return last result. */
 }
 
-/*
-Interpret a UNE_NT_COP une_node.
-*/
 une_interpreter__(une_interpret_cop)
 {
   /* Evaluate condition. */
@@ -302,9 +260,6 @@ une_interpreter__(une_interpret_cop)
   return une_result_dereference(une_interpret(error, is, node->content.branch.c));
 }
 
-/*
-Interpret a UNE_NT_NOT une_node.
-*/
 une_interpreter__(une_interpret_not)
 {
   /* Evaluate expression. */
@@ -322,9 +277,6 @@ une_interpreter__(une_interpret_not)
   };
 }
 
-/*
-Interpret a UNE_NT_AND une_node.
-*/
 une_interpreter__(une_interpret_and)
 {
   /* Check if branch A is true. */
@@ -337,9 +289,6 @@ une_interpreter__(une_interpret_and)
   return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
-/*
-Interpret a UNE_NT_OR une_node.
-*/
 une_interpreter__(une_interpret_or)
 {
   /* Check if branch A is true. */
@@ -352,9 +301,6 @@ une_interpreter__(une_interpret_or)
   return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
-/*
-Interpret a UNE_NT_NULLISH une_node.
-*/
 une_interpreter__(une_interpret_nullish)
 {
   /* Check if branch A is not VOID. */
@@ -367,9 +313,6 @@ une_interpreter__(une_interpret_nullish)
   return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
-/*
-Interpret a UNE_NT_EQU une_node.
-*/
 une_interpreter__(une_interpret_equ)
 {
   /* Evalute branches. */
@@ -393,9 +336,6 @@ une_interpreter__(une_interpret_equ)
   };
 }
 
-/*
-Interpret a UNE_NT_NEQ une_node.
-*/
 une_interpreter__(une_interpret_neq)
 {
   une_result equ = une_result_dereference(une_interpret_equ(error, is, node));
@@ -406,9 +346,6 @@ une_interpreter__(une_interpret_neq)
   return equ;
 }
 
-/*
-Interpret a UNE_NT_GTR une_node.
-*/
 une_interpreter__(une_interpret_gtr)
 {
   /* Evaluate branches. */
@@ -437,9 +374,6 @@ une_interpreter__(une_interpret_gtr)
   };
 }
 
-/*
-Interpret a UNE_NT_GEQ une_node.
-*/
 une_interpreter__(une_interpret_geq)
 {
   /* Evaluate branches. */
@@ -468,9 +402,6 @@ une_interpreter__(une_interpret_geq)
   };
 }
 
-/*
-Interpret a UNE_NT_LSS une_node.
-*/
 une_interpreter__(une_interpret_lss)
 {
   /* Evaluate branches. */
@@ -499,9 +430,6 @@ une_interpreter__(une_interpret_lss)
   };
 }
 
-/*
-Interpret a UNE_NT_LEQ une_node.
-*/
 une_interpreter__(une_interpret_leq)
 {
   /* Evaluate branches. */
@@ -530,9 +458,6 @@ une_interpreter__(une_interpret_leq)
   };
 }
 
-/*
-Interpret a UNE_NT_ADD une_node.
-*/
 une_interpreter__(une_interpret_add)
 {
   /* Evalute branches. */
@@ -558,9 +483,6 @@ une_interpreter__(une_interpret_add)
   return sum;
 }
 
-/*
-Interpret a UNE_NT_SUB une_node.
-*/
 une_interpreter__(une_interpret_sub)
 {
   /* Evaluate branches. */
@@ -586,9 +508,6 @@ une_interpreter__(une_interpret_sub)
   return difference;
 }
 
-/*
-Interpret a UNE_NT_MUL une_node.
-*/
 une_interpreter__(une_interpret_mul)
 {
   /* Evaluate branches. */
@@ -614,9 +533,6 @@ une_interpreter__(une_interpret_mul)
   return product;
 }
 
-/*
-Interpret a UNE_NT_DIV une_node.
-*/
 une_interpreter__(une_interpret_div)
 {
   /* Evaluate branches. */
@@ -647,9 +563,6 @@ une_interpreter__(une_interpret_div)
   return quotient;
 }
 
-/*
-Interpret a UNE_NT_FDIV une_node.
-*/
 une_interpreter__(une_interpret_fdiv)
 {
   /* Evaluate branches. */
@@ -680,9 +593,6 @@ une_interpreter__(une_interpret_fdiv)
   return quotient;
 }
 
-/*
-Interpret a UNE_NT_MOD une_node.
-*/
 une_interpreter__(une_interpret_mod)
 {
   /* Evaluate branches. */
@@ -708,9 +618,6 @@ une_interpreter__(une_interpret_mod)
   return remainder;
 }
 
-/*
-Interpret a UNE_NT_POW une_node.
-*/
 une_interpreter__(une_interpret_pow)
 {
   /* Evaluate branches. */
@@ -741,9 +648,6 @@ une_interpreter__(une_interpret_pow)
   return raised;
 }
 
-/*
-Interpret a UNE_NT_NEG une_node.
-*/
 une_interpreter__(une_interpret_neg)
 {
   /* Evaluate branch. */
@@ -762,52 +666,72 @@ une_interpreter__(une_interpret_neg)
   return negative;
 }
 
-/*
-Interpret a UNE_NT_SEEK une_node.
-*/
-une_interpreter__(une_interpret_seek, bool existing_only, bool force_global)
+une_interpreter__(une_interpret_seek)
 {
-  /* Extract information. */
-  wchar_t *name = node->content.branch.a->content.value._wcs;
-  bool global = (une_node*)node->content.branch.b || force_global;
-  
-  /* Find variable. */
-  une_association *var;
-  if (global) {
-    if (existing_only)
-      var = une_variable_find_global(is->context, name);
-    else
-      var = une_variable_find_or_create_global(is->context, name);
-  } else {
-    if (existing_only)
-      var = une_variable_find(is->context, name);
-    else
-      var = une_variable_find_or_create(is->context, name);
-  }
-  if (var == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  
-  /* Return reference to variable content. */
-  return (une_result){
-    .type = UNE_RT_REFERENCE,
-    .reference = (une_reference){
-      .type = UNE_FT_SINGLE,
-      .root = (void*)&var->content
-    }
-  };
+  return une_interpret_seek_or_create(error, is, node, true);
 }
 
-/*
-Interpret a UNE_NT_ASSIGN une_node.
-*/
+une_interpreter__(une_interpret_idx_seek)
+{
+  if (node->content.branch.c)
+    return une_interpret_idx_seek_range(error, is, node);
+  return une_interpret_idx_seek_index(error, is, node);
+}
+
+une_interpreter__(une_interpret_member_seek)
+{
+  /* Evaluate subject. */
+  une_result subject = une_interpret(error, is, node->content.branch.a);
+  if (subject.type == UNE_RT_ERROR)
+    return subject;
+  
+  /* Get applicable datatype. */
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
+  
+  /* Check if subject supports members. */
+  if (!dt_result.refer_to_member) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(subject);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  assert(dt_result.member_exists);
+  
+  /* Extract member name. */
+  assert(node->content.branch.b->type == UNE_NT_ID);
+  wchar_t *name = node->content.branch.b->content.value._wcs;
+  
+  /* Refer to member. */
+  if (!dt_result.member_exists(subject, name)) {
+    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
+    une_result_free(subject);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  une_result member = dt_result.refer_to_member(subject, name);
+  assert(member.type == UNE_RT_REFERENCE);
+  
+  /* If the subject was a literal, dereference the member.
+  This ensures that, in case the member contains another object that
+  later becomes a 'this' contestant, it does not refer to the previous
+  'this' contestant, which would at that point have been freed. */
+  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
+    member = une_result_dereference(member);
+  
+  /* Register container as 'this' contestant. */
+  une_result_free(is->this_contestant);
+  is->this_contestant = subject;
+  /* If the container contained data (i.e. we interpreted a literal), that data now belongs to the interpreter state. Otherwise, free the reference. */
+  if (!UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
+    une_result_free(subject);
+  
+  return member;
+}
+
 une_interpreter__(une_interpret_assign)
 {
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, false, false);
+    assignee = une_interpret_seek_or_create(error, is, node->content.branch.a, false);
   else
     assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
@@ -845,17 +769,10 @@ une_interpreter__(une_interpret_assign)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_ASSIGNADD une_node.
-*/
-une_interpreter__(une_interpret_assignadd)
+une_interpreter__(une_interpret_assign_add)
 {
   /* Evaluate assignee. */
-  une_result assignee;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    assignee = une_interpret(error, is, node->content.branch.a);
+  une_result assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
@@ -906,17 +823,10 @@ une_interpreter__(une_interpret_assignadd)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_ASSIGNSUB une_node.
-*/
-une_interpreter__(une_interpret_assignsub)
+une_interpreter__(une_interpret_assign_sub)
 {
   /* Evaluate assignee. */
-  une_result assignee;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    assignee = une_interpret(error, is, node->content.branch.a);
+  une_result assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
@@ -967,17 +877,10 @@ une_interpreter__(une_interpret_assignsub)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_ASSIGNPOW une_node.
-*/
-une_interpreter__(une_interpret_assignpow)
+une_interpreter__(une_interpret_assign_pow)
 {
   /* Evaluate assignee. */
-  une_result assignee;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    assignee = une_interpret(error, is, node->content.branch.a);
+  une_result assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
@@ -1028,17 +931,10 @@ une_interpreter__(une_interpret_assignpow)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_ASSIGNMUL une_node.
-*/
-une_interpreter__(une_interpret_assignmul)
+une_interpreter__(une_interpret_assign_mul)
 {
   /* Evaluate assignee. */
-  une_result assignee;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    assignee = une_interpret(error, is, node->content.branch.a);
+  une_result assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
@@ -1089,17 +985,10 @@ une_interpreter__(une_interpret_assignmul)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_ASSIGNFDIV une_node.
-*/
-une_interpreter__(une_interpret_assignfdiv)
+une_interpreter__(une_interpret_assign_fdiv)
 {
   /* Evaluate assignee. */
-  une_result assignee;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    assignee = une_interpret(error, is, node->content.branch.a);
+  une_result assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
@@ -1150,17 +1039,10 @@ une_interpreter__(une_interpret_assignfdiv)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_ASSIGNDIV une_node.
-*/
-une_interpreter__(une_interpret_assigndiv)
+une_interpreter__(une_interpret_assign_div)
 {
   /* Evaluate assignee. */
-  une_result assignee;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    assignee = une_interpret(error, is, node->content.branch.a);
+  une_result assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
@@ -1211,17 +1093,10 @@ une_interpreter__(une_interpret_assigndiv)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_ASSIGNMOD une_node.
-*/
-une_interpreter__(une_interpret_assignmod)
+une_interpreter__(une_interpret_assign_mod)
 {
   /* Evaluate assignee. */
-  une_result assignee;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    assignee = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    assignee = une_interpret(error, is, node->content.branch.a);
+  une_result assignee = une_interpret(error, is, node->content.branch.a);
   if (assignee.type == UNE_RT_ERROR)
     return assignee;
   
@@ -1272,220 +1147,6 @@ une_interpreter__(une_interpret_assignmod)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_IDX_SEEK une_node.
-*/
-une_interpreter__(une_interpret_idx_seek)
-{
-  if (node->content.branch.c)
-    return une_interpret_idx_seek_range(error, is, node);
-  return une_interpret_idx_seek_index(error, is, node);
-}
-
-/*
-Interpret a UNE_NT_IDX_SEEK une_node with a single index.
-*/
-une_interpreter__(une_interpret_idx_seek_index)
-{
-  /* Evaluate subject. */
-  une_result subject;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    subject = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    subject = une_interpret(error, is, node->content.branch.a);
-  if (subject.type == UNE_RT_ERROR)
-    return subject;
-  
-  /* Get applicable datatype. */
-  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
-  
-  /* Check if subject supports indexing. */
-  if (!dt_result.refer_to_index) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
-    une_result_free(subject);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  assert(dt_result.is_valid_index);
-  
-  /* Evaluate index. */
-  une_result index = une_result_dereference(une_interpret(error, is, node->content.branch.b));
-  if (index.type == UNE_RT_ERROR) {
-    une_result_free(subject);
-    return index;
-  }
-  
-  /* Check if provided index is valid. */
-  if (!dt_result.is_valid_index(subject, index)) {
-    *error = UNE_ERROR_SET(UNE_ET_INDEX, node->content.branch.b->pos);
-    une_result_free(subject);
-    une_result_free(index);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  
-  /* Refer to index. */
-  une_result result = dt_result.refer_to_index(subject, index);
-  assert(result.type == UNE_RT_REFERENCE);
-  
-  /* If the subject was NOT a reference (i.e. we interpreted a literal), we need to dereference the retrieved data *now*, because the literal will be deleted upon completion of this function. */
-  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
-    result = une_result_dereference(result);
-  
-  une_result_free(subject);
-  une_result_free(index);
-  return result;
-}
-
-/*
-Interpret a UNE_NT_IDX_SEEK une_node with an index range.
-*/
-une_interpreter__(une_interpret_idx_seek_range)
-{
-  /* Evaluate subject. */
-  une_result subject;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    subject = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    subject = une_interpret(error, is, node->content.branch.a);
-  if (subject.type == UNE_RT_ERROR)
-    return subject;
-  
-  /* Get applicable datatype. */
-  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
-  
-  /* Check if subject supports referring to ranges. */
-  if (!dt_result.refer_to_index) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
-    une_result_free(subject);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  assert(dt_result.is_valid_range);
-  
-  /* Evaluate indices. */
-  une_result begin = une_result_dereference(une_interpret(error, is, node->content.branch.b));
-  if (begin.type == UNE_RT_ERROR) {
-    une_result_free(subject);
-    return begin;
-  }
-  une_result end = une_result_dereference(une_interpret(error, is, node->content.branch.c));
-  if (end.type == UNE_RT_ERROR) {
-    une_result_free(subject);
-    une_result_free(begin);
-    return end;
-  }
-  
-  /* Check if provided range is valid. */
-  if (!dt_result.is_valid_range(subject, begin, end)) {
-    *error = UNE_ERROR_SET(UNE_ET_INDEX, node->content.branch.b->pos);
-    une_result_free(subject);
-    une_result_free(begin);
-    une_result_free(end);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  
-  /* Refer to range. */
-  une_result result = dt_result.refer_to_range(subject, begin, end);
-  assert(result.type == UNE_RT_REFERENCE);
-  
-  /* If the subject was NOT a reference (i.e. we interpreted a literal), we need to dereference the retrieved data *now*, because the literal will be deleted upon completion of this function. */
-  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
-    result = une_result_dereference(result);
-  
-  une_result_free(subject);
-  une_result_free(begin);
-  une_result_free(end);
-  return result;
-}
-
-/*
-Interpret a UNE_NT_MEMBER_SEEK une_node.
-*/
-une_interpreter__(une_interpret_member_seek)
-{
-  return une_interpret_member_seek_or_get(error, is, node);
-}
-
-/*
-Interpret a UNE_NT_MEMBER_SEEK une_node.
-*/
-une_interpreter__(une_interpret_member_seek_or_get)
-{
-  /* Evaluate subject. */
-  une_result subject;
-  if (node->content.branch.a->type == UNE_NT_SEEK)
-    subject = une_interpret_seek(error, is, node->content.branch.a, true, false);
-  else
-    subject = une_interpret(error, is, node->content.branch.a);
-  if (subject.type == UNE_RT_ERROR)
-    return subject;
-  
-  /* Get applicable datatype. */
-  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
-  
-  /* Check if subject supports members. */
-  if (!dt_result.refer_to_member) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
-    une_result_free(subject);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  assert(dt_result.member_exists);
-  
-  /* Extract member name. */
-  assert(node->content.branch.b->type == UNE_NT_ID);
-  wchar_t *name = node->content.branch.b->content.value._wcs;
-  
-  /* Refer to member. */
-  if (!dt_result.member_exists(subject, name)) {
-    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
-    une_result_free(subject);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  une_result member = dt_result.refer_to_member(subject, name);
-  assert(member.type == UNE_RT_REFERENCE);
-  
-  /* If the subject was a literal, dereference the member.
-  This ensures that, in case the member contains another object that
-  later becomes a 'this' contestant, it does not refer to the previous
-  'this' contestant, which would at that point have been freed. */
-  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
-    member = une_result_dereference(member);
-  
-  /* Register container as 'this' contestant. */
-  une_result_free(is->this_contestant);
-  is->this_contestant = subject;
-  /* If the container contained data (i.e. we interpreted a literal), that data now belongs to the interpreter state. Otherwise, free the reference. */
-  if (!UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
-    une_result_free(subject);
-  
-  return member;
-}
-
-/*
-Interpret a UNE_NT_GET une_node.
-*/
-une_interpreter__(une_interpret_get)
-{
-  return une_interpret_seek(error, is, node, true, true);
-}
-
-/*
-Interpret a UNE_NT_IDX_GET une_node.
-*/
-une_interpreter__(une_interpret_idx_get)
-{
-  return une_interpret_idx_seek(error, is, node);
-}
-
-/*
-Interpret a UNE_NT_MEMBER_GET une_node.
-*/
-une_interpreter__(une_interpret_member_get)
-{
-  return une_interpret_member_seek_or_get(error, is, node);
-}
-
-/*
-Interpret a UNE_NT_CALL une_node.
-*/
 une_interpreter__(une_interpret_call)
 {
   /* Get callable. */
@@ -1494,7 +1155,7 @@ une_interpreter__(une_interpret_call)
     return callable;
   
   /* Determine if this is a method call. */
-  bool is_method_call = node->content.branch.a->type == UNE_NT_MEMBER_GET;
+  bool is_method_call = node->content.branch.a->type == UNE_NT_MEMBER_SEEK;
   une_result this_before = une_result_create(UNE_RT_VOID);
   if (is_method_call) {
     /* Protect current 'this'. */
@@ -1533,9 +1194,6 @@ une_interpreter__(une_interpret_call)
   return result;
 }
 
-/*
-Interpret a UNE_NT_FOR_RANGE une_node.
-*/
 une_interpreter__(une_interpret_for_range)
 {
   /* Get range. */
@@ -1584,9 +1242,6 @@ une_interpreter__(une_interpret_for_range)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_FOR_ELEMENT une_node.
-*/
 une_interpreter__(une_interpret_for_element)
 {
   /* Get range. */
@@ -1629,9 +1284,6 @@ une_interpreter__(une_interpret_for_element)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_WHILE une_node.
-*/
 une_interpreter__(une_interpret_while)
 {
   une_result result, condition;
@@ -1658,9 +1310,6 @@ une_interpreter__(une_interpret_while)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_IF une_node.
-*/
 une_interpreter__(une_interpret_if)
 {
   /* Check if predicate applies. */
@@ -1677,25 +1326,16 @@ une_interpreter__(une_interpret_if)
   return une_result_create(UNE_RT_VOID);
 }
 
-/*
-Interpret a UNE_NT_CONTINUE une_node.
-*/
 une_interpreter__(une_interpret_continue)
 {
   return une_result_create(UNE_RT_CONTINUE);
 }
 
-/*
-Interpret a UNE_NT_BREAK une_node.
-*/
 une_interpreter__(une_interpret_break)
 {
   return une_result_create(UNE_RT_BREAK);
 }
 
-/*
-Interpret a UNE_NT_RETURN une_node.
-*/
 une_interpreter__(une_interpret_return)
 {
   une_result result;
@@ -1707,9 +1347,6 @@ une_interpreter__(une_interpret_return)
   return result;
 }
 
-/*
-Interpret a UNE_NT_EXIT une_node.
-*/
 une_interpreter__(une_interpret_exit)
 {
   une_result result;
@@ -1721,9 +1358,6 @@ une_interpreter__(une_interpret_exit)
   return result;
 }
 
-/*
-Interpret a UNE_NT_COVER une_node.
-*/
 une_interpreter__(une_interpret_cover)
 {
   /* Try to interpret branch A. */
@@ -1737,9 +1371,6 @@ une_interpreter__(une_interpret_cover)
   return une_result_dereference(une_interpret(error, is, node->content.branch.b));
 }
 
-/*
-Interpret a UNE_NT_CONCATENATE une_node.
-*/
 une_interpreter__(une_interpret_concatenate)
 {
   /* Evalute branches. */
@@ -1775,9 +1406,6 @@ une_interpreter__(une_interpret_concatenate)
   return concatenated;
 }
 
-/*
-Interpret a UNE_NT_THIS une_node.
-*/
 une_interpreter__(une_interpret_this)
 {
   if (is->this.type == UNE_RT_REFERENCE) {
@@ -1791,4 +1419,153 @@ une_interpreter__(une_interpret_this)
       .root = (void*)&is->this
     }
   };
+}
+
+/*
+*** Helpers.
+*/
+
+une_interpreter__(une_interpret_as, une_result_type type)
+{
+  une_result result = une_result_dereference(une_interpret(error, is, node));
+  if (result.type != type && result.type != UNE_RT_ERROR) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    une_result_free(result);
+    result = une_result_create(UNE_RT_ERROR);
+  }
+  return result;
+}
+
+une_interpreter__(une_interpret_seek_or_create, bool existing_only)
+{
+  /* Extract information. */
+  wchar_t *name = node->content.branch.a->content.value._wcs;
+  bool global = (une_node*)node->content.branch.b;
+  
+  /* Find variable. */
+  une_association *var;
+  if (global) {
+    if (existing_only)
+      var = une_variable_find_global(is->context, name);
+    else
+      var = une_variable_find_or_create_global(is->context, name);
+  } else {
+    if (existing_only)
+      var = une_variable_find(is->context, name);
+    else
+      var = une_variable_find_or_create(is->context, name);
+  }
+  if (var == NULL) {
+    *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Return reference to variable content. */
+  return (une_result){
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_SINGLE,
+      .root = (void*)&var->content
+    }
+  };
+}
+
+une_interpreter__(une_interpret_idx_seek_index)
+{
+  /* Evaluate subject. */
+  une_result subject = une_interpret(error, is, node->content.branch.a);
+  if (subject.type == UNE_RT_ERROR)
+    return subject;
+  
+  /* Get applicable datatype. */
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
+  
+  /* Check if subject supports indexing. */
+  if (!dt_result.refer_to_index) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(subject);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  assert(dt_result.is_valid_index);
+  
+  /* Evaluate index. */
+  une_result index = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (index.type == UNE_RT_ERROR) {
+    une_result_free(subject);
+    return index;
+  }
+  
+  /* Check if provided index is valid. */
+  if (!dt_result.is_valid_index(subject, index)) {
+    *error = UNE_ERROR_SET(UNE_ET_INDEX, node->content.branch.b->pos);
+    une_result_free(subject);
+    une_result_free(index);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Refer to index. */
+  une_result result = dt_result.refer_to_index(subject, index);
+  assert(result.type == UNE_RT_REFERENCE);
+  
+  /* If the subject was NOT a reference (i.e. we interpreted a literal), we need to dereference the retrieved data *now*, because the literal will be deleted upon completion of this function. */
+  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
+    result = une_result_dereference(result);
+  
+  une_result_free(subject);
+  une_result_free(index);
+  return result;
+}
+
+une_interpreter__(une_interpret_idx_seek_range)
+{
+  /* Evaluate subject. */
+  une_result subject = une_interpret(error, is, node->content.branch.a);
+  if (subject.type == UNE_RT_ERROR)
+    return subject;
+  
+  /* Get applicable datatype. */
+  une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
+  
+  /* Check if subject supports referring to ranges. */
+  if (!dt_result.refer_to_index) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(subject);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  assert(dt_result.is_valid_range);
+  
+  /* Evaluate indices. */
+  une_result begin = une_result_dereference(une_interpret(error, is, node->content.branch.b));
+  if (begin.type == UNE_RT_ERROR) {
+    une_result_free(subject);
+    return begin;
+  }
+  une_result end = une_result_dereference(une_interpret(error, is, node->content.branch.c));
+  if (end.type == UNE_RT_ERROR) {
+    une_result_free(subject);
+    une_result_free(begin);
+    return end;
+  }
+  
+  /* Check if provided range is valid. */
+  if (!dt_result.is_valid_range(subject, begin, end)) {
+    *error = UNE_ERROR_SET(UNE_ET_INDEX, node->content.branch.b->pos);
+    une_result_free(subject);
+    une_result_free(begin);
+    une_result_free(end);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  /* Refer to range. */
+  une_result result = dt_result.refer_to_range(subject, begin, end);
+  assert(result.type == UNE_RT_REFERENCE);
+  
+  /* If the subject was NOT a reference (i.e. we interpreted a literal), we need to dereference the retrieved data *now*, because the literal will be deleted upon completion of this function. */
+  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
+    result = une_result_dereference(result);
+  
+  une_result_free(subject);
+  une_result_free(begin);
+  une_result_free(end);
+  return result;
 }
