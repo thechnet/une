@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- Object blueprints are now immutable.
+
 ## [0.12.0] - 2023-05-07
 
 ### Added

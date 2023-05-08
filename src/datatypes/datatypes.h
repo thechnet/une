@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2023-05-04
+Modified 2023-05-08
 */
 
 #ifndef UNE_DATATYPES_H
@@ -55,7 +55,6 @@ typedef struct une_datatype_ {
   une_result (*refer_to_range)(une_result, une_result, une_result);
   
   bool (*member_exists)(une_result, wchar_t*);
-  une_result (*add_member)(une_result, wchar_t*);
   une_result (*refer_to_member)(une_result, wchar_t*);
   
   bool (*can_assign)(une_reference, une_result);

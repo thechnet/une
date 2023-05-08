@@ -1401,13 +1401,13 @@ Interpret a UNE_NT_MEMBER_SEEK une_node.
 */
 une_interpreter__(une_interpret_member_seek)
 {
-  return une_interpret_member_seek_or_get(error, is, node, false);
+  return une_interpret_member_seek_or_get(error, is, node);
 }
 
 /*
 Interpret a UNE_NT_MEMBER_SEEK une_node.
 */
-une_interpreter__(une_interpret_member_seek_or_get, bool existing_only)
+une_interpreter__(une_interpret_member_seek_or_get)
 {
   /* Evaluate subject. */
   une_result subject;
@@ -1428,24 +1428,19 @@ une_interpreter__(une_interpret_member_seek_or_get, bool existing_only)
     return une_result_create(UNE_RT_ERROR);
   }
   assert(dt_result.member_exists);
-  if (!existing_only)
-    assert(dt_result.add_member);
   
   /* Extract member name. */
   assert(node->content.branch.b->type == UNE_NT_ID);
   wchar_t *name = node->content.branch.b->content.value._wcs;
   
-  /* Refer to member or add it if it doesn't exist yet. */
-  une_result member;
-  if (dt_result.member_exists(subject, name)) {
-    member = dt_result.refer_to_member(subject, name);
-  } else if (!existing_only) {
-    member = dt_result.add_member(subject, name);
-  } else {
+  /* Refer to member. */
+  if (!dt_result.member_exists(subject, name)) {
     *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
     une_result_free(subject);
     return une_result_create(UNE_RT_ERROR);
   }
+  une_result member = dt_result.refer_to_member(subject, name);
+  assert(member.type == UNE_RT_REFERENCE);
   
   /* If the subject was a literal, dereference the member.
   This ensures that, in case the member contains another object that
@@ -1485,7 +1480,7 @@ Interpret a UNE_NT_MEMBER_GET une_node.
 */
 une_interpreter__(une_interpret_member_get)
 {
-  return une_interpret_member_seek_or_get(error, is, node, true);
+  return une_interpret_member_seek_or_get(error, is, node);
 }
 
 /*

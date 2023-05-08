@@ -1,6 +1,6 @@
 /*
 object.c - Une
-Modified 2023-05-04
+Modified 2023-05-08
 */
 
 /* Header-specific includes. */
@@ -119,44 +119,6 @@ bool une_datatype_object_member_exists(une_result subject, wchar_t *name)
     if (object->members[i]->name && !wcscmp(object->members[i]->name, name))
       return true;
   return false;
-}
-
-/*
-Add a member.
-*/
-une_result une_datatype_object_add_member(une_result subject, wchar_t *name)
-{
-  une_object *object = result_as_object_pointer(subject);
-  
-  /* Find or create slot. */
-  size_t slot = 0;
-  UNE_FOR_OBJECT_MEMBER(i, object) {
-    if (!object->members[i]->name)
-      break;
-    slot++;
-  }
-  if (slot == object->members_length) {
-    /* Update length. */
-    object->members_length++;
-    /* Grow member buffer. */
-    object->members = realloc(object->members, (object->members_length+1)*sizeof(*object->members));
-    verify(object->members);
-    /* Initialize new members. */
-    for (size_t i=slot; i<object->members_length; i++)
-      object->members[i] = une_association_create();
-    /* Name requested member. */
-    object->members[slot]->name = wcsdup(name);
-    verify(object->members[slot]->name);
-  }
-  
-  /* Return reference. */
-  return (une_result){
-    .type = UNE_RT_REFERENCE,
-    .reference = (une_reference){
-      .type = UNE_FT_SINGLE,
-      .root = &object->members[slot]->content
-    }
-  };
 }
 
 /*

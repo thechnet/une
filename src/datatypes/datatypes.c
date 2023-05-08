@@ -1,6 +1,6 @@
 /*
 datatypes.c - Une
-Modified 2023-05-05
+Modified 2023-05-08
 */
 
 /* Header-specific includes. */
@@ -115,7 +115,6 @@ une_datatype une_datatypes[] = {
     .is_true = &une_datatype_object_is_true,
     .is_equal = &une_datatype_object_is_equal,
     .member_exists = &une_datatype_object_member_exists,
-    .add_member = &une_datatype_object_add_member,
     .refer_to_member = &une_datatype_object_refer_to_member,
     .copy = &une_datatype_object_copy,
     .free_members = &une_datatype_object_free_members,
