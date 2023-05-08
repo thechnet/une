@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-05-07
+Modified 2023-05-08
 */
 
 /* Header-specific includes. */
@@ -1436,16 +1436,23 @@ une_interpreter__(une_interpret_member_seek_or_get, bool existing_only)
   wchar_t *name = node->content.branch.b->content.value._wcs;
   
   /* Refer to member or add it if it doesn't exist yet. */
-  une_result reference;
+  une_result member;
   if (dt_result.member_exists(subject, name)) {
-    reference = dt_result.refer_to_member(subject, name);
+    member = dt_result.refer_to_member(subject, name);
   } else if (!existing_only) {
-    reference = dt_result.add_member(subject, name);
+    member = dt_result.add_member(subject, name);
   } else {
     *error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.b->pos);
     une_result_free(subject);
     return une_result_create(UNE_RT_ERROR);
   }
+  
+  /* If the subject was a literal, dereference the member.
+  This ensures that, in case the member contains another object that
+  later becomes a 'this' contestant, it does not refer to the previous
+  'this' contestant, which would at that point have been freed. */
+  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
+    member = une_result_dereference(member);
   
   /* Register container as 'this' contestant. */
   une_result_free(is->this_contestant);
@@ -1454,7 +1461,7 @@ une_interpreter__(une_interpret_member_seek_or_get, bool existing_only)
   if (!UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
     une_result_free(subject);
   
-  return reference;
+  return member;
 }
 
 /*
