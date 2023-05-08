@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2023-02-16
+Modified 2023-05-08
 */
 
 /* Header-specific includes. */
@@ -161,6 +161,7 @@ void memdbg_free(char *file, int line, void *memory)
     fail_at(file, line, MEMDBG_MSG_UNOWNED_MEM);
   }
   memdbg_allocation_padding_clear(memdbg_allocations[index]);
+  memset(memory, 0, memdbg_allocations[index].size);
   free(memory);
   memdbg_allocation_remove(&memdbg_allocations[index]);
 }
