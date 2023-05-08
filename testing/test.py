@@ -17,7 +17,7 @@ class Case:
     self.attributes = attributes
 
 # Options
-SKIP_UNTIL = int(argv[1]) if len(argv) > 1 else 0 # 0, 2
+SKIP_UNTIL = int(argv[1]) if len(argv) > 1 and argv[1] != "enumerate_cases" else 0 # 0, 2
 HIDE_OUTPUT = True
 CLEAR = True
 STOP_AT_FAIL = True
