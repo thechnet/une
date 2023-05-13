@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2023-02-22
+Modified 2023-05-13
 */
 
 /* Header-specific includes. */
@@ -101,7 +101,7 @@ void une_datatype_function_free_members(une_result result)
 /*
 Call result.
 */
-une_result une_datatype_function_call(une_error *error, une_interpreter_state *is, une_node *call, une_result function, une_result args)
+une_result une_datatype_function_call(une_error *error, une_node *call, une_result function, une_result args)
 {
   /* Get function. */
   assert(function.type == UNE_RT_FUNCTION);
@@ -116,26 +116,26 @@ une_result une_datatype_function_call(une_error *error, une_interpreter_state *i
   }
   
   /* Create function context. */
-  une_context *parent = is->context;
+  une_context *parent = une_is->context;
   char *entry_file = strdup(callee->definition_file);
   verify(entry_file);
-  is->context = une_context_create(entry_file, callee->definition_point);
-  is->context->parent = parent;
+  une_is->context = une_context_create(entry_file, callee->definition_point);
+  une_is->context->parent = parent;
 
   /* Define parameters. */
   for (size_t i=0; i<callee->params_count; i++) {
-    une_association *var = une_variable_create(is->context, (callee->params)[i]);
+    une_association *var = une_variable_create(une_is->context, (callee->params)[i]);
     var->content = une_result_copy(args_p[i+1]);
   }
 
   /* Interpret body. */
-  une_result result = une_interpret(error, is, callee->body);
-  is->should_return = false;
+  une_result result = une_interpret(error, callee->body);
+  une_is->should_return = false;
 
   /* Return to parent context. */
   if (result.type != UNE_RT_ERROR) {
-    une_context_free_children(parent, is->context);
-    is->context = parent;
+    une_context_free_children(parent, une_is->context);
+    une_is->context = parent;
   }
   return result;
 }

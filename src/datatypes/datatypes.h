@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2023-05-08
+Modified 2023-05-13
 */
 
 #ifndef UNE_DATATYPES_H
@@ -63,7 +63,7 @@ typedef struct une_datatype_ {
   une_result (*copy)(une_result);
   void (*free_members)(une_result);
   
-  une_result (*call)(une_error*, une_interpreter_state*, une_node*, une_result, une_result);
+  une_result (*call)(une_error*, une_node*, une_result, une_result);
 } une_datatype;
 
 extern une_datatype une_datatypes[];

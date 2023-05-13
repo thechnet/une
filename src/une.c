@@ -60,26 +60,24 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   
   /* Get interpreter state. */
   une_interpreter_state _is;
-  une_interpreter_state *is;
   if (existing_interpreter_state) {
-    is = existing_interpreter_state;
+    une_is = existing_interpreter_state;
   } else {
     _is = une_interpreter_state_create();
-    is = &_is;
+    une_is = &_is;
   }
-  une_is = is;
   
   une_result result = une_result_create(UNE_RT_ERROR);
   #ifndef UNE_NO_INTERPRET
   if (ast != NULL)
-    result = une_interpret(&error, is, ast);
+    result = une_interpret(&error, ast);
   #else
   result = une_result_create(UNE_RT_VOID);
   #endif
   if (did_exit != NULL)
-    *did_exit = is->should_exit;
-  is->should_return = false;
-  is->should_exit = false;
+    *did_exit = une_is->should_exit;
+  une_is->should_return = false;
+  une_is->should_exit = false;
   #ifdef UNE_DEBUG_LOG_INTERPRET
   success("interpret done.");
   #endif
@@ -99,10 +97,10 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   #endif
   if (error_cases > 0) {
     assert(error.type != UNE_ET_none__);
-    une_error_display(&error, &ls, is);
+    une_error_display(&error, &ls);
   }
   if (!existing_interpreter_state)
-    une_interpreter_state_free(is);
+    une_interpreter_state_free(une_is);
   une_node_free(ast, false);
   une_tokens_free(tokens);
   
@@ -122,7 +120,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
 /*
 Run a Une program, without handling errors or freeing memory.
 */
-une_result une_run_bare(une_error *error, une_interpreter_state *is, char *path, wchar_t *text)
+une_result une_run_bare(une_error *error, char *path, wchar_t *text)
 {
   /* Prepare. */
   *error = une_error_create();
@@ -142,9 +140,9 @@ une_result une_run_bare(une_error *error, une_interpreter_state *is, char *path,
   }
   
   /* Interpret. */
-  if (!is->context)
-    *is = une_interpreter_state_create();
-  une_result result = une_interpret(error, is, ast);
+  if (!une_is->context)
+    *une_is = une_interpreter_state_create();
+  une_result result = une_interpret(error, ast);
   
   /* Finalize. */
   une_node_free(ast, false);

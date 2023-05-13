@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Modified 2023-05-05
+Modified 2023-05-13
 */
 
 #ifndef UNE_ERROR_H
@@ -63,6 +63,6 @@ Populate a une_error.
 
 une_error une_error_create(void);
 
-void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_state *is);
+void une_error_display(une_error *error, une_lexer_state *ls);
 
 #endif /* !UNE_ERROR_H */

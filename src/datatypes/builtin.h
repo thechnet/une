@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2021-08-11
+Modified 2023-05-13
 */
 
 #ifndef UNE_DATATYPES_BUILTIN_H
@@ -17,6 +17,6 @@ void une_datatype_builtin_represent(FILE *file, une_result result);
 
 une_int une_datatype_builtin_is_true(une_result result);
 
-une_result une_datatype_builtin_call(une_error *error, une_interpreter_state *is, une_node *call, une_result function, une_result args);
+une_result une_datatype_builtin_call(une_error *error, une_node *call, une_result function, une_result args);
 
 #endif /* UNE_DATATYPES_BUILTIN_H */

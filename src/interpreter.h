@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2023-05-08
+Modified 2023-05-13
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -19,13 +19,13 @@ Modified 2023-05-08
 Interpreter function template.
 */
 #define une_interpreter__(id__, ...)\
-  une_static__ une_result (id__)(une_error *error, une_interpreter_state *is, une_node *node, ##__VA_ARGS__)
+  une_static__ une_result (id__)(une_error *error, une_node *node, ##__VA_ARGS__)
 
 /*
 *** Interface.
 */
 
-une_result une_interpret(une_error *error, une_interpreter_state *is, une_node *node);
+une_result une_interpret(une_error *error, une_node *node);
 
 /*
 *** Interpreter table.

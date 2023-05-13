@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-02-22
+Modified 2023-05-13
 */
 
 /* Implementation-specific includes. */
@@ -200,7 +200,7 @@ void main_interactive(void)
     }
     size_t len = wcslen(stmts);
     stmts[--len] = L'\0'; /* Remove trailing newline. */
-    une_result result = une_run(false, NULL, stmts, &did_exit, &is);
+    une_result result = une_run(false, NULL, stmts, &did_exit, une_is);
     if (result.type != UNE_RT_VOID && result.type != UNE_RT_ERROR) {
       if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
         une_result_represent(stdout, result);

@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2023-05-07
+Modified 2023-05-13
 */
 
 #ifndef UNE_BUILTIN_H
@@ -12,7 +12,7 @@ Modified 2023-05-07
 #include "types/error.h"
 #include "types/interpreter_state.h"
 
-#define une_builtin_fn_sign__(id__) une_result (id__)(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args)
+#define une_builtin_fn_sign__(id__) une_result (id__)(une_error *error, une_node *call_node, une_result *args)
 
 typedef const int une_builtin_param;
 typedef une_builtin_fn_sign__(*une_builtin_fnptr);

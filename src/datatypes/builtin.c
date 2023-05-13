@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-02-22
+Modified 2023-05-13
 */
 
 /* Header-specific includes. */
@@ -31,7 +31,7 @@ une_int une_datatype_builtin_is_true(une_result result)
 /*
 Call result.
 */
-une_result une_datatype_builtin_call(une_error *error, une_interpreter_state *is, une_node *call, une_result function, une_result args)
+une_result une_datatype_builtin_call(une_error *error, une_node *call, une_result function, une_result args)
 {
   /* Get built-in function. */
   une_builtin_function builtin = (une_builtin_function)function.value._int;
@@ -44,5 +44,5 @@ une_result une_datatype_builtin_call(une_error *error, une_interpreter_state *is
     return une_result_create(UNE_RT_ERROR);
   }
   
-  return (une_builtin_function_to_fnptr(builtin))(error, is, call, args_p+1);
+  return (une_builtin_function_to_fnptr(builtin))(error, call, args_p+1);
 }

@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-05-05
+Modified 2023-05-13
 */
 
 /* Header-specific includes. */
@@ -71,7 +71,7 @@ UNE_ISTREAM_WFILE_ACCESS(une_error_display_wfile_now__)
 UNE_ISTREAM_WFILE_PEEKER(une_error_display_wfile_peek__)
 UNE_OSTREAM_PUSHER(une_error_display_ctx_push__, une_context*)
 
-void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_state *is)
+void une_error_display(une_error *error, une_lexer_state *ls)
 {
   /* Setup. */
   size_t invisible_characters = 0;
@@ -94,7 +94,7 @@ void une_error_display(une_error *error, une_lexer_state *ls, une_interpreter_st
   une_ostream s_contexts = une_ostream_create((void*)contexts, UNE_SIZE_EXPECTED_TRACEBACK_DEPTH, sizeof(*contexts), true);
   contexts = NULL; /* This pointer can turn stale after pushing. */
   void (*push)(une_ostream*, une_context*) = &une_error_display_ctx_push__;
-  une_context *current_context = is->context;
+  une_context *current_context = une_is->context;
   push(&s_contexts, NULL);
   while (current_context != NULL) {
     push(&s_contexts, current_context);

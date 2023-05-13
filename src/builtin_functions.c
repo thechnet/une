@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-05-07
+Modified 2023-05-13
 */
 
 /* Header-specific includes. */
@@ -125,7 +125,7 @@ Print a text representation of a une_result, always adding a newline at the end.
 */
 une_builtin_fn__(print)
 {
-  une_builtin_fn_put(error, is, call_node, args);
+  une_builtin_fn_put(error, call_node, args);
   
   putwc(L'\n', stdout);
   
@@ -302,7 +302,7 @@ une_builtin_fn__(read)
 /*
 Write/append text to a file (helper).
 */
-une_result une_builtin_fn_write_or_append(une_error *error, une_interpreter_state *is, une_node *call_node, une_result *args, bool write)
+une_result une_builtin_fn_write_or_append(une_error *error, une_node *call_node, une_result *args, bool write)
 {
   une_builtin_param file = 0;
   une_builtin_param text = 1;
@@ -334,7 +334,7 @@ Write text to a file.
 */
 une_builtin_fn__(write)
 {
-  return une_builtin_fn_write_or_append(error, is, call_node, args, true);
+  return une_builtin_fn_write_or_append(error, call_node, args, true);
 }
 
 /*
@@ -342,7 +342,7 @@ Append text to a file.
 */
 une_builtin_fn__(append)
 {
-  return une_builtin_fn_write_or_append(error, is, call_node, args, false);
+  return une_builtin_fn_write_or_append(error, call_node, args, false);
 }
 
 /*
@@ -393,7 +393,7 @@ une_builtin_fn__(script)
   }
 
   /* Run script. */
-  une_result out = une_run_bare(error, is, path, NULL);
+  une_result out = une_run_bare(error, path, NULL);
   free(path);
   return out;
 }
@@ -517,7 +517,7 @@ une_builtin_fn__(eval)
   UNE_BUILTIN_VERIFY_ARG_TYPE(script, UNE_RT_STR);
 
   /* Run script. */
-  return une_run_bare(error, is, NULL, args[script].value._wcs);
+  return une_run_bare(error, NULL, args[script].value._wcs);
 }
 
 /*
