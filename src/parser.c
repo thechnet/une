@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-05-08
+Modified 2023-05-11
 */
 
 /* Header-specific includes. */
@@ -307,9 +307,13 @@ une_parser__(une_parse_atom)
       LOGPARSE(L"expression", now(&ps->in));
       size_t pos_start = now(&ps->in).pos.start;
       pull(&ps->in);
+      while (now(&ps->in).type == UNE_TT_NEW)
+        pull(&ps->in);
       une_node *expression = une_parse_expression(error, ps);
       if (expression == NULL)
         return NULL;
+      while (now(&ps->in).type == UNE_TT_NEW)
+        pull(&ps->in);
       if (now(&ps->in).type != UNE_TT_RPAR) {
         une_node_free(expression, false);
         *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
