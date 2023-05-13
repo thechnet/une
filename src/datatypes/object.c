@@ -1,6 +1,6 @@
 /*
 object.c - Une
-Modified 2023-05-08
+Modified 2023-05-13
 */
 
 /* Header-specific includes. */
@@ -8,6 +8,7 @@ Modified 2023-05-08
 
 /* Implementation-specific includes. */
 #include "../tools.h"
+#include "../types/interpreter_state.h"
 
 /*
 *** Helpers.
@@ -158,6 +159,7 @@ une_result une_datatype_object_copy(une_result original)
   copy_object->members_length = original_object->members_length;
   copy_object->members = malloc(copy_object->members_length*sizeof(*copy_object->members));
   verify(copy_object->members);
+  copy_object->owner = une_is->context;
   UNE_FOR_OBJECT_MEMBER(i, original_object) {
     copy_object->members[i] = malloc(sizeof(*copy_object->members[i]));
     verify(copy_object->members[i]);

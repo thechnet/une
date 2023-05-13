@@ -31,6 +31,8 @@ typedef struct une_interpreter_state_ {
   une_holding holding;
 } une_interpreter_state;
 
+extern une_interpreter_state *une_is;
+
 /*
 *** Interface.
 */
@@ -41,5 +43,6 @@ une_holding une_interpreter_state_holding_strip(une_interpreter_state *is);
 void une_interpreter_state_holding_reinstate(une_interpreter_state *is, une_holding old);
 une_result *une_interpreter_state_holding_add(une_interpreter_state *is, une_result result);
 void une_interpreter_state_holding_purge(une_interpreter_state *is);
+bool une_result_is_reference_to_foreign_object(une_interpreter_state *is, une_result subject);
 
 #endif /* UNE_INTERPRETER_STATE_H */

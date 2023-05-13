@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2023-02-09
+Modified 2023-05-13
 */
 
 /* Header-specific includes. */
@@ -67,6 +67,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
     _is = une_interpreter_state_create();
     is = &_is;
   }
+  une_is = is;
   
   une_result result = une_result_create(UNE_RT_ERROR);
   #ifndef UNE_NO_INTERPRET

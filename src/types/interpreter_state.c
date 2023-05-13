@@ -7,6 +7,11 @@ Modified 2023-05-13
 #include "interpreter_state.h"
 #include "../tools.h"
 
+/* Implementation-specific includes. */
+#include "../datatypes/object.h"
+
+une_interpreter_state *une_is;
+
 /*
 Initialize a une_interpreter_state struct.
 */
@@ -105,4 +110,20 @@ void une_interpreter_state_holding_purge(une_interpreter_state *is)
     is->holding.buffer[i] = une_result_create(UNE_RT_none__);
   }
   is->holding.count = 0;
+}
+
+/*
+Check if a result matches the interpreter state's 'this'.
+*/
+bool une_result_is_reference_to_foreign_object(une_interpreter_state *is, une_result subject)
+{
+  if (subject.type != UNE_RT_REFERENCE || subject.reference.type != UNE_FT_SINGLE)
+    return false;
+  une_result *referenced = (une_result*)subject.reference.root;
+  assert(referenced);
+  if (referenced->type != UNE_RT_OBJECT)
+    return false;
+  une_object *object = (une_object*)referenced->value._vp;
+  assert(object);
+  return object->owner != is->context;
 }

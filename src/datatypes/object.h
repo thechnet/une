@@ -1,6 +1,6 @@
 /*
 object.h - Une
-Modified 2023-05-08
+Modified 2023-05-13
 */
 
 #ifndef UNE_DATATYPES_OBJECT_H
@@ -10,6 +10,7 @@ Modified 2023-05-08
 #include "../primitive.h"
 #include "../types/result.h"
 #include "../types/association.h"
+#include "../types/context.h"
 
 void une_datatype_object_represent(FILE *file, une_result result);
 
@@ -34,6 +35,7 @@ Object.
 typedef struct une_object_ {
   une_association **members;
   size_t members_length;
+  une_context *owner;
 } une_object;
 
 #endif /* UNE_DATATYPES_OBJECT_H */

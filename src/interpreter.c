@@ -156,6 +156,7 @@ une_interpreter__(une_interpret_object)
   object->members_length = list_size;
   object->members = malloc(object->members_length*sizeof(*object->members));
   verify(object->members);
+  object->owner = is->context;
 
   /* Store associations. */
   UNE_FOR_NODE_LIST_ITEM(i, list_size) {
@@ -245,7 +246,9 @@ une_interpreter__(une_interpret_stmts)
     une_result_free(result_);
     
     /* Interpret statement. */
-    result_ = une_result_dereference(une_interpret(error, is, nodes[i]));
+    result_ = une_interpret(error, is, nodes[i]);
+    if (!une_result_is_reference_to_foreign_object(is, result_))
+      result_ = une_result_dereference(result_);
     
     /* Drop held results. */
     une_interpreter_state_holding_purge(is);
@@ -701,6 +704,7 @@ une_interpreter__(une_interpret_member_seek)
   une_result subject = une_interpret(error, is, node->content.branch.a);
   if (subject.type == UNE_RT_ERROR)
     return subject;
+  assert(subject.type == UNE_RT_REFERENCE); /* Since we have is.holding, objects should always be encountered as references. */
   
   /* Get applicable datatype. */
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
@@ -726,19 +730,9 @@ une_interpreter__(une_interpret_member_seek)
   une_result member = dt_result.refer_to_member(subject, name);
   assert(member.type == UNE_RT_REFERENCE);
   
-  /* If the subject was a literal, dereference the member.
-  This ensures that, in case the member contains another object that
-  later becomes a 'this' contestant, it does not refer to the previous
-  'this' contestant, which would at that point have been freed. */
-  if (UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
-    member = une_result_dereference(member);
-  
   /* Register container as 'this' contestant. */
   une_result_free(is->this_contestant);
   is->this_contestant = subject;
-  /* If the container contained data (i.e. we interpreted a literal), that data now belongs to the interpreter state. Otherwise, free the reference. */
-  if (!UNE_RESULT_TYPE_IS_DATA_TYPE(subject.type))
-    une_result_free(subject);
   
   return member;
 }
@@ -1357,7 +1351,7 @@ une_interpreter__(une_interpret_return)
 {
   une_result result;
   if (node->content.branch.a != NULL)
-    result = une_result_dereference(une_interpret(error, is, node->content.branch.a));
+    result = une_interpret(error, is, node->content.branch.a); /* Dereferencing happens in interpret_stmts. */
   else
     result = une_result_create(UNE_RT_VOID);
   is->should_return = true;
@@ -1425,17 +1419,7 @@ une_interpreter__(une_interpret_concatenate)
 
 une_interpreter__(une_interpret_this)
 {
-  if (is->this.type == UNE_RT_REFERENCE) {
-    assert(is->this.reference.type == UNE_FT_SINGLE);
-    return is->this;
-  }
-  return (une_result){
-    .type = UNE_RT_REFERENCE,
-    .reference = (une_reference){
-      .type = UNE_FT_SINGLE,
-      .root = (void*)&is->this
-    }
-  };
+  return is->this;
 }
 
 /*
