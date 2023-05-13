@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-05-08
+Modified 2023-05-13
 */
 
 /* Header-specific includes. */
@@ -175,9 +175,19 @@ une_interpreter__(une_interpret_object)
       return result;
     }
   }
-  return (une_result){
+  
+  /* Hold object. */
+  une_result *object_container = une_interpreter_state_holding_add(is, (une_result){
     .type = UNE_RT_OBJECT,
     .value._vp = (void*)object,
+  });
+  
+  return (une_result){
+    .type = UNE_RT_REFERENCE,
+    .reference = (une_reference){
+      .type = UNE_FT_SINGLE,
+      .root = object_container
+    }
   };
 }
 
@@ -224,6 +234,8 @@ une_interpreter__(une_interpret_builtin)
 
 une_interpreter__(une_interpret_stmts)
 {
+  une_holding old_holding = une_interpreter_state_holding_strip(is);
+  
   une_result result_ = une_result_create(UNE_RT_VOID);
 
   UNE_UNPACK_NODE_LIST(node, nodes, nodes_size);
@@ -235,10 +247,15 @@ une_interpreter__(une_interpret_stmts)
     /* Interpret statement. */
     result_ = une_result_dereference(une_interpret(error, is, nodes[i]));
     
-    /* Return if required. */
+    /* Drop held results. */
+    une_interpreter_state_holding_purge(is);
+    
+    /* Break if required. */
     if (result_.type == UNE_RT_ERROR || result_.type == UNE_RT_CONTINUE || result_.type == UNE_RT_BREAK || is->should_return || is->should_exit)
-      return result_;
+      break;
   }
+  
+  une_interpreter_state_holding_reinstate(is, old_holding);
   
   return result_; /* Return last result. */
 }

@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-05-07
+Modified 2023-05-11
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -64,6 +64,7 @@ Modified 2023-05-07
 #define UNE_SIZE_FILE_BUFFER 4096 /* une_file_read. */
 #define UNE_SIZE_BIF_SPLIT_TKS 16 /* une_buitlin_split. */
 #define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH 8 /* une_error_display. */
+#define UNE_SIZE_HOLDING 4 /* Interpreter state. */
 #else
 #define UNE_SIZE_NUM_LEN UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_STR_LEN UNE_DEBUG_SIZES_SIZE
@@ -75,6 +76,7 @@ Modified 2023-05-07
 #define UNE_SIZE_FILE_BUFFER UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_BIF_SPLIT_TKS UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_HOLDING UNE_DEBUG_SIZES_SIZE
 #endif
 
 /* Output Color Escape Sequences. */
