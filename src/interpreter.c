@@ -81,6 +81,7 @@ une_result une_interpret(une_error *error, une_node *node)
   LOGINTERPRET_BEGIN(node);
   
   une_result result = interpreter_table__[(node->type)-UNE_R_BGN_LUT_NODES](error, node);
+  assert(UNE_RESULT_TYPE_IS_VALID(result.type));
   
   LOGINTERPRET_END(node);
   
