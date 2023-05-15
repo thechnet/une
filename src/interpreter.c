@@ -746,24 +746,24 @@ une_interpreter__(une_interpret_member_seek)
 
 une_interpreter__(une_interpret_assign)
 {
+  /* Evaluate value. */
+  une_result value = une_result_dereference(une_interpret(error, node->content.branch.b));
+  if (value.type == UNE_RT_ERROR)
+    return value;
+  
   /* Evaluate assignee. */
   une_result assignee;
   if (node->content.branch.a->type == UNE_NT_SEEK)
     assignee = une_interpret_seek_or_create(error, node->content.branch.a, false);
   else
     assignee = une_interpret(error, node->content.branch.a);
-  if (assignee.type == UNE_RT_ERROR)
+  if (assignee.type == UNE_RT_ERROR) {
+    une_result_free(value);
     return assignee;
+  }
   
   /* Get applicable datatype. */
   une_datatype dt_assignee = UNE_DATATYPE_FOR_RESULT(assignee);
-  
-  /* Evaluate value. */
-  une_result value = une_result_dereference(une_interpret(error, node->content.branch.b));
-  if (value.type == UNE_RT_ERROR) {
-    une_result_free(assignee);
-    return value;
-  }
   
   /* Check if value can be assigned. If .can_assign is undefined, assume any value can be assigned. */
   if (dt_assignee.can_assign && !dt_assignee.can_assign(assignee.reference, value)) {

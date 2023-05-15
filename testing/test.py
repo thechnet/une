@@ -428,6 +428,7 @@ cases = [
   Case('global a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=function(){global b=46};a();return b', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=[1]**2', UNE_RT_ERROR, UNE_ET_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=a', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, [ATTR_NO_IMPLICIT_RETURN]),
   
   # SET_IDX
   Case('a=[0];a[0]=1;return a', UNE_RT_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),

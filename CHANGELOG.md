@@ -10,6 +10,7 @@
   Previously, when an object method returned `this` or `this.x` (where `x` was a member of `this` containing an object), the returned value was a *copy* of the referenced object, meaning any subsequent changes applied to this object via further method calls would not be reflected in the root object. This happened because Une *always* dereferenced return values.  
   As of this release, various aspects of the interpreter have been reworked to allow objects to be returned by reference, which fixes the described issue.
 - Whitespace around expressions in parentheses causes a syntax error.
+- `var=var`, where `var` is a previously undefined symbol, does not cause an error.
 
 ## [0.12.0] - 2023-05-07
 
