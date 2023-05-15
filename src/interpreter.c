@@ -78,9 +78,13 @@ une_result une_interpret(une_error *error, une_node *node)
 {
   assert(UNE_NODE_TYPE_IS_IN_LUT(node->type));
   
-  LOGINTERPRET(une_node_type_to_wcs(node->type), node);
+  LOGINTERPRET_BEGIN(node);
   
-  return interpreter_table__[(node->type)-UNE_R_BGN_LUT_NODES](error, node);
+  une_result result = interpreter_table__[(node->type)-UNE_R_BGN_LUT_NODES](error, node);
+  
+  LOGINTERPRET_END(node);
+  
+  return result;
 }
 
 /*

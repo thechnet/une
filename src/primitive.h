@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-05-11
+Modified 2023-05-15
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -47,6 +47,8 @@ Modified 2023-05-11
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
 #define UNE_ERROR_USAGE L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
+#define UNE_DEBUG_LOGINTERPRET_INDENT L"|   "
+#define UNE_DEBUG_LOGINTERPRET_OFFSET 10
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
@@ -121,9 +123,22 @@ typedef union une_value_ {
 *** Logging.
 */
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
-#define LOGINTERPRET(str, node) wprintf(L"I %ls @ %zu-%zu\n", str, node->pos.start, node->pos.end)
+#define LOGINTERPRET_BEGIN(node) \
+  static int indent = 0; \
+  wprintf(L"%d-%d\33[%dG", node->pos.start, node->pos.end, UNE_DEBUG_LOGINTERPRET_OFFSET); \
+  for (int i=0; i<indent; i++) \
+    wprintf(UNE_DEBUG_LOGINTERPRET_INDENT); \
+  wprintf(L"%ls\n", une_node_type_to_wcs(node->type)); \
+  indent++
+#define LOGINTERPRET_END(node) \
+  indent--; \
+  wprintf(L"\33[%dG", UNE_DEBUG_LOGINTERPRET_OFFSET); \
+  for (int i=0; i<indent; i++) \
+    wprintf(UNE_DEBUG_LOGINTERPRET_INDENT); \
+  wprintf(L"X\n", une_node_type_to_wcs(node->type))
 #else
-#define LOGINTERPRET(...)
+#define LOGINTERPRET_BEGIN(...)
+#define LOGINTERPRET_END(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_PARSE)
 #define LOGPARSE(object_, node_) wprintf(L"P %hs %ls\n", __func__+10, object_, node_.type)
