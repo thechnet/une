@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-05-13
+Modified 2023-05-15
 */
 
 /* Header-specific includes. */
@@ -177,18 +177,9 @@ une_interpreter__(une_interpret_object)
     }
   }
   
-  /* Hold object. */
-  une_result *object_container = une_interpreter_state_holding_add((une_result){
-    .type = UNE_RT_OBJECT,
-    .value._vp = (void*)object,
-  });
-  
   return (une_result){
-    .type = UNE_RT_REFERENCE,
-    .reference = (une_reference){
-      .type = UNE_FT_SINGLE,
-      .root = object_container
-    }
+    .type = UNE_RT_OBJECT,
+    .value._vp = (void*)object
   };
 }
 
@@ -704,7 +695,23 @@ une_interpreter__(une_interpret_member_seek)
   une_result subject = une_interpret(error, node->content.branch.a);
   if (subject.type == UNE_RT_ERROR)
     return subject;
-  assert(subject.type == UNE_RT_REFERENCE); /* Since we have is.holding, objects should always be encountered as references. */
+  if (subject.type == UNE_RT_VOID) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    une_result_free(subject);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  if (subject.type == UNE_RT_OBJECT) {
+    assert(une_is->holding.buffer);
+    une_result *object_container = une_interpreter_state_holding_add(subject);
+    subject = (une_result){
+      .type = UNE_RT_REFERENCE,
+      .reference = (une_reference){
+        .type = UNE_FT_SINGLE,
+        .root = (void*)object_container
+      }
+    };
+  }
+  assert(subject.type == UNE_RT_REFERENCE); /* Since we have is.holding, objects MUST always be encountered as references. */
   
   /* Get applicable datatype. */
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
