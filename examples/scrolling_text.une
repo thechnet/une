@@ -7,7 +7,7 @@ move = function(string)
 
 cursor = function(show)
 {
-	print("[?25{show ? "h" : "l"}")
+	print("\e[?25{show ? "h" : "l"}")
 }
 
 text = "scrolling text! --- "
@@ -18,7 +18,7 @@ cursor(False)
 for i from 0 till revolutions
 	for j from 0 till len(text) {
 		text = move(text)
-		print("[F|{text}| {i+1}/{revolutions}[K")
+		print("\e[F|{text}| {i+1}/{revolutions}\e[K")
 		sleep(delay)
 	}
 cursor(True)

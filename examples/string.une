@@ -1,0 +1,36 @@
+DIFFERENCE = ord("a") - ord("A")
+
+String = function(content) {
+	return {
+		content: content,
+		length: function() {
+			return len(this.content)
+		},
+		lower: function() {
+			new = ""
+			for c in this.content
+				if ord(c) >= ord("A") && ord(c) <= ord("Z")
+					new += chr(ord(c) + DIFFERENCE)
+				else
+					new += c
+			return String(new)
+		},
+		upper: function() {
+			new = ""
+			for c in this.content
+				if ord(c) >= ord("a") && ord(c) <= ord("z")
+					new += chr(ord(c) - DIFFERENCE)
+				else
+					new += c
+			return String(new)
+		},
+		capitalize: function() {
+			new = this.lower().content
+			if ord(new[0]) >= ord("a") && ord(new[0]) <= ord("z")
+				new[0] = chr(ord(new[0]) - DIFFERENCE)
+			return String(new)
+		}
+	}
+}
+
+print(String("Test").lower().upper().capitalize())
