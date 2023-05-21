@@ -31,6 +31,7 @@ list(APPEND options "DEBUG_LOG_INTERPRET|Debug: Log interpretation calls|OFF")
 list(APPEND options "NO_LEX|Debug: Skip lexing|OFF")
 list(APPEND options "NO_PARSE|Debug: Skip parsing|OFF")
 list(APPEND options "NO_INTERPRET|Debug: Skip interpretation|OFF")
+list(APPEND options "DEBUG_FSANITIZE|Debug: Use -fsanitize flags|ON")
 foreach(option IN LISTS options)
   string(REPLACE "|" ";" option_list ${option})
   list(GET option_list 0 id)
@@ -113,6 +114,14 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     target_sources(une PRIVATE "src/util/memdbg.c")
     target_compile_options(une PRIVATE
       -Wno-unused-macros
+    )
+  endif()
+  if(UNE_DEBUG_FSANITIZE)
+    target_compile_options(une PRIVATE
+      -fsanitize=address,signed-integer-overflow -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope -fno-omit-frame-pointer -O1 -fno-optimize-sibling-calls 
+    )
+    target_link_options(une PRIVATE
+      -fsanitize=address,signed-integer-overflow
     )
   endif()
 elseif(CMAKE_BUILD_TYPE STREQUAL Release)
