@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-05-15
+Modified 2023-06-03
 */
 
 /* Header-specific includes. */
@@ -1172,10 +1172,17 @@ une_interpreter__(une_interpret_assign_mod)
 
 une_interpreter__(une_interpret_call)
 {
+  /* Interpret arguments. */
+  une_result args = une_result_dereference(une_interpret_list(error, node->content.branch.b));
+  if (args.type == UNE_RT_ERROR)
+    return args;
+  
   /* Get callable. */
   une_result callable = une_result_dereference(une_interpret(error, node->content.branch.a));
-  if (callable.type == UNE_RT_ERROR)
+  if (callable.type == UNE_RT_ERROR) {
+    une_result_free(args);
     return callable;
+  }
   
   /* Determine if this is a method call. */
   bool is_method_call = node->content.branch.a->type == UNE_NT_MEMBER_SEEK;
@@ -1193,20 +1200,15 @@ une_interpreter__(une_interpret_call)
   une_datatype dt_callable = UNE_DATATYPE_FOR_RESULT(callable);
   if (dt_callable.call == NULL) {
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-
-  /* Interpret arguments. */
-  une_result args = une_result_dereference(une_interpret_list(error, node->content.branch.b));
-  if (args.type == UNE_RT_ERROR) {
+    une_result_free(args);
     une_result_free(callable);
-    return args;
+    return une_result_create(UNE_RT_ERROR);
   }
 
   /* Execute function. */
   une_result result = dt_callable.call(error, node, callable, args);
-  une_result_free(callable);
   une_result_free(args);
+  une_result_free(callable);
   
   /* Free our 'this' and reinstate the previous 'this'. */
   if (is_method_call) {

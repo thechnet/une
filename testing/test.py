@@ -556,6 +556,9 @@ cases = [
   Case('a="string";a[1..-1][1..Void]="4t6";return a', UNE_RT_STR, 'st4t6g', [ATTR_NO_IMPLICIT_RETURN]),
   Case('"string"[100..]', UNE_RT_STR, '', []),
   Case('[1, 2, 3][100..]', UNE_RT_LIST, '[]', []),
+  
+  # Dereference 'this' before registering new one for method call
+  Case('({m:function(o){return o}}).m(this)', UNE_RT_VOID, 'Void', []),
 ]
 CASES_LEN = len(cases)
 
