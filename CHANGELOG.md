@@ -16,6 +16,7 @@
 - Whitespace around expressions in parentheses causes a syntax error.
 - `var=var`, where `var` is a previously undefined symbol, does not cause an error.
 - Method arguments are interpreted *after* `this` is defined.
+- The `>`, `>=`, `<`, and `<=` operators strictly expect the left-hand side operand to support the comparison, leading to a crash if it does not (e.g.: `Void > 0`).
 
 ## [0.12.0] - 2023-05-07
 

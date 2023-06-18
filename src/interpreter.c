@@ -376,8 +376,7 @@ une_interpreter__(une_interpret_gtr)
   }
   
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  assert(dt_left.is_greater != NULL);
-  une_int is_greater = dt_left.is_greater(left, right);
+  une_int is_greater = dt_left.is_greater ? dt_left.is_greater(left, right) : -1;
   une_result_free(left);
   une_result_free(right);
   
@@ -404,8 +403,7 @@ une_interpreter__(une_interpret_geq)
   }
   
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  assert(dt_left.is_greater_or_equal != NULL);
-  une_int is_greater_or_equal = dt_left.is_greater_or_equal(left, right);
+  une_int is_greater_or_equal = dt_left.is_greater_or_equal ? dt_left.is_greater_or_equal(left, right) : -1;
   une_result_free(left);
   une_result_free(right);
   
@@ -432,8 +430,7 @@ une_interpreter__(une_interpret_lss)
   }
   
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  assert(dt_left.is_less != NULL);
-  une_int is_less = dt_left.is_less(left, right);
+  une_int is_less = dt_left.is_less ? dt_left.is_less(left, right) : -1;
   une_result_free(left);
   une_result_free(right);
   
@@ -460,8 +457,7 @@ une_interpreter__(une_interpret_leq)
   }
   
   une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  assert(dt_left.is_less_or_equal != NULL);
-  une_int is_less_or_equal = dt_left.is_less_or_equal(left, right);
+  une_int is_less_or_equal = dt_left.is_less_or_equal ? dt_left.is_less_or_equal(left, right) : -1;
   une_result_free(left);
   une_result_free(right);
   
