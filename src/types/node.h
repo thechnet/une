@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2023-05-08
+Modified 2023-06-18
 */
 
 #ifndef UNE_NODE_H
@@ -71,6 +71,7 @@ typedef enum une_node_type_ {
   UNE_NT_FOR_ELEMENT,
   UNE_NT_WHILE,
   UNE_NT_IF,
+  UNE_NT_ASSERT,
   UNE_NT_CONTINUE,
   UNE_NT_BREAK,
   UNE_NT_RETURN,

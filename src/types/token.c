@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-04-30
+Modified 2023-06-18
 */
 
 /* Header-specific includes. */
@@ -42,6 +42,7 @@ const wchar_t *une_token_table[] = {
   L"break",
   L"return",
   L"exit",
+  L"assert",
   /* Begin operator tokens. */
   L"(",
   L")",

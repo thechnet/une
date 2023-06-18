@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2023-05-08
+Modified 2023-06-18
 */
 
 #ifndef UNE_PARSER_H
@@ -54,6 +54,7 @@ une_parser__(une_parse_for_range);
 une_parser__(une_parse_for_element);
 une_parser__(une_parse_while);
 une_parser__(une_parse_if);
+une_parser__(une_parse_assert);
 une_parser__(une_parse_continue);
 une_parser__(une_parse_break);
 une_parser__(une_parse_return);

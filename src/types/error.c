@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-05-13
+Modified 2023-06-18
 */
 
 /* Header-specific includes. */
@@ -28,6 +28,7 @@ const wchar_t *une_error_message_table[] = {
   L"File not found.",
   L"Encoding, conversion, or pattern error.",
   L"Type error.",
+  L"Assertion not met.",
   L"Unknown error! (Internal Error)",
 };
 

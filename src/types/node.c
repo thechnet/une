@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-05-08
+Modified 2023-06-18
 */
 
 /* Header-specific includes. */
@@ -60,6 +60,7 @@ const wchar_t *une_node_table[] = {
   L"FOR_ELEMENT",
   L"WHILE",
   L"IF",
+  L"ASSERT",
   L"CONTINUE",
   L"BREAK",
   L"RETURN",
@@ -361,6 +362,7 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_NEG:
     case UNE_NT_NOT:
     case UNE_NT_RETURN:
+    case UNE_NT_ASSERT:
     case UNE_NT_EXIT: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"

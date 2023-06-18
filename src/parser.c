@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-05-11
+Modified 2023-06-18
 */
 
 /* Header-specific includes. */
@@ -48,6 +48,8 @@ une_parser__(une_parse_stmt)
       return une_parse_while(error, ps);
     case UNE_TT_IF:
       return une_parse_if(error, ps);
+    case UNE_TT_ASSERT:
+      return une_parse_assert(error, ps);
     case UNE_TT_CONTINUE:
       return une_parse_continue(error, ps);
     case UNE_TT_BREAK:
@@ -718,6 +720,27 @@ une_parser__(une_parse_if)
   ifstmt->pos.end = alternate->pos.end;
   ifstmt->content.branch.c = alternate;
   return ifstmt;
+}
+
+une_parser__(une_parse_assert)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
+  size_t pos_start = now(&ps->in).pos.start;
+  
+  /* Assert. */
+  pull(&ps->in);
+
+  /* Assertion. */
+  une_node *assertion = une_parse_expression(error, ps);
+  if (assertion == NULL)
+    return NULL;
+
+  une_node *assert_ = une_node_create(UNE_NT_ASSERT);
+  assert_->pos.start = pos_start;
+  assert_->pos.end = assertion->pos.end;
+  assert_->content.branch.a = assertion;
+  return assert_;
 }
 
 une_parser__(une_parse_continue)

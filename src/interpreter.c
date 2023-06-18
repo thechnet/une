@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-06-03
+Modified 2023-06-18
 */
 
 /* Header-specific includes. */
@@ -61,6 +61,7 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_for_element,
   &une_interpret_while,
   &une_interpret_if,
+  &une_interpret_assert,
   &une_interpret_continue,
   &une_interpret_break,
   &une_interpret_return,
@@ -1348,6 +1349,22 @@ une_interpreter__(une_interpret_if)
     return une_result_dereference(une_interpret(error, node->content.branch.b));
   if (node->content.branch.c != NULL)
     return une_result_dereference(une_interpret(error, node->content.branch.c));
+  return une_result_create(UNE_RT_VOID);
+}
+
+une_interpreter__(une_interpret_assert)
+{
+  /* Check if assertion is met. */
+  une_result assertion = une_result_dereference(une_interpret(error, node->content.branch.a));
+  if (assertion.type == UNE_RT_ERROR)
+    return assertion;
+  une_int is_true = une_result_is_true(assertion);
+  une_result_free(assertion);
+  
+  if (!is_true) {
+    *error = UNE_ERROR_SET(UNE_ET_ASSERTION_NOT_MET, node->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
   return une_result_create(UNE_RT_VOID);
 }
 

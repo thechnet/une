@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+- `assert` statement.  
+  Used to ensure assertions are met at runtime.
+
 ### Changed
 - Defining new members for existing objects is no longer possible.
 

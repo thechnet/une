@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2023-04-30
+Modified 2023-06-18
 */
 
 #ifndef UNE_TOKEN_H
@@ -42,7 +42,8 @@ typedef enum une_token_type_ {
   UNE_TT_BREAK,
   UNE_TT_RETURN,
   UNE_TT_EXIT,
-  #define UNE_R_END_KEYWORD_TOKENS UNE_TT_EXIT
+  UNE_TT_ASSERT,
+  #define UNE_R_END_KEYWORD_TOKENS UNE_TT_ASSERT
   #define UNE_R_BGN_OPERATOR_TOKENS UNE_TT_LPAR
   UNE_TT_LPAR,
   UNE_TT_RPAR,

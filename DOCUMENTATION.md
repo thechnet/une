@@ -480,6 +480,15 @@ for i from 0 till 11 {
 }
 ```
 
+### 6.6 Assert Statement
+
+The `assert` statement is used to ensure assertions are met at runtime.
+
+```
+assert 2 > 1 # Passes.
+assert 1 > 2 # Fails.
+```
+
 ## 7. Built-in Functions
 
 - `put(value)` – Prints `value` to the standard output pipe:

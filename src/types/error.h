@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Modified 2023-05-13
+Modified 2023-06-18
 */
 
 #ifndef UNE_ERROR_H
@@ -27,6 +27,7 @@ typedef enum une_error_type_ {
   UNE_ET_FILE_NOT_FOUND,
   UNE_ET_ENCODING,
   UNE_ET_TYPE,
+  UNE_ET_ASSERTION_NOT_MET,
   UNE_ET_max__,
 } une_error_type;
 

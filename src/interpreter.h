@@ -1,6 +1,6 @@
 /*
 interpreter.h - Une
-Modified 2023-05-13
+Modified 2023-06-18
 */
 
 #ifndef UNE_INTERPRETER_H
@@ -75,6 +75,7 @@ une_interpreter__(une_interpret_for_range);
 une_interpreter__(une_interpret_for_element);
 une_interpreter__(une_interpret_while);
 une_interpreter__(une_interpret_if);
+une_interpreter__(une_interpret_assert);
 une_interpreter__(une_interpret_continue);
 une_interpreter__(une_interpret_break);
 une_interpreter__(une_interpret_return);
