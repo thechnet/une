@@ -291,6 +291,7 @@ cases = [
   Case('unknown>1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1>unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]>1', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('Void>0', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   # GEQ
   Case('1>=1', UNE_RT_INT, '1', []),
@@ -302,6 +303,7 @@ cases = [
   Case('unknown>=1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1>=unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]>=1', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('Void>=0', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   # LSS
   Case('2<1', UNE_RT_INT, '0', []),
@@ -313,6 +315,7 @@ cases = [
   Case('unknown<1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1<unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]<1', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('Void<0', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   # LEQ
   Case('1<=1', UNE_RT_INT, '1', []),
@@ -324,6 +327,7 @@ cases = [
   Case('unknown<=1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1<=unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]<=1', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('Void<=0', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
   # COVER
   Case('1/0 cover 46', UNE_RT_INT, '46', []),
