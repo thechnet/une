@@ -15,6 +15,7 @@
   As of this release, various aspects of the interpreter have been reworked to allow objects to be returned by reference, which fixes the described issue.
 - Whitespace around expressions in parentheses causes a syntax error.
 - `var=var`, where `var` is a previously undefined symbol, does not cause an error.
+- Method arguments are interpreted *after* `this` is defined.
 
 ## [0.12.0] - 2023-05-07
 
