@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2023-06-18
+Modified 2023-06-19
 */
 
 #ifndef UNE_NODE_H
@@ -76,6 +76,8 @@ typedef enum une_node_type_ {
   UNE_NT_BREAK,
   UNE_NT_RETURN,
   UNE_NT_EXIT,
+  UNE_NT_ANY,
+  UNE_NT_ALL,
   UNE_NT_COVER,
   UNE_NT_CONCATENATE,
   UNE_NT_THIS,
@@ -142,6 +144,8 @@ une_node *une_node_copy(une_node *src);
 void une_node_free(une_node *node, bool free_wcs);
 
 une_node **une_node_list_create(size_t size);
+
+une_node *une_node_unwrap_any_or_all(une_node *node, une_node_type *wrapped_as);
 
 #ifdef UNE_DEBUG
 une_static__ const wchar_t *une_node_type_to_wcs(une_node_type type);

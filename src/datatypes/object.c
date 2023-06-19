@@ -1,6 +1,6 @@
 /*
 object.c - Une
-Modified 2023-05-13
+Modified 2023-06-19
 */
 
 /* Header-specific includes. */
@@ -95,7 +95,7 @@ une_int une_datatype_object_is_equal(une_result subject, une_result comparison)
     if (!une_datatype_object_member_exists(comparison, name))
       return 0;
     une_result member = une_result_dereference(une_datatype_object_refer_to_member(comparison, name));
-    if (!une_results_are_equal(subject_object->members[i]->content, member))
+    if (!une_result_equ_result(subject_object->members[i]->content, member))
       return 0;
   }
   return 1;

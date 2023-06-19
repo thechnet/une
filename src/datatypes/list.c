@@ -1,6 +1,6 @@
 /*
 list.c - Une
-Modified 2023-05-07
+Modified 2023-06-19
 */
 
 /* Header-specific includes. */
@@ -82,7 +82,7 @@ une_int une_datatype_list_is_equal(une_result subject, une_result comparison)
   if (subject_size != comparison_size)
     return 0;
   UNE_FOR_RESULT_LIST_ITEM(i, subject_size)
-    if (!une_results_are_equal(subject_list[i], comparison_list[i]))
+    if (!une_result_equ_result(subject_list[i], comparison_list[i]))
       return 0;
   return 1;
 }

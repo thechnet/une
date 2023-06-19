@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-06-18
+Modified 2023-06-19
 */
 
 /* Header-specific includes. */
@@ -66,6 +66,8 @@ une_interpreter__(*interpreter_table__[]) = {
   &une_interpret_break,
   &une_interpret_return,
   &une_interpret_exit,
+  &une_interpret_any,
+  &une_interpret_all,
   &une_interpret_cover,
   &une_interpret_concatenate,
   &une_interpret_this,
@@ -332,143 +334,32 @@ une_interpreter__(une_interpret_nullish)
 
 une_interpreter__(une_interpret_equ)
 {
-  /* Evalute branches. */
-  une_result left = une_result_dereference(une_interpret(error, node->content.branch.a));
-  if (left.type == UNE_RT_ERROR)
-    return left;
-  une_result right = une_result_dereference(une_interpret(error, node->content.branch.b));
-  if (right.type == UNE_RT_ERROR) {
-    une_result_free(left);
-    return right;
-  }
-  
-  /* Check equality. */
-  une_int is_equal = une_results_are_equal(left, right);
-  une_result_free(left);
-  une_result_free(right);
-  
-  return (une_result){
-    .type = UNE_RT_INT,
-    .value._int = is_equal
-  };
+  return une_interpret_comparison(error, node, &une_result_equ_result);
 }
 
 une_interpreter__(une_interpret_neq)
 {
-  une_result equ = une_result_dereference(une_interpret_equ(error, node));
-  if (equ.type == UNE_RT_ERROR)
-    return equ;
-
-  equ.value._int = !equ.value._int;
-  return equ;
+  return une_interpret_comparison(error, node, &une_result_neq_result);
 }
 
 une_interpreter__(une_interpret_gtr)
 {
-  /* Evaluate branches. */
-  une_result left = une_result_dereference(une_interpret(error, node->content.branch.a));
-  if (left.type == UNE_RT_ERROR)
-    return left;
-  une_result right = une_result_dereference(une_interpret(error, node->content.branch.b));
-  if (right.type == UNE_RT_ERROR) {
-    une_result_free(left);
-    return right;
-  }
-  
-  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  une_int is_greater = dt_left.is_greater ? dt_left.is_greater(left, right) : -1;
-  une_result_free(left);
-  une_result_free(right);
-  
-  if (is_greater == -1) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  return (une_result){
-    .type = UNE_RT_INT,
-    .value._int = is_greater
-  };
+  return une_interpret_comparison(error, node, &une_result_gtr_result);
 }
 
 une_interpreter__(une_interpret_geq)
 {
-  /* Evaluate branches. */
-  une_result left = une_result_dereference(une_interpret(error, node->content.branch.a));
-  if (left.type == UNE_RT_ERROR)
-    return left;
-  une_result right = une_result_dereference(une_interpret(error, node->content.branch.b));
-  if (right.type == UNE_RT_ERROR) {
-    une_result_free(left);
-    return right;
-  }
-  
-  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  une_int is_greater_or_equal = dt_left.is_greater_or_equal ? dt_left.is_greater_or_equal(left, right) : -1;
-  une_result_free(left);
-  une_result_free(right);
-  
-  if (is_greater_or_equal == -1) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  return (une_result){
-    .type = UNE_RT_INT,
-    .value._int = is_greater_or_equal
-  };
+  return une_interpret_comparison(error, node, &une_result_geq_result);
 }
 
 une_interpreter__(une_interpret_lss)
 {
-  /* Evaluate branches. */
-  une_result left = une_result_dereference(une_interpret(error, node->content.branch.a));
-  if (left.type == UNE_RT_ERROR)
-    return left;
-  une_result right = une_result_dereference(une_interpret(error, node->content.branch.b));
-  if (right.type == UNE_RT_ERROR) {
-    une_result_free(left);
-    return right;
-  }
-  
-  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  une_int is_less = dt_left.is_less ? dt_left.is_less(left, right) : -1;
-  une_result_free(left);
-  une_result_free(right);
-  
-  if (is_less == -1) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  return (une_result){
-    .type = UNE_RT_INT,
-    .value._int = is_less
-  };
+  return une_interpret_comparison(error, node, &une_result_lss_result);
 }
 
 une_interpreter__(une_interpret_leq)
 {
-  /* Evaluate branches. */
-  une_result left = une_result_dereference(une_interpret(error, node->content.branch.a));
-  if (left.type == UNE_RT_ERROR)
-    return left;
-  une_result right = une_result_dereference(une_interpret(error, node->content.branch.b));
-  if (right.type == UNE_RT_ERROR) {
-    une_result_free(left);
-    return right;
-  }
-  
-  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
-  une_int is_less_or_equal = dt_left.is_less_or_equal ? dt_left.is_less_or_equal(left, right) : -1;
-  une_result_free(left);
-  une_result_free(right);
-  
-  if (is_less_or_equal == -1) {
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
-    return une_result_create(UNE_RT_ERROR);
-  }
-  return (une_result){
-    .type = UNE_RT_INT,
-    .value._int = is_less_or_equal
-  };
+  return une_interpret_comparison(error, node, &une_result_leq_result);
 }
 
 une_interpreter__(une_interpret_add)
@@ -1396,6 +1287,22 @@ une_interpreter__(une_interpret_exit)
   return result;
 }
 
+une_interpreter__(une_interpret_any)
+{
+  /* Whenever ANY is allowed, it is handled directly, without using this function.
+  Therefore, whenever this function *is* called, it means ANY is not allowed. */
+  *error = UNE_ERROR_SET(UNE_ET_MISPLACED_ANY_OR_ALL, node->pos);
+  return une_result_create(UNE_RT_ERROR);
+}
+
+une_interpreter__(une_interpret_all)
+{
+  /* Whenever ALL is allowed, it is handled directly, without using this function.
+  Therefore, whenever this function *is* called, it means ALL is not allowed. */
+  *error = UNE_ERROR_SET(UNE_ET_MISPLACED_ANY_OR_ALL, node->pos);
+  return une_result_create(UNE_RT_ERROR);
+}
+
 une_interpreter__(une_interpret_cover)
 {
   /* Try to interpret branch A. */
@@ -1596,4 +1503,88 @@ une_interpreter__(une_interpret_idx_seek_range)
   une_result_free(begin);
   une_result_free(end);
   return result;
+}
+
+une_interpreter__(une_interpret_comparison, une_int (*comparator)(une_result, une_result))
+{
+  /* Evaluate left branch. */
+  une_node_type left_wrapped_as = UNE_NT_none__;
+  une_result left = une_result_dereference(une_interpret(error, une_node_unwrap_any_or_all(node->content.branch.a, &left_wrapped_as)));
+  if (left.type == UNE_RT_ERROR)
+    return left;
+  if (left_wrapped_as != UNE_NT_none__ && !UNE_DATATYPE_FOR_RESULT(left).refer_to_index) {
+    une_result_free(left);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  if (left_wrapped_as == UNE_NT_none__)
+    left = une_result_wrap_in_list(left);
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  assert(dt_left.refer_to_index);
+  assert(dt_left.get_len);
+  size_t left_length = dt_left.get_len(left);
+  
+  /* Evaluate right branch. */
+  une_node_type right_wrapped_as = UNE_NT_none__;
+  une_result right = une_result_dereference(une_interpret(error, une_node_unwrap_any_or_all(node->content.branch.b, &right_wrapped_as)));
+  if (right.type == UNE_RT_ERROR) {
+    une_result_free(left);
+    return right;
+  }
+  if (right_wrapped_as != UNE_NT_none__ && !UNE_DATATYPE_FOR_RESULT(right).refer_to_index) {
+    une_result_free(left);
+    une_result_free(right);
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.b->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  if (right_wrapped_as == UNE_NT_none__)
+    right = une_result_wrap_in_list(right);
+  une_datatype dt_right = UNE_DATATYPE_FOR_RESULT(right);
+  assert(dt_right.refer_to_index);
+  assert(dt_right.get_len);
+  size_t right_length = dt_right.get_len(right);
+  
+  /* Compare. */
+  bool type_error = false;
+  une_int complete_matches = 0;
+  une_result i = une_result_create(UNE_RT_INT);
+  une_result j = une_result_create(UNE_RT_INT);
+  for (i.value._int=0; i.value._int<(une_int)left_length; i.value._int++) {
+    une_int partial_matches = 0;
+    for (j.value._int=0; j.value._int<(une_int)right_length; j.value._int++) {
+      une_result left_element = une_result_dereference(dt_left.refer_to_index(left, i));
+      une_result right_element = une_result_dereference(dt_right.refer_to_index(right, j));
+      une_int match = comparator(left_element, right_element);
+      une_result_free(left_element);
+      une_result_free(right_element);
+      if (match == -1) {
+        type_error = true;
+        break;
+      }
+      partial_matches += match;
+    }
+    if (type_error)
+      break;
+    if (right_wrapped_as == UNE_NT_ALL)
+      complete_matches += partial_matches >= (une_int)right_length;
+    else
+      complete_matches += partial_matches > 0;
+  }
+  une_result_free(left);
+  une_result_free(right);
+  if (type_error) {
+    *error = UNE_ERROR_SET(UNE_ET_TYPE, node->pos);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  une_int applies = 0;
+  if (left_wrapped_as == UNE_NT_ALL) {
+    applies = complete_matches >= (une_int)left_length;
+  }
+  else
+    applies = complete_matches > 0;
+  
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = applies
+  };
 }

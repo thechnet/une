@@ -288,6 +288,31 @@ Using `??`, the expression evaluates to the left-hand side if the left condition
 print("Something") ?? 2 # 2
 ```
 
+#### 3.3.4 Iterable Comparison
+
+Sometimes we want to perform a comparison on all elements within an iterable. This is achieved using the `any` and `all` operators.
+
+When placed in front of iterable values in comparisons, the comparison is performed once per element in the iterable. Using `any`, the expression yields true if the comparison applies to *any* element in the iterable.
+
+```
+"foo" == any ["foo", "bar"]
+```
+
+Using `all`, it yields true if the comparison applies to *all* elements in the iterable.
+
+```
+3 >= all [1, 2, 3]
+```
+
+Operators can be used on both sides to perform complex checks in a single expression:
+
+```
+# Check if any input is not an accepted value
+inputs = [1, 2, 3]
+accepted = [2, 3, 4]
+any inputs != all accepted
+```
+
 ## 4. Operations
 
 All common arithmetic operations (addition, subtraction, multiplication, division, modulus, power) are supported. The operator for modulus is `%`, the operator for power is `**`. An additional operation, floor division, behaves like division but always rounds the result down to the next smallest integer. Its operator is `//`.

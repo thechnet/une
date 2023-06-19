@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-06-18
+Modified 2023-06-19
 */
 
 /* Header-specific includes. */
@@ -65,6 +65,8 @@ const wchar_t *une_node_table[] = {
   L"BREAK",
   L"RETURN",
   L"EXIT",
+  L"ANY",
+  L"ALL",
   L"COVER",
   L"CONCATENATE",
   L"THIS",
@@ -239,6 +241,19 @@ une_node **une_node_list_create(size_t size)
 }
 
 /*
+Unwrap ANY or ALL node.
+*/
+une_node *une_node_unwrap_any_or_all(une_node *node, une_node_type *wrapped_as)
+{
+  if (node->type != UNE_NT_ANY && node->type != UNE_NT_ALL) {
+    *wrapped_as = UNE_NT_none__;
+    return node;
+  }
+  *wrapped_as = node->type;
+  return node->content.branch.a;
+}
+
+/*
 Get node name from node type.
 */
 #ifdef UNE_DEBUG
@@ -363,6 +378,8 @@ wchar_t *une_node_to_wcs(une_node *node)
     case UNE_NT_NOT:
     case UNE_NT_RETURN:
     case UNE_NT_ASSERT:
+    case UNE_NT_ANY:
+    case UNE_NT_ALL:
     case UNE_NT_EXIT: {
       wchar_t *branch1 = une_node_to_wcs(node->content.branch.a);
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, RESET L"(" UNE_COLOR_NODE_BRANCH_TYPE L"%ls"

@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2023-05-02
+Modified 2023-06-19
 */
 
 #ifndef UNE_RESULT_H
@@ -99,8 +99,15 @@ const wchar_t *une_result_type_to_wcs(une_result_type result_type);
 void une_result_represent(FILE *file, une_result result);
 
 une_int une_result_is_true(une_result result);
-une_int une_results_are_equal(une_result left, une_result right);
+une_int une_result_equ_result(une_result left, une_result right);
+une_int une_result_neq_result(une_result left, une_result right);
+une_int une_result_gtr_result(une_result left, une_result right);
+une_int une_result_geq_result(une_result left, une_result right);
+une_int une_result_lss_result(une_result left, une_result right);
+une_int une_result_leq_result(une_result left, une_result right);
 
 une_result une_result_dereference(une_result result);
+
+une_result une_result_wrap_in_list(une_result result);
 
 #endif /* !UNE_RESULT_H */

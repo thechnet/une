@@ -5,6 +5,8 @@
 ### Added
 - `assert` statement.  
   Used to ensure assertions are met at runtime.
+- `any` and `all` operators.  
+  When placed in front of iterable values in comparisons, these operators allow complex comparisons that take into account all members of an iterable. Using `any`, the comparison yields true if it applies to *any* element in the iterable. Using `all`, it yields true if it applies to *all* elements in the iterable.
 
 ### Changed
 - Defining new members for existing objects is no longer possible.

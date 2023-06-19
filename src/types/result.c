@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2023-05-05
+Modified 2023-06-19
 */
 
 /* Header-specific includes. */
@@ -114,13 +114,59 @@ une_int une_result_is_true(une_result result)
 /*
 Return 1 if the une_results are considered equal, otherwise 0.
 */
-une_int une_results_are_equal(une_result left, une_result right)
+une_int une_result_equ_result(une_result left, une_result right)
 {
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(left.type));
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(right.type));
   if (UNE_DATATYPE_FOR_RESULT(left).is_equal == NULL)
     return 0;
   return UNE_DATATYPE_FOR_RESULT(left).is_equal(left, right);
+}
+
+/*
+Return 1 if the une_results are considered not equal, otherwise 0.
+*/
+une_int une_result_neq_result(une_result left, une_result right)
+{
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(left.type));
+  assert(UNE_RESULT_TYPE_IS_DATA_TYPE(right.type));
+  return !une_result_equ_result(left, right);
+}
+
+/*
+Return 1 if left is greater than right, 0 if not, -1 if the comparison is not supported.
+*/
+une_int une_result_gtr_result(une_result left, une_result right)
+{
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  return dt_left.is_greater ? dt_left.is_greater(left, right) : -1;
+}
+
+/*
+Return 1 if left is greater than or equal to right, 0 if not, -1 if the comparison is not supported.
+*/
+une_int une_result_geq_result(une_result left, une_result right)
+{
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  return dt_left.is_greater_or_equal ? dt_left.is_greater_or_equal(left, right) : -1;
+}
+
+/*
+Return 1 if left is less than right, 0 if not, -1 if the comparison is not supported.
+*/
+une_int une_result_lss_result(une_result left, une_result right)
+{
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  return dt_left.is_less ? dt_left.is_less(left, right) : -1;
+}
+
+/*
+Return 1 if left is less than right, 0 if not, -1 if the comparison is not supported.
+*/
+une_int une_result_leq_result(une_result left, une_result right)
+{
+  une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
+  return dt_left.is_less_or_equal ? dt_left.is_less_or_equal(left, right) : -1;
 }
 
 /*
@@ -159,4 +205,17 @@ une_result une_result_dereference(une_result result)
   assert(referenced);
   assert(UNE_RESULT_TYPE_IS_DATA_TYPE(referenced->type));
   return une_result_copy(*referenced);
+}
+
+/*
+Wrap result in a list.
+*/
+une_result une_result_wrap_in_list(une_result result)
+{
+  une_result *list = une_result_list_create(1);
+  list[1] = result;
+  return (une_result){
+    .type = UNE_RT_LIST,
+    .value._vp = (void*)list
+  };
 }

@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-06-18
+Modified 2023-06-19
 */
 
 /* Header-specific includes. */
@@ -29,6 +29,7 @@ const wchar_t *une_error_message_table[] = {
   L"Encoding, conversion, or pattern error.",
   L"Type error.",
   L"Assertion not met.",
+  L"Misplaced 'any' or 'all'.",
   L"Unknown error! (Internal Error)",
 };
 

@@ -77,6 +77,7 @@ UNE_ET_FILE_NOT_FOUND = UNE_R_END_DATA_RESULT_TYPES+9
 UNE_ET_ENCODING = UNE_R_END_DATA_RESULT_TYPES+10
 UNE_ET_TYPE = UNE_R_END_DATA_RESULT_TYPES+11
 UNE_ET_ASSERTION_NOT_MET = UNE_R_END_DATA_RESULT_TYPES+12
+UNE_ET_MISPLACED_ANY_OR_ALL = UNE_R_END_DATA_RESULT_TYPES+13
 error_types = {
   UNE_ERROR_INPUT: 'UNE_ERROR_INPUT',
   UNE_ET_SYNTAX: 'UNE_ET_SYNTAX',
@@ -90,7 +91,8 @@ error_types = {
   UNE_ET_FILE_NOT_FOUND: 'UNE_ET_FILE_NOT_FOUND',
   UNE_ET_ENCODING: 'UNE_ET_ENCODING',
   UNE_ET_TYPE: 'UNE_ET_TYPE',
-  UNE_ET_ASSERTION_NOT_MET: 'UNE_ET_ASSERTION_NOT_MET'
+  UNE_ET_ASSERTION_NOT_MET: 'UNE_ET_ASSERTION_NOT_MET',
+  UNE_ET_MISPLACED_ANY_OR_ALL: 'UNE_ET_MISPLACED_ANY_OR_ALL'
 }
 
 ##### CASES
@@ -276,10 +278,17 @@ cases = [
   Case('[1]==[1]', UNE_RT_INT, '1', []),
   Case('unknown==1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1==unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
+  Case('1 == any [1, 2, 3]', UNE_RT_INT, '1', []),
+  Case('1 == all [1, 2, 3]', UNE_RT_INT, '0', []),
+  Case('"a" == any "abc"', UNE_RT_INT, '1', []),
+  Case('any 1 == 1', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('any 1', UNE_RT_ERROR, UNE_ET_MISPLACED_ANY_OR_ALL, []),
   
   # NEQ
   Case('1!=1', UNE_RT_INT, '0', []),
   Case('unknown!=1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
+  Case('1 != any [1, 2, 3]', UNE_RT_INT, '1', []),
+  Case('1 != all [1, 2, 3]', UNE_RT_INT, '0', []),
   
   # GTR
   Case('2>1', UNE_RT_INT, '1', []),
@@ -292,6 +301,8 @@ cases = [
   Case('1>unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]>1', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('Void>0', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('1 > any [0, 1, 2]', UNE_RT_INT, '1', []),
+  Case('1 > all [0, 1, 2]', UNE_RT_INT, '0', []),
   
   # GEQ
   Case('1>=1', UNE_RT_INT, '1', []),
@@ -304,6 +315,8 @@ cases = [
   Case('1>=unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]>=1', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('Void>=0', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('1 >= any [0, 1, 2]', UNE_RT_INT, '1', []),
+  Case('1 >= all [0, 1, 2]', UNE_RT_INT, '0', []),
   
   # LSS
   Case('2<1', UNE_RT_INT, '0', []),
@@ -316,6 +329,8 @@ cases = [
   Case('1<unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]<1', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('Void<0', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('1 < any [0, 1, 2]', UNE_RT_INT, '1', []),
+  Case('1 < all [0, 1, 2]', UNE_RT_INT, '0', []),
   
   # LEQ
   Case('1<=1', UNE_RT_INT, '1', []),
@@ -328,6 +343,8 @@ cases = [
   Case('1<=unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('[1]<=1', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('Void<=0', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  Case('1 <= any [0, 1, 2]', UNE_RT_INT, '1', []),
+  Case('1 <= all [0, 1, 2]', UNE_RT_INT, '0', []),
   
   # COVER
   Case('1/0 cover 46', UNE_RT_INT, '46', []),
