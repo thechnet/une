@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-06-19
+Modified 2023-06-21
 */
 
 /* Header-specific includes. */
@@ -124,10 +124,7 @@ une_parser__(une_parse_expression)
   }
   
   une_node *cop = une_node_create(UNE_NT_COP);
-  cop->pos = (une_position){
-    .start = cond->pos.start,
-    .end = exp_false->pos.end
-  };
+  cop->pos = une_position_between(cond->pos, exp_false->pos);
   cop->content.branch.a = cond;
   cop->content.branch.b = exp_true;
   cop->content.branch.c = exp_false;
@@ -266,7 +263,7 @@ une_parser__(une_parse_accessor)
       une_node_free(base, false);
       return NULL;
     }
-    accessor->pos.start = base->pos.start;
+    accessor->pos = une_position_set_start(accessor->pos, base->pos);
     accessor->content.branch.a = base;
     base = accessor;
   }
@@ -318,7 +315,7 @@ une_parser__(une_parse_atom)
     
     case UNE_TT_LPAR: {
       LOGPARSE(L"expression", now(&ps->in));
-      size_t pos_start = now(&ps->in).pos.start;
+      une_position pos_first = now(&ps->in).pos;
       pull(&ps->in);
       while (now(&ps->in).type == UNE_TT_NEW)
         pull(&ps->in);
@@ -332,10 +329,7 @@ une_parser__(une_parse_atom)
         *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
         return NULL;
       }
-      expression->pos = (une_position){
-        .start = pos_start,
-        .end = now(&ps->in).pos.end
-      };
+      expression->pos = une_position_between(pos_first, now(&ps->in).pos);
       pull(&ps->in);
       return expression;
     }
@@ -416,8 +410,8 @@ une_parser__(une_parse_str)
     
     /* Combine nodes. */
     une_node *string_with_expression = une_node_create(UNE_NT_CONCATENATE);
-    string_with_expression->pos.start = expression->pos.start;
-    string_with_expression->pos.end = post_expression_string->pos.end;
+    string_with_expression->pos = une_position_between(expression->pos, post_expression_string->pos);
+    string_with_expression->pos = une_position_between(expression->pos, post_expression_string->pos);
     string_with_expression->content.branch.a = expression;
     string_with_expression->content.branch.b = post_expression_string;
     
@@ -506,7 +500,7 @@ une_parser__(une_parse_function)
   LOGPARSE(L"", now(&ps->in));
   
   /* function. */
-  size_t pos_start = now(&ps->in).pos.start;
+  une_position pos_first = now(&ps->in).pos;
   void *definition_file = now(&ps->in).value._vp;
   pull(&ps->in);
   
@@ -523,10 +517,7 @@ une_parser__(une_parse_function)
   }
   
   une_node *function = une_node_create(UNE_NT_FUNCTION);
-  function->pos = (une_position){
-    .start = pos_start,
-    .end = body->pos.end
-  };
+  function->pos = une_position_between(pos_first, body->pos);
   function->content.branch.a = params;
   function->content.branch.b = body;
   function->content.branch.c = definition_file;
@@ -537,7 +528,7 @@ une_parser__(une_parse_for)
 {
   LOGPARSE(L"", now(&ps->in));
   
-  size_t pos_start = now(&ps->in).pos.start;
+  une_position pos_first = now(&ps->in).pos;
   
   /* For. */
   pull(&ps->in);
@@ -570,10 +561,7 @@ une_parser__(une_parse_for)
     return NULL;
   }
   
-  loop->pos = (une_position){
-    .start = pos_start,
-    .end = peek(&ps->in, -1).pos.end
-  };
+  loop->pos = une_position_between(pos_first, peek(&ps->in, -1).pos);
   loop->content.branch.a = counter;
   if (loop->type == UNE_NT_FOR_RANGE)
     loop->content.branch.d = body;
@@ -638,7 +626,7 @@ une_parser__(une_parse_while)
 {
   LOGPARSE(L"", now(&ps->in));
   
-  size_t pos_start = now(&ps->in).pos.start;
+  une_position pos_first = now(&ps->in).pos;
   
   /* While. */
   pull(&ps->in);
@@ -658,10 +646,7 @@ une_parser__(une_parse_while)
   }
   
   une_node *node = une_node_create(UNE_NT_WHILE);
-  node->pos = (une_position){
-    .start = pos_start,
-    .end = body->pos.end
-  };
+  node->pos = une_position_between(pos_first, body->pos);
   node->content.branch.a = condition;
   node->content.branch.b = body;
   return node;
@@ -671,7 +656,7 @@ une_parser__(une_parse_if)
 {
   LOGPARSE(L"", now(&ps->in));
   
-  size_t pos_start = now(&ps->in).pos.start;
+  une_position pos_first = now(&ps->in).pos;
   
   /* If || Elif. */
   pull(&ps->in);
@@ -705,7 +690,7 @@ une_parser__(une_parse_if)
     pull(&ps->in);
 
   une_node *ifstmt = une_node_create(UNE_NT_IF);
-  ifstmt->pos.start = pos_start;
+  ifstmt->pos = une_position_set_start(ifstmt->pos, pos_first);
   ifstmt->content.branch.a = predicate;
   ifstmt->content.branch.b = consequent;
 
@@ -737,7 +722,7 @@ une_parser__(une_parse_assert)
 {
   LOGPARSE(L"", now(&ps->in));
   
-  size_t pos_start = now(&ps->in).pos.start;
+  une_position pos_first = now(&ps->in).pos;
   
   /* Assert. */
   pull(&ps->in);
@@ -748,7 +733,7 @@ une_parser__(une_parse_assert)
     return NULL;
 
   une_node *assert_ = une_node_create(UNE_NT_ASSERT);
-  assert_->pos.start = pos_start;
+  assert_->pos = une_position_set_start(assert_->pos, pos_first);
   assert_->pos.end = assertion->pos.end;
   assert_->content.branch.a = assertion;
   return assert_;
@@ -862,8 +847,7 @@ une_parser__(une_parse_assignment_or_expr_stmt)
   une_node *assignment_or_expression_statement;
   if (assignment_operation) {
     assignment_or_expression_statement = une_node_create(assignment_operation);
-    assignment_or_expression_statement->pos.start = assignee->pos.start;
-    assignment_or_expression_statement->pos.end = expression->pos.end;
+    assignment_or_expression_statement->pos = une_position_between(assignee->pos, expression->pos);
     assignment_or_expression_statement->content.branch.a = assignee;
     assignment_or_expression_statement->content.branch.b = expression;
   } else {
@@ -905,7 +889,7 @@ une_parser__(une_parse_assignee)
       une_node_free(base, false);
       return NULL;
     }
-    accessor->pos.start = base->pos.start;
+    accessor->pos = une_position_set_start(accessor->pos, base->pos);
     accessor->content.branch.a = base;
     base = accessor;
   }
@@ -1023,8 +1007,7 @@ une_parser__(une_parse_object_association)
   }
   
   une_node *object_association = une_node_create(UNE_NT_OBJECT_ASSOCIATION);
-  object_association->pos.start = name->pos.start;
-  object_association->pos.end = expression->pos.end;
+  object_association->pos = une_position_between(name->pos, expression->pos);
   object_association->content.branch.a = name;
   object_association->content.branch.b = expression;
   return object_association;
@@ -1042,7 +1025,7 @@ une_parser__(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)
 {
   LOGPARSE(L"", now(&ps->in));
   
-  size_t pos_start = now(&ps->in).pos.start;
+  une_position pos_first = now(&ps->in).pos;
   
   pull(&ps->in);
   
@@ -1051,10 +1034,7 @@ une_parser__(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)
     return NULL;
   
   une_node *unop = une_node_create(node_t);
-  unop->pos = (une_position){
-    .start = pos_start,
-    .end = node->pos.end
-  };
+  unop->pos = une_position_between(pos_first, node->pos);
   unop->content.branch.a = node;
   return unop;
 }
@@ -1086,10 +1066,7 @@ une_parser__(une_parse_binary_operation,
     }
 
     une_node *new_left = une_node_create(type);
-    new_left->pos = (une_position){
-      .start = left->pos.start,
-      .end = right->pos.end
-    };
+    new_left->pos = une_position_between(left->pos, right->pos);
     new_left->content.branch.a = left;
     new_left->content.branch.b = right;
     left = new_left;
@@ -1107,7 +1084,7 @@ une_parser__(une_parse_sequence,
   LOGPARSE(L"", now(&ps->in));
   
   /* Begin Sequence. */
-  size_t pos_start = now(&ps->in).pos.start;
+  une_position pos_first = now(&ps->in).pos;
   if (tt_begin != UNE_TT_none__) {
     if (now(&ps->in).type != tt_begin) {
       *error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
@@ -1178,10 +1155,7 @@ une_parser__(une_parse_sequence,
   counter->content.value._int = (une_int)sequence_index-1;
   sequence[0] = counter;
   une_node *node = une_node_create(node_type);
-  node->pos = (une_position){
-    .start = pos_start,
-    .end = now(&ps->in).pos.end
-  };
+  node->pos = une_position_between(pos_first, now(&ps->in).pos);
   node->content.value._vpp = (void**)sequence;
   
   /* End Sequence. */
@@ -1197,7 +1171,7 @@ une_parser__(une_parse_phony,
 )
 {
   une_node *phony = une_node_create(node_type);
-  phony->pos.start = now(&ps->in).pos.start;
+  phony->pos = une_position_set_start(phony->pos, now(&ps->in).pos);
   phony->pos.end = phony->pos.start;
   return phony;
 }

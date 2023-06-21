@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-06-19
+Modified 2023-06-21
 */
 
 /* Header-specific includes. */
@@ -85,7 +85,7 @@ une_node *une_node_create(une_node_type type)
   /* Initialize new une_node. */
   *node = (une_node){
     .type = type,
-    .pos = (une_position){0, 0},
+    .pos = (une_position){ 0 },
     .content.branch.a = NULL,
     .content.branch.b = NULL,
     .content.branch.c = NULL,

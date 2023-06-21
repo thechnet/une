@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-05-07
+Modified 2023-06-21
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -276,6 +276,28 @@ une_range une_range_from_relative_indices(une_result begin, une_result end, size
     .guard = (size_t)absolute_end,
     .length = length
   };
+}
+
+/*
+Merge a start and end une_position.
+*/
+une_position une_position_between(une_position first, une_position last)
+{
+  return (une_position){
+    .start = first.start,
+    .end = last.end,
+    .line = first.line
+  };
+}
+
+/*
+A start and line to a une_position.
+*/
+une_position une_position_set_start(une_position subject, une_position begin)
+{
+  subject.start = begin.start;
+  subject.line = begin.line;
+  return subject;
 }
 
 #ifdef _WIN32

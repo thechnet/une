@@ -1,6 +1,6 @@
 /*
 lexer_state.c - Une
-Modified 2023-02-10
+Modified 2023-06-21
 */
 
 /* Header-specific includes. */
@@ -20,6 +20,7 @@ une_lexer_state une_lexer_state_create(bool read_from_file, char *path, wchar_t 
     .peek = NULL,
     .now = NULL,
     .in_str_expression = false,
-    .begin_str_expression = false
+    .begin_str_expression = false,
+    .line = 1,
   };
 }

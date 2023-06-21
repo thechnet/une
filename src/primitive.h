@@ -102,6 +102,7 @@ typedef double une_flt;
 typedef struct une_position_ {
   size_t start;
   size_t end;
+  size_t line;
 } une_position;
 
 typedef union une_value_ {

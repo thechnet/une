@@ -33,7 +33,7 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     ls->peek = &une_lex_wfile_peek__;
     ls->now = &une_lex_wfile_now__;
     if (!une_file_exists(ls->path)) {
-      *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, ((une_position){ .start=0, .end=0 }));
+      *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, ((une_position){ 0 }));
       return NULL;
     }
     ls->in = une_istream_wfile_create(ls->path);
@@ -70,7 +70,11 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
       ls->in_str_expression = true;
       push(&out, (une_token){
         .type = UNE_TT_STR_EXPRESSION_BEGIN,
-        .pos = (une_position){ .start = (size_t)ls->in.index-1, .end = (size_t)ls->in.index },
+        .pos = (une_position){
+          .start = (size_t)ls->in.index-1,
+          .end = (size_t)ls->in.index,
+          .line = ls->line
+        },
         .value._vp = 0
       });
     }
@@ -80,12 +84,20 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
       if (out.index > -1 && tkpeek(&out, -1)->type != UNE_TT_NEW)
         push(&out, (une_token){
           .type = UNE_TT_NEW,
-          .pos = (une_position){ .start = (size_t)ls->in.index, .end = (size_t)ls->in.index+1 },
+          .pos = (une_position){
+            .start = (size_t)ls->in.index,
+            .end = (size_t)ls->in.index+1,
+            .line = ls->line
+          },
           .value._vp = NULL
         });
       push(&out, (une_token){
         .type = UNE_TT_EOF,
-        .pos = (une_position){ .start = (size_t)ls->in.index, .end = (size_t)ls->in.index+1 },
+        .pos = (une_position){
+          .start = (size_t)ls->in.index,
+          .end = (size_t)ls->in.index+1,
+          .line = ls->line
+        },
         .value._vp = NULL
       });
       break;
@@ -112,7 +124,11 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     if (ls->in_str_expression && ls->now(&ls->in) == L'}') {
       push(&out, (une_token){
         .type = UNE_TT_STR_EXPRESSION_END,
-        .pos = (une_position){ .start = (size_t)ls->in.index, .end = (size_t)ls->in.index+1 },
+        .pos = (une_position){
+          .start = (size_t)ls->in.index,
+          .end = (size_t)ls->in.index+1,
+          .line = ls->line
+        },
         .value._vp = 0
       });
       ls->in_str_expression = false;
@@ -136,14 +152,23 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     /* NEW. */
     if (UNE_LEXER_WC_IS_HARD_WHITESPACE(ls->now(&ls->in))) {
       size_t idx_left = (size_t)ls->in.index;
-      while (UNE_LEXER_WC_IS_WHITESPACE(ls->now(&ls->in)))
+      size_t lines = 0;
+      while (UNE_LEXER_WC_IS_WHITESPACE(ls->now(&ls->in))) {
+        if (ls->now(&ls->in) == '\n')
+          lines++;
         ls->pull(&ls->in);
+      }
       if (out.index >= 0 && tkpeek(&out, -1)->type != UNE_TT_NEW)
         push(&out, (une_token){
           .type = UNE_TT_NEW,
-          .pos = (une_position){ .start = idx_left, .end = (size_t)ls->in.index },
+          .pos = (une_position){
+            .start = idx_left,
+            .end = (size_t)ls->in.index,
+            .line = ls->line
+          },
           .value._vp = 0
         });
+      ls->line += lines;
       continue;
     }
     
@@ -156,7 +181,11 @@ une_token *une_lex(une_error *error, une_lexer_state *ls)
     }
     
     /* Unexpected character. */
-    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){(size_t)ls->in.index, (size_t)ls->in.index+1}));
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+      .start = (size_t)ls->in.index,
+      .end = (size_t)ls->in.index+1,
+      .line = ls->line
+    }));
     push(&out, une_token_create(UNE_TT_none__));
     continue;
   }
@@ -180,8 +209,11 @@ une_lexer__(une_lex_operator)
           ls->pull(&ls->in);
         return (une_token){
           .type = tt,
-          .pos.start = (size_t)starting_index,
-          .pos.end = (size_t)ls->in.index
+          .pos = (une_position){
+            .start = (size_t)starting_index,
+            .end = (size_t)ls->in.index,
+            .line = ls->line
+          }
         };
       }
     }
@@ -218,7 +250,11 @@ une_lexer__(une_lex_num)
       assert(false);
     une_token tk = (une_token){
       .type = UNE_TT_INT,
-      .pos = (une_position){idx_start, (size_t)ls->in.index},
+      .pos = (une_position){
+        .start = idx_start,
+        .end = (size_t)ls->in.index,
+        .line = ls->line
+      },
       .value._int = int_
     };
     free(buffer);
@@ -247,7 +283,11 @@ une_lexer__(une_lex_num)
   
   /* No digits after decimal point. */
   if (ls->in.index == (ptrdiff_t)idx_before_decimals) {
-    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){(size_t)ls->in.index, (size_t)ls->in.index+1}));
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+      .start = (size_t)ls->in.index,
+      .end = (size_t)ls->in.index+1,
+      .line = ls->line
+    }));
     free(buffer);
     return une_token_create(UNE_TT_none__);
   }
@@ -259,7 +299,11 @@ une_lexer__(une_lex_num)
     assert(false);
   une_token tk = (une_token){
     .type = UNE_TT_FLT,
-    .pos = (une_position){idx_start, (size_t)ls->in.index},
+    .pos = (une_position){
+      .start = idx_start,
+      .end = (size_t)ls->in.index,
+      .line = ls->line
+    },
     .value._flt = flt
   };
   free(buffer);
@@ -273,6 +317,7 @@ une_lexer__(une_lex_str)
   wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
   verify(buffer);
   size_t idx_start = (size_t)ls->in.index;
+  size_t line_start = ls->line; /* Strings can contain newlines. */
   bool escape = false;
   size_t buffer_index = 0;
   
@@ -286,13 +331,21 @@ une_lexer__(une_lex_str)
     
     ls->pull(&ls->in);
     
+    /* Correct lexer state line. */
+    if (ls->now(&ls->in) == L'\n')
+      ls->line++;
+    
     /* Ignore carriage return. */
     if (ls->now(&ls->in) == L'\r')
       continue;
     
     /* Premature end of string. */
     if (ls->now(&ls->in) == WEOF) {
-      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){(size_t)ls->in.index, (size_t)ls->in.index+1}));
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+        .start = (size_t)ls->in.index,
+        .end = (size_t)ls->in.index+1,
+        .line = ls->line
+      }));
       free(buffer);
       return une_token_create(UNE_TT_none__);
     }
@@ -319,7 +372,11 @@ une_lexer__(une_lex_str)
         case L'\n':
           continue;
         default: {
-          *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){(size_t)ls->in.index, (size_t)ls->in.index+1}));
+          *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+            .start = (size_t)ls->in.index,
+            .end = (size_t)ls->in.index+1,
+            .line = ls->line
+          }));
           free(buffer);
           return une_token_create(UNE_TT_none__);
         }
@@ -341,7 +398,11 @@ une_lexer__(une_lex_str)
     /* Beginning of string expression (end of this string). */
     if (ls->now(&ls->in) == L'{') {
       if (ls->in_str_expression) {
-        *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){(size_t)ls->in.index, (size_t)ls->in.index+1}));
+        *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+          .start = (size_t)ls->in.index,
+          .end = (size_t)ls->in.index+1,
+          .line = ls->line
+        }));
         free(buffer);
         return une_token_create(UNE_TT_none__);
       }
@@ -357,7 +418,11 @@ une_lexer__(une_lex_str)
   buffer[buffer_index] = L'\0';
   return (une_token){
     .type = UNE_TT_STR,
-    .pos = (une_position){idx_start, (size_t)ls->in.index},
+    .pos = (une_position){
+      .start = idx_start,
+      .end = (size_t)ls->in.index,
+      .line = line_start
+    },
     /* DOC: Memory Management: This is where strings referenced during tokenization and parsing are constructed. */
     .value._wcs = buffer,
   };
@@ -408,7 +473,11 @@ une_lexer__(une_lex_keyword_or_identifier)
   keyword_or_identifier_defined:
   if (tk.type != UNE_TT_ID)
     free(buffer);
-  tk.pos = (une_position){ .start = idx_start, .end = (size_t)ls->in.index };
+  tk.pos = (une_position){
+    .start = idx_start,
+    .end = (size_t)ls->in.index,
+    .line = ls->line
+  };
   
   return tk;
 }

@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2023-05-07
+Modified 2023-06-21
 */
 
 #ifndef UNE_TOOLS_H
@@ -59,6 +59,9 @@ une_int une_clamp(une_int num, une_int min, une_int max);
 
 une_range une_range_from_relative_index(une_result index, size_t scope);
 une_range une_range_from_relative_indices(une_result begin, une_result end, size_t scope);
+
+une_position une_position_between(une_position first, une_position last);
+une_position une_position_set_start(une_position subject, une_position begin);
 
 #ifdef _WIN32
 void une_win_vt_proc(bool enable);
