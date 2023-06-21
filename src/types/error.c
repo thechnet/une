@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-06-19
+Modified 2023-06-21
 */
 
 /* Header-specific includes. */
@@ -137,7 +137,7 @@ void une_error_display(une_error *error, une_lexer_state *ls)
       if (ls->read_from_file)
         name = ls->path;
       else
-        name = UNE_COMMAND_LINE_NAME;
+        name = UNE_SOURCE_PLACEHOLDER;
       position = error->pos;
     }
     

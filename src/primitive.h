@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-05-15
+Modified 2023-06-21
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -31,7 +31,7 @@ Modified 2023-05-15
 *** Constants.
 */
 #define UNE_VERSION UNE_VERSION_MAJOR L"." UNE_VERSION_MINOR L"." UNE_VERSION_PATCH
-#define UNE_COMMAND_LINE_NAME "<args>"
+#define UNE_SOURCE_PLACEHOLDER "<anonymous>"
 #define UNE_SWITCH_SCRIPT "-s"
 #define UNE_SWITCH_INTERACTIVE "-i"
 #define UNE_INTERACTIVE_PREFIX L">>> "
