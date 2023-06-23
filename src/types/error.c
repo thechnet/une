@@ -14,7 +14,7 @@ Error message table.
 */
 const wchar_t *une_error_message_table[] = {
   L"No error defined! (Internal Error)",
-  L"Syntax error.",
+  L"Syntax.",
   L"Break outside loop.",
   L"Continue outside loop.",
   L"Symbol not defined.",
@@ -24,7 +24,7 @@ const wchar_t *une_error_message_table[] = {
   L"Wrong number of arguments.",
   L"File not found.",
   L"Encoding, conversion, or pattern error.",
-  L"Type error.",
+  L"Type.",
   L"Assertion not met.",
   L"Misplaced 'any' or 'all'.",
   L"Unknown error! (Internal Error)",
