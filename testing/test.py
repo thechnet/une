@@ -19,6 +19,7 @@ class Case:
 # Options
 SKIP_UNTIL = int(argv[1]) if len(argv) > 1 and argv[1] != "enumerate_cases" else 0 # 0, 2
 HIDE_OUTPUT = True
+SHOW_ERRORS = False
 CLEAR = True
 STOP_AT_FAIL = True
 ENUMERATE_CASES = True if len(argv) > 1 and argv[1] == "enumerate_cases" else False
@@ -672,10 +673,12 @@ i = 0
 for i, case in enumerate(cases):
   if i+1 < SKIP_UNTIL:
     continue
+  une_no_output = '1>' + ('nul' if is_cmd_exe() else '/dev/null') + f' 2>&1 {UNE}'
+  une_with_output = UNE
   if HIDE_OUTPUT and not ATTR_NEVER_HIDE_OUTPUT in case.attributes:
-    une = '1>' + ('nul' if is_cmd_exe() else '/dev/null') + f' 2>&1 {UNE}'
+    une = une_no_output
   else:
-    une = UNE
+    une = une_with_output
   i += 1
   passed = True
   if ATTR_DIRECT_ARG in case.attributes:
@@ -697,6 +700,8 @@ for i, case in enumerate(cases):
         passed = False
         print(f'\33[31m{command}\33[0m')
     if passed or not STOP_AT_FAIL:
+      if SHOW_ERRORS and case.result_type == UNE_RT_ERROR:
+        une = une_with_output
       script = case.input
       if case.result_type != UNE_RT_ERROR and not ATTR_NO_IMPLICIT_RETURN in case.attributes:
         script = f'return {script}'
