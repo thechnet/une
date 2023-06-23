@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.13.0] - 2023-06-23
 
 ### Added
 - `assert` statement.  
@@ -640,9 +640,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.13.0...HEAD
 
 <!-- Releases -->
+[0.13.0]: https://github.com/thechnet/une/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/thechnet/une/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/thechnet/une/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/thechnet/une/compare/v0.9.0...v0.10.0
