@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2023-05-13
+Modified 2023-06-23
 */
 
 /* Header-specific includes. */
@@ -63,7 +63,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   if (existing_interpreter_state) {
     une_is = existing_interpreter_state;
   } else {
-    _is = une_interpreter_state_create();
+    _is = une_interpreter_state_create(read_from_file ? path : NULL);
     une_is = &_is;
   }
   
@@ -141,7 +141,7 @@ une_result une_run_bare(une_error *error, char *path, wchar_t *text)
   
   /* Interpret. */
   if (!une_is->context)
-    *une_is = une_interpreter_state_create();
+    *une_is = une_interpreter_state_create(path);
   une_result result = une_interpret(error, ast);
   
   /* Finalize. */

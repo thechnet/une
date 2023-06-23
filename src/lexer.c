@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-06-21
+Modified 2023-06-23
 */
 
 /* Header-specific includes. */
@@ -452,7 +452,7 @@ une_lexer__(une_lex_keyword_or_identifier)
   une_token tk;
   if (!wcscmp(buffer, une_token_table[UNE_TT_FUNCTION-1])) {
     tk.type = UNE_TT_FUNCTION;
-    tk.value._vp = (void*)(ls->read_from_file ? ls->path : UNE_SOURCE_PLACEHOLDER);
+    tk.value._vp = (void*)(ls->read_from_file ? ls->path : NULL);
     goto keyword_or_identifier_defined;
   }
   for (une_token_type tt=UNE_R_BGN_KEYWORD_TOKENS; tt<=UNE_R_END_KEYWORD_TOKENS; tt++)

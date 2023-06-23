@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Modified 2023-06-19
+Modified 2023-06-23
 */
 
 #ifndef UNE_ERROR_H
@@ -43,6 +43,17 @@ typedef struct une_error_ {
 } une_error;
 
 /*
+Holds a trace.
+*/
+typedef struct une_trace_ {
+  char *file;
+  une_position point;
+  wchar_t *function_label;
+  char *function_file;
+  une_position function_point;
+} une_trace;
+
+/*
 *** Interface.
 */
 
@@ -65,6 +76,8 @@ Populate a une_error.
 
 une_error une_error_create(void);
 
+size_t une_error_trace(une_error *error, une_lexer_state *ls, une_trace **out);
+void une_error_trace_print(une_trace trace);
 void une_error_display(une_error *error, une_lexer_state *ls);
 
 #endif /* !UNE_ERROR_H */

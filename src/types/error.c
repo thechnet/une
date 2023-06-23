@@ -1,16 +1,13 @@
 /*
 error.c - Une
-Modified 2023-06-21
+Modified 2023-06-23
 */
 
 /* Header-specific includes. */
 #include "error.h"
 
 /* Implementation-specific includes. */
-#include "../stream.h"
 #include "../lexer.h"
-
-#define ERROR_MESSAGE_TAB_WIDTH 8
 
 /*
 Error message table.
@@ -61,168 +58,136 @@ une_static__ const wchar_t *une_error_type_to_wcs(une_error_type type)
   return une_error_message_table[type];
 }
 
-/*
-Display error.
-*/
+size_t une_error_trace(une_error *error, une_lexer_state *ls, une_trace **out)
+{
+  une_context **lineage;
+  size_t lineage_length = une_context_get_lineage(une_is->context, &lineage);
+  
+  size_t traces_length = lineage_length;
+  une_trace *traces = malloc(traces_length*sizeof(*traces));
+  verify(traces);
+  for (size_t i=0; i<lineage_length-1; i++) {
+    une_context *subject = lineage[lineage_length-i-2];
+    char *file;
+    if (subject->is_marker_context) {
+      /* Use marker contexts to mark script() and eval() calls. */
+      assert(subject->parent);
+      file = subject->parent->has_callee ? subject->parent->callee_definition_file : subject->parent->creation_file;
+    } else {
+      file = subject->creation_file;
+    }
+    traces[i] = (une_trace){
+      .file = file,
+      .point = subject->creation_point,
+      .function_label = subject->parent->callee_label,
+      .function_file = subject->parent->callee_definition_file,
+      .function_point = subject->parent->callee_definition_point
+    };
+  }
+  
+  traces[traces_length-1] = (une_trace){
+    .file = une_is->context->has_callee ? une_is->context->callee_definition_file : une_is->context->creation_file,
+    .point = error->pos,
+    .function_label = une_is->context->callee_label,
+    .function_file = une_is->context->callee_definition_file,
+    .function_point = une_is->context->callee_definition_point
+  };
+  
+  free(lineage);
+  *out = traces;
+  return traces_length;
+}
 
-UNE_ISTREAM_ARRAY_PULLER_VAL(une_error_display_array_pull__, wint_t, wint_t, WEOF, true)
-UNE_ISTREAM_ARRAY_ACCESS_VAL(une_error_display_array_now__, wint_t, wint_t, WEOF, true)
-UNE_ISTREAM_ARRAY_PEEKER_VAL(une_error_display_array_peek__, wint_t, wint_t, WEOF, true)
-UNE_ISTREAM_WFILE_PULLER(une_error_display_wfile_pull__)
-UNE_ISTREAM_WFILE_ACCESS(une_error_display_wfile_now__)
-UNE_ISTREAM_WFILE_PEEKER(une_error_display_wfile_peek__)
-UNE_OSTREAM_PUSHER(une_error_display_ctx_push__, une_context*)
+void une_error_trace_print(une_trace trace)
+{
+  #define UNE_ERROR_TRACE_PRINT_PREFIX L"  "
+  if (!trace.file)
+    return;
+  assert(une_file_exists(trace.file));
+  FILE *f = fopen(trace.file, UNE_FOPEN_RFLAGS);
+  assert(f);
+  
+  /* Skip to correct line. */
+  size_t line_start = 0;
+  size_t line = 1;
+  wint_t wc = L' '; /* Initialize as whitespace in case no lines are skipped. */
+  while (line < trace.point.line) {
+    wc = fgetwc(f);
+    if (wc == L'\n')
+      line++;
+    assert(wc != WEOF);
+    line_start++;
+  }
+  
+  /* Skip whitespace at start of line. */
+  size_t text_start = line_start - 1 /* Account for first skipped newline. */;
+  while (UNE_LEXER_WC_IS_WHITESPACE(wc) || UNE_LEXER_WC_IS_INVISIBLE(wc)) {
+    wc = fgetwc(f);
+    assert(wc != WEOF);
+    text_start++;
+  }
+  
+  /* Print code. */
+  size_t text_end = text_start;
+  fputws(UNE_ERROR_TRACE_PRINT_PREFIX, UNE_ERROR_STREAM);
+  while (wc != L'\n' && wc != WEOF) {
+    putwc(wc, UNE_ERROR_STREAM);
+    wc = fgetwc(f);
+    text_end++;
+  }
+  fclose(f);
+  putwc(L'\n', UNE_ERROR_STREAM);
+  
+  /* Underline position. */
+  fputws(UNE_COLOR_POSITION UNE_ERROR_TRACE_PRINT_PREFIX, UNE_ERROR_STREAM);
+  for (size_t i=text_start; i<trace.point.start; i++)
+    putwc(L' ', UNE_ERROR_STREAM);
+  for (size_t i=trace.point.start; i<trace.point.end && i<=text_end; i++)
+    putwc(L'~', UNE_ERROR_STREAM);
+  if (trace.point.end > text_end + 1)
+    fputws(L"\b+", UNE_ERROR_STREAM);
+  fputws(RESET L"\n", UNE_ERROR_STREAM);
+  
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+  fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Want: line %zu, characters %zu-%zu\n", trace.point.line, trace.point.start, trace.point.end);
+  fwprintf(UNE_ERROR_STREAM, L"Have: %zu (line), %zu (text), %zu (end)" RESET L"\n", line_start, text_start, text_end);
+  #endif
+}
 
 void une_error_display(une_error *error, une_lexer_state *ls)
 {
-  /* Setup. */
-  size_t invisible_characters = 0;
-  size_t additional_characters = 0;
-  une_istream text;
-  wint_t (*pull)(une_istream*);
-  wint_t (*peek)(une_istream*, ptrdiff_t);
-  wint_t (*now)(une_istream*);
-  void (*reset)(une_istream*);
-  const wchar_t *error_info_as_wcs; /* Predeclare to allow label jump. */
-  une_position error_line = { .start = 0, .end = 0 };
-
-  /* Skip preview if not available. */
-  if (error->type == UNE_ET_FILE_NOT_FOUND && error->pos.start == 0 && error->pos.end == 0)
-    goto skip_preview;
-
-  /* Get context traceback. */
-  une_context **contexts = malloc(UNE_SIZE_EXPECTED_TRACEBACK_DEPTH*sizeof(*contexts));
-  verify(contexts);
-  une_ostream s_contexts = une_ostream_create((void*)contexts, UNE_SIZE_EXPECTED_TRACEBACK_DEPTH, sizeof(*contexts), true);
-  contexts = NULL; /* This pointer can turn stale after pushing. */
-  void (*push)(une_ostream*, une_context*) = &une_error_display_ctx_push__;
-  une_context *current_context = une_is->context;
-  push(&s_contexts, NULL);
-  while (current_context != NULL) {
-    push(&s_contexts, current_context);
-    current_context = current_context->parent;
-  }
-  contexts = (une_context**)s_contexts.array; /* Reobtain up-to-date pointer. */
-  contexts[0] = contexts[(s_contexts.index)--];
-  contexts = NULL;
-
-  /* Setup stream. */
-  if (ls->read_from_file) {
-    text = une_istream_wfile_create(ls->path);
-    pull = &une_error_display_wfile_pull__;
-    peek = &une_error_display_wfile_peek__;
-    now = &une_error_display_wfile_now__;
-    reset = &une_istream_wfile_reset;
-  } else {
-    text = une_istream_array_create((void*)ls->text, wcslen(ls->text));
-    pull = &une_error_display_array_pull__;
-    peek = &une_error_display_array_peek__;
-    now = &une_error_display_array_now__;
-    reset = &une_istream_array_reset;
-  }
-
-  /* Print traceback. */
-  contexts = (une_context**)s_contexts.array; /* Reobtain up-to-date pointer. */
-  for (int i=0; i<=s_contexts.index; i++) {
-    
-    /* Get stored information. */
-    char *name;
-    une_position position;
-    bool main_context = false;
-    if (contexts[i]->entry_file) {
-      name = contexts[i]->entry_file;
-      position = contexts[i]->entry_point;
-    } else {
-      main_context = true;
-      if (ls->read_from_file)
-        name = ls->path;
-      else
-        name = UNE_SOURCE_PLACEHOLDER;
-      position = error->pos;
-    }
-    
-    /* Compute line number. */
-    int line = 1;
-    size_t line_begin = 0, line_end = 0;
-    assert(position.start != position.end);
-    reset(&text);
-    while (true) {
-      if (pull(&text) == WEOF)
-        break;
-      if (main_context && text.index < (ptrdiff_t)position.end) {
-        if (UNE_LEXER_WC_IS_INVISIBLE(now(&text)))
-          invisible_characters++;
-        if (now(&text) == L'\t')
-          additional_characters += ERROR_MESSAGE_TAB_WIDTH-1;
-      }
-      if (text.index >= (ptrdiff_t)position.start && (peek(&text, 1) == L'\n' || peek(&text, 1) == WEOF))
-        break;
-      if (now(&text) == L'\n') {
-        line_begin = (size_t)text.index+1;
-        if (main_context) {
-          invisible_characters = 0;
-          additional_characters = 0;
-        }
-        line++;
-      }
-    }
-    line_end = (size_t)text.index;
-    
-    /* Print position. */
-    if (main_context) {
-      error_line.start = line_begin;
-      error_line.end = line_end;
-      wprintf(UNE_COLOR_FAIL L"Error in file \"%hs\" at line %d", name, line);
-      #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
-      wprintf(UNE_COLOR_HINT L"\n(%hs @ %d)\n", error->meta_file, error->meta_line);
-      wprintf(L"(invisible_characters: %d)\n", invisible_characters);
-      wprintf(L"(additional_characters: %d)\n", additional_characters);
-      wprintf(L"(error_line.start/end: %d, %d)", error_line.start, error_line.end);
-      #endif
-    } else {
-      wprintf(L",\nIn function {\"%hs\":%d}", name, line);
-    }
-    
-    /* Print more detailed information. */
-    #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
-    wprintf(UNE_COLOR_HINT L"\n(position.start/end:   %d, %d)\n", position.start, position.end);
-    wprintf(L"(line_begin/end:       %d, %d)" UNE_COLOR_FAIL, line_begin, line_end);
-    #endif
-  }
-  wprintf(L":\n" RESET);
+  une_trace *traces = NULL;
   
-  free(s_contexts.array);
+  if (error->type == UNE_ET_FILE_NOT_FOUND && error->pos.end == 0)
+    goto skip_traceback;
   
-  /* Print text at location. */
-  if (ls->read_from_file)
-    une_istream_wfile_reset(&text);
-  else
-    une_istream_array_reset(&text);
-  while (text.index+1 < (ptrdiff_t)error_line.start)
-    if (pull(&text) == WEOF)
-      break;
-  while (text.index < (ptrdiff_t)error_line.end) {
-    if (pull(&text) == WEOF)
-      break;
-    putwc((wchar_t)now(&text), stdout);
+  size_t traces_length = une_error_trace(error, ls, &traces);
+  
+  for (size_t i=0; i<traces_length; i++) {
+    char *file = traces[i].file ? traces[i].file : UNE_SOURCE_PLACEHOLDER;
+    fwprintf(UNE_ERROR_STREAM, BOLD L"In file \"%hs\" at line %zu", file, traces[i].point.line);
+    if (traces[i].function_file) {
+      fputws(L", in", UNE_ERROR_STREAM);
+      if (traces[i].function_label)
+        fwprintf(UNE_ERROR_STREAM, L" %ls", traces[i].function_label);
+      if (
+        !traces[i].function_label
+        #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+        || true
+        #endif
+      )
+        fwprintf(UNE_ERROR_STREAM, L" (\"%hs\": %zu)", traces[i].function_file, traces[i].function_point.line);
+    }
+    fputws(L":" RESET L"\n", UNE_ERROR_STREAM);
+    une_error_trace_print(traces[i]);
   }
-  putwc(L'\n', stdout);
-
-  /* Underline error position within line. */
-  wprintf(UNE_COLOR_FAIL);
-  for (size_t i=error->pos.start-error_line.start-invisible_characters+additional_characters; i>0; i--)
-    putwc(L' ', stdout);
-  for (size_t i=0; i<error->pos.end-error->pos.start; i++)
-    putwc(L'~', stdout);
-  putwc(L'\n', stdout);
-
-  /* Close text stream. */
-  if (ls->read_from_file)
-    une_istream_wfile_free(text);
+  free(traces);
   
-  skip_preview:
-
-  /* Print error message. */
-  error_info_as_wcs = une_error_type_to_wcs(error->type);
-  wprintf(UNE_COLOR_FAIL L"%ls" RESET L"\n", error_info_as_wcs);
+  skip_traceback:
+  
+  fwprintf(UNE_ERROR_STREAM, UNE_COLOR_FAIL L"Error: %ls" RESET L"\n", une_error_type_to_wcs(error->type));
+  
+  #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+  fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Source: %hs, %d" RESET L"\n", error->meta_file, error->meta_line);
+  #endif
 }

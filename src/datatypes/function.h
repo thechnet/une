@@ -1,6 +1,6 @@
 /*
 function.h - Une
-Modified 2023-05-13
+Modified 2023-06-23
 */
 
 #ifndef UNE_DATATYPES_FUNCTION_H
@@ -20,7 +20,7 @@ une_int une_datatype_function_is_true(une_result result);
 une_result une_datatype_function_copy(une_result result);
 void une_datatype_function_free_members(une_result result);
 
-une_result une_datatype_function_call(une_error *error, une_node *call, une_result function, une_result args);
+une_result une_datatype_function_call(une_error *error, une_node *call, une_result function, une_result args, wchar_t *label);
 
 /*
 Function.

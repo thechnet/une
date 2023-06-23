@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2023-02-22
+Modified 2023-06-23
 */
 
 /* Header-specific includes. */
@@ -10,9 +10,9 @@ Modified 2023-02-22
 #include "../tools.h"
 
 /*
-Allocates, initializes, and returns a pointer to a une_context struct.
+Allocates, initializes, and returns a pointer to a marker une_context struct.
 */
-une_context *une_context_create(char *entry_file, une_position entry_point)
+une_context *une_context_create_marker(char *creation_file, une_position creation_point, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point)
 {
   /* Allocate une_context. */
   une_context *context = malloc(sizeof(*context));
@@ -20,14 +20,41 @@ une_context *une_context_create(char *entry_file, une_position entry_point)
   
   /* Initialize une_context. */
   *context = (une_context){
+    .is_marker_context = true,
     .parent = NULL,
-    .entry_file = entry_file,
-    .entry_point = entry_point,
-    .variables = malloc(UNE_SIZE_VARIABLE_BUF*sizeof(*context->variables)),
+    .creation_file = creation_file ? strdup(creation_file) : NULL,
+    .creation_point = creation_point,
+    .has_callee = false,
+    .callee_label = callee_label ? wcsdup(callee_label) : NULL,
+    .callee_definition_file = callee_definition_file ? strdup(callee_definition_file) : NULL,
+    .callee_definition_point = callee_definition_point,
+    .variables = NULL,
     .variables_size = UNE_SIZE_VARIABLE_BUF,
     .variables_count = 0
   };
+  if (creation_file)
+    verify(context->creation_file);
+  if (callee_label)
+    verify(callee_label);
+  if (callee_definition_file)
+    verify(context->callee_definition_file);
+  
+  return context;
+}
+
+/*
+Allocates, initializes, and returns a pointer to a une_context struct.
+*/
+une_context *une_context_create(char *creation_file, une_position creation_point, bool has_callee, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point)
+{
+  /* Create marker context. */
+  une_context *context = une_context_create_marker(creation_file, creation_point, callee_label, callee_definition_file, callee_definition_point);
+  
+  /* Promote to full context. */
+  context->is_marker_context = false;
+  context->variables = malloc(UNE_SIZE_VARIABLE_BUF*sizeof(*context->variables));
   verify(context->variables);
+  context->has_callee = has_callee;
   
   return context;
 }
@@ -60,11 +87,16 @@ Frees a une_context and its owned members.
 */
 void une_context_free(une_context *context)
 {
-  if (context->entry_file)
-    free(context->entry_file);
+  if (context->creation_file)
+    free(context->creation_file);
+  if (context->callee_label)
+    free(context->callee_label);
+  if (context->callee_definition_file)
+    free(context->callee_definition_file);
   
   /* Free une_association buffer. */
-  if (context->variables != NULL) {
+  if (!context->is_marker_context) {
+    assert(context->variables);
     for (size_t i=0; i<context->variables_count; i++)
       une_association_free(context->variables[i]);
     free(context->variables);
@@ -78,7 +110,14 @@ Initializes a new une_association in a une_context's variable buffer.
 */
 une_variable_itf__(une_variable_create)
 {
+  /* Find closest non-marker context. */
+  while (context->is_marker_context) {
+    assert(context->parent);
+    context = context->parent;
+  }
+  
   /* Ensure sufficient space in une_association buffer. */
+  assert(context->variables);
   if (context->variables_count >= context->variables_size) {
     context->variables_size *= 2;
     context->variables = realloc(context->variables, context->variables_size*sizeof(*context->variables));
@@ -154,4 +193,31 @@ une_variable_itf__(une_variable_find_or_create_global)
   
   /* une_association doesn't exist yet, create it in the oldest parent context. */
   return une_variable_create(une_context_get_oldest_parent(context), name);
+}
+
+/*
+Trace a context's lineage, ending with the root. Return the number of elements in the list.
+*/
+size_t une_context_get_lineage(une_context *subject, une_context ***out)
+{
+  size_t contexts_size = UNE_SIZE_EXPECTED_TRACEBACK_DEPTH;
+  une_context **contexts = malloc(contexts_size*sizeof(*contexts));
+  verify(contexts);
+  
+  size_t contexts_length = 0;
+  une_context *context = subject;
+  while (true) {
+    if (contexts_length >= UNE_SIZE_EXPECTED_TRACEBACK_DEPTH) {
+      contexts_size *= 2;
+      contexts = realloc(contexts, contexts_size*sizeof(*contexts));
+      verify(contexts);
+    }
+    contexts[contexts_length++] = context;
+    context = context->parent;
+    if (!context)
+      break;
+  }
+  
+  *out = contexts;
+  return contexts_length;
 }

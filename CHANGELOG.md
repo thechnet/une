@@ -10,6 +10,7 @@
 
 ### Changed
 - Defining new members for existing objects is no longer possible.
+- Improved traceback.
 
 ### Fixed
 - Method chaining  

@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2023-02-22
+Modified 2023-06-23
 */
 
 #ifndef UNE_CONTEXT_H
@@ -14,9 +14,14 @@ Modified 2023-02-22
 Holds information that changes depending on the execution context.
 */
 typedef struct une_context_ {
+  bool is_marker_context;
   struct une_context_ *parent;
-  char *entry_file;
-  une_position entry_point;
+  char *creation_file;
+  une_position creation_point;
+  bool has_callee;
+  wchar_t *callee_label;
+  char *callee_definition_file;
+  une_position callee_definition_point;
   size_t variables_size;
   size_t variables_count;
   une_association **variables;
@@ -31,10 +36,13 @@ Variable interface function template.
 */
 #define une_variable_itf__(id__) une_association *(id__)(une_context *context, wchar_t *name) 
 
-une_context *une_context_create(char *entry_file, une_position entry_point);
+une_context *une_context_create_marker(char *creation_file, une_position creation_point, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point);
+une_context *une_context_create(char *creation_file, une_position creation_point, bool has_callee, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point);
 une_context *une_context_get_oldest_parent(une_context *context);
 void une_context_free_children(une_context *parent, une_context *youngest_child);
 void une_context_free(une_context *context);
+
+size_t une_context_get_lineage(une_context *subject, une_context ***out);
 
 une_variable_itf__(une_variable_create);
 une_variable_itf__(une_variable_find);

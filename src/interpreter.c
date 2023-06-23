@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-06-19
+Modified 2023-06-23
 */
 
 /* Header-specific includes. */
@@ -210,8 +210,12 @@ une_interpreter__(une_interpret_function)
   verify(function);
   
   /* Populate function struct. */
-  function->definition_file = strdup((char*)node->content.branch.c);
-  verify(function->definition_file);
+  if (node->content.branch.c) {
+    function->definition_file = strdup((char*)node->content.branch.c);
+    verify(function->definition_file);
+  } else {
+    function->definition_file = NULL;
+  }
   function->definition_point = node->pos;
   function->params_count = params_count;
   function->params = params;
@@ -1066,6 +1070,9 @@ une_interpreter__(une_interpret_call)
     return args;
   
   /* Get callable. */
+  wchar_t *label = NULL;
+  if (node->content.branch.a->type == UNE_NT_SEEK && node->content.branch.a->content.branch.a->type == UNE_NT_ID)
+    label = node->content.branch.a->content.branch.a->content.value._wcs;
   une_result callable = une_result_dereference(une_interpret(error, node->content.branch.a));
   if (callable.type == UNE_RT_ERROR) {
     une_result_free(args);
@@ -1094,7 +1101,7 @@ une_interpreter__(une_interpret_call)
   }
 
   /* Execute function. */
-  une_result result = dt_callable.call(error, node, callable, args);
+  une_result result = dt_callable.call(error, node, callable, args, label);
   une_result_free(args);
   une_result_free(callable);
   

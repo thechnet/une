@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2023-05-13
+Modified 2023-06-23
 */
 
 /* Header-specific includes. */
@@ -42,9 +42,12 @@ une_result une_datatype_function_copy(une_result result)
   une_function *copy = malloc(sizeof(*copy));
   verify(copy);
   
-  assert(source->definition_file);
-  copy->definition_file = strdup((char*)source->definition_file);
-  verify(copy->definition_file);
+  if (source->definition_file) {
+    copy->definition_file = strdup(source->definition_file);
+    verify(copy->definition_file);
+  } else {
+    copy->definition_file = NULL;
+  }
   copy->definition_point = source->definition_point;
   
   copy->params_count = source->params_count;
@@ -80,8 +83,8 @@ void une_datatype_function_free_members(une_result result)
   assert(result.value._vp);
   une_function *function = (une_function*)result.value._vp;
   
-  assert(function->definition_file);
-  free(function->definition_file);
+  if (function->definition_file)
+    free(function->definition_file);
   
   if (function->params_count > 0) {
     assert(function->params);
@@ -101,7 +104,7 @@ void une_datatype_function_free_members(une_result result)
 /*
 Call result.
 */
-une_result une_datatype_function_call(une_error *error, une_node *call, une_result function, une_result args)
+une_result une_datatype_function_call(une_error *error, une_node *call, une_result function, une_result args, wchar_t *label)
 {
   /* Get function. */
   assert(function.type == UNE_RT_FUNCTION);
@@ -117,9 +120,7 @@ une_result une_datatype_function_call(une_error *error, une_node *call, une_resu
   
   /* Create function context. */
   une_context *parent = une_is->context;
-  char *entry_file = strdup(callee->definition_file);
-  verify(entry_file);
-  une_is->context = une_context_create(entry_file, callee->definition_point);
+  une_is->context = une_context_create(une_is->context->creation_file, call->pos, true, label, callee->definition_file, callee->definition_point);
   une_is->context->parent = parent;
 
   /* Define parameters. */

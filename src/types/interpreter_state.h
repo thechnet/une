@@ -1,6 +1,6 @@
 /*
 interpreter_state.h - Une
-Modified 2023-05-13
+Modified 2023-06-23
 */
 
 #ifndef UNE_INTERPRETER_STATE_H
@@ -37,7 +37,7 @@ extern une_interpreter_state *une_is;
 *** Interface.
 */
 
-une_interpreter_state une_interpreter_state_create(void);
+une_interpreter_state une_interpreter_state_create(char *creation_file);
 void une_interpreter_state_free(une_interpreter_state *is);
 une_holding une_interpreter_state_holding_strip(void);
 void une_interpreter_state_holding_reinstate(une_holding old);

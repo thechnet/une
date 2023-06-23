@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-05-15
+Modified 2023-06-23
 */
 
 /* Implementation-specific includes. */
@@ -163,7 +163,7 @@ void main_sigint_fired(int signal)
 void main_interactive(void)
 {
   signal(SIGINT, &main_sigint_fired);
-  une_interpreter_state is = une_interpreter_state_create();
+  une_interpreter_state is = une_interpreter_state_create(NULL);
   une_is = &is;
   wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
   verify(stmts);

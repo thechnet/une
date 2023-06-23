@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-06-21
+Modified 2023-06-23
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -31,7 +31,7 @@ Modified 2023-06-21
 *** Constants.
 */
 #define UNE_VERSION UNE_VERSION_MAJOR L"." UNE_VERSION_MINOR L"." UNE_VERSION_PATCH
-#define UNE_SOURCE_PLACEHOLDER "<anonymous>"
+#define UNE_SOURCE_PLACEHOLDER "<string>"
 #define UNE_SWITCH_SCRIPT "-s"
 #define UNE_SWITCH_INTERACTIVE "-i"
 #define UNE_INTERACTIVE_PREFIX L">>> "
@@ -47,6 +47,7 @@ Modified 2023-06-21
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
 #define UNE_ERROR_USAGE L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
+#define UNE_ERROR_STREAM stderr
 #define UNE_DEBUG_LOGINTERPRET_INDENT L"|   "
 #define UNE_DEBUG_LOGINTERPRET_OFFSET 10
 
@@ -82,7 +83,7 @@ Modified 2023-06-21
 #endif
 
 /* Output Color Escape Sequences. */
-#define UNE_COLOR_SUCCESS FGGREEN
+#define UNE_COLOR_POSITION BOLD FGGREEN
 #define UNE_COLOR_FAIL BOLD FGRED
 #define UNE_COLOR_HINT FGBBLACK
 #define UNE_COLOR_TOKEN_TYPE FGYELLOW
