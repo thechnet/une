@@ -131,7 +131,7 @@ void une_error_trace_print(une_trace trace)
   size_t text_end = text_start;
   fputws(UNE_ERROR_TRACE_PRINT_PREFIX, UNE_ERROR_STREAM);
   while (wc != L'\n' && wc != WEOF) {
-    putwc(wc, UNE_ERROR_STREAM);
+    putwc((wchar_t)wc, UNE_ERROR_STREAM);
     wc = fgetwc(f);
     text_end++;
   }
