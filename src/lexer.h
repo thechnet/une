@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Modified 2023-02-22
+Modified 2023-06-28
 */
 
 #ifndef UNE_LEXER_H
@@ -18,14 +18,18 @@ Modified 2023-02-22
 */
 
 /*
-Condition to check whether a character can be in a number.
+Character groups.
 */
+#define UNE_LEXER_WC_IS_LOWERCASE_LETTER(wc) (wc >= L'a' && wc <= L'z')
+#define UNE_LEXER_WC_IS_UPPERCASE_LETTER(wc) (wc >= L'A' && wc <= L'Z')
+#define UNE_LEXER_WC_IS_LETTER(wc) (UNE_LEXER_WC_IS_LOWERCASE_LETTER(wc) || UNE_LEXER_WC_IS_UPPERCASE_LETTER(wc))
 #define UNE_LEXER_WC_IS_DIGIT(wc) (wc >= L'0' && wc <= L'9')
+#define UNE_LEXER_WC_IS_LETTERLIKE(wc) (UNE_LEXER_WC_IS_LETTER(wc) || wc == L'_')
 
 /*
 Condition to check whether a character can be the first character of an id.
 */
-#define UNE_LEXER_WC_CAN_BEGIN_ID(wc) ((wc >= L'a' && wc <= L'z') || (wc >= L'A' && wc <= L'Z') || wc == L'_')
+#define UNE_LEXER_WC_CAN_BEGIN_ID(wc) UNE_LEXER_WC_IS_LETTERLIKE(wc)
 
 /*
 Condition to check whether a character can be in an id.
@@ -38,7 +42,7 @@ Condition to check whether a character is whitespace that can always be ignored.
 #define UNE_LEXER_WC_IS_SOFT_WHITESPACE(wc) (wc == L' ' || wc == L'\t')
 
 /*
-Condition to check whether a character is legal but non-printable.
+Condition to check whether a character is legal but not printable.
 */
 #define UNE_LEXER_WC_IS_INVISIBLE(wc) (wc == L'\r')
 
