@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- `int("")` and `flt("")` produce `0` instead of an error.
+
 ## [0.13.0] - 2023-06-23
 
 ### Added

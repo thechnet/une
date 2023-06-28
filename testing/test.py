@@ -118,12 +118,14 @@ cases = [
   Case('int("100")', UNE_RT_INT, '100', []),
   Case('int([1])', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('int("100x")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
+  Case('int("")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   
   Case('flt(100)', UNE_RT_FLT, '100.000', []),
   Case('flt(100.9)', UNE_RT_FLT, '100.900', []),
   Case('flt("100.9")', UNE_RT_FLT, '100.900', []),
   Case('flt([1])', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('flt("100.9x")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
+  Case('flt("")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   
   Case('str(1)', UNE_RT_STR, '1', []),
   Case('str(1.1)', UNE_RT_STR, '1.100', []),

@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-06-21
+Modified 2023-06-25
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -26,7 +26,7 @@ bool une_wcs_to_une_int(wchar_t *wcs, une_int *dest)
   wchar_t *wcs_end = wcs+wcslen(wcs);
   wchar_t *int_end;
   *dest = wcstoll(wcs, &int_end, 10);
-  return int_end == wcs_end ? true : false;
+  return int_end > wcs && int_end == wcs_end ? true : false;
 }
 
 /*
@@ -37,7 +37,7 @@ bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest)
   wchar_t *wcs_end = wcs+wcslen(wcs);
   wchar_t *flt_end;
   *dest = wcstod(wcs, &flt_end);
-  return flt_end == wcs_end ? true : false;
+  return flt_end > wcs && flt_end == wcs_end ? true : false;
 }
 
 /*
