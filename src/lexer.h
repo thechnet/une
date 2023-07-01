@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Modified 2023-06-28
+Modified 2023-06-29
 */
 
 #ifndef UNE_LEXER_H
@@ -61,11 +61,16 @@ Lexer function template.
 */
 #define une_lexer__(id__) une_static__ une_token (id__)(une_error *error, une_lexer_state *ls)
 
-une_token *une_lex(une_error*, une_lexer_state*);
+void une_lex(une_error *error, une_lexer_state *ls);
+
+wchar_t une_lexer_now(une_lexer_state *ls);
+wchar_t une_lexer_advance(une_lexer_state *ls);
+wchar_t une_lexer_peek(une_lexer_state *ls, une_int offset);
+void une_lexer_commit(une_lexer_state *ls, une_token token);
 
 une_lexer__(une_lex_operator);
-une_lexer__(une_lex_num);
-une_lexer__(une_lex_str);
+une_lexer__(une_lex_number);
+une_lexer__(une_lex_string);
 une_lexer__(une_lex_keyword_or_identifier);
 
 #endif /* !UNE_LEXER_H */

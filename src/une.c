@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2023-06-23
+Modified 2023-06-29
 */
 
 /* Header-specific includes. */
@@ -26,15 +26,26 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   /* Setup. */
   une_error error = une_error_create();
   
+  /* Read file. */
+  wchar_t *content = read_from_file ? une_file_read(path) : text;
+  if (!content)
+    error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+  
   /* Lex. */
-  une_lexer_state ls = une_lexer_state_create(read_from_file, path, text);
-  une_token *tokens = NULL;
-  #ifndef UNE_NO_LEX
-  tokens = une_lex(&error, &ls);
-  #endif
+  une_lexer_state ls = une_lexer_state_create();
+  if (content) {
+    ls.tokens = malloc(UNE_SIZE_TOKEN_BUF*sizeof(*ls.tokens));
+    verify(ls.tokens);
+    ls.name = path;
+    ls.text = content;
+    ls.text_length = wcslen(ls.text);
+    #ifndef UNE_NO_LEX
+    une_lex(&error, &ls);
+    #endif
+  }
   
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
-  une_tokens_display(tokens);
+  une_tokens_display(ls.tokens);
   wprintf(L"\n\n");
   #endif
   
@@ -42,8 +53,8 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   une_node *ast = NULL;
   #ifndef UNE_NO_PARSE
   une_parser_state ps = une_parser_state_create();
-  if (tokens != NULL)
-    ast = une_parse(&error, &ps, tokens);
+  if (ls.tokens != NULL)
+    ast = une_parse(&error, &ps, ls.tokens);
   #endif
   #ifdef UNE_DEBUG_LOG_PARSE
   success("parse done.");
@@ -84,7 +95,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   /* Wrap up. */
   int error_cases = 0;
   #ifndef UNE_NO_LEX
-  if (tokens == NULL)
+  if (ls.tokens == NULL)
     error_cases++;
   #endif
   #ifndef UNE_NO_PARSE
@@ -102,7 +113,9 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   if (!existing_interpreter_state)
     une_interpreter_state_free(une_is);
   une_node_free(ast, false);
-  une_tokens_free(tokens);
+  une_tokens_free(ls.tokens);
+  if (read_from_file && content)
+    free(content);
   
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
   if (result.type == UNE_RT_ERROR) {
@@ -125,17 +138,26 @@ une_result une_run_bare(une_error *error, char *path, wchar_t *text)
   /* Prepare. */
   *error = une_error_create();
   
+  /* Read file. */
+  wchar_t *content = path ? une_file_read(path) : text;
+  if (!content)
+    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+  
   /* Lex. */
-  une_lexer_state ls = une_lexer_state_create(path ? true : false, path, text);
-  une_token *tokens = une_lex(error, &ls);
-  if (!tokens)
+  une_lexer_state ls = une_lexer_state_create();
+  ls.tokens = malloc(UNE_SIZE_TOKEN_BUF*sizeof(*ls.tokens));
+  verify(ls.tokens);
+  ls.text = content;
+  ls.text_length = wcslen(ls.text);
+  une_lex(error, &ls);
+  if (!ls.tokens)
     return une_result_create(UNE_RT_ERROR);
   
   /* Parse. */
   une_parser_state ps = une_parser_state_create();
-  une_node *ast = une_parse(error, &ps, tokens);
+  une_node *ast = une_parse(error, &ps, ls.tokens);
   if (!ast) {
-    une_tokens_free(tokens);
+    une_tokens_free(ls.tokens);
     return une_result_create(UNE_RT_ERROR);
   }
   
@@ -146,7 +168,9 @@ une_result une_run_bare(une_error *error, char *path, wchar_t *text)
   
   /* Finalize. */
   une_node_free(ast, false);
-  une_tokens_free(tokens);
+  une_tokens_free(ls.tokens);
+  if (path)
+    free(content);
   
   return result;
 }
