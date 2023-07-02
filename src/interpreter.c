@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-06-23
+Modified 2023-07-02
 */
 
 /* Header-specific includes. */
@@ -592,7 +592,7 @@ une_interpreter__(une_interpret_member_seek)
   une_result subject = une_interpret(error, node->content.branch.a);
   if (subject.type == UNE_RT_ERROR)
     return subject;
-  if (subject.type == UNE_RT_VOID) {
+  if (subject.type != UNE_RT_REFERENCE && subject.type != UNE_RT_OBJECT) {
     *error = UNE_ERROR_SET(UNE_ET_TYPE, node->content.branch.a->pos);
     une_result_free(subject);
     return une_result_create(UNE_RT_ERROR);
@@ -608,7 +608,6 @@ une_interpreter__(une_interpret_member_seek)
       }
     };
   }
-  assert(subject.type == UNE_RT_REFERENCE); /* Since we have is.holding, objects MUST always be encountered as references. */
   
   /* Get applicable datatype. */
   une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(subject);
