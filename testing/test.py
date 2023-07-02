@@ -41,6 +41,7 @@ ATTR_FILE_ONLY = 2
 ATTR_NO_IMPLICIT_RETURN = 3
 ATTR_NEVER_HIDE_OUTPUT = 4
 ATTR_NO_SECOND_ESCAPE = 5
+ATTR_STDIN = 6
 
 # Result Types
 UNE_RT_ERROR = 1
@@ -102,7 +103,7 @@ cases = [
   
   # Built-in Commands
   
-  Case('input("Write \'test\' and press enter: ")', UNE_RT_STR, 'test', [ATTR_NEVER_HIDE_OUTPUT]),
+  Case('input("Write \'test\' and press enter: ")', UNE_RT_STR, 'test', [ATTR_STDIN]),
   Case('input(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('input()', UNE_RT_ERROR, UNE_ET_CALLABLE_ARG_COUNT, []),
   
@@ -680,7 +681,10 @@ for i, case in enumerate(cases):
   i += 1
   passed = True
   if ATTR_DIRECT_ARG in case.attributes:
-    cmd(f'{une} {case.input}')
+    command = f'{une} {case.input}'
+    if ATTR_STDIN in case.attributes:
+      command = 'echo test|' + command
+    cmd(command)
     if not check_report('main', case, i):
       passed = False
   else:
@@ -693,6 +697,8 @@ for i, case in enumerate(cases):
       if case.result_type != UNE_RT_ERROR and not ATTR_NO_IMPLICIT_RETURN in case.attributes:
         sanitized = f'return {sanitized}'
       command = f'{une} -s "{sanitized}"'
+      if ATTR_STDIN in case.attributes:
+        command = 'echo test|' + command
       cmd(command)
       if not check_report('cmdl', case, i):
         passed = False
@@ -706,7 +712,10 @@ for i, case in enumerate(cases):
       status = open(FILE_SCRIPT, 'w')
       status.write(script)
       status.close()
-      cmd(f'{une} "{FILE_SCRIPT}"')
+      command = f'{une} "{FILE_SCRIPT}"'
+      if ATTR_STDIN in case.attributes:
+        command = 'echo test|' + command
+      cmd(command)
       if not check_report('file', case, i):
         passed = False
         print(f'\33[31m{script}\33[0m')
