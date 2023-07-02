@@ -59,7 +59,7 @@ Condition to check if a character is any kind of whitespace.
 /*
 Lexer function template.
 */
-#define une_lexer__(id__, ...) une_static__ une_token (id__)(une_error *error, une_lexer_state *ls, ##__VA_ARGS__)
+#define une_lexer__(id__, ...) une_token (id__)(une_error *error, une_lexer_state *ls, ##__VA_ARGS__)
 
 void une_lex(une_error *error, une_lexer_state *ls);
 
