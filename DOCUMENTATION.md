@@ -89,6 +89,7 @@ The following characters must be escaped using a backslash (`\`) to be used insi
 
 Also, the following sequences have special meaning:
 - `\n` – Insert a new line.
+- `\r` – Insert a carriage return character.
 - `\t` – Insert a tab character.
 - `\e` – Inserts the *ESC* character.
 - `\a` – Inserts the *BEL* character.

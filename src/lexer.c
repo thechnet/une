@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-07-01
+Modified 2023-07-02
 */
 
 /* Header-specific includes. */
@@ -324,6 +324,9 @@ une_lexer__(une_lex_string)
           continue;
         case L'n':
           buffer[buffer_index++] = L'\n';
+          continue;
+        case L'r':
+          buffer[buffer_index++] = L'\r';
           continue;
         case L't':
           buffer[buffer_index++] = L'\t';
