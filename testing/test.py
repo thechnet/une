@@ -114,6 +114,12 @@ cases = [
   Case('2e-2', UNE_RT_FLT, '0.020', []),
   Case('0b1e1', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   
+  # OCTAL AND HEXADECIMAL CHARACTER CONSTANTS IN STRINGS
+  Case('"\o43"', UNE_RT_STR, '#', [ATTR_NO_SECOND_ESCAPE]),
+  Case('"\o431"', UNE_RT_STR, '#1', [ATTR_NO_SECOND_ESCAPE]),
+  Case('"\\x23"', UNE_RT_STR, '#', [ATTR_NO_SECOND_ESCAPE]),
+  Case('"\\x231"', UNE_RT_STR, '#1', [ATTR_NO_SECOND_ESCAPE]),
+  
   # Built-in Commands
   
   Case('input("Write \'test\' and press enter: ")', UNE_RT_STR, 'test', [ATTR_STDIN]),

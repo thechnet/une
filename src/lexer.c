@@ -192,7 +192,7 @@ une_lexer__(une_lex_number, bool allow_signed)
     return une_token_create(UNE_TT_none__);
   
   une_int integer = 0;
-  if (!une_lex_number_integer(error, ls, base, &integer, allow_signed, true))
+  if (!une_lex_number_integer(error, ls, base, &integer, allow_signed, true, 0))
     return une_token_create(UNE_TT_none__);
   
   une_flt floating = (une_flt)integer;
@@ -275,7 +275,7 @@ une_lexer__(une_lex_string)
         case L'"':
         case L'{':
         case L'}':
-          buffer[buffer_index++] = (wchar_t)une_lexer_now(ls);
+          buffer[buffer_index++] = une_lexer_now(ls);
           continue;
         case L'n':
           buffer[buffer_index++] = L'\n';
@@ -294,16 +294,32 @@ une_lexer__(une_lex_string)
           continue;
         case L'\n':
           continue;
-        default: {
-          *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
-            .start = ls->text_index,
-            .end = ls->text_index+1,
-            .line = ls->line
-          }));
-          free(buffer);
-          return une_token_create(UNE_TT_none__);
+        case L'o': {
+          une_lexer_advance(ls);
+          une_int integer = 0;
+          if (!une_lex_number_integer(error, ls, 8, &integer, false, false, 2))
+            break;
+          ls->text_index--; /* Backtrack because we advance at the beginning of each loop. */
+          buffer[buffer_index++] = (wchar_t)integer;
+          continue;
+        }
+        case L'x': {
+          une_lexer_advance(ls);
+          une_int integer = 0;
+          if (!une_lex_number_integer(error, ls, 16, &integer, false, false, 2))
+            break;
+          ls->text_index--; /* Backtrack because we advance at the beginning of each loop. */
+          buffer[buffer_index++] = (wchar_t)integer;
+          continue;
         }
       }
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+        .start = ls->text_index,
+        .end = ls->text_index+1,
+        .line = ls->line
+      }));
+      free(buffer);
+      return une_token_create(UNE_TT_none__);
     }
     
     /* Schedule escaped character. */
@@ -426,7 +442,7 @@ bool une_lex_number_base(une_error *error, une_lexer_state *ls, int *base)
   return true;
 }
 
-bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une_int *integer, bool allow_signed, bool allow_e)
+bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une_int *integer, bool allow_signed, bool allow_e, size_t limit_length)
 {
   int sign = 1;
   if (allow_signed && une_lexer_now(ls) == L'-') {
@@ -443,7 +459,8 @@ bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une
   while (true) {
     if (
       !une_lexer_digit_to_decimal(une_lexer_now(ls), &digit_in_decimal) ||
-      (allow_e && base == 10 && (une_lexer_now(ls) == L'e' || une_lexer_now(ls) == 'E'))
+      (allow_e && base == 10 && (une_lexer_now(ls) == L'e' || une_lexer_now(ls) == 'E')) ||
+      (limit_length && ls->text_index == index_start + limit_length)
     )
       break;
     if (digit_in_decimal >= base) {
@@ -516,7 +533,7 @@ bool une_lex_number_exponent(une_error *error, une_lexer_state *ls, une_int *exp
   assert(une_lexer_now(ls) == L'e' || une_lexer_now(ls) == L'E');
   une_lexer_advance(ls); /* 'e' or 'E'. */
   
-  return une_lex_number_integer(error, ls, 10, exponent, true, false);
+  return une_lex_number_integer(error, ls, 10, exponent, true, false, 0);
 }
 
 /*

@@ -69,7 +69,7 @@ une_lexer__(une_lex_string);
 une_lexer__(une_lex_keyword_or_identifier);
 
 bool une_lex_number_base(une_error *error, une_lexer_state *ls, int *base);
-bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une_int *integer, bool allow_signed, bool allow_e);
+bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une_int *integer, bool allow_signed, bool allow_e, size_t limit_length);
 bool une_lex_number_fractional_part(une_error *error, une_lexer_state *ls, int base, une_flt *floating);
 bool une_lex_number_exponent(une_error *error, une_lexer_state *ls, une_int *exponent);
 

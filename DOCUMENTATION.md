@@ -93,6 +93,8 @@ Also, the following sequences have special meaning:
 - `\t` – Insert a tab character.
 - `\e` – Inserts the *ESC* character.
 - `\a` – Inserts the *BEL* character.
+- `\oOO` – Insert the character with octal value `OO`.
+- `\xXX` – Insert the character with hexadecimal value `XX`.
 - `\` new line – Does not include the new line in the string.
 
 For information on how to access or modify the characters making up a string, see 2.9.
