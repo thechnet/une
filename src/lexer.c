@@ -185,91 +185,46 @@ une_lexer__(une_lex_operator)
 
 une_lexer__(une_lex_number)
 {
-  /* Setup. */
-  size_t buffer_size = UNE_SIZE_NUM_LEN;
-  wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
-  verify(buffer);
-  size_t idx_start = ls->text_index;
+  size_t start_index = ls->text_index;
   
-  do {
-    /* Ensure sufficient space in buffer. */
-    while (ls->text_index-idx_start+1 /* NUL. */ >= buffer_size) {
-      buffer_size *= 2;
-      buffer = realloc(buffer, buffer_size*sizeof(*buffer));
-      verify(buffer);
-    }
-  
-    /* Add character to buffer. */
-    buffer[ls->text_index-idx_start] = (wchar_t)une_lexer_now(ls);
-    une_lexer_advance(ls);
-  } while (UNE_LEXER_WC_IS_DIGIT(une_lexer_now(ls)));
-  
-  if (une_lexer_now(ls) != L'.' || une_lexer_peek(ls, 1) == L'.') { /* This alternative case catches situations where an integer is followed by two dots - this is not a decimal point, but instead the beginning of a DOTDOT token. */
-    /* Return integer. */
-    buffer[ls->text_index-idx_start] = L'\0';
-    une_int int_;
-    if(!une_wcs_to_une_int(buffer, &int_))
-      assert(false);
-    une_token tk = (une_token){
-      .type = UNE_TT_INT,
-      .pos = (une_position){
-        .start = idx_start,
-        .end = ls->text_index,
-        .line = ls->line
-      },
-      .value._int = int_
-    };
-    free(buffer);
-    return tk;
-  }
-  
-  /* Try to lex floating point number. */
-  
-  buffer[ls->text_index-idx_start] = (wchar_t)une_lexer_now(ls); /* '.'. */
-  une_lexer_advance(ls);
-  
-  size_t idx_before_decimals = ls->text_index;
-  
-  while (une_lexer_now(ls) >= L'0' && une_lexer_now(ls) <= L'9') {
-    /* Ensure sufficient space in buffer. */
-    if (ls->text_index-idx_start+1 /* NUL. */ >= buffer_size) {
-      buffer_size *= 2;
-      buffer = realloc(buffer, buffer_size*sizeof(*buffer));
-      verify(buffer);
-    }
-  
-    /* Add character to buffer. */
-    buffer[ls->text_index-idx_start] = (wchar_t)une_lexer_now(ls);
-    une_lexer_advance(ls);
-  }
-  
-  /* No digits after decimal point. */
-  if (ls->text_index == idx_before_decimals) {
-    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
-      .start = ls->text_index,
-      .end = ls->text_index+1,
-      .line = ls->line
-    }));
-    free(buffer);
+  int base = 0;
+  if (!une_lex_number_base(error, ls, &base))
     return une_token_create(UNE_TT_none__);
+  
+  une_int integer = 0;
+  if (!une_lex_number_integer(error, ls, base, &integer, false, true))
+    return une_token_create(UNE_TT_none__);
+  
+  une_flt floating = (une_flt)integer;
+  bool is_floating = une_lexer_now(ls) == L'.' && une_lexer_peek(ls, 1) != L'.'; /* Not '..'. */
+  if (is_floating && !une_lex_number_fractional_part(error, ls, base, &floating))
+    return une_token_create(UNE_TT_none__);
+  
+  une_int exponent = 0;
+  bool has_exponent = base == 10 && (une_lexer_now(ls) == L'e' || une_lexer_now(ls) == L'E');
+  if (has_exponent) {
+    if (!une_lex_number_exponent(error, ls, &exponent))
+      return une_token_create(UNE_TT_none__);
+    if (!is_floating) {
+      is_floating = true;
+      floating = (une_flt)integer;
+    }
+    floating *= pow(10.0, (une_flt)exponent);
   }
   
-  /* Return floating point number. */
-  buffer[ls->text_index-idx_start] = L'\0';
-  une_flt flt;
-  if (!une_wcs_to_une_flt(buffer, &flt))
-    assert(false);
-  une_token tk = (une_token){
-    .type = UNE_TT_FLT,
+  une_token number = (une_token){
+    .type = is_floating ? UNE_TT_FLT : UNE_TT_INT,
     .pos = (une_position){
-      .start = idx_start,
+      .start = start_index,
       .end = ls->text_index,
       .line = ls->line
-    },
-    .value._flt = flt
+    }
   };
-  free(buffer);
-  return tk;
+  if (is_floating)
+    number.value._flt = floating;
+  else
+    number.value._int = integer;
+  return number;
 }
 
 une_lexer__(une_lex_string)
@@ -450,6 +405,112 @@ une_lexer__(une_lex_keyword_or_identifier)
   return tk;
 }
 
+bool une_lex_number_base(une_error *error, une_lexer_state *ls, int *base)
+{
+  *base = 10;
+  if (une_lexer_now(ls) == L'0' && UNE_LEXER_WC_CAN_BEGIN_ID(une_lexer_peek(ls, 1))) {
+    switch (une_lexer_advance(ls) /* '0'. */ ) {
+      case L'b': *base = 2; break;
+      case L'o': *base = 8; break;
+      case L'x': *base = 16; break;
+      default:
+        *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+          .start = ls->text_index,
+          .end = ls->text_index+1,
+          .line = ls->line
+        }));
+        return false;
+    }
+    une_lexer_advance(ls); /* Base identifier. */
+  }
+  return true;
+}
+
+bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une_int *integer, bool allow_signed, bool allow_e)
+{
+  int sign = 1;
+  if (allow_signed && une_lexer_now(ls) == L'-') {
+    une_lexer_advance(ls);
+    sign = -1;
+  }
+  
+  while (une_lexer_now(ls) == L'0')
+    une_lexer_advance(ls);
+  
+  *integer = 0;
+  int digit_in_decimal;
+  
+  while (true) {
+    if (
+      !une_lexer_digit_to_decimal(une_lexer_now(ls), &digit_in_decimal) ||
+      (allow_e && base == 10 && (une_lexer_now(ls) == L'e' || une_lexer_now(ls) == 'E'))
+    )
+      break;
+    if (digit_in_decimal >= base) {
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+        .start = ls->text_index,
+        .end = ls->text_index+1,
+        .line = ls->line
+      }));
+      return false;
+    }
+    *integer *= base;
+    *integer += digit_in_decimal;
+    une_lexer_advance(ls);
+  }
+  
+  *integer *= sign;
+  return true;
+}
+
+bool une_lex_number_fractional_part(une_error *error, une_lexer_state *ls, int base, une_flt *floating)
+{
+  assert(une_lexer_now(ls) == L'.' && une_lexer_peek(ls, 1) != L'.');
+  une_lexer_advance(ls); /* Radix point. */
+  
+  une_flt floating_divisor = 1;
+  int digit_in_decimal;
+  
+  while (true) {
+    if (
+      !une_lexer_digit_to_decimal(une_lexer_now(ls), &digit_in_decimal) ||
+      (base == 10 && (une_lexer_now(ls) == L'e' || une_lexer_now(ls) == 'E'))
+    )
+      break;
+    if (digit_in_decimal >= base) {
+      *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+        .start = ls->text_index,
+        .end = ls->text_index+1,
+        .line = ls->line
+      }));
+      return false;
+    }
+    floating_divisor *= base;
+    *floating += digit_in_decimal / floating_divisor;
+    une_lexer_advance(ls);
+  }
+  
+  /* Missing fraction. */
+  if (floating_divisor <= 1) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+      .start = ls->text_index,
+      .end = ls->text_index+1,
+      .line = ls->line
+    }));
+    return false;
+  }
+  
+  return true;
+}
+
+bool une_lex_number_exponent(une_error *error, une_lexer_state *ls, une_int *exponent)
+{
+  assert(une_lexer_now(ls) == L'e' || une_lexer_now(ls) == L'E');
+  une_lexer_advance(ls); /* 'e' or 'E'. */
+  
+  return une_lex_number_integer(error, ls, 10, exponent, true, false);
+}
+
 /*
 Helpers.
 */
@@ -492,4 +553,17 @@ void une_lexer_commit(une_lexer_state *ls, une_token token)
   }
   
   ls->tokens[ls->tokens_count++] = token;
+}
+
+bool une_lexer_digit_to_decimal(wchar_t digit, int *digit_in_decimal)
+{
+  if (UNE_LEXER_WC_IS_DIGIT(digit))
+    *digit_in_decimal = digit - L'0';
+  else if (UNE_LEXER_WC_IS_LOWERCASE_LETTER(digit))
+    *digit_in_decimal = 10 + digit - L'a';
+  else if (UNE_LEXER_WC_IS_UPPERCASE_LETTER(digit))
+    *digit_in_decimal = 10 + digit - L'A';
+  else
+    return false;
+  return true;
 }
