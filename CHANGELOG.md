@@ -2,8 +2,20 @@
 
 ## [Unreleased]
 
+### Added
+- Improved number lexer:
+  - Numbers can now also be expressed in binary (prefix `0b`), octal (prefix `0o`), and hexadecimal (prefix `0x`).
+  - Decimal numbers now support scientific E notation (suffix `e<exponent>`).
+  - These improvements also apply to the `int()` and `flt()` built-in functions.
+- New escape sequences:
+  - `\t` translates to `U+0009` ("Character Tabulation").
+  - `\r` translates to `U+240D` ("Carriage Return").
+  - `\oOO` translates to the character with octal value `OO`.
+  - `\xXX` translates to the character with hexadecimal value `XX`.
+
 ### Fixed
 - `int("")` and `flt("")` produce `0` instead of an error.
+- Crash when attempting to access a member of a literal.
 
 ## [0.13.0] - 2023-06-23
 
