@@ -109,7 +109,7 @@ cases = [
   Case('0b10', UNE_RT_INT, '2', []),
   Case('0o10', UNE_RT_INT, '8', []),
   Case('0xf', UNE_RT_INT, '15', []),
-  Case('0x.8', UNE_RT_FLT, '0.500', []),
+  Case('0x.8', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('2e2', UNE_RT_FLT, '200.000', []),
   Case('2e-2', UNE_RT_FLT, '0.020', []),
   Case('0b1e1', UNE_RT_ERROR, UNE_ET_SYNTAX, []),

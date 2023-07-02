@@ -77,7 +77,7 @@ void une_lex(une_error *error, une_lexer_state *ls)
     
     /* Number. */
     if (UNE_LEXER_WC_IS_DIGIT(une_lexer_now(ls))) {
-      une_lexer_commit(ls, une_lex_number(error, ls));
+      une_lexer_commit(ls, une_lex_number(error, ls, false));
       continue;
     }
     
@@ -183,7 +183,7 @@ une_lexer__(une_lex_operator)
   return une_token_create(UNE_TT_none__);
 }
 
-une_lexer__(une_lex_number)
+une_lexer__(une_lex_number, bool allow_signed)
 {
   size_t start_index = ls->text_index;
   
@@ -192,7 +192,7 @@ une_lexer__(une_lex_number)
     return une_token_create(UNE_TT_none__);
   
   une_int integer = 0;
-  if (!une_lex_number_integer(error, ls, base, &integer, false, true))
+  if (!une_lex_number_integer(error, ls, base, &integer, allow_signed, true))
     return une_token_create(UNE_TT_none__);
   
   une_flt floating = (une_flt)integer;
@@ -434,9 +434,9 @@ bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une
     sign = -1;
   }
   
+  size_t index_start = ls->text_index;
   while (une_lexer_now(ls) == L'0')
     une_lexer_advance(ls);
-  
   *integer = 0;
   int digit_in_decimal;
   
@@ -459,6 +459,14 @@ bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une
     une_lexer_advance(ls);
   }
   
+  if (ls->text_index == index_start) {
+    *error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+      .start = ls->text_index,
+      .end = ls->text_index+1,
+      .line = ls->line
+    }));
+    return false;
+  }
   *integer *= sign;
   return true;
 }

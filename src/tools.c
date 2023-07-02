@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-06-25
+Modified 2023-07-02
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -17,16 +17,23 @@ Modified 2023-06-25
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include "lexer.h"
 
 /*
 Convert a wchar_t string into a une_int integer.
 */
 bool une_wcs_to_une_int(wchar_t *wcs, une_int *dest)
 {
-  wchar_t *wcs_end = wcs+wcslen(wcs);
-  wchar_t *int_end;
-  *dest = wcstoll(wcs, &int_end, 10);
-  return int_end > wcs && int_end == wcs_end ? true : false;
+  assert(wcs);
+  une_lexer_state ls = une_lexer_state_create();
+  ls.text = wcs;
+  ls.text_length = wcslen(ls.text);
+  une_error error = une_error_create();
+  une_token token = une_lex_number(&error, &ls, true);
+  if (token.type != UNE_TT_INT)
+    return false;
+  *dest = token.value._int;
+  return true;
 }
 
 /*
@@ -34,10 +41,19 @@ Convert a wchar_t string into a une_flt floating pointer number.
 */
 bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest)
 {
-  wchar_t *wcs_end = wcs+wcslen(wcs);
-  wchar_t *flt_end;
-  *dest = wcstod(wcs, &flt_end);
-  return flt_end > wcs && flt_end == wcs_end ? true : false;
+  assert(wcs);
+  une_lexer_state ls = une_lexer_state_create();
+  ls.text = wcs;
+  ls.text_length = wcslen(ls.text);
+  une_error error = une_error_create();
+  une_token token = une_lex_number(&error, &ls, true);
+  if (token.type == UNE_TT_FLT)
+    *dest = token.value._flt;
+  else if (token.type == UNE_TT_INT)
+    *dest = (une_flt)token.value._int;
+  else
+    return false;
+  return true;
 }
 
 /*
