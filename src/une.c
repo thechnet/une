@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2023-06-29
+Modified 2023-08-13
 */
 
 /* Header-specific includes. */
@@ -131,7 +131,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
 }
 
 /*
-Run a Une program, without handling errors or freeing memory.
+Run a Une program without error handling, 'return' propagation, or managing incoming memory.
 */
 une_result une_run_bare(une_error *error, char *path, wchar_t *text)
 {
@@ -167,6 +167,7 @@ une_result une_run_bare(une_error *error, char *path, wchar_t *text)
   une_result result = une_interpret(error, ast);
   
   /* Finalize. */
+  une_is->should_return = false;
   une_node_free(ast, false);
   une_tokens_free(ls.tokens);
   if (path)

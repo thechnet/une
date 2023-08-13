@@ -16,6 +16,7 @@
 ### Fixed
 - `int("")` and `flt("")` produce `0` instead of an error.
 - Crash when attempting to access a member of a literal.
+- Return statements are propagated out of `eval()` and `script()` calls.
 
 ## [0.13.0] - 2023-06-23
 

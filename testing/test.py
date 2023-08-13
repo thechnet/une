@@ -605,6 +605,9 @@ cases = [
   # Assertions
   Case('assert True', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
   Case('assert False', UNE_RT_ERROR, UNE_ET_ASSERTION_NOT_MET, [ATTR_NO_IMPLICIT_RETURN]),
+  
+  # Don't propagate 'return' out of eval() and script().
+  Case('eval("return");return 1', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
 ]
 CASES_LEN = len(cases)
 
