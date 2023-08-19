@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-07-02
+Modified 2023-08-19
 */
 
 /* Header-specific includes. */
@@ -164,8 +164,8 @@ une_lexer__(une_lex_operator)
 {
   for (une_token_type tt=UNE_R_BGN_OPERATOR_TOKENS; tt<=UNE_R_END_OPERATOR_TOKENS; tt++) {
     ptrdiff_t i=0;
-    while (une_lexer_peek(ls, i) == (wint_t)une_token_table[tt-1][i]) {
-      if ((wint_t)une_token_table[tt-1][++i] == L'\0') {
+    while (une_lexer_peek(ls, i) == une_token_table[tt-1][i]) {
+      if (une_token_table[tt-1][++i] == L'\0') {
         ptrdiff_t starting_index = (ptrdiff_t)ls->text_index;
         for (; i>0; i--)
           une_lexer_advance(ls);
