@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.14.0] - 2023-08-19
 
 ### Added
 - Improved number lexer:
