@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2023-05-13
+Modified 2023-08-20
 */
 
 #ifndef UNE_BUILTIN_H
@@ -43,7 +43,8 @@ Every built-in function.
   enumerator(split) \
   enumerator(eval) \
   enumerator(replace) \
-  enumerator(join)
+  enumerator(join) \
+  enumerator(sort)
 
 /*
 The index of a built-in function.

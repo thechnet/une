@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- New built-in function `sort()`.  
+  Sort a list using a custom comparator function.
+
 ## [0.14.0] - 2023-08-19
 
 ### Added

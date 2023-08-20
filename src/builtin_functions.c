@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-06-23
+Modified 2023-08-20
 */
 
 /* Header-specific includes. */
@@ -53,6 +53,7 @@ const size_t une_builtin_functions_params_count[] = {
   1, /* eval */
   3, /* replace */
   2, /* join */
+  2, /* sort */
 };
 
 /*
@@ -627,5 +628,76 @@ une_builtin_fn__(join)
   
   une_result result = une_result_create(UNE_RT_STR);
   result.value._wcs = joined_string;
+  return result;
+}
+
+static une_error *sort_error = NULL;
+static une_node *sort_call_node = NULL;
+static une_result sort_comparator = (une_result){ .type = UNE_RT_none__ };
+
+static int sort_compare(const void *a, const void *b)
+{
+  assert(sort_error);
+  /* Avoid repeated traceback. */
+  if (sort_error->type != UNE_ET_none__)
+    return 0;
+  
+  assert(sort_call_node);
+  une_datatype dt_comparator = UNE_DATATYPE_FOR_RESULT(sort_comparator);
+  assert(dt_comparator.call);
+  
+  une_result *subjects = une_result_list_create(2);
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wcast-qual"
+  subjects[1] = une_result_copy(*(une_result*)a);
+  subjects[2] = une_result_copy(*(une_result*)b);
+  #pragma clang diagnostic pop
+  une_result comparator_args = une_result_create(UNE_RT_LIST);
+  comparator_args.value._vp = (void*)subjects;
+  
+  une_result result = dt_comparator.call(sort_error, sort_call_node, sort_comparator, comparator_args, NULL);
+  int rating = 0;
+  if (result.type == UNE_RT_INT)
+    rating = result.value._int > 0 ? 1 : result.value._int < 0 ? -1 : 0;
+  else if (result.type != UNE_RT_ERROR)
+    *sort_error = UNE_ERROR_SET(UNE_ET_TYPE, sort_call_node->pos);
+  
+  une_result_free(result);
+  une_result_free(comparator_args);
+  
+  return rating;
+}
+
+/*
+Return the list 'subject', sorted using the function 'compare'.
+*/
+
+une_builtin_fn__(sort)
+{
+  une_builtin_param subject = 0;
+  une_builtin_param compare = 1;
+  
+  UNE_BUILTIN_VERIFY_ARG_TYPE(subject, UNE_RT_LIST);
+  UNE_BUILTIN_VERIFY_ARG_TYPE(compare, UNE_RT_FUNCTION);
+  
+  assert(!sort_error);
+  assert(!sort_call_node);
+  assert(sort_comparator.type == UNE_RT_none__);
+  sort_error = error;
+  sort_call_node = call_node;
+  sort_comparator = args[compare];
+  
+  une_result result = une_result_copy(args[subject]);
+  UNE_UNPACK_RESULT_LIST(result, elements, count);
+  qsort(elements + 1 /* Size. */, count, sizeof(*elements), &sort_compare);
+  if (error->type != UNE_ET_none__) {
+    une_result_free(result);
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  sort_error = NULL;
+  sort_call_node = NULL;
+  sort_comparator = (une_result){ .type = UNE_RT_none__ };
+  
   return result;
 }

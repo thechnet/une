@@ -608,6 +608,12 @@ cases = [
   
   # Don't propagate 'return' out of eval() and script().
   Case('eval("return");return 1', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+  
+  # sort
+  Case('sort([2,1,3],function(a,b) return a-b)', UNE_RT_LIST, '[1, 2, 3]', []),
+  Case('sort([2,1,3],function(a,b) return b-a)', UNE_RT_LIST, '[3, 2, 1]', []),
+  Case('sort([2,1,3],function(a,b) return 1/0)', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION, []),
+  Case('sort([2,1,3],function(a,b) return 1.0)', UNE_RT_ERROR, UNE_ET_TYPE, []),
 ]
 CASES_LEN = len(cases)
 
