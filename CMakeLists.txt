@@ -32,6 +32,7 @@ list(APPEND options "NO_LEX|Debug: Skip lexing|OFF")
 list(APPEND options "NO_PARSE|Debug: Skip parsing|OFF")
 list(APPEND options "NO_INTERPRET|Debug: Skip interpretation|OFF")
 list(APPEND options "DEBUG_FSANITIZE|Debug: Use -fsanitize flags|OFF")
+list(APPEND options "DEBUG_COVERAGE|Debug: Enable instrumentation|OFF")
 foreach(option IN LISTS options)
   string(REPLACE "|" ";" option_list ${option})
   list(GET option_list 0 id)
@@ -99,7 +100,7 @@ target_compile_options(une PRIVATE
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   add_definitions(-DUNE_DEBUG)
   target_compile_options(une PRIVATE
-    -g3 -Wno-switch -Wno-switch-enum
+    -g3 -O0 -Wno-switch -Wno-switch-enum
   )
   if(UNE_DEBUG_WATCHDOG)
     add_definitions(-DWATCHDOG)
@@ -122,6 +123,14 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     )
     target_link_options(une PRIVATE
       -fsanitize=address,signed-integer-overflow
+    )
+  endif()
+  if(UNE_DEBUG_COVERAGE)
+    target_compile_options(une PRIVATE
+      -fprofile-arcs -ftest-coverage
+    )
+    target_link_options(une PRIVATE
+      -fprofile-arcs -ftest-coverage
     )
   endif()
 elseif(CMAKE_BUILD_TYPE STREQUAL Release)
