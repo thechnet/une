@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-06-19
+Modified 2023-10-06
 */
 
 /* Header-specific includes. */
@@ -176,9 +176,12 @@ une_static__ wchar_t *une_token_to_wcs(une_token token)
     case UNE_TT_INT:
       str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE UNE_PRINTF_UNE_INT RESET, token.value._int);
       break;
-    case UNE_TT_FLT:
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE UNE_PRINTF_UNE_FLT RESET, token.value._flt);
+    case UNE_TT_FLT: {
+      wchar_t *flt_as_wcs = une_flt_to_wcs(token.value._flt);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, flt_as_wcs);
+      free(flt_as_wcs);
       break;
+    }
     
     /* Strings. */
     case UNE_TT_STR:

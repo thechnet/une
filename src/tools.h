@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2023-06-21
+Modified 2023-10-06
 */
 
 #ifndef UNE_TOOLS_H
@@ -42,6 +42,8 @@ bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest);
 
 wchar_t *une_str_to_wcs(char *str);
 char *une_wcs_to_str(wchar_t *wcs);
+
+wchar_t *une_flt_to_wcs(une_flt flt);
 
 bool une_file_exists(char *path);
 bool une_file_or_folder_exists(char *path);

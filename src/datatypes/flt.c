@@ -1,6 +1,6 @@
 /*
 flt.c - Une
-Modified 2022-08-04
+Modified 2023-10-06
 */
 
 /* Header-specific includes. */
@@ -37,12 +37,9 @@ Convert to STR.
 une_result une_datatype_flt_as_str(une_result result)
 {
   assert(result.type == UNE_RT_FLT);
-  wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
-  verify(out);
-  swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_FLT, result.value._flt);
   return (une_result){
     .type = UNE_RT_STR,
-    .value._wcs = out
+    .value._wcs = une_flt_to_wcs(result.value._flt)
   };
 }
 
@@ -52,7 +49,9 @@ Print a text representation to file.
 void une_datatype_flt_represent(FILE *file, une_result result)
 {
   assert(result.type == UNE_RT_FLT);
-  fwprintf(file, UNE_PRINTF_UNE_FLT, result.value._flt);
+  wchar_t *flt_as_wcs = une_flt_to_wcs(result.value._flt);
+  fwprintf(file, L"%ls", flt_as_wcs);
+  free(flt_as_wcs);
 }
 
 /*

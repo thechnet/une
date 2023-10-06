@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-06-23
+Modified 2023-10-06
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -17,6 +17,7 @@ Modified 2023-06-23
 #include <stdbool.h>
 #include <assert.h>
 #include <stddef.h>
+#include <float.h>
 
 #define ESCSEQ_WIDE
 #include "../logging/escseq/include/escseq.h"
@@ -43,19 +44,20 @@ Modified 2023-06-23
 #define UNE_DEBUG_SIZES_SIZE 1
 #define UNE_DEBUG_REPORT_FILE_RETURN "une_report_return.txt"
 #define UNE_DEBUG_REPORT_FILE_STATUS "une_report_status.txt"
-#define UNE_PRINTF_UNE_FLT L"%.3f"
+#define UNE_PRINTF_UNE_FLT L"%.*f"
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
 #define UNE_ERROR_USAGE L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
 #define UNE_ERROR_STREAM stderr
 #define UNE_DEBUG_LOGINTERPRET_INDENT L"|   "
 #define UNE_DEBUG_LOGINTERPRET_OFFSET 10
+#define UNE_FLT_PRECISION (DBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
 #define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
-#define UNE_SIZE_NUM_TO_STR_LEN 32 /* Representing. */
+#define UNE_SIZE_NUMBER_AS_STRING (48+UNE_FLT_PRECISION) /* une_int and une_flt as strings. */
 #if !defined(UNE_DEBUG_SIZES)
 #define UNE_SIZE_NUM_LEN 32 /* Lexing. */
 #define UNE_SIZE_STR_LEN 4096 /* Lexing. */

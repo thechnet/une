@@ -103,15 +103,15 @@ cases = [
   
   # NEW NUMBER LEXER
   Case('0', UNE_RT_INT, '0', []),
-  Case('00.00', UNE_RT_FLT, '0.000', []),
+  Case('00.00', UNE_RT_FLT, '0.0', []),
   Case('0.', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('.0', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   Case('0b10', UNE_RT_INT, '2', []),
   Case('0o10', UNE_RT_INT, '8', []),
   Case('0xf', UNE_RT_INT, '15', []),
   Case('0x.8', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
-  Case('2e2', UNE_RT_FLT, '200.000', []),
-  Case('2e-2', UNE_RT_FLT, '0.020', []),
+  Case('2e2', UNE_RT_FLT, '200.0', []),
+  Case('2e-2', UNE_RT_FLT, '0.02', []),
   Case('0b1e1', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   
   # OCTAL AND HEXADECIMAL CHARACTER CONSTANTS IN STRINGS
@@ -140,15 +140,15 @@ cases = [
   Case('int("100x")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   Case('int("")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   
-  Case('flt(100)', UNE_RT_FLT, '100.000', []),
-  Case('flt(100.9)', UNE_RT_FLT, '100.900', []),
-  Case('flt("100.9")', UNE_RT_FLT, '100.900', []),
+  Case('flt(100)', UNE_RT_FLT, '100.0', []),
+  Case('flt(100.9)', UNE_RT_FLT, '100.9', []),
+  Case('flt("100.9")', UNE_RT_FLT, '100.9', []),
   Case('flt([1])', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('flt("100.9x")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   Case('flt("")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   
   Case('str(1)', UNE_RT_STR, '1', []),
-  Case('str(1.1)', UNE_RT_STR, '1.100', []),
+  Case('str(1.1)', UNE_RT_STR, '1.1', []),
   Case('str("str")', UNE_RT_STR, 'str', []),
   Case('str([1])', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
@@ -248,7 +248,7 @@ cases = [
   # Data
   Case('Void', UNE_RT_VOID, 'Void', []),
   Case('100', UNE_RT_INT, '100', []),
-  Case('100.9', UNE_RT_FLT, '100.900', []),
+  Case('100.9', UNE_RT_FLT, '100.9', []),
   Case('[]', UNE_RT_LIST, '[]', []),
   Case('[1]', UNE_RT_LIST, '[1]', []),
   Case('[1, 2]', UNE_RT_LIST, '[1, 2]', []),
@@ -371,9 +371,9 @@ cases = [
   
   # ADD
   Case('1+1', UNE_RT_INT, '2', []),
-  Case('1+1.0', UNE_RT_FLT, '2.000', []),
-  Case('1.0+1', UNE_RT_FLT, '2.000', []),
-  Case('1.0+1.0', UNE_RT_FLT, '2.000', []),
+  Case('1+1.0', UNE_RT_FLT, '2.0', []),
+  Case('1.0+1', UNE_RT_FLT, '2.0', []),
+  Case('1.0+1.0', UNE_RT_FLT, '2.0', []),
   Case('"str"+"str"', UNE_RT_STR, 'strstr', []),
   Case('[1]+[2]', UNE_RT_LIST, '[1, 2]', []),
   Case('unknown+1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
@@ -386,9 +386,9 @@ cases = [
   
   # SUB
   Case('1-1', UNE_RT_INT, '0', []),
-  Case('1-1.0', UNE_RT_FLT, '0.000', []),
-  Case('1.0-1', UNE_RT_FLT, '0.000', []),
-  Case('1.0-1.0', UNE_RT_FLT, '0.000', []),
+  Case('1-1.0', UNE_RT_FLT, '0.0', []),
+  Case('1.0-1', UNE_RT_FLT, '0.0', []),
+  Case('1.0-1.0', UNE_RT_FLT, '0.0', []),
   Case('unknown-1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1-unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1-[1]', UNE_RT_ERROR, UNE_ET_TYPE, []),
@@ -396,9 +396,9 @@ cases = [
   
   # MUL
   Case('2*2', UNE_RT_INT, '4', []),
-  Case('2*2.5', UNE_RT_FLT, '5.000', []),
-  Case('2.5*2', UNE_RT_FLT, '5.000', []),
-  Case('2.5*2.0', UNE_RT_FLT, '5.000', []),
+  Case('2*2.5', UNE_RT_FLT, '5.0', []),
+  Case('2.5*2', UNE_RT_FLT, '5.0', []),
+  Case('2.5*2.0', UNE_RT_FLT, '5.0', []),
   Case('3*"str"', UNE_RT_STR, 'strstrstr', []),
   Case('"string"*3', UNE_RT_STR, 'stringstringstring', []),
   Case('"string"*-1', UNE_RT_STR, '', []),
@@ -413,10 +413,10 @@ cases = [
   
   # DIV
   Case('6/2', UNE_RT_INT, '3', []),
-  Case('1/2', UNE_RT_FLT, '0.500', []),
-  Case('1/4.0', UNE_RT_FLT, '0.250', []),
-  Case('4.0/1', UNE_RT_FLT, '4.000', []),
-  Case('1.0/3.0', UNE_RT_FLT, '0.333', []),
+  Case('1/2', UNE_RT_FLT, '0.5', []),
+  Case('1/4.0', UNE_RT_FLT, '0.25', []),
+  Case('4.0/1', UNE_RT_FLT, '4.0', []),
+  Case('1.0/3.0', UNE_RT_FLT, '0.3333333333', []),
   Case('unknown/1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1/unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1/[1]', UNE_RT_ERROR, UNE_ET_TYPE, []),
@@ -440,9 +440,9 @@ cases = [
   
   # MOD
   Case('3%2', UNE_RT_INT, '1', []),
-  Case('5.5%2', UNE_RT_FLT, '1.500', []),
-  Case('5%3.5', UNE_RT_FLT, '1.500', []),
-  Case('5.5%3.5', UNE_RT_FLT, '2.000', []),
+  Case('5.5%2', UNE_RT_FLT, '1.5', []),
+  Case('5%3.5', UNE_RT_FLT, '1.5', []),
+  Case('5.5%3.5', UNE_RT_FLT, '2.0', []),
   Case('unknown%1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1%unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1%[1]', UNE_RT_ERROR, UNE_ET_TYPE, []),
@@ -450,9 +450,9 @@ cases = [
   
   # POW
   Case('3**3', UNE_RT_INT, '27', []),
-  Case('4**0.5', UNE_RT_FLT, '2.000', []),
+  Case('4**0.5', UNE_RT_FLT, '2.0', []),
   Case('0.8**3', UNE_RT_FLT, '0.512', []),
-  Case('4.0**2.0', UNE_RT_FLT, '16.000', []),
+  Case('4.0**2.0', UNE_RT_FLT, '16.0', []),
   Case('unknown**1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1**unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1**[1]', UNE_RT_ERROR, UNE_ET_TYPE, []),
@@ -461,7 +461,7 @@ cases = [
   
   # NEG
   Case('--100', UNE_RT_INT, '100', []),
-  Case('--100.9', UNE_RT_FLT, '100.900', []),
+  Case('--100.9', UNE_RT_FLT, '100.9', []),
   Case('-unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('-[1]', UNE_RT_ERROR, UNE_ET_TYPE, []),
   
@@ -488,7 +488,7 @@ cases = [
   Case('a=4;a**=2;return a', UNE_RT_INT, '16', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=4;a*=2;return a', UNE_RT_INT, '8', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=5;a//=2;return a', UNE_RT_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
-  Case('a=5;a/=2;return a', UNE_RT_FLT, '2.500', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('a=5;a/=2;return a', UNE_RT_FLT, '2.5', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a=5;a%=2;return a', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
   
   # GET
@@ -546,7 +546,7 @@ cases = [
   Case('int=function(){return}', UNE_RT_ERROR, UNE_ET_SYNTAX, []),
   
   # CALL
-  Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]};return fn(2)', UNE_RT_LIST, '[2.200, "str"]', [ATTR_NO_IMPLICIT_RETURN]),
+  Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]};return fn(2)', UNE_RT_LIST, '[2.2, "str"]', [ATTR_NO_IMPLICIT_RETURN]),
   Case('a()', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('a=function(b)return b;c=function(d)return a();c(1)', UNE_RT_ERROR, UNE_ET_CALLABLE_ARG_COUNT, []),
   Case('a=function(b, c){return b};a(1, [1]**2)', UNE_RT_ERROR, UNE_ET_TYPE, []),

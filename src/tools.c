@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-07-02
+Modified 2023-10-06
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -86,6 +86,27 @@ char *une_wcs_to_str(wchar_t *wcs)
     return NULL;
   }
   return str;
+}
+
+/*
+Create a wchar_t string representation of a une_flt.
+*/
+wchar_t *une_flt_to_wcs(une_flt flt)
+{
+  /* Try to strip imprecise digits. */
+  wchar_t *wcs = malloc(UNE_SIZE_NUMBER_AS_STRING*sizeof(*wcs));
+  verify(wcs);
+  swprintf(wcs, UNE_SIZE_NUMBER_AS_STRING, UNE_PRINTF_UNE_FLT, UNE_FLT_PRECISION, flt);
+  
+  /* Strip trailing zeros. */
+  size_t wcs_length = wcslen(wcs);
+  for (size_t i=wcs_length-1; i>wcs_length-UNE_FLT_PRECISION; i--) {
+    if (wcs[i] != L'0')
+      break;
+    wcs[i] = L'\0';
+  }
+  
+  return wcs;
 }
 
 /*

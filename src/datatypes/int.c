@@ -1,6 +1,6 @@
 /*
 int.c - Une
-Modified 2022-08-04
+Modified 2023-10-06
 */
 
 /* Header-specific includes. */
@@ -39,9 +39,9 @@ Convert to STR.
 une_result une_datatype_int_as_str(une_result result)
 {
   assert(result.type == UNE_RT_INT);
-  wchar_t *out = malloc(UNE_SIZE_NUM_TO_STR_LEN*sizeof(*out));
+  wchar_t *out = malloc(UNE_SIZE_NUMBER_AS_STRING*sizeof(*out));
   verify(out);
-  swprintf(out, UNE_SIZE_NUM_TO_STR_LEN, UNE_PRINTF_UNE_INT, result.value._int);
+  swprintf(out, UNE_SIZE_NUMBER_AS_STRING, UNE_PRINTF_UNE_INT, result.value._int);
   return (une_result){
     .type = UNE_RT_STR,
     .value._wcs = out

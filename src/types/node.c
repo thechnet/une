@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-06-21
+Modified 2023-10-06
 */
 
 /* Header-specific includes. */
@@ -338,11 +338,14 @@ wchar_t *une_node_to_wcs(une_node *node)
         UNE_COLOR_NODE_DATUM_VALUE UNE_PRINTF_UNE_INT RESET,
         une_node_type_to_wcs(node->type), node->content.value._int);
       break;
-    case UNE_NT_FLT:
+    case UNE_NT_FLT: {
+      wchar_t *flt_as_wcs = une_flt_to_wcs(node->content.value._flt);
       buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" RESET L":"
-        UNE_COLOR_NODE_DATUM_VALUE UNE_PRINTF_UNE_FLT RESET,
-        une_node_type_to_wcs(node->type), node->content.value._flt);
+        UNE_COLOR_NODE_DATUM_VALUE L"%ls" RESET,
+        une_node_type_to_wcs(node->type), flt_as_wcs);
+      free(flt_as_wcs);
       break;
+    }
     
     /* Strings. */
     case UNE_NT_STR:

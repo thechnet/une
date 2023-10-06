@@ -6,6 +6,9 @@
 - New built-in function `sort()`.  
   Sort a list using a custom comparator function.
 
+## Changed
+- Improved string representations of floating-point numbers.
+
 ## [0.14.0] - 2023-08-19
 
 ### Added
