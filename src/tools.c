@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-10-06
+Modified 2023-10-07
 */
 
 /* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
@@ -206,8 +206,8 @@ Compares two une_flt for equality.
 */
 bool une_flts_equal(une_flt a, une_flt b)
 {
-  double epsilon = nextafter(0, 1);
-  return fabs(a - b) < epsilon;
+  une_flt epsilon = nextafterl(0, 1);
+  return fabsl(a - b) < epsilon;
 }
 
 /*

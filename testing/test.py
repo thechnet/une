@@ -416,7 +416,7 @@ cases = [
   Case('1/2', UNE_RT_FLT, '0.5', []),
   Case('1/4.0', UNE_RT_FLT, '0.25', []),
   Case('4.0/1', UNE_RT_FLT, '4.0', []),
-  Case('1.0/3.0', UNE_RT_FLT, '0.3333333333', []),
+  Case('1.0/3.0', UNE_RT_FLT, '0.3333333333333', []),
   Case('unknown/1', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1/unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   Case('1/[1]', UNE_RT_ERROR, UNE_ET_TYPE, []),

@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-08-19
+Modified 2023-10-06
 */
 
 /* Header-specific includes. */
@@ -209,7 +209,7 @@ une_lexer__(une_lex_number, bool allow_signed)
       is_floating = true;
       floating = (une_flt)integer;
     }
-    floating *= pow(10.0, (une_flt)exponent);
+    floating *= powl(10.0L, (une_flt)exponent);
   }
   
   une_token number = (une_token){

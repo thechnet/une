@@ -44,14 +44,14 @@ Modified 2023-10-06
 #define UNE_DEBUG_SIZES_SIZE 1
 #define UNE_DEBUG_REPORT_FILE_RETURN "une_report_return.txt"
 #define UNE_DEBUG_REPORT_FILE_STATUS "une_report_status.txt"
-#define UNE_PRINTF_UNE_FLT L"%.*f"
+#define UNE_PRINTF_UNE_FLT L"%.*Lf"
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
 #define UNE_ERROR_USAGE L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
 #define UNE_ERROR_STREAM stderr
 #define UNE_DEBUG_LOGINTERPRET_INDENT L"|   "
 #define UNE_DEBUG_LOGINTERPRET_OFFSET 10
-#define UNE_FLT_PRECISION (DBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
+#define UNE_FLT_PRECISION (LDBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
@@ -100,7 +100,7 @@ Modified 2023-10-06
 */
 typedef int64_t une_int;
 typedef uint64_t une_uint;
-typedef double une_flt;
+typedef long double une_flt;
 
 typedef struct une_position_ {
   size_t start;

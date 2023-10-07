@@ -60,7 +60,7 @@ Check for truth.
 une_int une_datatype_flt_is_true(une_result result)
 {
   assert(result.type == UNE_RT_FLT);
-  return result.value._flt == 0.0 ? 0 : 1;
+  return une_flts_equal(result.value._flt, 0.0L) ? 0 : 1;
 }
 
 /*
@@ -215,7 +215,7 @@ une_result une_datatype_flt_fdiv(une_result left, une_result right)
   assert(left.type == UNE_RT_FLT);
   
   /* Return INFINITY on zero division. */
-  if ((right.type == UNE_RT_INT && right.value._int == 0) || (right.type == UNE_RT_FLT && right.value._flt == 0.0))
+  if ((right.type == UNE_RT_INT && right.value._int == 0) || (right.type == UNE_RT_FLT && une_flts_equal(right.value._flt, 0.0L)))
     return (une_result){
       .type = UNE_RT_FLT,
       .value._flt = INFINITY
@@ -224,12 +224,12 @@ une_result une_datatype_flt_fdiv(une_result left, une_result right)
   if (right.type == UNE_RT_INT)
     return (une_result){
       .type = UNE_RT_INT,
-      .value._int = (une_int)(floor(left.value._flt / (une_flt)right.value._int))
+      .value._int = (une_int)(floorl(left.value._flt / (une_flt)right.value._int))
     };
   if (right.type == UNE_RT_FLT)
     return (une_result){
       .type = UNE_RT_INT,
-      .value._int = (une_int)(floor(left.value._flt / right.value._flt))
+      .value._int = (une_int)(floorl(left.value._flt / right.value._flt))
     };
   return une_result_create(UNE_RT_ERROR);
 }
@@ -243,12 +243,12 @@ une_result une_datatype_flt_mod(une_result left, une_result right)
   if (right.type == UNE_RT_INT)
     return (une_result){
       .type = UNE_RT_FLT,
-      .value._flt = fmod(left.value._flt, (une_flt)right.value._int)
+      .value._flt = fmodl(left.value._flt, (une_flt)right.value._int)
     };
   if (right.type == UNE_RT_FLT)
     return (une_result){
       .type = UNE_RT_FLT,
-      .value._flt = fmod(left.value._flt, right.value._flt)
+      .value._flt = fmodl(left.value._flt, right.value._flt)
     };
   return une_result_create(UNE_RT_ERROR);
 }
@@ -264,12 +264,12 @@ une_result une_datatype_flt_pow(une_result left, une_result right)
   if (right.type == UNE_RT_INT)
     return (une_result){
       .type = UNE_RT_FLT,
-      .value._flt = (une_flt)pow((double)left.value._flt, (double)right.value._int)
+      .value._flt = powl(left.value._flt, (une_flt)right.value._int)
     };
   if (right.type == UNE_RT_FLT)
     return (une_result){
       .type = UNE_RT_FLT,
-      .value._flt = (une_flt)pow((double)left.value._flt, (double)right.value._flt)
+      .value._flt = powl(left.value._flt, right.value._flt)
     };
   return une_result_create(UNE_RT_ERROR);
 }

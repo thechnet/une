@@ -15,7 +15,7 @@ Modified 2023-10-06
 une_flt-compatible INFINITY.
 */
 #undef INFINITY
-#define INFINITY __builtin_inf()
+#define INFINITY HUGE_VALL
 
 /*
 A range, produced by une_range_from_relative_indices.

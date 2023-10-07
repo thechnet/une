@@ -8,6 +8,7 @@
 
 ## Changed
 - Improved string representations of floating-point numbers.
+- Increased precision of floating-point numbers.
 
 ## [0.14.0] - 2023-08-19
 
