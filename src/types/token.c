@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-10-06
+Modified 2023-10-07
 */
 
 /* Header-specific includes. */
@@ -167,33 +167,33 @@ une_static__ wchar_t *une_token_to_wcs(une_token token)
   
   assert(UNE_TOKEN_TYPE_IS_VALID(token.type));
   str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L"%ls", une_token_type_to_wcs(token.type));
-  str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, RESET);
+  str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, UNE_COLOR_RESET);
   
   /* Write token value if it exists. */
   switch (token.type) {
     
     /* Numbers. */
     case UNE_TT_INT:
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE UNE_PRINTF_UNE_INT RESET, token.value._int);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE UNE_PRINTF_UNE_INT UNE_COLOR_RESET, token.value._int);
       break;
     case UNE_TT_FLT: {
       wchar_t *flt_as_wcs = une_flt_to_wcs(token.value._flt);
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, flt_as_wcs);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_RESET, flt_as_wcs);
       free(flt_as_wcs);
       break;
     }
     
     /* Strings. */
     case UNE_TT_STR:
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" RESET, token.value._wcs);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" UNE_COLOR_RESET, token.value._wcs);
       break;
     case UNE_TT_ID:
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, token.value._wcs);
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_RESET, token.value._wcs);
       break;
     
     /* Built-in function. */
     case UNE_TT_BUILTIN:
-      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" RESET, une_builtin_function_to_wcs((une_builtin_function)token.value._int));
+      str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_RESET, une_builtin_function_to_wcs((une_builtin_function)token.value._int));
       break;
     
   }

@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-06-23
+Modified 2023-10-07
 */
 
 /* Header-specific includes. */
@@ -146,11 +146,11 @@ void une_error_trace_print(une_trace trace)
     putwc(L'~', UNE_ERROR_STREAM);
   if (trace.point.end > text_end + 1)
     fputws(L"\b+", UNE_ERROR_STREAM);
-  fputws(RESET L"\n", UNE_ERROR_STREAM);
+  fputws(UNE_COLOR_RESET L"\n", UNE_ERROR_STREAM);
   
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
   fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Want: line %zu, characters %zu-%zu\n", trace.point.line, trace.point.start, trace.point.end);
-  fwprintf(UNE_ERROR_STREAM, L"Have: %zu (line), %zu (text), %zu (end)" RESET L"\n", line_start, text_start, text_end);
+  fwprintf(UNE_ERROR_STREAM, L"Have: %zu (line), %zu (text), %zu (end)" UNE_COLOR_RESET L"\n", line_start, text_start, text_end);
   #endif
 }
 
@@ -165,7 +165,7 @@ void une_error_display(une_error *error, une_lexer_state *ls)
   
   for (size_t i=0; i<traces_length; i++) {
     char *file = traces[i].file ? traces[i].file : UNE_SOURCE_PLACEHOLDER;
-    fwprintf(UNE_ERROR_STREAM, BOLD L"In file \"%hs\" at line %zu", file, traces[i].point.line);
+    fwprintf(UNE_ERROR_STREAM, UNE_COLOR_TRACEBACK_LOCATION L"In file \"%hs\" at line %zu", file, traces[i].point.line);
     if (traces[i].function_file) {
       fputws(L", in", UNE_ERROR_STREAM);
       if (traces[i].function_label)
@@ -178,16 +178,16 @@ void une_error_display(une_error *error, une_lexer_state *ls)
       )
         fwprintf(UNE_ERROR_STREAM, L" (\"%hs\": %zu)", traces[i].function_file, traces[i].function_point.line);
     }
-    fputws(L":" RESET L"\n", UNE_ERROR_STREAM);
+    fputws(L":" UNE_COLOR_RESET L"\n", UNE_ERROR_STREAM);
     une_error_trace_print(traces[i]);
   }
   free(traces);
   
   skip_traceback:
   
-  fwprintf(UNE_ERROR_STREAM, UNE_COLOR_FAIL L"Error: %ls" RESET L"\n", une_error_type_to_wcs(error->type));
+  fwprintf(UNE_ERROR_STREAM, UNE_COLOR_FAIL L"Error: %ls" UNE_COLOR_RESET L"\n", une_error_type_to_wcs(error->type));
   
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
-  fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Source: %hs, %d" RESET L"\n", error->meta_file, error->meta_line);
+  fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Source: %hs, %d" UNE_COLOR_RESET L"\n", error->meta_file, error->meta_line);
   #endif
 }

@@ -19,12 +19,6 @@ Modified 2023-10-07
 #include <stddef.h>
 #include <float.h>
 
-#define ESCSEQ_WIDE
-#include "../logging/escseq/include/escseq.h"
-#define LOGGING_WIDE
-#define LOGGING_ID "une"
-#include "../logging/include/logging.h"
-
 #include "util/memdbg.h"
 
 /*
@@ -84,15 +78,18 @@ Modified 2023-10-07
 #endif
 
 /* Output Color Escape Sequences. */
-#define UNE_COLOR_POSITION BOLD FGGREEN
-#define UNE_COLOR_FAIL BOLD FGRED
-#define UNE_COLOR_HINT FGBBLACK
-#define UNE_COLOR_TOKEN_TYPE FGYELLOW
-#define UNE_COLOR_TOKEN_VALUE FGGREEN
-#define UNE_COLOR_NODE_BRANCH_TYPE FGCYAN
-#define UNE_COLOR_NODE_DATUM_TYPE FGMAGENTA
-#define UNE_COLOR_NODE_DATUM_VALUE BOLD FGMAGENTA
-#define UNE_COLOR_RESULT_TYPE FGBLUE
+#define UNE_COLOR_RESET L"\33[0m"
+#define UNE_COLOR_POSITION L"\33[1m\33[32m"
+#define UNE_COLOR_FAIL L"\33[1m\33[31m"
+#define UNE_COLOR_HINT L"\33[90m"
+#define UNE_COLOR_TOKEN_TYPE L"\33[33m"
+#define UNE_COLOR_TOKEN_VALUE L"\33[32m"
+#define UNE_COLOR_NODE_BRANCH_TYPE L"\33[36m"
+#define UNE_COLOR_NODE_DATUM_TYPE L"\33[35m"
+#define UNE_COLOR_NODE_DATUM_VALUE L"\33[1m\33[35m"
+#define UNE_COLOR_RESULT_TYPE L"\33[34m"
+#define UNE_COLOR_TRACEBACK_LOCATION L"\33[1m"
+#define UNE_COLOR_WARN L"\33[1m\33[33m"
 
 /*
 *** Types.

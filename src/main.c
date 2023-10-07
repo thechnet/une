@@ -24,22 +24,22 @@ int main(int argc, char *argv[])
   /* Warnings */
   #ifdef UNE_DEBUG
   #ifdef UNE_DEBUG_MEMDBG
-  warn("UNE_DEBUG_MEMDBG enabled.");
+  wprintf(UNE_COLOR_WARN L"UNE_DEBUG_MEMDBG enabled.\n");
   #endif
   #ifdef UNE_DEBUG_SIZES
-  warn("UNE_DEBUG_SIZES enabled.");
+  wprintf(UNE_COLOR_WARN L"UNE_DEBUG_SIZES enabled.\n");
   #endif
   #ifdef UNE_DEBUG_REPORT
-  warn("UNE_DEBUG_REPORT enabled.");
+  wprintf(UNE_COLOR_WARN L"UNE_DEBUG_REPORT enabled.\n");
   #endif
   #ifdef UNE_NO_LEX
-  warn("UNE_NO_LEX enabled.");
+  wprintf(UNE_COLOR_WARN L"UNE_NO_LEX enabled.\n");
   #endif
   #ifdef UNE_NO_PARSE
-  warn("UNE_NO_PARSE enabled.");
+  wprintf(UNE_COLOR_WARN L"UNE_NO_PARSE enabled.\n");
   #endif
   #ifdef UNE_NO_INTERPRET
-  warn("UNE_NO_INTERPRET enabled.");
+  wprintf(UNE_COLOR_WARN L"UNE_NO_INTERPRET enabled.\n");
   #endif
   #endif
   une_result result;
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
   end:
   /* main Error. */
   if (main_error) {
-    wprintf(RESET UNE_HEADER L"\n" UNE_ERROR_USAGE L"\n", argv[0]);
+    wprintf(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_ERROR_USAGE L"\n", argv[0]);
     result = (une_result){
       .type = UNE_RT_ERROR,
       .value._int = UNE_MAIN_ERROR
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
   #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
   if (result.type != UNE_RT_ERROR) {
     assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
-    wprintf(UNE_COLOR_RESULT_TYPE L"%ls" RESET ": ", une_result_type_to_wcs(result.type));
+    wprintf(UNE_COLOR_RESULT_TYPE L"%ls" UNE_COLOR_RESET ": ", une_result_type_to_wcs(result.type));
     une_result_represent(stdout, result);
     putwc(L'\n', stdout);
   }
@@ -166,7 +166,7 @@ void main_interactive(void)
   verify(stmts);
   bool did_exit = false;
   
-  fputws(RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
+  fputws(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
   
   while (!sigint_fired && !did_exit) {
     fputws(UNE_INTERACTIVE_PREFIX, stdout);
@@ -177,7 +177,7 @@ void main_interactive(void)
       fputws(L"\033[H\033[J", stdout);
       continue;
     } else if (!wcscmp(stmts, L"#header\n")) {
-      fputws(RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
+      fputws(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
       continue;
     } else if (!wcscmp(stmts, L"#symbols\n")) {
       for (size_t i=0; i<is.context->variables_count; i++) {
