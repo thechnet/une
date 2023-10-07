@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-10-06
+Modified 2023-10-07
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -26,7 +26,6 @@ Modified 2023-10-06
 #include "../logging/include/logging.h"
 
 #include "util/memdbg.h"
-#include "../watchdog/build/watchdog.h"
 
 /*
 *** Constants.

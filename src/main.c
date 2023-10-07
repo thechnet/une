@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-06-23
+Modified 2023-10-07
 */
 
 /* Implementation-specific includes. */
@@ -25,9 +25,6 @@ int main(int argc, char *argv[])
   #ifdef UNE_DEBUG
   #ifdef UNE_DEBUG_MEMDBG
   warn("UNE_DEBUG_MEMDBG enabled.");
-  #endif
-  #ifdef UNE_DEBUG_WATCHDOG
-  warn("UNE_DEBUG_WATCHDOG enabled.");
   #endif
   #ifdef UNE_DEBUG_SIZES
   warn("UNE_DEBUG_SIZES enabled.");
