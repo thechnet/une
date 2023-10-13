@@ -32,6 +32,7 @@ list(APPEND options "NO_PARSE|Debug: Skip parsing|OFF")
 list(APPEND options "NO_INTERPRET|Debug: Skip interpretation|OFF")
 list(APPEND options "DEBUG_FSANITIZE|Debug: Use -fsanitize flags|OFF")
 list(APPEND options "DEBUG_COVERAGE|Debug: Enable instrumentation|OFF")
+list(APPEND options "USES_UCRT|Enable when using UCRT on Windows|OFF")
 foreach(option IN LISTS options)
   string(REPLACE "|" ";" option_list ${option})
   list(GET option_list 0 id)
@@ -94,6 +95,9 @@ endif()
 target_compile_options(une PRIVATE
   -pedantic -Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused -Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations -Wno-unsafe-buffer-usage
 )
+if(UNE_USES_UCRT)
+  add_definitions(-D__USE_MINGW_ANSI_STDIO=1) # See https://github.com/mstorsjo/llvm-mingw/issues/373.
+endif()
 
 # Build types.
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
