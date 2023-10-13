@@ -91,9 +91,14 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
   target_compile_options(une PRIVATE -Wall -Wextra -Wno-unused-value -Wno-implicit-fallthrough)
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
   target_compile_options(une PRIVATE -Weverything)
+  if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0)
+    target_compile_options(une PRIVATE -Wno-unsafe-buffer-usage)
+  endif()
 endif()
 target_compile_options(une PRIVATE
-  -pedantic -Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused -Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations -Wno-unsafe-buffer-usage
+  -pedantic
+  -Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused
+  -Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations
 )
 if(UNE_USES_UCRT)
   add_definitions(-D__USE_MINGW_ANSI_STDIO=1) # See https://github.com/mstorsjo/llvm-mingw/issues/373.
