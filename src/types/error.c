@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-10-07
+Modified 2023-10-11
 */
 
 /* Header-specific includes. */
@@ -113,6 +113,8 @@ void une_error_trace_print(une_trace trace)
   wint_t wc = L' '; /* Initialize as whitespace in case no lines are skipped. */
   while (line < trace.point.line) {
     wc = fgetwc(f);
+    if (wc == L'\r')
+      continue;
     if (wc == L'\n')
       line++;
     assert(wc != WEOF);
