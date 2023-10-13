@@ -51,6 +51,9 @@ bool une_file_exists(char *path);
 bool une_file_or_folder_exists(char *path);
 wchar_t *une_file_read(char *path);
 
+wchar_t *une_get_working_directory(void);
+bool une_set_working_directory(wchar_t *path);
+
 void une_sleep_ms(int ms);
 
 int une_out_of_memory(void);

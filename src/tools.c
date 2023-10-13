@@ -213,6 +213,61 @@ wchar_t *une_file_read(char *path)
 }
 
 /*
+Get the working directory.
+*/
+wchar_t *une_get_working_directory(void)
+{
+  #ifdef _WIN32
+  DWORD size = GetCurrentDirectoryW(0, NULL); /* Determine required buffer size. */
+  wchar_t *path = malloc(size*sizeof(*path));
+  verify(path);
+  DWORD count = GetCurrentDirectoryW(size, path);
+  if (count == 0) {
+    free(path);
+    return NULL;
+  }
+  assert(count + 1 /* \0. */ == size);
+  
+  #else
+  
+  size_t size = PATH_MAX;
+  char *path_narrow = malloc(size * sizeof(*path_narrow));
+  verify(path_narrow);
+  while (!getcwd(path_narrow, (int)size-1)) {
+    if (errno != ERANGE) {
+      free(path_narrow);
+      return NULL;
+    }
+    size *= 2;
+    path_narrow = realloc(path_narrow, size * sizeof(*path_narrow));
+    verify(path_narrow);
+  }
+  wchar_t *path = une_str_to_wcs(path_narrow);
+  free(path_narrow);
+  #endif
+  
+  return path;
+}
+
+/*
+Set the working directory.
+*/
+bool une_set_working_directory(wchar_t *path)
+{
+  #ifdef _WIN32
+  return SetCurrentDirectoryW(path) != 0;
+  #else
+  
+  char *path_narrow = une_wcs_to_str(path);
+  if (!path_narrow)
+    return false;
+  int code = chdir(path_narrow);
+  free(path_narrow);
+  return code == 0;
+  #endif
+}
+
+/*
 Halt execution for the specified number of miliseconds.
 */
 void une_sleep_ms(int ms)
