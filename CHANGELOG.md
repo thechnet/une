@@ -5,6 +5,9 @@
 ### Added
 - New built-in function `sort()`.  
   Sort a list using a custom comparator function.
+- New built-in functions:
+  - `getwd()` – Get the working directory.
+  - `setwd()` – Set the working directory.
 
 ## Changed
 - Improved string representations of floating-point numbers.

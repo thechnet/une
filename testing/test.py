@@ -614,6 +614,12 @@ cases = [
   Case('sort([2,1,3],function(a,b) return b-a)', UNE_RT_LIST, '[3, 2, 1]', []),
   Case('sort([2,1,3],function(a,b) return 1/0)', UNE_RT_ERROR, UNE_ET_ZERO_DIVISION, []),
   Case('sort([2,1,3],function(a,b) return 1.0)', UNE_RT_ERROR, UNE_ET_TYPE, []),
+  
+  # getwd
+  Case('split(getwd(),["/","\\\\"])[-2..]', UNE_RT_LIST, '["une", "testing"]', []),
+  
+  # setwd
+  Case('setwd("..");s=split(getwd(),["/","\\\\"])[-1..];setwd("testing");return s', UNE_RT_LIST, '["une"]', [ATTR_NO_IMPLICIT_RETURN]),
 ]
 CASES_LEN = len(cases)
 

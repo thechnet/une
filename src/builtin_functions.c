@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-08-20
+Modified 2023-10-11
 */
 
 /* Header-specific includes. */
@@ -8,7 +8,6 @@ Modified 2023-08-20
 
 /* Implementation-specific includes. */
 #include <time.h>
-#include <limits.h>
 #include "tools.h"
 #include "une.h"
 #include "stream.h"
@@ -54,6 +53,8 @@ const size_t une_builtin_functions_params_count[] = {
   3, /* replace */
   2, /* join */
   2, /* sort */
+  0, /* getcwd */
+  1, /* setcwd */
 };
 
 /*
@@ -671,7 +672,6 @@ static int sort_compare(const void *a, const void *b)
 /*
 Return the list 'subject', sorted using the function 'compare'.
 */
-
 une_builtin_fn__(sort)
 {
   une_builtin_param subject = 0;
@@ -700,4 +700,35 @@ une_builtin_fn__(sort)
   sort_comparator = (une_result){ .type = UNE_RT_none__ };
   
   return result;
+}
+
+/*
+Get the working directory.
+*/
+une_builtin_fn__(getwd)
+{
+  wchar_t *path = une_get_working_directory();
+  assert(path); // FIXME:
+  
+  return (une_result){
+    .type = UNE_RT_STR,
+    .value._wcs = path
+  };
+}
+
+/*
+Set the working directory.
+*/
+une_builtin_fn__(setwd)
+{
+  une_builtin_param path = 0;
+  UNE_BUILTIN_VERIFY_ARG_TYPE(path, UNE_RT_STR);
+  
+  bool success = une_set_working_directory(args[path].value._wcs);
+  if (!success) {
+    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, UNE_BUILTIN_POS_OF_ARG(path));
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  return une_result_create(UNE_RT_VOID);
 }

@@ -612,6 +612,18 @@ assert 1 > 2 # Fails.
     ```
     replace("+", "*", "2+23") == "2*23"
     ```
+- `sort(subject, comparator)` – Return a sorted copy of the list `subject`, using the `comparator` function to compare elements:
+    ```
+    sort([3, 1, 2], function(a, b) return a-b) == [1, 2, 3]
+    ```
+- `setwd()` – Set the working directory.
+    ```
+    setwd("C:\Directory")
+    ```
+- `getwd()` – Get the current working directory.
+    ```
+    getwd() == "C:\Directory"
+    ```
 
 ---
 
