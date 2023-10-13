@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2023-08-13
+Modified 2023-10-11
 */
 
 /* Header-specific includes. */
@@ -27,9 +27,16 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   une_error error = une_error_create();
   
   /* Read file. */
-  wchar_t *content = read_from_file ? une_file_read(path) : text;
-  if (!content)
-    error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+  wchar_t *content = NULL;
+  if (read_from_file) {
+    char *resolved_path = une_resolve_path(path);
+    if (!resolved_path || !une_file_exists(resolved_path))
+      error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+    path = resolved_path;
+    content = une_file_read(path);
+  } else {
+    content = text;
+  }
   
   /* Lex. */
   une_lexer_state ls = une_lexer_state_create();
@@ -114,8 +121,12 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
     une_interpreter_state_free(une_is);
   une_node_free(ast, false);
   une_tokens_free(ls.tokens);
-  if (read_from_file && content)
-    free(content);
+  if (read_from_file) {
+    if (content)
+      free(content);
+    if (path)
+      free(path);
+  }
   
   #if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
   if (result.type == UNE_RT_ERROR) {
@@ -139,9 +150,16 @@ une_result une_run_bare(une_error *error, char *path, wchar_t *text)
   *error = une_error_create();
   
   /* Read file. */
-  wchar_t *content = path ? une_file_read(path) : text;
-  if (!content)
-    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+  wchar_t *content = NULL;
+  if (path) {
+    char *resolved_path = une_resolve_path(path);
+    if (!resolved_path || !une_file_exists(resolved_path))
+      *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+    path = resolved_path;
+    content = une_file_read(path);
+  } else {
+    content = text;
+  }
   
   /* Lex. */
   une_lexer_state ls = une_lexer_state_create();
@@ -170,8 +188,10 @@ une_result une_run_bare(une_error *error, char *path, wchar_t *text)
   une_is->should_return = false;
   une_node_free(ast, false);
   une_tokens_free(ls.tokens);
-  if (path)
+  if (path) {
     free(content);
+    free(path);
+  }
   
   return result;
 }

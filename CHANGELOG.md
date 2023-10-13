@@ -9,6 +9,7 @@
 ## Changed
 - Improved string representations of floating-point numbers.
 - Increased precision of floating-point numbers.
+- Relative paths are now always converted to absolute ones.
 
 ## [0.14.0] - 2023-08-19
 
