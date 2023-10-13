@@ -1,14 +1,7 @@
 /*
 tools.c - Une
-Modified 2023-10-07
+Modified 2023-10-11
 */
-
-/* FIXME: Because watchdog.h overrides sizeof we need to include windows.h here. */
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <sys/stat.h>
-#endif
 
 /* Header-specific includes. */
 #include "tools.h"
@@ -17,6 +10,13 @@ Modified 2023-10-07
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <limits.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 #include "lexer.h"
 
 /*
@@ -110,6 +110,41 @@ wchar_t *une_flt_to_wcs(une_flt flt)
 }
 
 /*
+Get the absolute path.
+*/
+char *une_resolve_path(char *path)
+{
+  size_t size = PATH_MAX;
+  char *resolved_path = malloc(size * sizeof(*resolved_path));
+  verify(resolved_path);
+  
+  #ifdef _WIN32
+  DWORD count;
+  while (true) {
+    count = GetFullPathNameA(path, (DWORD)size, resolved_path, NULL);
+    if (count == 0) {
+      free(resolved_path);
+      return NULL;
+    }
+    if (count < size)
+      break;
+    size = count + 1 /* Just to be sure... */;
+    resolved_path = realloc(resolved_path, size * sizeof(*resolved_path));
+    verify(resolved_path);
+  }
+  
+  #else
+  
+  if (!realpath(path, resolved_path)) {
+    free(resolved_path);
+    return NULL;
+  }
+  #endif
+  
+  return resolved_path;
+}
+
+/*
 Check if a file exists.
 */
 bool une_file_exists(char *path)
@@ -145,6 +180,8 @@ Open a UTF-8 file at 'path' and return its text contents as wchar_t string.
 */
 wchar_t *une_file_read(char *path)
 {
+  if (path == NULL)
+    return NULL;
   FILE *f = fopen(path, UNE_FOPEN_RFLAGS);
   if (f == NULL)
     return NULL;
