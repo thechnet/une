@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-06-21
+Modified 2023-10-14
 */
 
 /* Header-specific includes. */
@@ -148,11 +148,6 @@ une_parser__(une_parse_condition)
 {
   LOGPARSE(L"", now(&ps->in));
   
-  if (now(&ps->in).type == UNE_TT_NOT) {
-    LOGPARSE(L"not", now(&ps->in));
-    return une_parse_unary_operation(error, ps, UNE_NT_NOT, &une_parse_condition);
-  }
-  
   return une_parse_binary_operation(error, ps,
     UNE_R_BGN_CONDITION_TOKENS,
     UNE_R_BGN_CONDITION_NODES,
@@ -216,8 +211,17 @@ une_parser__(une_parse_negation)
 {
   LOGPARSE(L"", now(&ps->in));
   
+  if (now(&ps->in).type == UNE_TT_NOT)
+    return une_parse_unary_operation(error, ps, UNE_NT_NOT, &une_parse_negation);
+  return une_parse_minus(error, ps);
+}
+
+une_parser__(une_parse_minus)
+{
+  LOGPARSE(L"", now(&ps->in));
+  
   if (now(&ps->in).type == UNE_TT_SUB)
-    return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_negation);
+    return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_minus);
   return une_parse_power(error, ps);
 }
 

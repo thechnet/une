@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2023-06-19
+Modified 2023-10-14
 */
 
 #ifndef UNE_PARSER_H
@@ -36,6 +36,7 @@ une_parser__(une_parse_cover);
 une_parser__(une_parse_add_sub);
 une_parser__(une_parse_term);
 une_parser__(une_parse_negation);
+une_parser__(une_parse_minus);
 une_parser__(une_parse_power);
 une_parser__(une_parse_accessor);
 une_parser__(une_parse_atom);

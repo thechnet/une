@@ -274,6 +274,7 @@ cases = [
   
   # NOT
   Case('!0', UNE_RT_INT, '1', []),
+  Case('1==!0', UNE_RT_INT, '1', []),
   Case('!unknown', UNE_RT_ERROR, UNE_ET_SYMBOL_NOT_DEFINED, []),
   
   # AND

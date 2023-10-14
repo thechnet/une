@@ -3,13 +3,13 @@
 ## [Unreleased]
 
 ### Added
-- New built-in function `sort()`.  
-  Sort a list using a custom comparator function.
 - New built-in functions:
+  - `sort()` – Sort a list using a custom comparator function.
   - `getwd()` – Get the working directory.
   - `setwd()` – Set the working directory.
 
 ## Changed
+- Increased precedence of negation operator (`!`) – Negation is now evaluated after multiplication/division and before the unary minus operator.
 - Improved string representations of floating-point numbers.
 - Increased precision of floating-point numbers.
 - Relative paths are now always converted to absolute ones.
