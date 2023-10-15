@@ -55,6 +55,7 @@ const size_t une_builtin_functions_params_count[] = {
   2, /* sort */
   0, /* getcwd */
   1, /* setcwd */
+  1, /* playwav */
 };
 
 /*
@@ -731,4 +732,30 @@ une_builtin_fn__(setwd)
   }
   
   return une_result_create(UNE_RT_VOID);
+}
+
+/*
+Play a WAV file.
+*/
+une_builtin_fn__(playwav)
+{
+  une_builtin_param path = 0;
+  UNE_BUILTIN_VERIFY_ARG_TYPE(path, UNE_RT_STR);
+  
+  char *path_narrow = une_wcs_to_str(args[path].value._wcs);
+  if (!path_narrow) {
+    *error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(path));
+    return une_result_create(UNE_RT_ERROR);
+  }
+  bool file_not_fit = !une_file_exists(path_narrow) || !une_file_extension_matches(path_narrow, ".wav");
+  free(path_narrow);
+  if (file_not_fit) {
+    *error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(path));
+    return une_result_create(UNE_RT_ERROR);
+  }
+  
+  return (une_result){
+    .type = UNE_RT_INT,
+    .value._int = une_play_wav(args[path].value._wcs)
+  };
 }

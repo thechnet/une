@@ -624,6 +624,10 @@ assert 1 > 2 # Fails.
     ```
     getwd() == "C:\Directory"
     ```
+- `playwav()` – Play a WAV file. (Windows only)
+    ```
+    playwav("sound.wav")
+    ```
 
 ---
 

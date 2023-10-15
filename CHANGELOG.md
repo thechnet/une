@@ -7,6 +7,7 @@
   - `sort()` – Sort a list using a custom comparator function.
   - `getwd()` – Get the working directory.
   - `setwd()` – Set the working directory.
+  - `playwav()` – Play a WAV file. This function is currently only supported on Windows; on other systems, it will simply return `False`.
 
 ## Changed
 - Increased precedence of negation operator (`!`) – Negation is now evaluated after multiplication/division and before the unary minus operator.
