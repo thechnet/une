@@ -57,6 +57,8 @@ bool une_set_working_directory(wchar_t *path);
 
 void une_sleep_ms(int ms);
 
+bool une_play_wav(wchar_t *path);
+
 int une_out_of_memory(void);
 
 bool une_flts_equal(une_flt a, une_flt b);

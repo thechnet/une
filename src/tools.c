@@ -313,6 +313,18 @@ void une_sleep_ms(int ms)
 }
 
 /*
+Play a WAV file.
+*/
+bool une_play_wav(wchar_t *path)
+{
+  #ifdef _WIN32
+  return PlaySoundW(path, NULL, SND_FILENAME|SND_NODEFAULT|SND_ASYNC);
+  #else
+  return false;
+  #endif
+}
+
+/*
 Print a message and abort.
 */
 int une_out_of_memory(void)

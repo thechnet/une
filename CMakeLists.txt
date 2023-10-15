@@ -73,8 +73,11 @@ add_executable(une
   src/main.c
 )
 
-# libm
+# Libraries.
 target_link_libraries(une m)
+if(WIN32)
+  target_link_libraries(une winmm)
+endif()
 
 # Include directories.
 target_include_directories(une PUBLIC
