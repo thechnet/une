@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-10-11
+Modified 2023-10-15
 */
 
 /* Header-specific includes. */
@@ -210,6 +210,35 @@ wchar_t *une_file_read(char *path)
   fclose(f);
   text[cursor] = L'\0';
   return text;
+}
+
+/*
+Check if a file extension matches a given path.
+*/
+bool une_file_extension_matches(char *path, char *extension)
+{
+  assert(path);
+  assert(extension);
+  
+  size_t path_length = strlen(path);
+  size_t extension_length = strlen(extension);
+  if (extension_length >= path_length)
+    return false;
+  
+  char *path_extension_lower = malloc((extension_length+1)*sizeof(*path_extension_lower));
+  verify(path_extension_lower);
+  for (size_t i=0; i<=extension_length; i++)
+    path_extension_lower[i] = (char)tolower(path[path_length-extension_length+i]);
+  
+  char *extension_lower = malloc((extension_length+1)*sizeof(*extension_lower));
+  verify(extension_lower);
+  for (size_t i=0; i<=extension_length; i++)
+    extension_lower[i] = (char)tolower(extension[i]);
+  
+  int strcmp_return_code = strcmp(path_extension_lower, extension_lower);
+  free(path_extension_lower);
+  free(extension_lower);
+  return strcmp_return_code == 0;
 }
 
 /*
