@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2023-10-11
+Modified 2023-10-15
 */
 
 /* Header-specific includes. */
@@ -31,7 +31,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
   if (read_from_file) {
     char *resolved_path = une_resolve_path(path);
     if (!resolved_path || !une_file_exists(resolved_path))
-      error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+      error = UNE_ERROR_SET(UNE_ET_FILE, (une_position){0});
     path = resolved_path;
     content = une_file_read(path);
   } else {
@@ -154,7 +154,7 @@ une_result une_run_bare(une_error *error, char *path, wchar_t *text)
   if (path) {
     char *resolved_path = une_resolve_path(path);
     if (!resolved_path || !une_file_exists(resolved_path))
-      *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, (une_position){0});
+      *error = UNE_ERROR_SET(UNE_ET_FILE, (une_position){0});
     path = resolved_path;
     content = une_file_read(path);
   } else {

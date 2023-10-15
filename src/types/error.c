@@ -1,6 +1,6 @@
 /*
 error.c - Une
-Modified 2023-10-11
+Modified 2023-10-15
 */
 
 /* Header-specific includes. */
@@ -22,7 +22,7 @@ const wchar_t *une_error_message_table[] = {
   L"Zero division.",
   L"Unreal number.",
   L"Wrong number of arguments.",
-  L"File not found.",
+  L"File unsuitable or non-existent.",
   L"Encoding, conversion, or pattern error.",
   L"Type.",
   L"Assertion not met.",
@@ -160,7 +160,7 @@ void une_error_display(une_error *error, une_lexer_state *ls)
 {
   une_trace *traces = NULL;
   
-  if (error->type == UNE_ET_FILE_NOT_FOUND && error->pos.end == 0)
+  if (error->type == UNE_ET_FILE && error->pos.end == 0)
     goto skip_traceback;
   
   size_t traces_length = une_error_trace(error, ls, &traces);

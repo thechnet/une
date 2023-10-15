@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-10-11
+Modified 2023-10-15
 */
 
 /* Header-specific includes. */
@@ -289,7 +289,7 @@ une_builtin_fn__(read)
   }
   if (!une_file_exists(path)) {
     free(path);
-    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, UNE_BUILTIN_POS_OF_ARG(file));
+    *error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(file));
     return une_result_create(UNE_RT_ERROR);
   }
   
@@ -321,7 +321,7 @@ une_result une_builtin_fn_write_or_append(une_error *error, une_node *call_node,
   FILE *fp = fopen(path, write ? UNE_FOPEN_WFLAGS : UNE_FOPEN_AFLAGS);
   free(path);
   if (fp == NULL) {
-    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, UNE_BUILTIN_POS_OF_ARG(file));
+    *error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(file));
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -390,7 +390,7 @@ une_builtin_fn__(script)
   }
   if (!une_file_exists(path)) {
     free(path);
-    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, UNE_BUILTIN_POS_OF_ARG(script));
+    *error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(script));
     return une_result_create(UNE_RT_ERROR);
   }
 
@@ -726,7 +726,7 @@ une_builtin_fn__(setwd)
   
   bool success = une_set_working_directory(args[path].value._wcs);
   if (!success) {
-    *error = UNE_ERROR_SET(UNE_ET_FILE_NOT_FOUND, UNE_BUILTIN_POS_OF_ARG(path));
+    *error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(path));
     return une_result_create(UNE_RT_ERROR);
   }
   

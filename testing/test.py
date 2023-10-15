@@ -75,7 +75,7 @@ UNE_ET_INDEX = UNE_R_END_DATA_RESULT_TYPES+5
 UNE_ET_ZERO_DIVISION = UNE_R_END_DATA_RESULT_TYPES+6
 UNE_ET_UNREAL_NUMBER = UNE_R_END_DATA_RESULT_TYPES+7
 UNE_ET_CALLABLE_ARG_COUNT = UNE_R_END_DATA_RESULT_TYPES+8
-UNE_ET_FILE_NOT_FOUND = UNE_R_END_DATA_RESULT_TYPES+9
+UNE_ET_FILE = UNE_R_END_DATA_RESULT_TYPES+9
 UNE_ET_ENCODING = UNE_R_END_DATA_RESULT_TYPES+10
 UNE_ET_TYPE = UNE_R_END_DATA_RESULT_TYPES+11
 UNE_ET_ASSERTION_NOT_MET = UNE_R_END_DATA_RESULT_TYPES+12
@@ -90,7 +90,7 @@ error_types = {
   UNE_ET_ZERO_DIVISION: 'UNE_ET_ZERO_DIVISION',
   UNE_ET_UNREAL_NUMBER: 'UNE_ET_UNREAL_NUMBER',
   UNE_ET_CALLABLE_ARG_COUNT: 'UNE_ET_CALLABLE_ARG_COUNT',
-  UNE_ET_FILE_NOT_FOUND: 'UNE_ET_FILE_NOT_FOUND',
+  UNE_ET_FILE: 'UNE_ET_FILE',
   UNE_ET_ENCODING: 'UNE_ET_ENCODING',
   UNE_ET_TYPE: 'UNE_ET_TYPE',
   UNE_ET_ASSERTION_NOT_MET: 'UNE_ET_ASSERTION_NOT_MET',
@@ -169,15 +169,15 @@ cases = [
   Case('write("script.une", "return 46")', UNE_RT_VOID, 'Void', []),
   Case('write(1, "test")', UNE_RT_ERROR, UNE_ET_TYPE, []),
   Case('write("test", 1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
-  Case('write("/", "test")', UNE_RT_ERROR, UNE_ET_FILE_NOT_FOUND, []),
+  Case('write("/", "test")', UNE_RT_ERROR, UNE_ET_FILE, []),
   
   Case('read("script.une")', UNE_RT_STR, 'return 46', []),
   Case('read(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
-  Case('read("1lkj23")', UNE_RT_ERROR, UNE_ET_FILE_NOT_FOUND, []),
+  Case('read("1lkj23")', UNE_RT_ERROR, UNE_ET_FILE, []),
   
   Case('script("script.une")', UNE_RT_INT, '46', []),
   Case('script(1)', UNE_RT_ERROR, UNE_ET_TYPE, []),
-  Case('script("/")', UNE_RT_ERROR, UNE_ET_FILE_NOT_FOUND, []),
+  Case('script("/")', UNE_RT_ERROR, UNE_ET_FILE, []),
   Case('write("script.une", "msg=128");script("script.une");return msg', UNE_RT_INT, '128', [ATTR_NO_IMPLICIT_RETURN]),
   
   Case('write("script.une", "4");append("script.une", "\n6");return read("script.une")', UNE_RT_STR, '4\n6', [ATTR_NO_IMPLICIT_RETURN]),
@@ -203,7 +203,7 @@ cases = [
   Case('replace("","","")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   
   # main
-  Case('unknown', UNE_RT_ERROR, UNE_ET_FILE_NOT_FOUND, [ATTR_DIRECT_ARG]),
+  Case('unknown', UNE_RT_ERROR, UNE_ET_FILE, [ATTR_DIRECT_ARG]),
   Case('', UNE_RT_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),
   Case('-s', UNE_RT_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),
   
