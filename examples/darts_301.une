@@ -54,7 +54,7 @@ reevaluate_turn = function()
 
 commands = [
 	[
-		"stake", "Set starting stake",
+		"stake", "<amount>", "Set starting stake",
 		function(amount) {
 			new = sum(amount)
 			if new != Void
@@ -62,7 +62,7 @@ commands = [
 		}
 	],
 	[
-		"add", "Add player",
+		"add", "<name>", "Add player",
 		function(name) {
 			global names += [name]
 			global scores += [stake]
@@ -70,7 +70,7 @@ commands = [
 		}
 	],
 	[
-		"kick", "Remove player",
+		"kick", "<name>", "Remove player",
 		function(name) {
 			index = find(names, name)
 			global names = pop(names, index)
@@ -78,28 +78,19 @@ commands = [
 			global plays = pop(plays, index)
 		}
 	],
-	[
-		"reset", "Reset all scores",
-		function(_) {
-			for i from 0 till len(scores) {
-				global scores[i] = stake
-				global plays[i] = ""
-			}
-		}
-	],
-	[
-		"fix", "Fix score",
-		function(name_and_score) {
+		[
+		"fix", "<score> [<name>]", "Fix score",
+		function(score_and_name) {
 			separation = Void
-			for i from 0 till len(name_and_score)
-				if name_and_score[i] == " "
+			for i from 0 till len(score_and_name)
+				if score_and_name[i] == " "
 					separation = i
 			if separation == Void {
 				name = names[turn]
-				score = name_and_score
+				score = score_and_name
 			} else {
-				name = name_and_score[separation+1..]
-				score = name_and_score[..separation]
+				name = score_and_name[separation+1..]
+				score = score_and_name[..separation]
 			}
 			new = sum(score)
 			if new != Void {
@@ -110,7 +101,16 @@ commands = [
 		}
 	],
 	[
-		"?", "Toggle this board",
+		"reset", "", "Reset all scores",
+		function(_) {
+			for i from 0 till len(scores) {
+				global scores[i] = stake
+				global plays[i] = ""
+			}
+		}
+	],
+	[
+		"?", "", "Toggle this board",
 		function(_) {
 			global show_help = !show_help
 		}
@@ -135,12 +135,15 @@ for color in colors
 	put("\e]4;{color[0]};rgb:{join(color[1], "/")}\a")
 
 command_names = []
+command_parameters = []
 command_descriptions = []
 for command in commands {
 	command_names += [command[0]]
-	command_descriptions += [command[1]]
+	command_parameters += [command[1]]
+	command_descriptions += [command[2]]
 }
 widest_command_name = widest(command_names)
+widest_command_parameters = widest(command_parameters)
 widest_command_description = widest(command_descriptions)
 
 stake = 301
@@ -175,11 +178,12 @@ while True {
 		}
 	if show_help {
 		stop_1 = 6 + widest_command_name + 3
-		stop_2 = stop_1 + widest_command_description + 3
-		buffer += "\e[K\n\e[K  \e[44m\e[94m\e[K\e[{stop_2}G\e[40m\e[K\n"
+		stop_2 = stop_1 + widest_command_parameters + 3
+		stop_3 = stop_2 + widest_command_description + 3
+		buffer += "\e[K\n\e[K  \e[44m\e[94m\e[K\e[{stop_3}G\e[40m\e[K\n"
 		for command in commands
-			buffer += "\e[K  \e[44m\e[K   {command[0]}\e[{stop_1}G\e[3m{command[1]}\e[23m\e[{stop_2}G\e[40m\e[K\n"
-		buffer += "\e[K  \e[44m\e[K\e[{stop_2}G\e[40m\e[K\n"
+			buffer += "\e[K  \e[44m\e[K   {command[0]}\e[{stop_1}G{command[1]}\e[{stop_2}G\e[3m{command[2]}\e[23m\e[{stop_3}G\e[40m\e[K\n"
+		buffer += "\e[K  \e[44m\e[K\e[{stop_3}G\e[40m\e[K\n"
 	}
 	buffer += "\e[J\e[H"
 	print(buffer)
@@ -193,7 +197,7 @@ while True {
 	argument = Void
 	for command in commands
 		if request[..len(command[0])] == command[0] {
-			command_function = command[2]
+			command_function = command[3]
 			argument = request[len(command[0])+1..]
 			break
 		}
