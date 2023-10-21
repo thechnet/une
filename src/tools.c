@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-10-15
+Modified 2023-10-21
 */
 
 /* Header-specific includes. */
@@ -16,6 +16,7 @@ Modified 2023-10-15
 #else
 #include <sys/stat.h>
 #include <unistd.h>
+#include <ctype.h>
 #endif
 #include "lexer.h"
 
@@ -262,7 +263,7 @@ wchar_t *une_get_working_directory(void)
   size_t size = PATH_MAX;
   char *path_narrow = malloc(size * sizeof(*path_narrow));
   verify(path_narrow);
-  while (!getcwd(path_narrow, (int)size-1)) {
+  while (!getcwd(path_narrow, size-1)) {
     if (errno != ERANGE) {
       free(path_narrow);
       return NULL;
