@@ -9,11 +9,12 @@
   - `setwd()` – Set the working directory.
   - `playwav()` – Play a WAV file. This function is currently only supported on Windows; on other systems, it will simply return `False`.
 
-## Changed
+### Changed
 - Increased precedence of negation operator (`!`) – Negation is now evaluated after multiplication/division and before the unary minus operator.
 - Improved string representations of floating-point numbers.
 - Increased precision of floating-point numbers.
 - Relative paths are now always converted to absolute ones.
+- Increased the maximum size for textual representations of the AST (enabled by default in debug builds).
 
 ## [0.14.0] - 2023-08-19
 

@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-10-07
+Modified 2023-10-21
 */
 
 /* Header-specific includes. */
@@ -305,6 +305,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_RESET L"\n%ls", node_as_wcs);
+        assert(buffer_len + offset < UNE_SIZE_NODE_AS_WCS);
         free(node_as_wcs);
       }
       buffer_len += offset + swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_RESET L"}");
@@ -325,6 +326,7 @@ wchar_t *une_node_to_wcs(une_node *node)
       for (size_t i=2; i<=list_size; i++) {
         node_as_wcs = une_node_to_wcs(list[i]);
         offset += swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_RESET L", %ls", node_as_wcs);
+        assert(buffer_len + offset < UNE_SIZE_NODE_AS_WCS);
         free(node_as_wcs);
       }
       buffer_len += offset + swprintf(buffer+offset, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_RESET L"%c", close);

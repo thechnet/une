@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-10-07
+Modified 2023-10-21
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -47,7 +47,7 @@ Modified 2023-10-07
 #define UNE_FLT_PRECISION (LDBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
 
 /* Sizes. */
-#define UNE_SIZE_NODE_AS_WCS 32767 /* (Debug) Representing. */
+#define UNE_SIZE_NODE_AS_WCS 128000 /* (Debug) Representing. */
 #define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_builtin_input. */
 #define UNE_SIZE_NUMBER_AS_STRING (48+UNE_FLT_PRECISION) /* une_int and une_flt as strings. */
