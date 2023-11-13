@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-10-21
+Modified 2023-11-13
 */
 
 /* Header-specific includes. */
@@ -13,6 +13,8 @@ Modified 2023-10-21
 #include <limits.h>
 #ifdef _WIN32
 #include <windows.h>
+#undef PATH_MAX
+#define PATH_MAX MAX_PATH /* MinGW defines both of these for compatibility. */
 #else
 #include <sys/stat.h>
 #include <unistd.h>
