@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased] - 2023-11-15
+
+### Fixed
+- Using `replace()` to remove a substring (i.e., the replacement is the empty string) results in a buffer overflow.
+
 ## [0.15.0] - 2023-10-21
 
 ### Added

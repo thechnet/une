@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-10-15
+Modified 2023-11-15
 */
 
 /* Header-specific includes. */
@@ -572,7 +572,7 @@ une_builtin_fn__(replace)
   }
   size_t replace_len = wcslen(replace);
   size_t subject_len = wcslen(subject);
-  size_t new_size = subject_len*replace_len+1;
+  size_t new_size = subject_len * (replace_len || 1) + 1;
   
   /* Allocate memory for new string. */
   wchar_t *new = malloc(new_size*sizeof(wchar_t));

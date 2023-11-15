@@ -200,6 +200,7 @@ cases = [
   Case('eval("23*2")', UNE_RT_INT, '46', []),
   
   Case('replace("a","b","xax")', UNE_RT_STR, 'xbx', []),
+  Case('replace("a","","xax");return replace("a","","xax")', UNE_RT_STR, 'xx', [ATTR_NO_IMPLICIT_RETURN]),
   Case('replace("","","")', UNE_RT_ERROR, UNE_ET_ENCODING, []),
   
   # main
