@@ -27,6 +27,7 @@ const wchar_t *une_error_message_table[] = {
 	L"Type.",
 	L"Assertion not met.",
 	L"Misplaced 'any' or 'all'.",
+	L"System error.",
 	L"Unknown error! (Internal Error)",
 };
 

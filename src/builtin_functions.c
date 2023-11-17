@@ -709,7 +709,10 @@ Get the working directory.
 une_builtin_fn__(getwd)
 {
 	wchar_t *path = une_get_working_directory();
-	assert(path); // FIXME:
+	if (!path) {
+		*error = UNE_ERROR_SET(UNE_ET_SYSTEM, call_node->pos);
+		return une_result_create(UNE_RT_ERROR);
+	}
 	
 	return (une_result){
 		.type = UNE_RT_STR,

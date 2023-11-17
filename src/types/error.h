@@ -29,6 +29,7 @@ typedef enum une_error_type_ {
 	UNE_ET_TYPE,
 	UNE_ET_ASSERTION_NOT_MET,
 	UNE_ET_MISPLACED_ANY_OR_ALL,
+	UNE_ET_SYSTEM,
 	UNE_ET_max__,
 } une_error_type;
 
