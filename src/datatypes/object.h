@@ -1,6 +1,6 @@
 /*
 object.h - Une
-Modified 2023-05-13
+Modified 2023-11-17
 */
 
 #ifndef UNE_DATATYPES_OBJECT_H
@@ -30,12 +30,12 @@ Object.
 */
 
 #define UNE_FOR_OBJECT_MEMBER(iterator_, object_ptr_) \
-  for (size_t iterator_=0; iterator_<object_ptr_->members_length; iterator_++)
+	for (size_t iterator_=0; iterator_<object_ptr_->members_length; iterator_++)
 
 typedef struct une_object_ {
-  une_association **members;
-  size_t members_length;
-  une_context *owner;
+	une_association **members;
+	size_t members_length;
+	une_context *owner;
 } une_object;
 
 #endif /* UNE_DATATYPES_OBJECT_H */

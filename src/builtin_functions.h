@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2023-10-14
+Modified 2023-11-17
 */
 
 #ifndef UNE_BUILTIN_H
@@ -25,39 +25,39 @@ typedef une_builtin_fn_sign__(*une_builtin_fnptr);
 Every built-in function.
 */
 #define UNE_ENUMERATE_BUILTIN_FUNCTIONS(enumerator) \
-  enumerator(put) \
-  enumerator(print) \
-  enumerator(int) \
-  enumerator(flt) \
-  enumerator(str) \
-  enumerator(len) \
-  enumerator(sleep) \
-  enumerator(chr) \
-  enumerator(ord) \
-  enumerator(read) \
-  enumerator(write) \
-  enumerator(append) \
-  enumerator(input) \
-  enumerator(script) \
-  enumerator(exist) \
-  enumerator(split) \
-  enumerator(eval) \
-  enumerator(replace) \
-  enumerator(join) \
-  enumerator(sort) \
-  enumerator(getwd) \
-  enumerator(setwd) \
-  enumerator(playwav)
+	enumerator(put) \
+	enumerator(print) \
+	enumerator(int) \
+	enumerator(flt) \
+	enumerator(str) \
+	enumerator(len) \
+	enumerator(sleep) \
+	enumerator(chr) \
+	enumerator(ord) \
+	enumerator(read) \
+	enumerator(write) \
+	enumerator(append) \
+	enumerator(input) \
+	enumerator(script) \
+	enumerator(exist) \
+	enumerator(split) \
+	enumerator(eval) \
+	enumerator(replace) \
+	enumerator(join) \
+	enumerator(sort) \
+	enumerator(getwd) \
+	enumerator(setwd) \
+	enumerator(playwav)
 
 /*
 The index of a built-in function.
 */
 typedef enum une_builtin_function_ {
-  UNE_BUILTIN_none__,
-  #define BUILTIN_FUNCTION__(id__) UNE_BUILTIN_##id__,
-  UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_FUNCTION__)
-  #undef BUILTIN_FUNCTION__
-  UNE_BUILTIN_max__,
+	UNE_BUILTIN_none__,
+	#define BUILTIN_FUNCTION__(id__) UNE_BUILTIN_##id__,
+	UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_FUNCTION__)
+	#undef BUILTIN_FUNCTION__
+	UNE_BUILTIN_max__,
 } une_builtin_function;
 
 /*
@@ -69,22 +69,22 @@ Built-in function template.
 Get the position of an argument.
 */
 #define UNE_BUILTIN_POS_OF_ARG(index) \
-  (((une_node**)call_node->content.branch.b->content.value._vpp)[index+1]->pos)
+	(((une_node**)call_node->content.branch.b->content.value._vpp)[index+1]->pos)
 
 /*
 Ensure an argument has the correct type.
 */
 #define UNE_BUILTIN_VERIFY_ARG_TYPE(index, expected_type) \
-  do if (args[index].type != expected_type) {\
-    *error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(index));\
-    return une_result_create(UNE_RT_ERROR);\
-  } while(false)
+	do if (args[index].type != expected_type) {\
+		*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(index));\
+		return une_result_create(UNE_RT_ERROR);\
+	} while(false)
 
 /*
 Verify that a une_builtin_function is valid.
 */
 #define UNE_BUILTIN_FUNCTION_IS_VALID(function) \
-  (function > UNE_BUILTIN_none__ && function < UNE_BUILTIN_max__)
+	(function > UNE_BUILTIN_none__ && function < UNE_BUILTIN_max__)
 
 size_t une_builtin_params_count(une_builtin_function function);
 une_builtin_fnptr une_builtin_function_to_fnptr(une_builtin_function function);

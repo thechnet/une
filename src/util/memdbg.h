@@ -1,6 +1,6 @@
 /*
 memdbg.h - Une
-Modified 2022-08-04
+Modified 2023-11-17
 */
 
 #ifndef MEMDBG_H
@@ -22,7 +22,7 @@ implementation from mapping to themselves.
 /* Manual functionality. */
 #define padchk(memory) memdbg_allocations_padding_check__(__FILE__, __LINE__)
 #define ARR(arr, idx)\
-  (*(typeof(arr[0])*)memdbg_array_check__(__FILE__, __LINE__, (char*)arr, sizeof(arr), sizeof(arr[0]), idx))
+	(*(typeof(arr[0])*)memdbg_array_check__(__FILE__, __LINE__, (char*)arr, sizeof(arr), sizeof(arr[0]), idx))
 
 /* Wrappers. */
 #define strdup(str) memdbg_strdup__(__FILE__, __LINE__, str)

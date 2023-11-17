@@ -1,6 +1,6 @@
 /*
 memdbg_internal.h - Une
-Modified 2022-08-04
+Modified 2023-11-17
 */
 
 #ifndef MEMDBG_INTERNAL_H
@@ -24,11 +24,11 @@ Modified 2022-08-04
 Holds information for an allocation.
 */
 typedef struct memdbg_allocation_ {
-  char *file;
-  int line;
-  char *memory;
-  size_t size;
-  bool check_padding;
+	char *file;
+	int line;
+	char *memory;
+	size_t size;
+	bool check_padding;
 } memdbg_allocation;
 
 /*

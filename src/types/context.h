@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2023-06-23
+Modified 2023-11-17
 */
 
 #ifndef UNE_CONTEXT_H
@@ -14,17 +14,17 @@ Modified 2023-06-23
 Holds information that changes depending on the execution context.
 */
 typedef struct une_context_ {
-  bool is_marker_context;
-  struct une_context_ *parent;
-  char *creation_file;
-  une_position creation_point;
-  bool has_callee;
-  wchar_t *callee_label;
-  char *callee_definition_file;
-  une_position callee_definition_point;
-  size_t variables_size;
-  size_t variables_count;
-  une_association **variables;
+	bool is_marker_context;
+	struct une_context_ *parent;
+	char *creation_file;
+	une_position creation_point;
+	bool has_callee;
+	wchar_t *callee_label;
+	char *callee_definition_file;
+	une_position callee_definition_point;
+	size_t variables_size;
+	size_t variables_count;
+	une_association **variables;
 } une_context;
 
 /*

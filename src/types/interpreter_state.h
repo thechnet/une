@@ -1,6 +1,6 @@
 /*
 interpreter_state.h - Une
-Modified 2023-06-23
+Modified 2023-11-17
 */
 
 #ifndef UNE_INTERPRETER_STATE_H
@@ -14,21 +14,21 @@ Modified 2023-06-23
 A temporary result buffer.
 */
 typedef struct une_holding_ {
-  une_result *buffer;
-  size_t size;
-  size_t count;
+	une_result *buffer;
+	size_t size;
+	size_t count;
 } une_holding;
 
 /*
 Holds the state of the interpreter.
 */
 typedef struct une_interpreter_state_ {
-  une_context *context;
-  bool should_return;
-  bool should_exit;
-  une_result this_contestant;
-  une_result this;
-  une_holding holding;
+	une_context *context;
+	bool should_return;
+	bool should_exit;
+	une_result this_contestant;
+	une_result this;
+	une_holding holding;
 } une_interpreter_state;
 
 extern une_interpreter_state *une_is;

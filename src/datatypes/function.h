@@ -1,6 +1,6 @@
 /*
 function.h - Une
-Modified 2023-06-23
+Modified 2023-11-17
 */
 
 #ifndef UNE_DATATYPES_FUNCTION_H
@@ -27,11 +27,11 @@ Function.
 */
 
 typedef struct une_function_ {
-  char *definition_file;
-  une_position definition_point;
-  size_t params_count;
-  wchar_t **params;
-  une_node *body;
+	char *definition_file;
+	une_position definition_point;
+	size_t params_count;
+	wchar_t **params;
+	une_node *body;
 } une_function;
 
 #endif /* UNE_DATATYPES_FUNCTION_H */

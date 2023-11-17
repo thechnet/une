@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-10-21
+Modified 2023-11-17
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -99,17 +99,17 @@ typedef uint64_t une_uint;
 typedef long double une_flt;
 
 typedef struct une_position_ {
-  size_t start;
-  size_t end;
-  size_t line;
+	size_t start;
+	size_t end;
+	size_t line;
 } une_position;
 
 typedef union une_value_ {
-  une_int _int;
-  une_flt _flt;
-  wchar_t *_wcs;
-  void *_vp;
-  void **_vpp;
+	une_int _int;
+	une_flt _flt;
+	wchar_t *_wcs;
+	void *_vp;
+	void **_vpp;
 } une_value;
 
 /*
@@ -124,18 +124,18 @@ typedef union une_value_ {
 */
 #if defined(UNE_DEBUG) && defined(UNE_DEBUG_LOG_INTERPRET)
 #define LOGINTERPRET_BEGIN(node) \
-  static int indent = 0; \
-  wprintf(L"%d-%d\33[%dG", node->pos.start, node->pos.end, UNE_DEBUG_LOGINTERPRET_OFFSET); \
-  for (int i=0; i<indent; i++) \
-    wprintf(UNE_DEBUG_LOGINTERPRET_INDENT); \
-  wprintf(L"%ls\n", une_node_type_to_wcs(node->type)); \
-  indent++
+	static int indent = 0; \
+	wprintf(L"%d-%d\33[%dG", node->pos.start, node->pos.end, UNE_DEBUG_LOGINTERPRET_OFFSET); \
+	for (int i=0; i<indent; i++) \
+		wprintf(UNE_DEBUG_LOGINTERPRET_INDENT); \
+	wprintf(L"%ls\n", une_node_type_to_wcs(node->type)); \
+	indent++
 #define LOGINTERPRET_END(node) \
-  indent--; \
-  wprintf(L"\33[%dG", UNE_DEBUG_LOGINTERPRET_OFFSET); \
-  for (int i=0; i<indent; i++) \
-    wprintf(UNE_DEBUG_LOGINTERPRET_INDENT); \
-  wprintf(L"X\n", une_node_type_to_wcs(node->type))
+	indent--; \
+	wprintf(L"\33[%dG", UNE_DEBUG_LOGINTERPRET_OFFSET); \
+	for (int i=0; i<indent; i++) \
+		wprintf(UNE_DEBUG_LOGINTERPRET_INDENT); \
+	wprintf(L"X\n", une_node_type_to_wcs(node->type))
 #else
 #define LOGINTERPRET_BEGIN(...)
 #define LOGINTERPRET_END(...)

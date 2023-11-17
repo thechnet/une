@@ -1,6 +1,6 @@
 /*
 lexer_state.h - Une
-Modified 2023-06-29
+Modified 2023-11-17
 */
 
 #ifndef UNE_LEXER_STATE_H
@@ -14,16 +14,16 @@ Modified 2023-06-29
 Holds the state of the lexer.
 */
 typedef struct une_lexer_state_ {
-  char *name;
-  wchar_t *text;
-  size_t text_length;
-  size_t text_index;
-  une_token *tokens;
-  size_t tokens_size;
-  size_t tokens_count;
-  bool in_str_expression;
-  bool begin_str_expression;
-  size_t line;
+	char *name;
+	wchar_t *text;
+	size_t text_length;
+	size_t text_index;
+	une_token *tokens;
+	size_t tokens_size;
+	size_t tokens_count;
+	bool in_str_expression;
+	bool begin_str_expression;
+	size_t line;
 } une_lexer_state;
 
 /*

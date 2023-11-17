@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2023-10-14
+Modified 2023-11-17
 */
 
 #ifndef UNE_PARSER_H
@@ -21,7 +21,7 @@ Modified 2023-10-14
 Parser function template.
 */
 #define une_parser__(id__, ...)\
-  une_static__ une_node *(id__)(une_error *error, une_parser_state *ps, ##__VA_ARGS__)
+	une_static__ une_node *(id__)(une_error *error, une_parser_state *ps, ##__VA_ARGS__)
 
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens);
 
@@ -70,28 +70,28 @@ une_parser__(une_parse_object_association);
 une_parser__(une_parse_object);
 
 une_parser__(une_parse_unary_operation,
-  une_node_type node_t,
-  une_node *(*parse)(une_error*, une_parser_state*)
+	une_node_type node_t,
+	une_node *(*parse)(une_error*, une_parser_state*)
 );
 
 une_parser__(une_parse_binary_operation,
-  une_token_type range_begin_tt,
-  une_node_type range_begin_nt,
-  une_token_type range_end_tt,
-  une_node *(*parse_left)(une_error*, une_parser_state*),
-  une_node *(*parse_right)(une_error*, une_parser_state*)
+	une_token_type range_begin_tt,
+	une_node_type range_begin_nt,
+	une_token_type range_end_tt,
+	une_node *(*parse_left)(une_error*, une_parser_state*),
+	une_node *(*parse_right)(une_error*, une_parser_state*)
 );
 
 une_parser__(une_parse_sequence,
-  une_node_type node_type,
-  une_token_type tt_begin,
-  une_token_type tt_end_of_item,
-  une_token_type tt_end,
-  une_node *(*parser)(une_error*, une_parser_state*)
+	une_node_type node_type,
+	une_token_type tt_begin,
+	une_token_type tt_end_of_item,
+	une_token_type tt_end,
+	une_node *(*parser)(une_error*, une_parser_state*)
 );
 
 une_parser__(une_parse_phony,
-  une_node_type node_type
+	une_node_type node_type
 );
 
 #endif /* !UNE_PARSER_H */

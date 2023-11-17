@@ -1,6 +1,6 @@
 /*
 association.h - Une
-Modified 2023-02-22
+Modified 2023-11-17
 */
 
 #ifndef UNE_ASSOCIATION_H
@@ -15,8 +15,8 @@ Modified 2023-02-22
 Associate a result with a given name.
 */
 typedef struct une_association_ {
-  wchar_t *name;
-  une_result content;
+	wchar_t *name;
+	une_result content;
 } une_association;
 
 /*

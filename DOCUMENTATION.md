@@ -27,8 +27,8 @@ Multiple statements can be grouped into a block by surrounding them with curly b
 
 ```
 {
-  statement
-  statement
+	statement
+	statement
 }
 ```
 
@@ -39,8 +39,8 @@ keyword statement
 ```
 ```
 keyword {
-  statement
-  statement
+	statement
+	statement
 }
 ```
 
@@ -52,8 +52,8 @@ keyword{statement;statement}
 ```
 keyword
 {
-  statement
-  statement
+	statement
+	statement
 }
 ```
 
@@ -106,8 +106,8 @@ For example:
 ```
 function(parameter1, parameter2)
 {
-  statement1
-  statement2
+	statement1
+	statement2
 }
 ````
 
@@ -116,8 +116,8 @@ Functions are called by appending the arguments in parentheses (`(`, `)`) after 
 ```
 function(parameter1, parameter2)
 {
-  statement1
-  statement2
+	statement1
+	statement2
 }(argument1, argument2)
 ```
 
@@ -153,8 +153,8 @@ Much like lists, objects can hold any number of any kind of data, including obje
 
 ```
 person = {
-  name: "Mia",
-  age: Void
+	name: "Mia",
+	age: Void
 }
 print(person.name) # Prints 'Mia'.
 ```
@@ -170,7 +170,7 @@ When a function is stored in an object member, that function becomes a *method* 
 ```
 person.set_age = function(new_age)
 {
-  this.age = new_age
+	this.age = new_age
 }
 person.set_age(24)
 print(person.age) # Prints '24'.
@@ -402,9 +402,9 @@ Any execution context can be concluded early using the `return` keyword, optiona
 ```
 function()
 {
-  statement1
-  return some_value
-  statement2 # Not executed.
+	statement1
+	return some_value
+	statement2 # Not executed.
 }
 
 return # The return value can be omitted.
@@ -416,10 +416,10 @@ A script can be aborted early using the `exit` keyword, optionally followed by a
 
 ```
 return function() {
-  return function() {
-    exit 46 # Immediately ends the execution with exit code 46.
-    return 1 # Does not get returned.
-  }()
+	return function() {
+		exit 46 # Immediately ends the execution with exit code 46.
+		return 1 # Does not get returned.
+	}()
 }()
 ```
 
@@ -429,7 +429,7 @@ Conditional execution is achieved using the `if` keyword:
 
 ```
 if conditional_expression {
-  # conditional_expression evaluated to 'true'.
+	# conditional_expression evaluated to 'true'.
 }
 ```
 
@@ -437,10 +437,10 @@ Optionally, one can add separate branches using the `elif` keyword.
 
 ```
 if conditional_expression {
-  # conditional_expression evaluated to 'true'.
+	# conditional_expression evaluated to 'true'.
 } elif other_conditional_expression {
-  # conditional_expression evaluated to 'false'.
-  # other_conditional_expression evaluated to 'true'.
+	# conditional_expression evaluated to 'false'.
+	# other_conditional_expression evaluated to 'true'.
 }
 ```
 
@@ -448,9 +448,9 @@ Finally, alternative statement(s) can be included using the `else` keyword.
 
 ```
 if conditional_expression {
-  # The conditional expression evaluated to 'true'.
+	# The conditional expression evaluated to 'true'.
 } else {
-  # The conditional expression evaluated to 'false'.
+	# The conditional expression evaluated to 'false'.
 }
 ```
 
@@ -462,7 +462,7 @@ Using the `for` keyword, statement(s) can be repeated a given number of times:
 
 ```
 for iterator_variable from starting_integer till concluding_integer {
-  statement
+	statement
 }
 ```
 
@@ -472,7 +472,7 @@ Alternatively, the `for` loop also accepts the `in` keyword in place of `from-ti
 
 ```
 for element in list_or_string {
-  statement
+	statement
 }
 ```
 
@@ -481,7 +481,7 @@ Using the `while` keyword, statement(s) can be repeated until a conditional expr
 ```
 i = 10
 while i > 0 {
-  i = i-1
+	i = i-1
 }
 ```
 
@@ -492,9 +492,9 @@ To conclude a loop early, use `break`:
 ```
 i = 10
 while 1 {
-  i = i-1
-  if i <= 0
-    break
+	i = i-1
+	if i <= 0
+		break
 }
 ```
 
@@ -503,9 +503,9 @@ To skip to the next iteration in a loop, use `continue`:
 ```
 odd_numbers = 0
 for i from 0 till 11 {
-  if i%2
-    continue
-  odd_numbers = odd_numbers+1
+	if i%2
+		continue
+	odd_numbers = odd_numbers+1
 }
 ```
 
@@ -521,113 +521,113 @@ assert 1 > 2 # Fails.
 ## 7. Built-in Functions
 
 - `put(value)` – Prints `value` to the standard output pipe:
-    ```
-    > une -s "put(\"Hello, World!\")"
-    Hello, World!> 
-    ```
+		```
+		> une -s "put(\"Hello, World!\")"
+		Hello, World!> 
+		```
 - `print(value)` – Same as `put`, but automatically appends a newline to the output:
-    ```
-    > une -s "put(\"Hello, World!\")"
-    Hello, World!
-    > 
-    ```
+		```
+		> une -s "put(\"Hello, World!\")"
+		Hello, World!
+		> 
+		```
 - `int(value)` – Returns `value` as an integer:
-    ```
-    int("46") == 46
-    ```
+		```
+		int("46") == 46
+		```
 - `flt(value)` – Returns `value` as a floating-point number:
-    ```
-    flt(46) == 46.0
-    ```
+		```
+		flt(46) == 46.0
+		```
 - `str(value)` – Returns `value` as a string:
-    ```
-    str(46) == "46"
-    ```
+		```
+		str(46) == "46"
+		```
 - `len(value)` – Returns the number of characters or items in `value`:
-    ```
-    len("Une") == 3
-    len([1, 2, 3]) == 3
-    ```
+		```
+		len("Une") == 3
+		len([1, 2, 3]) == 3
+		```
 - `sleep(time)` – Halts execution for `time` milliseconds:
-    ```
-    [16:20:46] > une -s "sleep(10000); print(\"Done.\")"
-    [16:20:56] Done.
-    ```
+		```
+		[16:20:46] > une -s "sleep(10000); print(\"Done.\")"
+		[16:20:56] Done.
+		```
 - `ord(character)` – Returns the ordinal character code of `character`:
-    ```
-    ord("A") == 65
-    ```
+		```
+		ord("A") == 65
+		```
 - `chr(code)` – Returns the character represented by the ordinal character code `code`:
-    ```
-    chr(65) == "A"
-    ```
+		```
+		chr(65) == "A"
+		```
 - `write(path, text)` – Writes the text `text` to a file at `path`:
-    ```
-    > une -s "write(\"test.txt\", \"return 40\")"
-    ```
-    test.txt:
-    ```
-    return 40
-    ```
+		```
+		> une -s "write(\"test.txt\", \"return 40\")"
+		```
+		test.txt:
+		```
+		return 40
+		```
 - `append(path, text)` – Same as `write`, but does not overwrite existing content:
-    ```
-    > une -s "append(\"test.txt\", \"+6\")"
-    ```
-    test.txt:
-    ```
-    return 40+6
-    ```
+		```
+		> une -s "append(\"test.txt\", \"+6\")"
+		```
+		test.txt:
+		```
+		return 40+6
+		```
 - `read(path)` – Returns the text contents of a file at `path`:
-    ```
-    read("test.txt") == "return 40+6"
-    ```
+		```
+		read("test.txt") == "return 40+6"
+		```
 - `script(path)` – Calls a script at `path` into the host context:
-    ```
-    script("test.txt") == 46
-    ```
+		```
+		script("test.txt") == 46
+		```
 - `eval(string)` – Same as `script()`, but accepts a string instead:
-    ```
-    eval("23*2") == 46
-    ```
+		```
+		eval("23*2") == 46
+		```
 - `input(prompt)` – Prints `prompt` and requests input from the user, returning the entered string:
-    ```
-    > une -s "print(\"You wrote '\" + input(\"Write something: \") + \"'\")"
-    Write something: test
-    You wrote 'test'
-    > 
-    ```
+		```
+		> une -s "print(\"You wrote '\" + input(\"Write something: \") + \"'\")"
+		Write something: test
+		You wrote 'test'
+		> 
+		```
 - `exist(path)` – Returns `1` if a file `path` exists, otherwise `0`:
-    ```
-    exist("test.txt") == 1
-    ```
+		```
+		exist("test.txt") == 1
+		```
 - `split(text, delimiters)` – Returns a list of slices created by separating the string `text` at every delimiter contained in the list `delimiters`:
-    ```
-    split("1,2;3", [",", ";"]) == ["1", "2", "3"]
-    ```
+		```
+		split("1,2;3", [",", ";"]) == ["1", "2", "3"]
+		```
 - `join(list, seperator)` – Joins the strings in `list` into a single string, seperated by `seperator`:
-  ```
-  join(["1", "2", "3"], ";") == "1;2;3"
-  ```
+	```
+	join(["1", "2", "3"], ";") == "1;2;3"
+	```
 - `replace(search, replace, subject)` – Replace string `search` with string `replace` in string `subject`:
-    ```
-    replace("+", "*", "2+23") == "2*23"
-    ```
+		```
+		replace("+", "*", "2+23") == "2*23"
+		```
 - `sort(subject, comparator)` – Return a sorted copy of the list `subject`, using the `comparator` function to compare elements:
-    ```
-    sort([3, 1, 2], function(a, b) return a-b) == [1, 2, 3]
-    ```
+		```
+		sort([3, 1, 2], function(a, b) return a-b) == [1, 2, 3]
+		```
 - `setwd()` – Set the working directory.
-    ```
-    setwd("C:\Directory")
-    ```
+		```
+		setwd("C:\Directory")
+		```
 - `getwd()` – Get the current working directory.
-    ```
-    getwd() == "C:\Directory"
-    ```
+		```
+		getwd() == "C:\Directory"
+		```
 - `playwav()` – Play a WAV file. (Windows only)
-    ```
-    playwav("sound.wav")
-    ```
+		```
+		playwav("sound.wav")
+		```
 
 ---
 

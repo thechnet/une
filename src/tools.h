@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2023-10-15
+Modified 2023-11-17
 */
 
 #ifndef UNE_TOOLS_H
@@ -21,10 +21,10 @@ une_flt-compatible INFINITY.
 A range, produced by une_range_from_relative_indices.
 */
 typedef struct une_range_ {
-  bool valid;
-  size_t first;
-  size_t guard;
-  size_t length;
+	bool valid;
+	size_t first;
+	size_t guard;
+	size_t length;
 } une_range;
 
 /*
@@ -35,7 +35,7 @@ typedef struct une_range_ {
 Verify an allocation.
 */
 #define verify(memory) \
-  ((void)((memory) != NULL || une_out_of_memory()))
+	((void)((memory) != NULL || une_out_of_memory()))
 
 bool une_wcs_to_une_int(wchar_t *wcs, une_int *dest);
 bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest);
