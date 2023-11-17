@@ -205,26 +205,25 @@ une_interpreter__(une_interpret_function)
 		verify(params[i]);
 	}
 	
-	/* Allocate function struct. */
-	une_function *function = malloc(sizeof(*function));
-	verify(function);
-	
-	/* Populate function struct. */
+	/* Register callable. */
+	char *definition_file = NULL;
 	if (node->content.branch.c) {
-		function->definition_file = strdup((char*)node->content.branch.c);
-		verify(function->definition_file);
-	} else {
-		function->definition_file = NULL;
+		definition_file = strdup((char*)node->content.branch.c);
+		verify(definition_file);
 	}
-	function->definition_point = node->pos;
-	function->params_count = params_count;
-	function->params = params;
-	function->body = une_node_copy(node->content.branch.b);
-	
+	size_t id = une_callables_register_function(
+		&une_is->callables,
+		definition_file,
+		node->pos,
+		params_count,
+		params,
+		une_node_copy(node->content.branch.b)
+	);
+
 	/* Return FUNCTION result. */
 	return (une_result){
 		.type = UNE_RT_FUNCTION,
-		.value._vp = (void*)function
+		.value._id = id
 	};
 }
 

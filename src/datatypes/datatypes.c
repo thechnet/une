@@ -123,8 +123,6 @@ une_datatype une_datatypes[] = {
 		.type = UNE_RT_FUNCTION,
 		.represent = &une_datatype_function_represent,
 		.is_true = &une_datatype_function_is_true,
-		.copy = &une_datatype_function_copy,
-		.free_members = &une_datatype_function_free_members,
 		.call = &une_datatype_function_call,
 	},
 	{

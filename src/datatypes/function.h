@@ -17,21 +17,6 @@ void une_datatype_function_represent(FILE *file, une_result result);
 
 une_int une_datatype_function_is_true(une_result result);
 
-une_result une_datatype_function_copy(une_result result);
-void une_datatype_function_free_members(une_result result);
-
 une_result une_datatype_function_call(une_error *error, une_node *call, une_result function, une_result args, wchar_t *label);
-
-/*
-Function.
-*/
-
-typedef struct une_function_ {
-	char *definition_file;
-	une_position definition_point;
-	size_t params_count;
-	wchar_t **params;
-	une_node *body;
-} une_function;
 
 #endif /* UNE_DATATYPES_FUNCTION_H */

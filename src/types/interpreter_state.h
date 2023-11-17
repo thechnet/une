@@ -9,6 +9,7 @@ Modified 2023-11-17
 /* Header-specific includes. */
 #include "../primitive.h"
 #include "context.h"
+#include "callable.h"
 
 /*
 A temporary result buffer.
@@ -24,6 +25,7 @@ Holds the state of the interpreter.
 */
 typedef struct une_interpreter_state_ {
 	une_context *context;
+	une_callables callables;
 	bool should_return;
 	bool should_exit;
 	une_result this_contestant;

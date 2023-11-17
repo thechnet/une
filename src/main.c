@@ -183,14 +183,14 @@ void main_interactive(void)
 			for (size_t i=0; i<is.context->variables_count; i++) {
 				fputws(is.context->variables[i]->name, stdout);
 				if (is.context->variables[i]->content.type == UNE_RT_FUNCTION) {
-					une_function *fn = (une_function*)is.context->variables[i]->content.value._vp;
+					une_callable *callable = une_callables_get_callable_by_id(is.callables, is.context->variables[i]->content.value._id);
 					fputwc(L'(', stdout);
-					if (fn->params_count) {
-						fwprintf(stdout, L"%ls", fn->params[0]);
-						for (size_t j=1; j<fn->params_count; j++)
-							fwprintf(stdout, L", %ls", fn->params[j]);
+					if (callable->params_count) {
+						fwprintf(stdout, L"%ls", callable->params[0]);
+						for (size_t j=1; j<callable->params_count; j++)
+							fwprintf(stdout, L", %ls", callable->params[j]);
 					}
-					fputwc(L')', stdout);
+					fwprintf(stdout, L") [id %zu]", callable->id);
 				}
 				fputwc(L'\n', stdout);
 			}

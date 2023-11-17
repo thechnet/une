@@ -63,6 +63,7 @@ Modified 2023-11-17
 #define UNE_SIZE_BIF_SPLIT_TKS 16 /* une_buitlin_split. */
 #define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH 8 /* une_error_display. */
 #define UNE_SIZE_HOLDING 4 /* Interpreter state. */
+#define UNE_SIZE_CALLABLES 32
 #else
 #define UNE_SIZE_NUM_LEN UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_STR_LEN UNE_DEBUG_SIZES_SIZE
@@ -75,6 +76,7 @@ Modified 2023-11-17
 #define UNE_SIZE_BIF_SPLIT_TKS UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_EXPECTED_TRACEBACK_DEPTH UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_HOLDING UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_CALLABLES UNE_DEBUG_SIZES_SIZE
 #endif
 
 /* Output Color Escape Sequences. */
@@ -105,6 +107,7 @@ typedef struct une_position_ {
 } une_position;
 
 typedef union une_value_ {
+	size_t _id;
 	une_int _int;
 	une_flt _flt;
 	wchar_t *_wcs;
