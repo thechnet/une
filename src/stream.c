@@ -43,7 +43,7 @@ Initialize a wfile une_istream struct.
 */
 une_istream une_istream_wfile_create(char *path)
 {
-	une_istream istream = (une_istream){
+	une_istream istream = {
 		.index = -1,
 		.data.wfile = {
 			.file = fopen(path, UNE_FOPEN_RFLAGS),

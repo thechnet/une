@@ -635,7 +635,7 @@ une_builtin_fn__(join)
 
 static une_error *sort_error = NULL;
 static une_node *sort_call_node = NULL;
-static une_result sort_comparator = (une_result){ .type = UNE_RT_none__ };
+static une_result sort_comparator = { .type = UNE_RT_none__ };
 
 static int sort_compare(const void *a, const void *b)
 {

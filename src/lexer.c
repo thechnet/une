@@ -212,7 +212,7 @@ une_lexer__(une_lex_number, bool allow_signed)
 		floating *= powl(10.0L, (une_flt)exponent);
 	}
 	
-	une_token number = (une_token){
+	une_token number = {
 		.type = is_floating ? UNE_TT_FLT : UNE_TT_INT,
 		.pos = (une_position){
 			.start = start_index,
