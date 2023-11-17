@@ -218,7 +218,7 @@ une_result une_datatype_flt_fdiv(une_result left, une_result right)
 	if ((right.type == UNE_RT_INT && right.value._int == 0) || (right.type == UNE_RT_FLT && une_flts_equal(right.value._flt, 0.0L)))
 		return (une_result){
 			.type = UNE_RT_FLT,
-			.value._flt = INFINITY
+			.value._flt = UNE_INFINITY
 		};
 	
 	if (right.type == UNE_RT_INT)

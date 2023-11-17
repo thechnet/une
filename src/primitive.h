@@ -154,5 +154,6 @@ typedef union une_value_ {
 #else
 #define une_static__
 #endif
+#define UNE_INFINITY ((une_flt)INFINITY)
 
 #endif /* !UNE_PRIMITIVE_H */

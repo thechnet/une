@@ -12,12 +12,6 @@ Modified 2023-11-17
 #include <math.h>
 
 /*
-une_flt-compatible INFINITY.
-*/
-#undef INFINITY
-#define INFINITY HUGE_VALL
-
-/*
 A range, produced by une_range_from_relative_indices.
 */
 typedef struct une_range_ {
