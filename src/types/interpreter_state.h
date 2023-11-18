@@ -1,6 +1,6 @@
 /*
 interpreter_state.h - Une
-Modified 2023-11-17
+Modified 2023-11-18
 */
 
 #ifndef UNE_INTERPRETER_STATE_H
@@ -47,6 +47,7 @@ une_holding une_interpreter_state_holding_strip(void);
 void une_interpreter_state_holding_reinstate(une_holding old);
 une_result *une_interpreter_state_holding_add(une_result result);
 void une_interpreter_state_holding_purge(void);
+void une_interpreter_state_reset_flags(une_interpreter_state *is);
 bool une_result_is_reference_to_foreign_object(une_result subject);
 
 #endif /* UNE_INTERPRETER_STATE_H */

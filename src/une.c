@@ -1,6 +1,6 @@
 /*
 une.c - Une
-Modified 2023-11-17
+Modified 2023-11-18
 */
 
 /* Header-specific includes. */
@@ -94,8 +94,7 @@ une_result une_run(bool read_from_file, char *path, wchar_t *text, bool *did_exi
 	#endif
 	if (did_exit != NULL)
 		*did_exit = une_is->should_exit;
-	une_is->should_return = false;
-	une_is->should_exit = false;
+	une_interpreter_state_reset_flags(une_is);
 	#ifdef UNE_DEBUG_LOG_INTERPRET
 	success("interpret done.");
 	#endif

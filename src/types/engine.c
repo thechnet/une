@@ -65,7 +65,7 @@ une_module *une_engine_new_module_from_file_or_wcs(une_engine *engine, char *pat
 	}
 
 	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
-	une_tokens_display(ls.tokens);
+	une_tokens_display(module->tokens);
 	wprintf(L"\n\n");
 	#endif
 
@@ -125,8 +125,7 @@ une_result une_engine_interpret_file_or_wcs(une_engine *engine, char *path, wcha
 	engine->is.context = une_context_create_marker(module->path, (une_position){0}, NULL, NULL, (une_position){0});
 	engine->is.context->parent = parent;
 
-	engine->is.should_return = false;
-	engine->is.should_exit = false;
+	une_interpreter_state_reset_flags(&engine->is);
 
 	une_result result = une_result_create(UNE_RT_VOID);
 	#ifndef UNE_NO_INTERPRET
@@ -146,7 +145,7 @@ une_result une_engine_interpret_file_or_wcs(une_engine *engine, char *path, wcha
 
 void une_engine_print_error(une_engine *engine)
 {
-	wprintf("Error\n");
+	wprintf(L"Error\n");
 }
 
 void une_engine_free(une_engine engine)

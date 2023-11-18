@@ -1,6 +1,6 @@
 /*
 interpreter_state.c - Une
-Modified 2023-11-17
+Modified 2023-11-18
 */
 
 /* Header-specific includes. */
@@ -118,6 +118,12 @@ void une_interpreter_state_holding_purge(void)
 		une_is->holding.buffer[i] = une_result_create(UNE_RT_none__);
 	}
 	une_is->holding.count = 0;
+}
+
+void une_interpreter_state_reset_flags(une_interpreter_state *is)
+{
+	is->should_return = false;
+	is->should_exit = false;
 }
 
 /*
