@@ -1,6 +1,6 @@
 /*
 callable.h - Une
-Modified 2023-11-17
+Modified 2023-11-18
 */
 
 // FIXME: Needs better name.
@@ -17,6 +17,7 @@ A callable.
 */
 typedef struct une_callable_ {
 	size_t id;
+	size_t module_id;
 	char *definition_file;
 	une_position definition_point;
 	size_t params_count;
@@ -38,13 +39,7 @@ typedef struct une_callables {
 */
 
 une_callables une_callables_create(void);
-size_t une_callables_register_function(
-	une_callables *callables,
-	char *definition_file,
-	une_position definition_point,
-	size_t params_count,
-	wchar_t **params,
-	une_node *body);
+une_callable *une_callables_add_callable(une_callables *callables);
 une_callable *une_callables_get_callable_by_id(une_callables callables, size_t id);
 void une_callables_free(une_callables *callables);
 

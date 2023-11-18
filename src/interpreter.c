@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-11-17
+Modified 2023-11-18
 */
 
 /* Header-specific includes. */
@@ -211,19 +211,20 @@ une_interpreter__(une_interpret_function)
 		definition_file = strdup((char*)node->content.branch.c);
 		verify(definition_file);
 	}
-	size_t id = une_callables_register_function(
-		&une_is->callables,
-		definition_file,
-		node->pos,
-		params_count,
-		params,
-		une_node_copy(node->content.branch.b)
-	);
+
+	une_callable *callable = une_callables_add_callable(&une_is->callables);
+	assert(callable);
+
+	callable->definition_file = definition_file;
+	callable->definition_point = node->pos;
+	callable->params_count = params_count;
+	callable->params = params;
+	callable->body = une_node_copy(node->content.branch.b);
 
 	/* Return FUNCTION result. */
 	return (une_result){
 		.type = UNE_RT_FUNCTION,
-		.value._id = id
+		.value._id = callable->id
 	};
 }
 

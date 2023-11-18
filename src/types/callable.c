@@ -1,6 +1,6 @@
 /*
 callable.c - Une
-Modified 2023-11-17
+Modified 2023-11-18
 */
 
 /* Header-specific includes. */
@@ -50,13 +50,7 @@ une_callables une_callables_create(void)
 	};
 }
 
-size_t une_callables_register_function(
-	une_callables *callables,
-	char *definition_file,
-	une_position definition_point,
-	size_t params_count,
-	wchar_t **params,
-	une_node *body)
+une_callable *une_callables_add_callable(une_callables *callables)
 {
 	assert(callables);
 	assert(callables->buffer);
@@ -75,15 +69,10 @@ size_t une_callables_register_function(
 	}
 	
 	callables->buffer[index] = (une_callable){
-		.id = callables->next_unused_id,
-		.definition_file = definition_file,
-		.definition_point = definition_point,
-		.params_count = params_count,
-		.params = params,
-		.body = body
+		.id = callables->next_unused_id++
 	};
 
-	return callables->next_unused_id++;
+	return callables->buffer+index;
 }
 
 une_callable *une_callables_get_callable_by_id(une_callables callables, size_t id)
