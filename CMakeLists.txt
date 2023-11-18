@@ -58,6 +58,7 @@ add_executable(une
 	src/types/parser_state.c
 	src/types/lexer_state.c
 	src/types/callable.c
+	src/types/modules.c
 	src/datatypes/datatypes.c
 	src/datatypes/int.c
 	src/datatypes/flt.c

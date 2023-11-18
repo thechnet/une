@@ -20,6 +20,7 @@ une_interpreter_state une_interpreter_state_create(char *creation_file)
 	return (une_interpreter_state){
 		.context = une_context_create(creation_file, (une_position){0}, false, NULL, NULL, (une_position){0}),
 		.callables = une_callables_create(),
+		.modules = une_modules_create(),
 		.should_return = false,
 		.should_exit = false,
 		.this_contestant = une_result_create(UNE_RT_VOID),
@@ -42,6 +43,9 @@ void une_interpreter_state_free(une_interpreter_state *is)
 
 	/* Callables. */
 	une_callables_free(&is->callables);
+
+	/* Modules. */
+	une_modules_free(&is->modules);
 	
 	/* 'this' contestant. */
 	une_result_free(une_is->this_contestant);
