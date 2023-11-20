@@ -16,6 +16,7 @@ Node name table.
 const wchar_t *une_node_table[] = {
 	L"NAME",
 	L"SIZE",
+	L"ID",
 	L"VOID",
 	L"INT",
 	L"FLT",
@@ -121,6 +122,7 @@ une_node *une_node_copy(une_node *src)
 		case UNE_NT_BREAK:
 		case UNE_NT_CONTINUE:
 		case UNE_NT_SIZE:
+		case UNE_NT_ID:
 		case UNE_NT_BUILTIN:
 		case UNE_NT_THIS:
 			dest->content.value = src->content.value;
@@ -185,6 +187,7 @@ void une_node_free(une_node *node, bool free_wcs)
 		case UNE_NT_BREAK:
 		case UNE_NT_CONTINUE:
 		case UNE_NT_SIZE:
+		case UNE_NT_ID:
 		case UNE_NT_THIS:
 			break;
 		
@@ -336,6 +339,7 @@ wchar_t *une_node_to_wcs(une_node *node)
 		/* Numbers. */
 		case UNE_NT_INT:
 		case UNE_NT_SIZE:
+		case UNE_NT_ID:
 			buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_RESET L":"
 				UNE_COLOR_NODE_DATUM_VALUE UNE_PRINTF_UNE_INT UNE_COLOR_RESET,
 				une_node_type_to_wcs(node->type), node->content.value._int);
