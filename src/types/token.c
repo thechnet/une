@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-11-19
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -19,7 +19,7 @@ const wchar_t *une_token_table[] = {
 	L"str",
 	L"\"{",
 	L"}\"",
-	L"id",
+	L"name",
 	L"builtin",
 	L"EOF",
 	L"function",
@@ -106,7 +106,7 @@ void une_token_free(une_token token)
 	
 	/* Free members. */
 	switch (token.type) {
-		case UNE_TT_ID:
+		case UNE_TT_NAME:
 		case UNE_TT_STR:
 			free(token.value._wcs);
 			break;
@@ -187,7 +187,7 @@ une_static__ wchar_t *une_token_to_wcs(une_token token)
 		case UNE_TT_STR:
 			str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"\"%ls" UNE_COLOR_TOKEN_VALUE L"\"" UNE_COLOR_RESET, token.value._wcs);
 			break;
-		case UNE_TT_ID:
+		case UNE_TT_NAME:
 			str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_RESET, token.value._wcs);
 			break;
 		

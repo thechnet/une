@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-11-17
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -108,9 +108,9 @@ void une_lex(une_error *error, une_lexer_state *ls)
 			continue;
 		}
 
-		/* Keyword or identifier. */
-		if (UNE_LEXER_WC_CAN_BEGIN_ID(une_lexer_now(ls))) {
-			une_lexer_commit(ls, une_lex_keyword_or_identifier(error, ls));
+		/* Keyword or name. */
+		if (UNE_LEXER_WC_CAN_BEGIN_NAME(une_lexer_now(ls))) {
+			une_lexer_commit(ls, une_lex_keyword_or_name(error, ls));
 			continue;
 		}
 		
@@ -367,16 +367,16 @@ une_lexer__(une_lex_string)
 	};
 }
 
-une_lexer__(une_lex_keyword_or_identifier)
+une_lexer__(une_lex_keyword_or_name)
 {
-	size_t buffer_size = UNE_SIZE_ID_LEN;
+	size_t buffer_size = UNE_SIZE_NAME_LEN;
 	wchar_t *buffer = malloc(buffer_size*sizeof(*buffer));
 	verify(buffer);
 	size_t idx_start = ls->text_index;
 	size_t buffer_index = 0;
 	
-	/* Read keyword or identifier. */
-	while (UNE_LEXER_WC_CAN_BE_IN_ID(une_lexer_now(ls))) {
+	/* Read keyword or name. */
+	while (UNE_LEXER_WC_CAN_BE_IN_NAME(une_lexer_now(ls))) {
 		if (buffer_index >= buffer_size-1) {
 			buffer_size *= 2;
 			buffer = realloc(buffer, buffer_size*sizeof(*buffer));
@@ -392,25 +392,25 @@ une_lexer__(une_lex_keyword_or_identifier)
 	if (!wcscmp(buffer, une_token_table[UNE_TT_FUNCTION-1])) {
 		tk.type = UNE_TT_FUNCTION;
 		tk.value._vp = (void*)ls->name;
-		goto keyword_or_identifier_defined;
+		goto keyword_or_name_defined;
 	}
 	for (une_token_type tt=UNE_R_BGN_KEYWORD_TOKENS; tt<=UNE_R_END_KEYWORD_TOKENS; tt++)
 		if (!wcscmp(buffer, une_token_table[tt-1])) {
 			tk.type = tt;
-			goto keyword_or_identifier_defined;
+			goto keyword_or_name_defined;
 		}
 	une_builtin_function builtin = une_builtin_wcs_to_function(buffer);
 	if (builtin != UNE_BUILTIN_none__) {
 		tk.type = UNE_TT_BUILTIN;
 		tk.value._int = (une_int)builtin;
-		goto keyword_or_identifier_defined;
+		goto keyword_or_name_defined;
 	}
-	tk.type = UNE_TT_ID;
+	tk.type = UNE_TT_NAME;
 	tk.value._wcs = buffer;
 	
 	/* Finalize token. */
-	keyword_or_identifier_defined:
-	if (tk.type != UNE_TT_ID)
+	keyword_or_name_defined:
+	if (tk.type != UNE_TT_NAME)
 		free(buffer);
 	tk.pos = (une_position){
 		.start = idx_start,
@@ -424,7 +424,7 @@ une_lexer__(une_lex_keyword_or_identifier)
 bool une_lex_number_base(une_error *error, une_lexer_state *ls, int *base)
 {
 	*base = 10;
-	if (une_lexer_now(ls) == L'0' && UNE_LEXER_WC_CAN_BEGIN_ID(une_lexer_peek(ls, 1))) {
+	if (une_lexer_now(ls) == L'0' && UNE_LEXER_WC_CAN_BEGIN_NAME(une_lexer_peek(ls, 1))) {
 		switch (une_lexer_advance(ls) /* '0'. */ ) {
 			case L'b': *base = 2; break;
 			case L'o': *base = 8; break;
@@ -437,7 +437,7 @@ bool une_lex_number_base(une_error *error, une_lexer_state *ls, int *base)
 				}));
 				return false;
 		}
-		une_lexer_advance(ls); /* Base identifier. */
+		une_lexer_advance(ls); /* Base name. */
 	}
 	return true;
 }

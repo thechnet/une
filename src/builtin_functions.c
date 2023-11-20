@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-11-19
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -17,7 +17,7 @@ Modified 2023-11-19
 Pointers to all built-in functions.
 */
 une_builtin_fnptr une_builtin_functions[] = {
-	#define BUILTIN_FUNCTION__(id__) &une_builtin_fn_##id__,
+	#define BUILTIN_FUNCTION__(name__) &une_builtin_fn_##name__,
 	UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_FUNCTION__)
 	#undef BUILTIN_FUNCTION__
 };
@@ -26,7 +26,7 @@ une_builtin_fnptr une_builtin_functions[] = {
 String representations of built-in function names.
 */
 const wchar_t *une_builtin_functions_as_strings[] = {
-	#define BUILTIN_AS_STRING__(id__) L"" #id__,
+	#define BUILTIN_AS_STRING__(name__) L"" #name__,
 	UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_AS_STRING__)
 	#undef BUILTIN_AS_STRING__
 };

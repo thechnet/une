@@ -1,6 +1,6 @@
 /*
 stream.h - Une
-Modified 2023-11-17
+Modified 2023-11-20
 */
 
 #ifndef UNE_STREAM_H
@@ -53,8 +53,8 @@ The current item in an array une_istream, with an optional offset.
 /*
 Pull the next item from an array une_istream by value.
 */
-#define UNE_ISTREAM_ARRAY_PULLER_VAL(id__, type__, cast_type__, error_value__, verify_position__)\
-	une_static__ type__ id__(une_istream *istream)\
+#define UNE_ISTREAM_ARRAY_PULLER_VAL(name__, type__, cast_type__, error_value__, verify_position__)\
+	une_static__ type__ name__(une_istream *istream)\
 	{\
 		if (verify_position__ && !une_istream_array_verify_position(istream, 1)) {\
 			if (!istream->has_reached_end) {\
@@ -70,8 +70,8 @@ Pull the next item from an array une_istream by value.
 /*
 Pull the next item from an array une_istream by reference.
 */
-#define UNE_ISTREAM_ARRAY_PULLER_REF(id__, type__, cast_type__, error_value__, verify_position__)\
-	une_static__ type__ *id__(une_istream *istream)\
+#define UNE_ISTREAM_ARRAY_PULLER_REF(name__, type__, cast_type__, error_value__, verify_position__)\
+	une_static__ type__ *name__(une_istream *istream)\
 	{\
 		if (verify_position__ && !une_istream_array_verify_position(istream, 1)) {\
 			if (!istream->has_reached_end) {\
@@ -87,8 +87,8 @@ Pull the next item from an array une_istream by reference.
 /*
 Peek an item in an array une_istream by value.
 */
-#define UNE_ISTREAM_ARRAY_PEEKER_VAL(id__, type__, cast_type__, error_value__, verify_position__)\
-	une_static__ type__ id__(une_istream *istream, ptrdiff_t offset)\
+#define UNE_ISTREAM_ARRAY_PEEKER_VAL(name__, type__, cast_type__, error_value__, verify_position__)\
+	une_static__ type__ name__(une_istream *istream, ptrdiff_t offset)\
 	{\
 		if (verify_position__ && !une_istream_array_verify_position(istream, offset))\
 			return error_value__;\
@@ -98,8 +98,8 @@ Peek an item in an array une_istream by value.
 /*
 Peek an item in an array une_istream by reference.
 */
-#define UNE_ISTREAM_ARRAY_PEEKER_REF(id__, type__, cast_type__, error_value__, verify_position__)\
-	une_static__ type__ *id__(une_istream *istream, ptrdiff_t offset)\
+#define UNE_ISTREAM_ARRAY_PEEKER_REF(name__, type__, cast_type__, error_value__, verify_position__)\
+	une_static__ type__ *name__(une_istream *istream, ptrdiff_t offset)\
 	{\
 		if (verify_position__ && !une_istream_array_verify_position(istream, offset))\
 			return error_value__;\
@@ -109,8 +109,8 @@ Peek an item in an array une_istream by reference.
 /*
 Access the current item in an array une_istream by value.
 */
-#define UNE_ISTREAM_ARRAY_ACCESS_VAL(id__, type__, cast_type__, error_value__, verify_position__)\
-	une_static__ type__ id__(une_istream *istream)\
+#define UNE_ISTREAM_ARRAY_ACCESS_VAL(name__, type__, cast_type__, error_value__, verify_position__)\
+	une_static__ type__ name__(une_istream *istream)\
 	{\
 		if (verify_position__ && istream->has_reached_end)\
 			return error_value__;\
@@ -120,8 +120,8 @@ Access the current item in an array une_istream by value.
 /*
 Access the current item in an array une_istream by reference.
 */
-#define UNE_ISTREAM_ARRAY_ACCESS_REF(id__, type__, cast_type__, error_value__, verify_position__)\
-	une_static__ type__ *id__(une_istream *istream)\
+#define UNE_ISTREAM_ARRAY_ACCESS_REF(name__, type__, cast_type__, error_value__, verify_position__)\
+	une_static__ type__ *name__(une_istream *istream)\
 	{\
 		if (verify_position__ && istream->has_reached_end)\
 			return error_value__;\
@@ -139,8 +139,8 @@ The current item in a wfile une_istream.
 /*
 Pull the next item from a wfile une_istream.
 */
-#define UNE_ISTREAM_WFILE_PULLER(id__)\
-	une_static__ wint_t id__(une_istream *istream)\
+#define UNE_ISTREAM_WFILE_PULLER(name__)\
+	une_static__ wint_t name__(une_istream *istream)\
 	{\
 		if (UNE_ISTREAM_WFILE_ITEM__(istream) != WEOF)\
 			(istream->index)++;\
@@ -151,8 +151,8 @@ Pull the next item from a wfile une_istream.
 /*
 Peek an item in a wfile une_istream.
 */
-#define UNE_ISTREAM_WFILE_PEEKER(id__)\
-	une_static__ wint_t id__(une_istream *istream, ptrdiff_t offset)\
+#define UNE_ISTREAM_WFILE_PEEKER(name__)\
+	une_static__ wint_t name__(une_istream *istream, ptrdiff_t offset)\
 	{\
 		assert(offset >= 0);\
 		if (!offset)\
@@ -160,7 +160,7 @@ Peek an item in a wfile une_istream.
 		wint_t wc_tmp = fgetwc(istream->data.wfile.file);\
 		wint_t wc = wc_tmp;\
 		if (offset-1 > 0)\
-			wc = id__(istream, offset-1);\
+			wc = name__(istream, offset-1);\
 		ungetwc(wc_tmp, istream->data.wfile.file);\
 		return wc;\
 	}
@@ -168,8 +168,8 @@ Peek an item in a wfile une_istream.
 /*
 Access the current item in a wfile une_istream.
 */
-#define UNE_ISTREAM_WFILE_ACCESS(id__)\
-	static inline wint_t id__(une_istream *istream)\
+#define UNE_ISTREAM_WFILE_ACCESS(name__)\
+	static inline wint_t name__(une_istream *istream)\
 	{\
 		return UNE_ISTREAM_WFILE_ITEM__(istream);\
 	}
@@ -185,8 +185,8 @@ The current item in a une_ostream, with an optional offset.
 /*
 Push an item to a une_ostream.
 */
-#define UNE_OSTREAM_PUSHER(id__, type__)\
-	une_static__ void id__(une_ostream *ostream, type__ item)\
+#define UNE_OSTREAM_PUSHER(name__, type__)\
+	une_static__ void name__(une_ostream *ostream, type__ item)\
 	{\
 		if (!une_ostream_grow_if_needed(ostream, 1))\
 			assert(false);\
@@ -197,8 +197,8 @@ Push an item to a une_ostream.
 /*
 Peek an item in a une_ostream by value.
 */
-#define UNE_OSTREAM_PEEKER_VAL(id__, type__, error_value__)\
-	une_static__ type__ id__(une_ostream *ostream, ptrdiff_t offset)\
+#define UNE_OSTREAM_PEEKER_VAL(name__, type__, error_value__)\
+	une_static__ type__ name__(une_ostream *ostream, ptrdiff_t offset)\
 	{\
 		if (!une_ostream_grow_if_needed(ostream, offset+1))\
 			return error_value__;\
@@ -208,8 +208,8 @@ Peek an item in a une_ostream by value.
 /*
 Peek an item in a une_ostream by reference.
 */
-#define UNE_OSTREAM_PEEKER_REF(id__, type__, error_value__)\
-	une_static__ type__ *id__(une_ostream *ostream, ptrdiff_t offset)\
+#define UNE_OSTREAM_PEEKER_REF(name__, type__, error_value__)\
+	une_static__ type__ *name__(une_ostream *ostream, ptrdiff_t offset)\
 	{\
 		if (!une_ostream_grow_if_needed(ostream, offset+1))\
 			return error_value__;\

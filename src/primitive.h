@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-11-17
+Modified 2023-11-20
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -54,7 +54,7 @@ Modified 2023-11-17
 #if !defined(UNE_DEBUG_SIZES)
 #define UNE_SIZE_NUM_LEN 32 /* Lexing. */
 #define UNE_SIZE_STR_LEN 4096 /* Lexing. */
-#define UNE_SIZE_ID_LEN 32 /* Lexing. */
+#define UNE_SIZE_NAME_LEN 32 /* Lexing. */
 #define UNE_SIZE_VARIABLE_BUF 32 /* Context. */
 #define UNE_SIZE_FUNCTION_BUF 16 /* Context. */
 #define UNE_SIZE_TOKEN_BUF 4096 /* Lexing. */
@@ -68,7 +68,7 @@ Modified 2023-11-17
 #else
 #define UNE_SIZE_NUM_LEN UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_STR_LEN UNE_DEBUG_SIZES_SIZE
-#define UNE_SIZE_ID_LEN UNE_DEBUG_SIZES_SIZE
+#define UNE_SIZE_NAME_LEN UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_VARIABLE_BUF UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_FUNCTION_BUF UNE_DEBUG_SIZES_SIZE
 #define UNE_SIZE_TOKEN_BUF UNE_DEBUG_SIZES_SIZE

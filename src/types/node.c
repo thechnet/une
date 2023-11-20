@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-11-17
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -14,7 +14,7 @@ Modified 2023-11-17
 Node name table.
 */
 const wchar_t *une_node_table[] = {
-	L"ID",
+	L"NAME",
 	L"SIZE",
 	L"VOID",
 	L"INT",
@@ -128,7 +128,7 @@ une_node *une_node_copy(une_node *src)
 		
 		/* Heap data. */
 		case UNE_NT_STR:
-		case UNE_NT_ID:
+		case UNE_NT_NAME:
 			dest->content.value._wcs = wcsdup(src->content.value._wcs);
 			verify(dest->content.value._wcs);
 			break;
@@ -190,7 +190,7 @@ void une_node_free(une_node *node, bool free_wcs)
 		
 		/* Heap data. */
 		case UNE_NT_STR:
-		case UNE_NT_ID:
+		case UNE_NT_NAME:
 			/* DOC: Memory Management
 			We don't normally free the WCS pointers because they are pointing at data stored in the tokens,
 			which may still be needed after the parse. This memory is freed alongside the tokens. */
@@ -355,7 +355,7 @@ wchar_t *une_node_to_wcs(une_node *node)
 				UNE_COLOR_NODE_DATUM_VALUE L"\"%ls" UNE_COLOR_NODE_DATUM_VALUE L"\"" UNE_COLOR_RESET,
 				une_node_type_to_wcs(node->type), node->content.value._wcs);
 			break;
-		case UNE_NT_ID:
+		case UNE_NT_NAME:
 			buffer_len += swprintf(buffer, UNE_SIZE_NODE_AS_WCS, UNE_COLOR_NODE_DATUM_TYPE L"%ls" UNE_COLOR_RESET L":"
 				UNE_COLOR_NODE_DATUM_VALUE L"%ls" UNE_COLOR_RESET,
 				une_node_type_to_wcs(node->type), node->content.value._wcs);

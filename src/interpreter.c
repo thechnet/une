@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-11-19
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -621,7 +621,7 @@ une_interpreter__(une_interpret_member_seek)
 	assert(dt_result.member_exists);
 	
 	/* Extract member name. */
-	assert(node->content.branch.b->type == UNE_NT_ID);
+	assert(node->content.branch.b->type == UNE_NT_NAME);
 	wchar_t *name = node->content.branch.b->content.value._wcs;
 	
 	/* Refer to member. */
@@ -1070,7 +1070,7 @@ une_interpreter__(une_interpret_call)
 	
 	/* Get callable. */
 	wchar_t *label = NULL;
-	if (node->content.branch.a->type == UNE_NT_SEEK && node->content.branch.a->content.branch.a->type == UNE_NT_ID)
+	if (node->content.branch.a->type == UNE_NT_SEEK && node->content.branch.a->content.branch.a->type == UNE_NT_NAME)
 		label = node->content.branch.a->content.branch.a->content.value._wcs;
 	une_result callable = une_result_dereference(une_interpret(node->content.branch.a));
 	if (callable.type == UNE_RT_ERROR) {
@@ -1137,12 +1137,12 @@ une_interpreter__(une_interpret_for_range)
 		step = -1;
 	
 	/* Get loop variable. */
-	wchar_t *id = node->content.branch.a->content.value._wcs;
-	une_association *var = une_variable_find_or_create(felix->is.context, id); /* We only check the *local* variables. */
+	wchar_t *name = node->content.branch.a->content.value._wcs;
+	une_association *var = une_variable_find_or_create(felix->is.context, name); /* We only check the *local* variables. */
 	
 	/* Loop. */
 	for (une_int i=from; i!=till; i+=step) {
-		var = une_variable_find(felix->is.context, id); /* Avoid stale pointer if variable buffer grows. */
+		var = une_variable_find(felix->is.context, name); /* Avoid stale pointer if variable buffer grows. */
 		une_result_free(var->content);
 		var->content = (une_result){
 			.type = UNE_RT_INT,
@@ -1177,8 +1177,8 @@ une_interpreter__(une_interpret_for_element)
 	assert(elements_dt.refer_to_index);
 	
 	/* Get loop variable. */
-	wchar_t *id = node->content.branch.a->content.value._wcs;
-	une_association *var = une_variable_find_or_create(felix->is.context, id); /* We only check the *local* variables. */
+	wchar_t *name = node->content.branch.a->content.value._wcs;
+	une_association *var = une_variable_find_or_create(felix->is.context, name); /* We only check the *local* variables. */
 	
 	/* Prepare internal index. */
 	une_result index = une_result_create(UNE_RT_INT);
@@ -1186,7 +1186,7 @@ une_interpreter__(une_interpret_for_element)
 	
 	/* Loop. */
 	for (; index.value._int<length; index.value._int++) {
-		var = une_variable_find(felix->is.context, id); /* Avoid stale pointer if variable buffer grows. */
+		var = une_variable_find(felix->is.context, name); /* Avoid stale pointer if variable buffer grows. */
 		une_result_free(var->content);
 		var->content = une_result_dereference(elements_dt.refer_to_index(elements, index));
 		une_result result = une_result_dereference(une_interpret(node->content.branch.c));

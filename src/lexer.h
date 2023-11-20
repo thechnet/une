@@ -1,6 +1,6 @@
 /*
 lexer.h - Une
-Modified 2023-07-02
+Modified 2023-11-20
 */
 
 #ifndef UNE_LEXER_H
@@ -27,14 +27,14 @@ Character groups.
 #define UNE_LEXER_WC_IS_LETTERLIKE(wc) (UNE_LEXER_WC_IS_LETTER(wc) || wc == L'_')
 
 /*
-Condition to check whether a character can be the first character of an id.
+Condition to check whether a character can be the first character of a name.
 */
-#define UNE_LEXER_WC_CAN_BEGIN_ID(wc) UNE_LEXER_WC_IS_LETTERLIKE(wc)
+#define UNE_LEXER_WC_CAN_BEGIN_NAME(wc) UNE_LEXER_WC_IS_LETTERLIKE(wc)
 
 /*
-Condition to check whether a character can be in an id.
+Condition to check whether a character can be in a name.
 */
-#define UNE_LEXER_WC_CAN_BE_IN_ID(wc) (UNE_LEXER_WC_CAN_BEGIN_ID(wc) || UNE_LEXER_WC_IS_DIGIT(wc))
+#define UNE_LEXER_WC_CAN_BE_IN_NAME(wc) (UNE_LEXER_WC_CAN_BEGIN_NAME(wc) || UNE_LEXER_WC_IS_DIGIT(wc))
 
 /*
 Condition to check whether a character is whitespace that can always be ignored.
@@ -59,14 +59,14 @@ Condition to check if a character is any kind of whitespace.
 /*
 Lexer function template.
 */
-#define une_lexer__(id__, ...) une_token (id__)(une_error *error, une_lexer_state *ls, ##__VA_ARGS__)
+#define une_lexer__(name__, ...) une_token (name__)(une_error *error, une_lexer_state *ls, ##__VA_ARGS__)
 
 void une_lex(une_error *error, une_lexer_state *ls);
 
 une_lexer__(une_lex_operator);
 une_lexer__(une_lex_number, bool allow_signed);
 une_lexer__(une_lex_string);
-une_lexer__(une_lex_keyword_or_identifier);
+une_lexer__(une_lex_keyword_or_name);
 
 bool une_lex_number_base(une_error *error, une_lexer_state *ls, int *base);
 bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une_int *integer, bool allow_signed, bool allow_e, size_t limit_length);

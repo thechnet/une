@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2023-11-19
+Modified 2023-11-20
 */
 
 #ifndef UNE_CONTEXT_H
@@ -34,7 +34,7 @@ typedef struct une_context_ {
 /*
 Variable interface function template.
 */
-#define une_variable_itf__(id__) une_association *(id__)(une_context *context, wchar_t *name) 
+#define une_variable_itf__(name__) une_association *(name__)(une_context *context, wchar_t *name) 
 
 une_context *une_context_create_marker(char *creation_file, une_position creation_point, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point);
 une_context *une_context_create(char *creation_file, une_position creation_point, bool has_callee, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point);

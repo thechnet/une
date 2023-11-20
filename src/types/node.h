@@ -1,6 +1,6 @@
 /*
 node.h - Une
-Modified 2023-11-17
+Modified 2023-11-20
 */
 
 #ifndef UNE_NODE_H
@@ -14,7 +14,7 @@ Type of une_node.
 */
 typedef enum une_node_type_ {
 	UNE_NT_none__,
-	UNE_NT_ID,
+	UNE_NT_NAME,
 	UNE_NT_SIZE,
 	#define UNE_R_BGN_LUT_NODES UNE_NT_VOID /* (!) Order-sensitive. */
 	UNE_NT_VOID,

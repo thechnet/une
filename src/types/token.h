@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2023-11-17
+Modified 2023-11-20
 */
 
 #ifndef UNE_TOKEN_H
@@ -19,7 +19,7 @@ typedef enum une_token_type_ {
 	UNE_TT_STR,
 	UNE_TT_STR_EXPRESSION_BEGIN,
 	UNE_TT_STR_EXPRESSION_END,
-	UNE_TT_ID,
+	UNE_TT_NAME,
 	UNE_TT_BUILTIN,
 	UNE_TT_EOF,
 	UNE_TT_FUNCTION, /* Exception, see lexer implementation. */

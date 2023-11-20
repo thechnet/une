@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-11-17
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -65,21 +65,21 @@ une_parser__(une_parse_stmt)
 	return une_parse_assignment_or_expr_stmt(error, ps);
 }
 
-une_parser__(une_parse_id)
+une_parser__(une_parse_name)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	if (now(&ps->in).type != UNE_TT_ID) {
+	if (now(&ps->in).type != UNE_TT_NAME) {
 		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
 		return NULL;
 	}
 
-	une_node *id = une_node_create(UNE_NT_ID);
-	id->pos = now(&ps->in).pos;
-	id->content.value._wcs = now(&ps->in).value._wcs;
+	une_node *name = une_node_create(UNE_NT_NAME);
+	name->pos = now(&ps->in).pos;
+	name->content.value._wcs = now(&ps->in).value._wcs;
 	pull(&ps->in);
 	
-	return id;
+	return name;
 }
 
 une_parser__(une_parse_block)
@@ -305,7 +305,7 @@ une_parser__(une_parse_atom)
 		case UNE_TT_BUILTIN:
 			return une_parse_builtin(error, ps);
 		
-		case UNE_TT_ID:
+		case UNE_TT_NAME:
 			return une_parse_seek(error, ps, true);
 		
 		case UNE_TT_LSQB:
@@ -460,14 +460,14 @@ une_parser__(une_parse_this)
 une_parser__(une_parse_seek, bool global)
 {
 	LOGPARSE(L"", now(&ps->in));
-	une_node *id = une_parse_id(error, ps);
-	if (!id) {
-		*error = une_error_create(); /* une_parse_id normally returns an error, but here we want to ignore it. */
+	une_node *name = une_parse_name(error, ps);
+	if (!name) {
+		*error = une_error_create(); /* une_parse_name normally returns an error, but here we want to ignore it. */
 		return NULL;
 	}
 	une_node *seek = une_node_create(UNE_NT_SEEK);
-	seek->pos = id->pos;
-	seek->content.branch.a = id;
+	seek->pos = name->pos;
+	seek->content.branch.a = name;
 	seek->content.branch.b = (une_node*)global;
 	return seek;
 }
@@ -509,7 +509,7 @@ une_parser__(une_parse_function)
 	pull(&ps->in);
 	
 	/* Parameters. */
-	une_node *params = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_id);
+	une_node *params = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_name);
 	if (params == NULL)
 		return NULL;
 	
@@ -538,7 +538,7 @@ une_parser__(une_parse_for)
 	pull(&ps->in);
 	
 	/* Id. */
-	une_node *counter = une_parse_id(error, ps);
+	une_node *counter = une_parse_name(error, ps);
 	if (counter == NULL)
 		return NULL;
 	
@@ -975,13 +975,13 @@ une_parser__(une_parse_member)
 	pull(&ps->in);
 	
 	/* Identifier. */
-	une_node *identifier = une_parse_id(error, ps);
-	if (!identifier)
+	une_node *name = une_parse_name(error, ps);
+	if (!name)
 		return NULL;
 	
 	une_node *member = une_node_create(UNE_NT_none__); /* The caller is required to provide the node type. */
-	member->pos.end = identifier->pos.end; /* The caller is required to provide the start position. */
-	member->content.branch.b = identifier; /* The caller is required to provide branch A. */
+	member->pos.end = name->pos.end; /* The caller is required to provide the start position. */
+	member->content.branch.b = name; /* The caller is required to provide branch A. */
 	return member;
 }
 
@@ -990,7 +990,7 @@ une_parser__(une_parse_object_association)
 	LOGPARSE(L"", now(&ps->in));
 	
 	/* Name. */
-	une_node *name = une_parse_id(error, ps);
+	une_node *name = une_parse_name(error, ps);
 	if (!name)
 		return NULL;
 	

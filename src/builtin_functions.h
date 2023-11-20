@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2023-11-19
+Modified 2023-11-20
 */
 
 #ifndef UNE_BUILTIN_H
@@ -13,7 +13,7 @@ Modified 2023-11-19
 #include "types/interpreter_state.h"
 #include "types/engine.h"
 
-#define une_builtin_fn_sign__(id__) une_result (id__)(une_node *call_node, une_result *args)
+#define une_builtin_fn_sign__(name__) une_result (name__)(une_node *call_node, une_result *args)
 
 typedef const int une_builtin_param;
 typedef une_builtin_fn_sign__(*une_builtin_fnptr);
@@ -55,7 +55,7 @@ The index of a built-in function.
 */
 typedef enum une_builtin_function_ {
 	UNE_BUILTIN_none__,
-	#define BUILTIN_FUNCTION__(id__) UNE_BUILTIN_##id__,
+	#define BUILTIN_FUNCTION__(name__) UNE_BUILTIN_##name__,
 	UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_FUNCTION__)
 	#undef BUILTIN_FUNCTION__
 	UNE_BUILTIN_max__,
@@ -64,7 +64,7 @@ typedef enum une_builtin_function_ {
 /*
 Built-in function template.
 */
-#define une_builtin_fn__(id__) une_builtin_fn_sign__(une_builtin_fn_##id__)
+#define une_builtin_fn__(name__) une_builtin_fn_sign__(une_builtin_fn_##name__)
 
 /*
 Get the position of an argument.
@@ -95,7 +95,7 @@ une_builtin_function une_builtin_wcs_to_function(wchar_t *wcs);
 const wchar_t *une_builtin_function_to_wcs(une_builtin_function function);
 #endif /* UNE_DEBUG */
 
-#define BUILTIN_DECLARATION__(id__) une_builtin_fn__(id__);
+#define BUILTIN_DECLARATION__(name__) une_builtin_fn__(name__);
 UNE_ENUMERATE_BUILTIN_FUNCTIONS(BUILTIN_DECLARATION__)
 #undef BUILTIN_DECLARATION__
 
