@@ -1,92 +1,103 @@
 /*
 main.c - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
+/* Header-specific includes. */
+#include "main.h"
+
 /* Implementation-specific includes. */
-#include <string.h>
 #include <signal.h>
-#include "une.h"
 #include "tools.h"
+#include "types/engine.h"
 #include "datatypes/datatypes.h"
 
-#define UNE_MAIN_ERROR 1
+/*
+Implementation.
+*/
 
-void main_interactive(void);
+volatile sig_atomic_t sigint_fired = 0;
 
 int main(int argc, char *argv[])
 {
+	/* Enable Virtual Terminal Processing for the Windows console. */
 	#ifdef _WIN32
-	/* Manually enable Virtual Terminal Processing for the Windows console. */
 	une_win_vt_proc(true);
 	#endif
 	
-	/* Warnings */
+	/* Display warnings. */
 	#ifdef UNE_DEBUG
 	#ifdef UNE_DEBUG_MEMDBG
-	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_MEMDBG enabled.\n");
+	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_MEMDBG enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#ifdef UNE_DEBUG_SIZES
-	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_SIZES enabled.\n");
+	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_SIZES enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#ifdef UNE_DEBUG_REPORT
-	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_REPORT enabled.\n");
+	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_REPORT enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#ifdef UNE_NO_LEX
-	wprintf(UNE_COLOR_WARN L"UNE_NO_LEX enabled.\n");
+	wprintf(UNE_COLOR_WARN L"UNE_NO_LEX enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#ifdef UNE_NO_PARSE
-	wprintf(UNE_COLOR_WARN L"UNE_NO_PARSE enabled.\n");
+	wprintf(UNE_COLOR_WARN L"UNE_NO_PARSE enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#ifdef UNE_NO_INTERPRET
-	wprintf(UNE_COLOR_WARN L"UNE_NO_INTERPRET enabled.\n");
+	wprintf(UNE_COLOR_WARN L"UNE_NO_INTERPRET enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#endif
+
+	/* Check command line. */
+	wchar_t *script_string = NULL;
+	enum une_main_action action = SHOW_USAGE;
+	if (argc == 2 && !strcmp(argv[1], UNE_SWITCH_INTERACTIVE)) {
+		action = ENTER_INTERACTIVE_MODE;
+	} else if (argc >= 2 && !strcmp(argv[1], UNE_SWITCH_SCRIPT)) {
+		script_string = argc == 3 ? une_str_to_wcs(argv[2]) : NULL;
+		if (script_string)
+			action = RUN_SCRIPT_STRING;
+		else
+			action = SHOW_USAGE;
+	} else if (argc == 2) {
+		action = RUN_SCRIPT_FILE;
+	}
+	
+	/* Perform action. */
+
 	une_result result;
-	bool read_from_file;
-	bool main_error = false;
-	
-	if (argc < 2) {
-		main_error = true;
-		goto end;
-	}
-	
-	if (strcmp(argv[1], UNE_SWITCH_INTERACTIVE) == 0) {
-		main_interactive();
-		return 0;
-	}
-	
-	if (strcmp(argv[1], UNE_SWITCH_SCRIPT) == 0) {
-		if (argc < 3) {
-			main_error = true;
-			goto end;
-		}
-		read_from_file = false;
-	} else
-		read_from_file = true;
-	
-	if (read_from_file)
-		result = une_run(read_from_file, argv[1], NULL, NULL, NULL);
-	else {
-		wchar_t *wcs = une_str_to_wcs(argv[2]);
-		if (wcs == NULL) {
-			main_error = true;
-			goto end;
-		}
-		result = une_run(read_from_file, NULL, wcs, NULL, NULL);
-		free(wcs);
-	}
-	
-	end:
-	/* main Error. */
-	if (main_error) {
-		wprintf(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_ERROR_USAGE L"\n", argv[0]);
+
+	if (action == SHOW_USAGE) {
 		result = (une_result){
 			.type = UNE_RT_ERROR,
-			.value._int = UNE_MAIN_ERROR
+			.value._int = EXIT_FAILURE
 		};
+		print_usage(argv[0]);
+	} else {
+		une_engine engine = une_engine_create_engine();
+		une_engine_select_engine(&engine);
+		
+		if (action == RUN_SCRIPT_FILE) {
+			result = une_engine_interpret_file_or_wcs(argv[1], NULL);
+		} else if (action == RUN_SCRIPT_STRING) {
+			result = une_engine_interpret_file_or_wcs(NULL, script_string);
+			free(script_string);
+		} else {
+			assert(action == ENTER_INTERACTIVE_MODE);
+			result = (une_result){
+				.type = UNE_RT_INT,
+				.value._int = EXIT_SUCCESS
+			};
+			interactive();
+		}
+
+		if (result.type == UNE_RT_ERROR) {
+			result.value._int = (une_int)felix->error.type+(une_int)UNE_R_END_DATA_RESULT_TYPES;
+			une_engine_print_error();
+		}
+		
+		une_engine_free();
 	}
-	
+
 	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
 	if (result.type != UNE_RT_ERROR) {
 		assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
@@ -110,9 +121,9 @@ int main(int argc, char *argv[])
 	if (result.type == UNE_RT_INT)
 		final = (int)result.value._int;
 	else if (result.type == UNE_RT_ERROR)
-		final = UNE_MAIN_ERROR;
+		final = EXIT_FAILURE;
 	else
-		final = 0;
+		final = EXIT_SUCCESS;
 	une_result_free(result);
 	
 	#if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
@@ -137,41 +148,35 @@ int main(int argc, char *argv[])
 	);
 	fclose(report_status);
 	#endif /* UNE_DEBUG_REPORT */
-	
+
+	/* Disable Virtual Terminal Processing for the Windows console. */
 	#ifdef _WIN32
-	/* Manually disable Virtual Terminal Processing for the Windows console. */
 	une_win_vt_proc(false);
 	#endif
 	
 	return final;
 }
 
-/*
-*** Interactive mode.
-*/
-
-volatile sig_atomic_t sigint_fired = false;
-
-void main_sigint_fired(int signal)
+void interactive_sigint_handler(int signal)
 {
 	sigint_fired = true;
 }
 
-void main_interactive(void)
+void interactive(void)
 {
-	signal(SIGINT, &main_sigint_fired);
-	une_interpreter_state is = une_interpreter_state_create(NULL);
-	une_is = &is;
+	signal(SIGINT, &interactive_sigint_handler);
+
 	wchar_t *stmts = malloc(UNE_SIZE_FGETWS_BUFFER*sizeof(*stmts));
 	verify(stmts);
-	bool did_exit = false;
-	
+
 	fputws(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
 	
-	while (!sigint_fired && !did_exit) {
+	while (!sigint_fired && !felix->is.should_exit) {
 		fputws(UNE_INTERACTIVE_PREFIX, stdout);
+		
 		if (!fgetws(stmts, UNE_SIZE_FGETWS_BUFFER, stdin))
 			break;
+		
 		/* Directives. */
 		if (!wcscmp(stmts, L"#clear\n")) {
 			fputws(L"\033[H\033[J", stdout);
@@ -180,25 +185,26 @@ void main_interactive(void)
 			fputws(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
 			continue;
 		} else if (!wcscmp(stmts, L"#symbols\n")) {
-			for (size_t i=0; i<is.context->variables_count; i++) {
-				fputws(is.context->variables[i]->name, stdout);
-				if (is.context->variables[i]->content.type == UNE_RT_FUNCTION) {
-					une_callable *callable = une_callables_get_callable_by_id(is.callables, is.context->variables[i]->content.value._id);
+			for (size_t i=0; i<felix->is.context->variables_count; i++) {
+				fputws(felix->is.context->variables[i]->name, stdout);
+				if (felix->is.context->variables[i]->content.type == UNE_RT_FUNCTION) {
+					une_callable *callable = une_callables_get_callable_by_id(felix->is.callables, felix->is.context->variables[i]->content.value._id);
 					fputwc(L'(', stdout);
 					if (callable->params_count) {
 						fwprintf(stdout, L"%ls", callable->params[0]);
 						for (size_t j=1; j<callable->params_count; j++)
 							fwprintf(stdout, L", %ls", callable->params[j]);
 					}
-					fwprintf(stdout, L") [id %zu]", callable->id);
+					fwprintf(stdout, L")", callable->id);
 				}
 				fputwc(L'\n', stdout);
 			}
 			continue;
 		}
+
 		size_t len = wcslen(stmts);
 		stmts[--len] = L'\0'; /* Remove trailing newline. */
-		une_result result = une_run(false, NULL, stmts, &did_exit, une_is);
+		une_result result = une_engine_interpret_file_or_wcs(NULL, stmts);
 		if (result.type != UNE_RT_VOID && result.type != UNE_RT_ERROR) {
 			if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
 				une_result_represent(stdout, result);
@@ -210,6 +216,11 @@ void main_interactive(void)
 		}
 		une_result_free(result);
 	}
+
 	free(stmts);
-	une_interpreter_state_free(&is);
+}
+
+void print_usage(char *executable_path)
+{
+	wprintf(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_ERROR_USAGE L"\n", executable_path);
 }

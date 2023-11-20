@@ -1,6 +1,6 @@
 /*
 error.h - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 #ifndef UNE_ERROR_H
@@ -76,9 +76,6 @@ Populate a une_error.
 	}
 
 une_error une_error_create(void);
-
-size_t une_error_trace(une_error *error, une_lexer_state *ls, une_trace **out);
-void une_error_trace_print(une_trace trace);
-void une_error_display(une_error *error, une_lexer_state *ls);
+const wchar_t *une_error_type_to_wcs(une_error_type type);
 
 #endif /* !UNE_ERROR_H */

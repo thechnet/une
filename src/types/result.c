@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 /* Header-specific includes. */
@@ -175,7 +175,7 @@ Dereference reference results.
 une_result une_result_dereference(une_result result)
 {
 	if (result.type == UNE_RT_OBJECT) {
-		((une_object*)result.value._vp)->owner = une_is->context;
+		((une_object*)result.value._vp)->owner = felix->is.context;
 		return result;
 	}
 	if (result.type != UNE_RT_REFERENCE)

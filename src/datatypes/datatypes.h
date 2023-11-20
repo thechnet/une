@@ -1,6 +1,6 @@
 /*
 datatypes.h - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 #ifndef UNE_DATATYPES_H
@@ -19,6 +19,7 @@ Modified 2023-11-17
 #include "object.h"
 #include "function.h"
 #include "builtin.h"
+#include "../types/engine.h"
 
 /*
 Holds all the functionality a datatype can define.
@@ -63,7 +64,7 @@ typedef struct une_datatype_ {
 	une_result (*copy)(une_result);
 	void (*free_members)(une_result);
 	
-	une_result (*call)(une_error*, une_node*, une_result, une_result, wchar_t*);
+	une_result (*call)(une_node*, une_result, une_result, wchar_t*);
 } une_datatype;
 
 extern une_datatype une_datatypes[];

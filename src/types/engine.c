@@ -1,6 +1,6 @@
 /*
 engine.c - Une
-Modified 2023-11-18
+Modified 2023-11-19
 */
 
 /* Header-specific includes. */
@@ -13,10 +13,16 @@ Modified 2023-11-18
 #include "../interpreter.h"
 
 /*
-API.
+Globals.
 */
 
-une_engine une_engine_create(void)
+une_engine *felix = NULL; /* FIXME: This name is a placeholder to make search-and-replace easier. */
+
+/*
+Interface.
+*/
+
+une_engine une_engine_create_engine(void)
 {
 	return (une_engine){
 		.error = une_error_create(),
@@ -24,9 +30,27 @@ une_engine une_engine_create(void)
 	};
 }
 
-une_module *une_engine_new_module_from_file_or_wcs(une_engine *engine, char *path, wchar_t *wcs)
+void une_engine_select_engine(une_engine *engine)
 {
-	assert(engine);
+	felix = engine;
+}
+
+void une_engine_free(void)
+{
+	une_interpreter_state_free(&felix->is);
+	felix = NULL;
+}
+
+void une_engine_prepare_for_next_module(void)
+{
+	felix->error.type = UNE_ET_none__;
+	felix->is.should_return = false;
+	felix->is.should_exit = false;
+}
+
+une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
+{
+	UNE_VERIFY_ENGINE;
 	bool is_file = path != NULL;
 	if (is_file) {
 		assert(!wcs);
@@ -36,15 +60,18 @@ une_module *une_engine_new_module_from_file_or_wcs(une_engine *engine, char *pat
 	}
 
 	char *absolute_path = NULL;
-	wchar_t *source = wcs;
+	wchar_t *source = NULL;
 	if (is_file) {
 		absolute_path = une_resolve_path(path);
 		if (!absolute_path || !une_file_exists(absolute_path))
-			engine->error = UNE_ERROR_SET(UNE_ET_FILE, (une_position){0});
-		source = une_file_read(absolute_path);
+			felix->error = UNE_ERROR_SET(UNE_ET_FILE, (une_position){0});
+		else
+			source = une_file_read(absolute_path);
+	} else {
+		source = wcsdup(wcs);
 	}
 
-	une_module *module = une_modules_add_module(&engine->is.modules);
+	une_module *module = une_modules_add_module(&felix->is.modules);
 	assert(module);
 
 	module->is_file = is_file;
@@ -59,12 +86,13 @@ une_module *une_engine_new_module_from_file_or_wcs(une_engine *engine, char *pat
 		ls.text = module->source;
 		ls.text_length = wcslen(ls.text);
 		#ifndef UNE_NO_LEX
-		une_lex(&engine->error, &ls);
+		une_lex(&felix->error, &ls);
 		#endif
 		module->tokens = ls.tokens;
 	}
 
 	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
+	wprintf(L"\n");
 	une_tokens_display(module->tokens);
 	wprintf(L"\n\n");
 	#endif
@@ -72,9 +100,9 @@ une_module *une_engine_new_module_from_file_or_wcs(une_engine *engine, char *pat
 	return module;
 }
 
-une_callable *une_engine_parse_module(une_engine *engine, une_module *module)
+une_callable *une_engine_parse_module(une_module *module)
 {
-	assert(engine);
+	UNE_VERIFY_ENGINE;
 	assert(module);
 
 	assert(module->tokens);
@@ -82,7 +110,7 @@ une_callable *une_engine_parse_module(une_engine *engine, une_module *module)
 	une_parser_state ps = une_parser_state_create();
 	une_node *ast = NULL;
 	#ifndef UNE_NO_PARSE
-	ast = une_parse(&engine->error, &ps, module->tokens);
+	ast = une_parse(&felix->error, &ps, module->tokens);
 	#endif
 	#ifdef UNE_DEBUG_LOG_PARSE
 	success("parse done.");
@@ -97,11 +125,18 @@ une_callable *une_engine_parse_module(une_engine *engine, une_module *module)
 
 	une_callable *callable = NULL;
 	if (ast) {
-		callable = une_callables_add_callable(&engine->is.callables);
+		char *callable_definition_file = NULL;
+		if (module->path) {
+			callable_definition_file = strdup(module->path);
+			assert(callable_definition_file);
+		}
+
+		callable = une_callables_add_callable(&felix->is.callables);
 		assert(callable);
 
+		callable->is_module = true;
 		callable->module_id = module->id;
-		callable->definition_file = module->path;
+		callable->definition_file = callable_definition_file;
 		callable->definition_point = (une_position){0};
 		callable->params_count = 0;
 		callable->params = NULL;
@@ -111,25 +146,26 @@ une_callable *une_engine_parse_module(une_engine *engine, une_module *module)
 	return callable;
 }
 
-une_result une_engine_interpret_file_or_wcs(une_engine *engine, char *path, wchar_t *wcs)
+une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs)
 {
-	une_module *module = une_engine_new_module_from_file_or_wcs(engine, path, wcs);
+	une_engine_prepare_for_next_module();
+
+	une_module *module = une_engine_new_module_from_file_or_wcs(path, wcs);
 	if (!module->tokens)
 		return une_result_create(UNE_RT_ERROR);
 
-	une_callable *callable = une_engine_parse_module(engine, module);
-	if (!module)
+	une_callable *callable = une_engine_parse_module(module);
+	if (!callable)
 		return une_result_create(UNE_RT_ERROR);
 
-	une_context *parent = engine->is.context;
-	engine->is.context = une_context_create_marker(module->path, (une_position){0}, NULL, NULL, (une_position){0});
-	engine->is.context->parent = parent;
-
-	une_interpreter_state_reset_flags(&engine->is);
+	une_context *parent = felix->is.context;
+	felix->is.context = une_context_create_marker(module->path, (une_position){0}, NULL, NULL, (une_position){0});
+	felix->is.context->parent = parent;
 
 	une_result result = une_result_create(UNE_RT_VOID);
 	#ifndef UNE_NO_INTERPRET
-	result = une_interpret(&engine->error, callable->body);
+	result = une_interpret(callable->body);
+	felix->is.should_return = false;
 	#endif
 	#ifdef UNE_DEBUG_LOG_INTERPRET
 	success("interpret done.");
@@ -137,18 +173,14 @@ une_result une_engine_interpret_file_or_wcs(une_engine *engine, char *path, wcha
 	if (result.type == UNE_RT_ERROR)
 		return une_result_create(UNE_RT_ERROR);
 
-	une_context_free_children(parent, engine->is.context);
-	engine->is.context = parent;
+	une_context_free_children(parent, felix->is.context);
+	felix->is.context = parent;
 	
 	return result;
 }
 
-void une_engine_print_error(une_engine *engine)
+void une_engine_print_error(void)
 {
-	wprintf(L"Error\n");
-}
-
-void une_engine_free(une_engine engine)
-{
-	une_interpreter_state_free(&engine.is);
+	assert(felix->error.type != UNE_ET_none__);
+	wprintf(L"[91mError: %ls\n[0m", une_error_type_to_wcs(felix->error.type));
 }

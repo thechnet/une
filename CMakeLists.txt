@@ -44,7 +44,6 @@ endforeach()
 # Source.
 add_executable(une
 	# Backend.
-	src/une.c
 	src/interpreter.c
 	src/parser.c
 	src/lexer.c

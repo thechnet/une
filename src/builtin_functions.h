@@ -1,6 +1,6 @@
 /*
 builtin.h - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 #ifndef UNE_BUILTIN_H
@@ -11,8 +11,9 @@ Modified 2023-11-17
 #include "types/result.h"
 #include "types/error.h"
 #include "types/interpreter_state.h"
+#include "types/engine.h"
 
-#define une_builtin_fn_sign__(id__) une_result (id__)(une_error *error, une_node *call_node, une_result *args)
+#define une_builtin_fn_sign__(id__) une_result (id__)(une_node *call_node, une_result *args)
 
 typedef const int une_builtin_param;
 typedef une_builtin_fn_sign__(*une_builtin_fnptr);
@@ -76,7 +77,7 @@ Ensure an argument has the correct type.
 */
 #define UNE_BUILTIN_VERIFY_ARG_TYPE(index, expected_type) \
 	do if (args[index].type != expected_type) {\
-		*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(index));\
+		felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(index));\
 		return une_result_create(UNE_RT_ERROR);\
 	} while(false)
 

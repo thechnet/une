@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 /* Header-specific includes. */
@@ -9,7 +9,7 @@ Modified 2023-11-17
 /* Implementation-specific includes. */
 #include <time.h>
 #include "tools.h"
-#include "une.h"
+#include "types/engine.h"
 #include "stream.h"
 #include "datatypes/datatypes.h"
 
@@ -128,7 +128,7 @@ Print a text representation of a une_result, always adding a newline at the end.
 */
 une_builtin_fn__(print)
 {
-	une_builtin_fn_put(error, call_node, args);
+	une_builtin_fn_put(call_node, args);
 	
 	putwc(L'\n', stdout);
 	
@@ -144,13 +144,13 @@ une_builtin_fn__(int)
 	une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
 	
 	if (dt_result.as_int == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
 	une_result result_as_int = dt_result.as_int(args[result]);
 	if (result_as_int.type == UNE_RT_ERROR) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -166,13 +166,13 @@ une_builtin_fn__(flt)
 	une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
 	
 	if (dt_result.as_flt == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
 	une_result result_as_flt = dt_result.as_flt(args[result]);
 	if (result_as_flt.type == UNE_RT_ERROR) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -188,7 +188,7 @@ une_builtin_fn__(str)
 	une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
 	
 	if (dt_result.as_str == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -206,7 +206,7 @@ une_builtin_fn__(len)
 	une_datatype dt_result = UNE_DATATYPE_FOR_RESULT(args[result]);
 	
 	if (dt_result.get_len == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -243,7 +243,7 @@ une_builtin_fn__(chr)
 	UNE_BUILTIN_VERIFY_ARG_TYPE(result, UNE_RT_INT);
 	
 	if (args[result].value._int > WCHAR_MAX) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -264,7 +264,7 @@ une_builtin_fn__(ord)
 	
 	/* Ensure input une_result_type is UNE_RT_STR and is only one character long. */
 	if (args[result].type != UNE_RT_STR || wcslen(args[result].value._wcs) != 1) {
-		*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
+		felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(result));
 		return une_result_create(UNE_RT_ERROR);
 	}
 
@@ -285,12 +285,12 @@ une_builtin_fn__(read)
 	/* Check if file exists. */
 	char *path = une_wcs_to_str(args[file].value._wcs);
 	if (path == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(file));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(file));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	if (!une_file_exists(path)) {
 		free(path);
-		*error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(file));
+		felix->error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(file));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -305,7 +305,7 @@ une_builtin_fn__(read)
 /*
 Write/append text to a file (helper).
 */
-une_result une_builtin_fn_write_or_append(une_error *error, une_node *call_node, une_result *args, bool write)
+une_result une_builtin_fn_write_or_append(une_node *call_node, une_result *args, bool write)
 {
 	une_builtin_param file = 0;
 	une_builtin_param text = 1;
@@ -316,13 +316,13 @@ une_result une_builtin_fn_write_or_append(une_error *error, une_node *call_node,
 	/* Create file. */
 	char *path = une_wcs_to_str(args[file].value._wcs);
 	if (path == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(file));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(file));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	FILE *fp = fopen(path, write ? UNE_FOPEN_WFLAGS : UNE_FOPEN_AFLAGS);
 	free(path);
 	if (fp == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(file));
+		felix->error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(file));
 		return une_result_create(UNE_RT_ERROR);
 	}
 
@@ -337,7 +337,7 @@ Write text to a file.
 */
 une_builtin_fn__(write)
 {
-	return une_builtin_fn_write_or_append(error, call_node, args, true);
+	return une_builtin_fn_write_or_append(call_node, args, true);
 }
 
 /*
@@ -345,7 +345,7 @@ Append text to a file.
 */
 une_builtin_fn__(append)
 {
-	return une_builtin_fn_write_or_append(error, call_node, args, false);
+	return une_builtin_fn_write_or_append(call_node, args, false);
 }
 
 /*
@@ -386,28 +386,28 @@ une_builtin_fn__(script)
 	/* Check if file exists. */
 	char *path = une_wcs_to_str(args[script].value._wcs);
 	if (path == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(script));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(script));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	if (!une_file_exists(path)) {
 		free(path);
-		*error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(script));
+		felix->error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(script));
 		return une_result_create(UNE_RT_ERROR);
 	}
 
 	/* Wrap script in marker context to ensure child contexts use the correct creation file. */
-	une_context *parent = une_is->context;
-	une_is->context = une_context_create_marker(path, call_node->pos, NULL, NULL, (une_position){0});
-	une_is->context->parent = parent;
+	une_context *parent = felix->is.context;
+	felix->is.context = une_context_create_marker(path, call_node->pos, NULL, NULL, (une_position){0});
+	felix->is.context->parent = parent;
 
 	/* Run script. */
-	une_result out = une_run_bare(error, path, NULL);
+	une_result out = une_engine_interpret_file_or_wcs(path, NULL); // FIXME: There's currently two marker contexts here.
 	free(path);
 	
 	/* Discard marker context. */
 	if (out.type != UNE_RT_ERROR) {
-		une_context_free_children(parent, une_is->context);
-		une_is->context = parent;
+		une_context_free_children(parent, felix->is.context);
+		felix->is.context = parent;
 	}
 	
 	return out;
@@ -425,7 +425,7 @@ une_builtin_fn__(exist)
 	/* Check if file or folder exists. */
 	char *path_str = une_wcs_to_str(args[path].value._wcs);
 	if (path_str == NULL) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(path));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(path));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	bool exists = une_file_or_folder_exists(path_str);
@@ -452,7 +452,7 @@ une_builtin_fn__(split)
 	UNE_UNPACK_RESULT_LIST(args[delims], delims_p, delims_len);
 	UNE_FOR_RESULT_LIST_ITEM(i, delims_len) {
 		if (delims_p[i].type != UNE_RT_STR || wcslen(delims_p[i].value._wcs) <= 0) {
-			*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(delims));
+			felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(delims));
 			return une_result_create(UNE_RT_ERROR);
 		}
 	}
@@ -532,17 +532,17 @@ une_builtin_fn__(eval)
 	UNE_BUILTIN_VERIFY_ARG_TYPE(script, UNE_RT_STR);
 
 	/* Wrap script in marker context to ensure child contexts use the correct creation file. */
-	une_context *parent = une_is->context;
-	une_is->context = une_context_create_marker(NULL, call_node->pos, NULL, NULL, (une_position){0});
-	une_is->context->parent = parent;
+	une_context *parent = felix->is.context;
+	felix->is.context = une_context_create_marker(NULL, call_node->pos, NULL, NULL, (une_position){0});
+	felix->is.context->parent = parent;
 
 	/* Run script. */
-	une_result out = une_run_bare(error, NULL, args[script].value._wcs);
-	
+	une_result out = une_engine_interpret_file_or_wcs(NULL, args[script].value._wcs); // FIXME: There's currently two marker contexts here.
+
 	/* Discard marker context. */
 	if (out.type != UNE_RT_ERROR) {
-		une_context_free_children(parent, une_is->context);
-		une_is->context = parent;
+		une_context_free_children(parent, felix->is.context);
+		felix->is.context = parent;
 	}
 	
 	return out;
@@ -567,7 +567,7 @@ une_builtin_fn__(replace)
 	
 	size_t search_len = wcslen(search);
 	if (!search_len) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(search_arg));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(search_arg));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	size_t replace_len = wcslen(replace);
@@ -606,7 +606,7 @@ une_builtin_fn__(join)
 	UNE_UNPACK_RESULT_LIST(args[list], elements, count);
 	UNE_FOR_RESULT_LIST_ITEM(i, count)
 		if (elements[i].type != UNE_RT_STR) {
-			*error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(list));
+			felix->error = UNE_ERROR_SET(UNE_ET_TYPE, UNE_BUILTIN_POS_OF_ARG(list));
 			return une_result_create(UNE_RT_ERROR);
 		}
 	UNE_BUILTIN_VERIFY_ARG_TYPE(seperator, UNE_RT_STR);
@@ -657,7 +657,7 @@ static int sort_compare(const void *a, const void *b)
 	une_result comparator_args = une_result_create(UNE_RT_LIST);
 	comparator_args.value._vp = (void*)subjects;
 	
-	une_result result = dt_comparator.call(sort_error, sort_call_node, sort_comparator, comparator_args, NULL);
+	une_result result = dt_comparator.call(sort_call_node, sort_comparator, comparator_args, NULL);
 	int rating = 0;
 	if (result.type == UNE_RT_INT)
 		rating = result.value._int > 0 ? 1 : result.value._int < 0 ? -1 : 0;
@@ -684,14 +684,14 @@ une_builtin_fn__(sort)
 	assert(!sort_error);
 	assert(!sort_call_node);
 	assert(sort_comparator.type == UNE_RT_none__);
-	sort_error = error;
+	sort_error = &felix->error;
 	sort_call_node = call_node;
 	sort_comparator = args[compare];
 	
 	une_result result = une_result_copy(args[subject]);
 	UNE_UNPACK_RESULT_LIST(result, elements, count);
 	qsort(elements + 1 /* Size. */, count, sizeof(*elements), &sort_compare);
-	if (error->type != UNE_ET_none__) {
+	if (felix->error.type != UNE_ET_none__) {
 		une_result_free(result);
 		return une_result_create(UNE_RT_ERROR);
 	}
@@ -710,7 +710,7 @@ une_builtin_fn__(getwd)
 {
 	wchar_t *path = une_get_working_directory();
 	if (!path) {
-		*error = UNE_ERROR_SET(UNE_ET_SYSTEM, call_node->pos);
+		felix->error = UNE_ERROR_SET(UNE_ET_SYSTEM, call_node->pos);
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -730,7 +730,7 @@ une_builtin_fn__(setwd)
 	
 	bool success = une_set_working_directory(args[path].value._wcs);
 	if (!success) {
-		*error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(path));
+		felix->error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(path));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
@@ -747,13 +747,13 @@ une_builtin_fn__(playwav)
 	
 	char *path_narrow = une_wcs_to_str(args[path].value._wcs);
 	if (!path_narrow) {
-		*error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(path));
+		felix->error = UNE_ERROR_SET(UNE_ET_ENCODING, UNE_BUILTIN_POS_OF_ARG(path));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	bool file_not_fit = !une_file_exists(path_narrow) || !une_file_extension_matches(path_narrow, ".wav");
 	free(path_narrow);
 	if (file_not_fit) {
-		*error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(path));
+		felix->error = UNE_ERROR_SET(UNE_ET_FILE, UNE_BUILTIN_POS_OF_ARG(path));
 		return une_result_create(UNE_RT_ERROR);
 	}
 	
