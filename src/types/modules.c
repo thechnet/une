@@ -1,6 +1,6 @@
 /*
 modules.c - Une
-Modified 2023-11-18
+Modified 2023-11-19
 */
 
 /* Header-specific includes. */
@@ -40,7 +40,7 @@ une_modules une_modules_create(void)
 	return (une_modules){
 		.size = size,
 		.buffer = buffer,
-		.next_unused_id = 0
+		.next_unused_id = 1
 	};
 }
 
