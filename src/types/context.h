@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 #ifndef UNE_CONTEXT_H
@@ -38,7 +38,11 @@ Variable interface function template.
 
 une_context *une_context_create_marker(char *creation_file, une_position creation_point, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point);
 une_context *une_context_create(char *creation_file, une_position creation_point, bool has_callee, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point);
-une_context *une_context_get_oldest_parent(une_context *context);
+
+une_context *une_context_get_oldest_parent_or_self(une_context *context);
+une_context *une_context_get_oldest_nonmarker_parent_or_nonmarker_self(une_context *context);
+une_context *une_context_get_youngest_nonmarker_parent_or_nonmarker_self(une_context *context);
+
 void une_context_free_children(une_context *parent, une_context *youngest_child);
 void une_context_free(une_context *context);
 

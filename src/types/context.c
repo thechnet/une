@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 /* Header-specific includes. */
@@ -62,10 +62,38 @@ une_context *une_context_create(char *creation_file, une_position creation_point
 /*
 Find and return the oldest parent of the incoming context.
 */
-une_context *une_context_get_oldest_parent(une_context *context)
+une_context *une_context_get_oldest_parent_or_self(une_context *context)
 {
 	while (context->parent != NULL)
 		context = context->parent;
+	return context;
+}
+
+/*
+Find and return the oldest non-marker parent (or self) of the incoming context, or NULL.
+*/
+une_context *une_context_get_oldest_nonmarker_parent_or_nonmarker_self(une_context *context)
+{
+	une_context *oldest_nonmarker_parent_or_nonmarker_self = NULL;
+	do {
+		if (!context->is_marker_context)
+			oldest_nonmarker_parent_or_nonmarker_self = context;
+		context = context->parent;
+	} while (context->parent != NULL);
+	return oldest_nonmarker_parent_or_nonmarker_self;
+}
+
+/*
+Find and return the youngest non-marker parent (or self) of the incoming context, or NULL.
+*/
+une_context *une_context_get_youngest_nonmarker_parent_or_nonmarker_self(une_context *context)
+{
+	while (context) {
+		if (!context->is_marker_context) {
+			break;
+		}
+		context = context->parent;
+	}
 	return context;
 }
 
@@ -139,10 +167,14 @@ Returns a pointer to a une_association in a une_context's variable buffer or NUL
 */
 une_variable_itf__(une_variable_find)
 {
+	/* Search in the youngest non-marker parent (or self). */
+	une_context *nonmarker_context = une_context_get_youngest_nonmarker_parent_or_nonmarker_self(context);
+	assert(nonmarker_context);
+
 	/* Find une_association. */
-	for (size_t i=0; i<context->variables_count; i++)
-		if (wcscmp(context->variables[i]->name, name) == 0)
-			return context->variables[i];
+	for (size_t i=0; i<nonmarker_context->variables_count; i++)
+		if (wcscmp(nonmarker_context->variables[i]->name, name) == 0)
+			return nonmarker_context->variables[i];
 
 	/* Return NULL if no match was found. */
 	return NULL;
@@ -153,16 +185,18 @@ Returns a pointer to a une_association in a une_context's variable buffer and it
 */
 une_variable_itf__(une_variable_find_global)
 {
+	assert(context);
+
 	/* Return NULL by default. */
 	une_association *var = NULL;
 	
 	/* Find une_association. */
-	while (var == NULL) {
+	do {
 		var = une_variable_find(context, name);
-		if (context->parent == NULL)
+		if (var || !context->parent)
 			break;
-		context = context->parent;
-	}
+		context = une_context_get_youngest_nonmarker_parent_or_nonmarker_self(context->parent);
+	} while (true);
 	
 	return var;
 }
@@ -192,7 +226,7 @@ une_variable_itf__(une_variable_find_or_create_global)
 		return variable;
 	
 	/* une_association doesn't exist yet, create it in the oldest parent context. */
-	return une_variable_create(une_context_get_oldest_parent(context), name);
+	return une_variable_create(une_context_get_oldest_parent_or_self(context), name);
 }
 
 /*
