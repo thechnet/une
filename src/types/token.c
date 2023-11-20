@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-11-17
+Modified 2023-11-19
 */
 
 /* Header-specific includes. */
@@ -210,8 +210,10 @@ Display the text representations of each item in a list of une_tokens.
 void une_tokens_display(une_token *tokens)
 {
 	/* Ensure list of tokens exists. */
-	if (tokens == NULL)
+	if (tokens == NULL) {
+		wprintf(L"No tokens");
 		return;
+	}
 	
 	/* Print the text representation of each token. */
 	size_t i = 0;
