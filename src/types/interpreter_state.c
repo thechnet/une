@@ -1,6 +1,6 @@
 /*
 interpreter_state.c - Une
-Modified 2023-11-19
+Modified 2023-11-21
 */
 
 /* Header-specific includes. */
@@ -16,7 +16,7 @@ Initialize a une_interpreter_state struct.
 une_interpreter_state une_interpreter_state_create(char *creation_file)
 {
 	return (une_interpreter_state){
-		.context = une_context_create(creation_file, (une_position){0}, false, NULL, NULL, (une_position){0}),
+		.context = une_context_create(),
 		.callables = une_callables_create(),
 		.modules = une_modules_create(),
 		.should_return = false,

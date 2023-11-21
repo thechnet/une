@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-11-20
+Modified 2023-11-21
 */
 
 /* Header-specific includes. */
@@ -154,10 +154,7 @@ une_node *une_node_copy(une_node *src)
 				dest->content.branch.b = src->content.branch.b;
 			else
 				dest->content.branch.b = une_node_copy(src->content.branch.b);
-			if (src->type == UNE_NT_FUNCTION)
-				dest->content.branch.c = src->content.branch.c;
-			else
-				dest->content.branch.c = une_node_copy(src->content.branch.c);
+			dest->content.branch.c = une_node_copy(src->content.branch.c);
 			dest->content.branch.d = une_node_copy(src->content.branch.d);
 			break;
 	
@@ -220,8 +217,7 @@ void une_node_free(une_node *node, bool free_wcs)
 			une_node_free(node->content.branch.a, free_wcs);
 			if (node->type != UNE_NT_SEEK)
 				une_node_free(node->content.branch.b, free_wcs);
-			if (node->type != UNE_NT_FUNCTION)
-				une_node_free(node->content.branch.c, free_wcs);
+			une_node_free(node->content.branch.c, free_wcs);
 			une_node_free(node->content.branch.d, free_wcs);
 			break;
 	

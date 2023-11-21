@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-11-20
+Modified 2023-11-21
 */
 
 /* Header-specific includes. */
@@ -395,20 +395,9 @@ une_builtin_fn__(script)
 		return une_result_create(UNE_RT_ERROR);
 	}
 
-	/* Wrap script in marker context to ensure child contexts use the correct creation file. */
-	une_context *parent = felix->is.context;
-	felix->is.context = une_context_create_marker(path, call_node->pos, NULL, NULL, (une_position){0});
-	felix->is.context->parent = parent;
-
 	/* Run script. */
-	une_result out = une_engine_interpret_file_or_wcs(path, NULL); // FIXME: There's currently two marker contexts here.
+	une_result out = une_engine_interpret_file_or_wcs_with_position(path, NULL, call_node->pos);
 	free(path);
-	
-	/* Discard marker context. */
-	if (out.type != UNE_RT_ERROR) {
-		une_context_free_children(parent, felix->is.context);
-		felix->is.context = parent;
-	}
 	
 	return out;
 }
@@ -531,19 +520,8 @@ une_builtin_fn__(eval)
 	
 	UNE_BUILTIN_VERIFY_ARG_TYPE(script, UNE_RT_STR);
 
-	/* Wrap script in marker context to ensure child contexts use the correct creation file. */
-	une_context *parent = felix->is.context;
-	felix->is.context = une_context_create_marker(NULL, call_node->pos, NULL, NULL, (une_position){0});
-	felix->is.context->parent = parent;
-
 	/* Run script. */
-	une_result out = une_engine_interpret_file_or_wcs(NULL, args[script].value._wcs); // FIXME: There's currently two marker contexts here.
-
-	/* Discard marker context. */
-	if (out.type != UNE_RT_ERROR) {
-		une_context_free_children(parent, felix->is.context);
-		felix->is.context = parent;
-	}
+	une_result out = une_engine_interpret_file_or_wcs_with_position(NULL, args[script].value._wcs, call_node->pos);
 	
 	return out;
 }

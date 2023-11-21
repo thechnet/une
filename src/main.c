@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-11-19
+Modified 2023-11-21
 */
 
 /* Header-specific includes. */
@@ -185,15 +185,15 @@ void interactive(void)
 			fputws(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
 			continue;
 		} else if (!wcscmp(stmts, L"#symbols\n")) {
-			for (size_t i=0; i<felix->is.context->variables_count; i++) {
-				fputws(felix->is.context->variables[i]->name, stdout);
-				if (felix->is.context->variables[i]->content.type == UNE_RT_FUNCTION) {
-					une_callable *callable = une_callables_get_callable_by_id(felix->is.callables, felix->is.context->variables[i]->content.value._id);
+			for (size_t i=0; i<felix->is.context->variables.count; i++) {
+				fputws(felix->is.context->variables.buffer[i]->name, stdout);
+				if (felix->is.context->variables.buffer[i]->content.type == UNE_RT_FUNCTION) {
+					une_callable *callable = une_callables_get_callable_by_id(felix->is.callables, felix->is.context->variables.buffer[i]->content.value._id);
 					fputwc(L'(', stdout);
-					if (callable->params_count) {
-						fwprintf(stdout, L"%ls", callable->params[0]);
-						for (size_t j=1; j<callable->params_count; j++)
-							fwprintf(stdout, L", %ls", callable->params[j]);
+					if (callable->parameters.count) {
+						fwprintf(stdout, L"%ls", callable->parameters.names[0]);
+						for (size_t j=1; j<callable->parameters.count; j++)
+							fwprintf(stdout, L", %ls", callable->parameters.names[j]);
 					}
 					fwprintf(stdout, L")", callable->id);
 				}

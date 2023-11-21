@@ -1,6 +1,6 @@
 /*
 engine.h - Une
-Modified 2023-11-19
+Modified 2023-11-21
 */
 
 #ifndef UNE_ENGINE_H
@@ -44,6 +44,7 @@ void une_engine_free(void);
 void une_engine_prepare_for_next_module(void);
 une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs);
 une_callable *une_engine_parse_module(une_module *module);
+une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *wcs, une_position creation_position);
 une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs);
 void une_engine_print_error(void);
 

@@ -1,6 +1,6 @@
 /*
 callable.c - Une
-Modified 2023-11-19
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -16,22 +16,19 @@ static void une_callable_clear(une_callable *callable)
 	if (callable->id == 0)
 		return;
 	
-	if (callable->definition_file)
-		free(callable->definition_file);
+	callable->id = 0;
 	
-	if (callable->params_count > 0) {
-		assert(callable->params);
-		for (size_t i=0; i<callable->params_count; i++) {
-			assert(callable->params[i]);
-			free(callable->params[i]);
+	if (callable->parameters.count > 0) {
+		assert(callable->parameters.names);
+		for (size_t i=0; i<callable->parameters.count; i++) {
+			assert(callable->parameters.names[i]);
+			free(callable->parameters.names[i]);
 		}
-		free(callable->params);
+		free(callable->parameters.names);
 	}
 	
 	if (callable->body)
 		une_node_free(callable->body, !callable->is_module);
-	
-	callable->id = 0;
 }
 
 une_callables une_callables_create(void)

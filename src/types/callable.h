@@ -18,10 +18,11 @@ A callable.
 typedef struct une_callable_ {
 	size_t id;
 	size_t module_id;
-	char *definition_file;
-	une_position definition_point;
-	size_t params_count;
-	wchar_t **params;
+	une_position position;
+	struct {
+		size_t count;
+		wchar_t **names;
+	} parameters;
 	une_node *body;
 	bool is_module; // FIXME: We need this to decide if we free callable::body's strings when we destroy this struct, but that's not very elegant. Should we duplicate all the strings in the AST?
 } une_callable;

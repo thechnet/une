@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-11-20
+Modified 2023-11-21
 */
 
 /* Header-specific includes. */
@@ -505,7 +505,6 @@ une_parser__(une_parse_function)
 	
 	/* function. */
 	une_position pos_first = now(&ps->in).pos;
-	void *definition_file = now(&ps->in).value._vp;
 	pull(&ps->in);
 	
 	/* Parameters. */
@@ -520,11 +519,15 @@ une_parser__(une_parse_function)
 		return NULL;
 	}
 	
+	une_node *module_id = une_node_create(UNE_NT_ID);
+	module_id->content.value._id = ps->module_id;
+	
 	une_node *function = une_node_create(UNE_NT_FUNCTION);
 	function->pos = une_position_between(pos_first, body->pos);
 	function->content.branch.a = params;
 	function->content.branch.b = body;
-	function->content.branch.c = definition_file;
+	function->content.branch.c = module_id;
+	
 	return function;
 }
 

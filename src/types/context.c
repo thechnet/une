@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2023-11-19
+Modified 2023-11-20
 */
 
 /* Header-specific includes. */
@@ -10,9 +10,9 @@ Modified 2023-11-19
 #include "../tools.h"
 
 /*
-Allocates, initializes, and returns a pointer to a marker une_context struct.
+Allocates, initializes, and returns a pointer to a transparent une_context struct.
 */
-une_context *une_context_create_marker(char *creation_file, une_position creation_point, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point)
+une_context *une_context_create_transparent(void)
 {
 	/* Allocate une_context. */
 	une_context *context = malloc(sizeof(*context));
@@ -20,24 +20,8 @@ une_context *une_context_create_marker(char *creation_file, une_position creatio
 	
 	/* Initialize une_context. */
 	*context = (une_context){
-		.is_marker_context = true,
-		.parent = NULL,
-		.creation_file = creation_file ? strdup(creation_file) : NULL,
-		.creation_point = creation_point,
-		.has_callee = false,
-		.callee_label = callee_label ? wcsdup(callee_label) : NULL,
-		.callee_definition_file = callee_definition_file ? strdup(callee_definition_file) : NULL,
-		.callee_definition_point = callee_definition_point,
-		.variables = NULL,
-		.variables_size = UNE_SIZE_VARIABLE_BUF,
-		.variables_count = 0
+		.is_transparent = true
 	};
-	if (creation_file)
-		verify(context->creation_file);
-	if (callee_label)
-		verify(callee_label);
-	if (callee_definition_file)
-		verify(context->callee_definition_file);
 	
 	return context;
 }
@@ -45,16 +29,17 @@ une_context *une_context_create_marker(char *creation_file, une_position creatio
 /*
 Allocates, initializes, and returns a pointer to a une_context struct.
 */
-une_context *une_context_create(char *creation_file, une_position creation_point, bool has_callee, wchar_t *callee_label, char *callee_definition_file, une_position callee_definition_point)
+une_context *une_context_create(void)
 {
-	/* Create marker context. */
-	une_context *context = une_context_create_marker(creation_file, creation_point, callee_label, callee_definition_file, callee_definition_point);
+	/* Create transparent context. */
+	une_context *context = une_context_create_transparent();
 	
 	/* Promote to full context. */
-	context->is_marker_context = false;
-	context->variables = malloc(UNE_SIZE_VARIABLE_BUF*sizeof(*context->variables));
-	verify(context->variables);
-	context->has_callee = has_callee;
+	context->is_transparent = false;
+	context->variables.size = UNE_SIZE_VARIABLE_BUF;
+	context->variables.count = 0;
+	context->variables.buffer = malloc(context->variables.size*sizeof(*context->variables.buffer));
+	verify(context->variables.buffer);
 	
 	return context;
 }
@@ -70,26 +55,26 @@ une_context *une_context_get_oldest_parent_or_self(une_context *context)
 }
 
 /*
-Find and return the oldest non-marker parent (or self) of the incoming context, or NULL.
+Find and return the oldest non-transparent parent (or self) of the incoming context, or NULL.
 */
-une_context *une_context_get_oldest_nonmarker_parent_or_nonmarker_self(une_context *context)
+une_context *une_context_get_oldest_opaque_parent_or_opaque_self(une_context *context)
 {
-	une_context *oldest_nonmarker_parent_or_nonmarker_self = NULL;
+	une_context *oldest_opaque_parent_or_opaque_self = NULL;
 	do {
-		if (!context->is_marker_context)
-			oldest_nonmarker_parent_or_nonmarker_self = context;
+		if (!context->is_transparent)
+			oldest_opaque_parent_or_opaque_self = context;
 		context = context->parent;
 	} while (context->parent != NULL);
-	return oldest_nonmarker_parent_or_nonmarker_self;
+	return oldest_opaque_parent_or_opaque_self;
 }
 
 /*
-Find and return the youngest non-marker parent (or self) of the incoming context, or NULL.
+Find and return the youngest non-transparent parent (or self) of the incoming context, or NULL.
 */
-une_context *une_context_get_youngest_nonmarker_parent_or_nonmarker_self(une_context *context)
+une_context *une_context_get_youngest_opaque_parent_or_opaque_self(une_context *context)
 {
 	while (context) {
-		if (!context->is_marker_context) {
+		if (!context->is_transparent) {
 			break;
 		}
 		context = context->parent;
@@ -115,19 +100,12 @@ Frees a une_context and its owned members.
 */
 void une_context_free(une_context *context)
 {
-	if (context->creation_file)
-		free(context->creation_file);
-	if (context->callee_label)
-		free(context->callee_label);
-	if (context->callee_definition_file)
-		free(context->callee_definition_file);
-	
 	/* Free une_association buffer. */
-	if (!context->is_marker_context) {
-		assert(context->variables);
-		for (size_t i=0; i<context->variables_count; i++)
-			une_association_free(context->variables[i]);
-		free(context->variables);
+	if (!context->is_transparent) {
+		assert(context->variables.buffer);
+		for (size_t i=0; i<context->variables.count; i++)
+			une_association_free(context->variables.buffer[i]);
+		free(context->variables.buffer);
 	}
 	
 	free(context);
@@ -138,18 +116,18 @@ Initializes a new une_association in a une_context's variable buffer.
 */
 une_variable_itf__(une_variable_create)
 {
-	/* Find closest non-marker context. */
-	while (context->is_marker_context) {
+	/* Find closest non-transparent context. */
+	while (context->is_transparent) {
 		assert(context->parent);
 		context = context->parent;
 	}
 	
 	/* Ensure sufficient space in une_association buffer. */
-	assert(context->variables);
-	if (context->variables_count >= context->variables_size) {
-		context->variables_size *= 2;
-		context->variables = realloc(context->variables, context->variables_size*sizeof(*context->variables));
-		verify(context->variables);
+	assert(context->variables.buffer);
+	if (context->variables.count >= context->variables.size) {
+		context->variables.size *= 2;
+		context->variables.buffer = realloc(context->variables.buffer, context->variables.size*sizeof(*context->variables.buffer));
+		verify(context->variables.buffer);
 	}
 	
 	/* Initialize une_association. */
@@ -157,7 +135,7 @@ une_variable_itf__(une_variable_create)
 	variable->name = wcsdup(name);
 	verify(variable->name);
 	variable->content = une_result_create(UNE_RT_VOID); /* Don't use UNE_RT_none__ because this will be freed using une_result_free. */
-	context->variables[context->variables_count++] = variable;
+	context->variables.buffer[context->variables.count++] = variable;
 	
 	return variable;
 }
@@ -167,14 +145,14 @@ Returns a pointer to a une_association in a une_context's variable buffer or NUL
 */
 une_variable_itf__(une_variable_find)
 {
-	/* Search in the youngest non-marker parent (or self). */
-	une_context *nonmarker_context = une_context_get_youngest_nonmarker_parent_or_nonmarker_self(context);
-	assert(nonmarker_context);
+	/* Search in the youngest non-transparent parent (or self). */
+	une_context *opaque_context = une_context_get_youngest_opaque_parent_or_opaque_self(context);
+	assert(opaque_context);
 
 	/* Find une_association. */
-	for (size_t i=0; i<nonmarker_context->variables_count; i++)
-		if (wcscmp(nonmarker_context->variables[i]->name, name) == 0)
-			return nonmarker_context->variables[i];
+	for (size_t i=0; i<opaque_context->variables.count; i++)
+		if (wcscmp(opaque_context->variables.buffer[i]->name, name) == 0)
+			return opaque_context->variables.buffer[i];
 
 	/* Return NULL if no match was found. */
 	return NULL;
@@ -195,7 +173,7 @@ une_variable_itf__(une_variable_find_global)
 		var = une_variable_find(context, name);
 		if (var || !context->parent)
 			break;
-		context = une_context_get_youngest_nonmarker_parent_or_nonmarker_self(context->parent);
+		context = une_context_get_youngest_opaque_parent_or_opaque_self(context->parent);
 	} while (true);
 	
 	return var;

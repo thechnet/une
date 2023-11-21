@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-11-20
+Modified 2023-11-21
 */
 
 /* Header-specific includes. */
@@ -194,31 +194,26 @@ une_interpreter__(une_interpret_object)
 une_interpreter__(une_interpret_function)
 {
 	/* Reduce parameter nodes to a vector of strings. */
-	UNE_UNPACK_NODE_LIST(node->content.branch.a, params_n, params_count);
-	wchar_t **params = NULL;
-	if (params_count > 0) {
-		params = malloc(params_count*sizeof(*params));
-		verify(params);
+	UNE_UNPACK_NODE_LIST(node->content.branch.a, p_nodes, p_count);
+	wchar_t **p_names = NULL;
+	if (p_count > 0) {
+		p_names = malloc(p_count*sizeof(*p_names));
+		verify(p_names);
 	}
-	for (size_t i=0; i<params_count; i++) {
-		params[i] = wcsdup(params_n[i+1]->content.value._wcs);
-		verify(params[i]);
+	for (size_t i=0; i<p_count; i++) {
+		p_names[i] = wcsdup(p_nodes[i+1]->content.value._wcs);
+		verify(p_names[i]);
 	}
 	
 	/* Register callable. */
-	char *definition_file = NULL;
-	if (node->content.branch.c) {
-		definition_file = strdup((char*)node->content.branch.c);
-		verify(definition_file);
-	}
-
 	une_callable *callable = une_callables_add_callable(&felix->is.callables);
 	assert(callable);
 
-	callable->definition_file = definition_file;
-	callable->definition_point = node->pos;
-	callable->params_count = params_count;
-	callable->params = params;
+	assert(node->content.branch.c->type == UNE_NT_ID);
+	callable->module_id = node->content.branch.c->content.value._id;
+	callable->position = node->pos;
+	callable->parameters.count = p_count;
+	callable->parameters.names = p_names;
 	callable->body = une_node_copy(node->content.branch.b);
 
 	/* Return FUNCTION result. */

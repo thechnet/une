@@ -1,6 +1,6 @@
 /*
 engine.c - Une
-Modified 2023-11-19
+Modified 2023-11-21
 */
 
 /* Header-specific includes. */
@@ -108,6 +108,7 @@ une_callable *une_engine_parse_module(une_module *module)
 	assert(module->tokens);
 
 	une_parser_state ps = une_parser_state_create();
+	ps.module_id = module->id;
 	une_node *ast = NULL;
 	#ifndef UNE_NO_PARSE
 	ast = une_parse(&felix->error, &ps, module->tokens);
@@ -125,28 +126,18 @@ une_callable *une_engine_parse_module(une_module *module)
 
 	une_callable *callable = NULL;
 	if (ast) {
-		char *callable_definition_file = NULL;
-		if (module->path) {
-			callable_definition_file = strdup(module->path);
-			assert(callable_definition_file);
-		}
-
 		callable = une_callables_add_callable(&felix->is.callables);
 		assert(callable);
 
-		callable->is_module = true;
 		callable->module_id = module->id;
-		callable->definition_file = callable_definition_file;
-		callable->definition_point = (une_position){0};
-		callable->params_count = 0;
-		callable->params = NULL;
 		callable->body = ast;
+		callable->is_module = true;
 	}
 
 	return callable;
 }
 
-une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs)
+une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *wcs, une_position creation_position)
 {
 	une_engine_prepare_for_next_module();
 
@@ -159,8 +150,14 @@ une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs)
 		return une_result_create(UNE_RT_ERROR);
 
 	une_context *parent = felix->is.context;
-	felix->is.context = une_context_create_marker(module->path, (une_position){0}, NULL, NULL, (une_position){0});
+	felix->is.context = une_context_create_transparent();
 	felix->is.context->parent = parent;
+	une_callable *parent_callable = une_callables_get_callable_by_id(felix->is.callables, parent->callable_id);
+	if (parent_callable) { /* The root context, created as part of the engine, does not have a callable. */
+		felix->is.context->creation_module_id = parent_callable->module_id;
+		felix->is.context->creation_position = creation_position;
+	}
+	felix->is.context->callable_id = callable->id;
 
 	une_result result = une_result_create(UNE_RT_VOID);
 	#ifndef UNE_NO_INTERPRET
@@ -177,6 +174,11 @@ une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs)
 	felix->is.context = parent;
 	
 	return result;
+}
+
+une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs)
+{
+	return une_engine_interpret_file_or_wcs_with_position(path, wcs, (une_position){0});
 }
 
 void une_engine_print_error(void)
