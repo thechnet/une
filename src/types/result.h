@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2023-11-17
+Modified 2023-12-01
 */
 
 #ifndef UNE_RESULT_H
@@ -105,6 +105,8 @@ une_int une_result_gtr_result(une_result left, une_result right);
 une_int une_result_geq_result(une_result left, une_result right);
 une_int une_result_lss_result(une_result left, une_result right);
 une_int une_result_leq_result(une_result left, une_result right);
+
+bool une_result_equals_result(une_result left, une_result right);
 
 une_result une_result_dereference(une_result result);
 

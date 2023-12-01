@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2023-11-20
+Modified 2023-12-01
 */
 
 #ifndef UNE_CONTEXT_H
@@ -30,27 +30,23 @@ typedef struct une_context_ {
 *** Interface.
 */
 
-/*
-Variable interface function template.
-*/
-#define une_variable_itf__(name__) une_association *(name__)(une_context *context, wchar_t *name) 
-
 une_context *une_context_create_transparent(void);
 une_context *une_context_create(void);
 
 une_context *une_context_get_oldest_parent_or_self(une_context *context);
-une_context *une_context_get_oldest_opaque_parent_or_opaque_self(une_context *context);
-une_context *une_context_get_youngest_opaque_parent_or_opaque_self(une_context *context);
+une_context *une_context_get_opaque_self_or_oldest_opaque_parent_or_null(une_context *context);
+une_context *une_context_get_opaque_self_or_youngest_opaque_parent_or_null(une_context *context);
 
 void une_context_free_children(une_context *parent, une_context *youngest_child);
 void une_context_free(une_context *context);
 
-// size_t une_context_get_lineage(une_context *subject, une_context ***out);
+size_t une_context_get_lineage(une_context *subject, une_context ***out);
 
-une_variable_itf__(une_variable_create);
-une_variable_itf__(une_variable_find);
-une_variable_itf__(une_variable_find_global);
-une_variable_itf__(une_variable_find_or_create);
-une_variable_itf__(une_variable_find_or_create_global);
+une_association *une_variable_create(une_context *context, wchar_t *name);
+une_association *une_variable_find_by_name(une_context *context, wchar_t *name);
+une_association *une_variable_find_by_name_global(une_context *context, wchar_t *name);
+une_association *une_variable_find_by_name_or_create(une_context *context, wchar_t *name);
+une_association *une_variable_find_by_name_or_create_global(une_context *context, wchar_t *name);
+une_association *une_variable_find_by_content_global(une_context *context, une_result content);
 
 #endif /* !UNE_CONTEXT_H */

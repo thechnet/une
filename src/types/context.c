@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2023-11-20
+Modified 2023-12-01
 */
 
 /* Header-specific includes. */
@@ -49,34 +49,35 @@ Find and return the oldest parent of the incoming context.
 */
 une_context *une_context_get_oldest_parent_or_self(une_context *context)
 {
+	assert(context);
 	while (context->parent != NULL)
 		context = context->parent;
 	return context;
 }
 
 /*
-Find and return the oldest non-transparent parent (or self) of the incoming context, or NULL.
+Find and return the oldest opaque parent (or self) of the incoming context, or NULL.
 */
-une_context *une_context_get_oldest_opaque_parent_or_opaque_self(une_context *context)
+une_context *une_context_get_opaque_self_or_oldest_opaque_parent_or_null(une_context *context)
 {
-	une_context *oldest_opaque_parent_or_opaque_self = NULL;
+	assert(context);
+	une_context *opaque_self_or_oldest_opaque_parent_or_null = NULL;
 	do {
 		if (!context->is_transparent)
-			oldest_opaque_parent_or_opaque_self = context;
+			opaque_self_or_oldest_opaque_parent_or_null = context;
 		context = context->parent;
-	} while (context->parent != NULL);
-	return oldest_opaque_parent_or_opaque_self;
+	} while (context);
+	return opaque_self_or_oldest_opaque_parent_or_null;
 }
 
 /*
-Find and return the youngest non-transparent parent (or self) of the incoming context, or NULL.
+Find and return the youngest opaque parent (or self) of the incoming context, or NULL.
 */
-une_context *une_context_get_youngest_opaque_parent_or_opaque_self(une_context *context)
+une_context *une_context_get_opaque_self_or_youngest_opaque_parent_or_null(une_context *context)
 {
 	while (context) {
-		if (!context->is_transparent) {
+		if (!context->is_transparent)
 			break;
-		}
 		context = context->parent;
 	}
 	return context;
@@ -112,11 +113,103 @@ void une_context_free(une_context *context)
 }
 
 /*
+Trace a context's lineage, ending with the root. Return the number of elements in the list.
+*/
+size_t une_context_get_lineage(une_context *subject, une_context ***out)
+{
+	size_t contexts_size = UNE_SIZE_EXPECTED_TRACEBACK_DEPTH;
+	une_context **contexts = malloc(contexts_size*sizeof(*contexts));
+	verify(contexts);
+	
+	size_t contexts_length = 0;
+	une_context *context = subject;
+	while (true) {
+		if (contexts_length >= UNE_SIZE_EXPECTED_TRACEBACK_DEPTH) {
+			contexts_size *= 2;
+			contexts = realloc(contexts, contexts_size*sizeof(*contexts));
+			verify(contexts);
+		}
+		contexts[contexts_length++] = context;
+		context = context->parent;
+		if (!context)
+			break;
+	}
+	
+	*out = contexts;
+	return contexts_length;
+}
+
+/*
+Find a variable.
+*/
+static une_association *une_variable_find_or_create_(une_context *starting_context, wchar_t *name, une_result content, bool global, bool create_if_not_found)
+{
+	assert(starting_context);
+	assert(
+		(name && content.type == UNE_RT_none__) ||
+		(!name && UNE_RESULT_TYPE_IS_VALID(content.type) && !create_if_not_found)
+	);
+
+	/* Return NULL by default. */
+	une_association *association = NULL;
+
+	/* Search in the youngest opaque parent (or self). Assert that such a context exists. */
+	une_context *search_context = une_context_get_opaque_self_or_youngest_opaque_parent_or_null(starting_context);
+	assert(search_context);
+
+	/* Find association. */
+	do {
+		for (size_t i=0; i<search_context->variables.count; i++) {
+			if (
+				(name && !wcscmp(search_context->variables.buffer[i]->name, name)) ||
+				(
+					une_result_equals_result(search_context->variables.buffer[i]->content, content)
+				)
+			) {
+				association = search_context->variables.buffer[i];
+				break;
+			}
+		}
+		if (association || !global)
+			break;
+		search_context = une_context_get_opaque_self_or_youngest_opaque_parent_or_null(search_context->parent);
+	} while (search_context);
+	
+	/* No association found, create it. */
+	if (!association && create_if_not_found) {
+		une_context *target_context = (
+			global ?
+				une_context_get_opaque_self_or_oldest_opaque_parent_or_null(starting_context)
+			:
+				une_context_get_opaque_self_or_youngest_opaque_parent_or_null(starting_context)
+		);
+		assert(target_context);
+
+		/* Ensure there is sufficient space in the association buffer. */
+		assert(target_context->variables.buffer);
+		if (target_context->variables.count >= target_context->variables.size) {
+			target_context->variables.size *= 2;
+			target_context->variables.buffer = realloc(target_context->variables.buffer, target_context->variables.size*sizeof(*target_context->variables.buffer));
+			verify(target_context->variables.buffer);
+		}
+
+		/* Initialize a new association. */
+		association = une_association_create();
+		association->name = wcsdup(name);
+		verify(association->name);
+		association->content = une_result_create(UNE_RT_VOID); /* Don't use UNE_RT_none__ because this will be freed using une_result_free. */
+		target_context->variables.buffer[target_context->variables.count++] = association;
+	}
+
+	return association;
+}
+
+/*
 Initializes a new une_association in a une_context's variable buffer.
 */
-une_variable_itf__(une_variable_create)
+une_association *une_variable_create(une_context *context, wchar_t *name)
 {
-	/* Find closest non-transparent context. */
+	/* Find closest opaque context. */
 	while (context->is_transparent) {
 		assert(context->parent);
 		context = context->parent;
@@ -143,93 +236,39 @@ une_variable_itf__(une_variable_create)
 /*
 Returns a pointer to a une_association in a une_context's variable buffer or NULL.
 */
-une_variable_itf__(une_variable_find)
+une_association *une_variable_find_by_name(une_context *context, wchar_t *name)
 {
-	/* Search in the youngest non-transparent parent (or self). */
-	une_context *opaque_context = une_context_get_youngest_opaque_parent_or_opaque_self(context);
-	assert(opaque_context);
-
-	/* Find une_association. */
-	for (size_t i=0; i<opaque_context->variables.count; i++)
-		if (wcscmp(opaque_context->variables.buffer[i]->name, name) == 0)
-			return opaque_context->variables.buffer[i];
-
-	/* Return NULL if no match was found. */
-	return NULL;
+	return une_variable_find_or_create_(context, name, une_result_create(UNE_RT_none__), false, false);
 }
 
 /*
 Returns a pointer to a une_association in a une_context's variable buffer and its parents or NULL.
 */
-une_variable_itf__(une_variable_find_global)
+une_association *une_variable_find_by_name_global(une_context *context, wchar_t *name)
 {
-	assert(context);
-
-	/* Return NULL by default. */
-	une_association *var = NULL;
-	
-	/* Find une_association. */
-	do {
-		var = une_variable_find(context, name);
-		if (var || !context->parent)
-			break;
-		context = une_context_get_youngest_opaque_parent_or_opaque_self(context->parent);
-	} while (true);
-	
-	return var;
+	return une_variable_find_or_create_(context, name, une_result_create(UNE_RT_none__), true, false);
 }
 
 /*
 Returns a pointer to a une_association in a une_context's variable buffer or creates and initializes it.
 */
-une_variable_itf__(une_variable_find_or_create)
+une_association *une_variable_find_by_name_or_create(une_context *context, wchar_t *name)
 {
-	/* Find une_association. */
-	une_association *variable = une_variable_find(context, name);
-	if (variable != NULL)
-		return variable;
-	
-	/* une_association doesn't exist yet, create it. */
-	return une_variable_create(context, name);
+	return une_variable_find_or_create_(context, name, une_result_create(UNE_RT_none__), false, true);
 }
 
 /*
 Returns a pointer to a une_association in a une_context's variable buffer and its parents or creates and initializes it.
 */
-une_variable_itf__(une_variable_find_or_create_global)
+une_association *une_variable_find_by_name_or_create_global(une_context *context, wchar_t *name)
 {
-	/* Find une_association. */
-	une_association *variable = une_variable_find_global(context, name);
-	if (variable != NULL)
-		return variable;
-	
-	/* une_association doesn't exist yet, create it in the oldest parent context. */
-	return une_variable_create(une_context_get_oldest_parent_or_self(context), name);
+	return une_variable_find_or_create_(context, name, une_result_create(UNE_RT_none__), true, true);
 }
 
 /*
-Trace a context's lineage, ending with the root. Return the number of elements in the list.
+Returns a pointer to a une_association (found by content) in a une_context's variable buffer and its parents or NULL.
 */
-size_t une_context_get_lineage(une_context *subject, une_context ***out)
+une_association *une_variable_find_by_content_global(une_context *context, une_result content)
 {
-	size_t contexts_size = UNE_SIZE_EXPECTED_TRACEBACK_DEPTH;
-	une_context **contexts = malloc(contexts_size*sizeof(*contexts));
-	verify(contexts);
-	
-	size_t contexts_length = 0;
-	une_context *context = subject;
-	while (true) {
-		if (contexts_length >= UNE_SIZE_EXPECTED_TRACEBACK_DEPTH) {
-			contexts_size *= 2;
-			contexts = realloc(contexts, contexts_size*sizeof(*contexts));
-			verify(contexts);
-		}
-		contexts[contexts_length++] = context;
-		context = context->parent;
-		if (!context)
-			break;
-	}
-	
-	*out = contexts;
-	return contexts_length;
+	return une_variable_find_or_create_(context, NULL, content, true, false);
 }

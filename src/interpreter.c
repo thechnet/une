@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-11-21
+Modified 2023-12-01
 */
 
 /* Header-specific includes. */
@@ -1133,11 +1133,11 @@ une_interpreter__(une_interpret_for_range)
 	
 	/* Get loop variable. */
 	wchar_t *name = node->content.branch.a->content.value._wcs;
-	une_association *var = une_variable_find_or_create(felix->is.context, name); /* We only check the *local* variables. */
+	une_association *var = une_variable_find_by_name_or_create(felix->is.context, name); /* We only check the *local* variables. */
 	
 	/* Loop. */
 	for (une_int i=from; i!=till; i+=step) {
-		var = une_variable_find(felix->is.context, name); /* Avoid stale pointer if variable buffer grows. */
+		var = une_variable_find_by_name(felix->is.context, name); /* Avoid stale pointer if variable buffer grows. */
 		une_result_free(var->content);
 		var->content = (une_result){
 			.type = UNE_RT_INT,
@@ -1173,7 +1173,7 @@ une_interpreter__(une_interpret_for_element)
 	
 	/* Get loop variable. */
 	wchar_t *name = node->content.branch.a->content.value._wcs;
-	une_association *var = une_variable_find_or_create(felix->is.context, name); /* We only check the *local* variables. */
+	une_association *var = une_variable_find_by_name_or_create(felix->is.context, name); /* We only check the *local* variables. */
 	
 	/* Prepare internal index. */
 	une_result index = une_result_create(UNE_RT_INT);
@@ -1181,7 +1181,7 @@ une_interpreter__(une_interpret_for_element)
 	
 	/* Loop. */
 	for (; index.value._int<length; index.value._int++) {
-		var = une_variable_find(felix->is.context, name); /* Avoid stale pointer if variable buffer grows. */
+		var = une_variable_find_by_name(felix->is.context, name); /* Avoid stale pointer if variable buffer grows. */
 		une_result_free(var->content);
 		var->content = une_result_dereference(elements_dt.refer_to_index(elements, index));
 		une_result result = une_result_dereference(une_interpret(node->content.branch.c));
@@ -1382,14 +1382,14 @@ une_interpreter__(une_interpret_seek_or_create, bool existing_only)
 	une_association *var;
 	if (global) {
 		if (existing_only)
-			var = une_variable_find_global(felix->is.context, name);
+			var = une_variable_find_by_name_global(felix->is.context, name);
 		else
-			var = une_variable_find_or_create_global(felix->is.context, name);
+			var = une_variable_find_by_name_or_create_global(felix->is.context, name);
 	} else {
 		if (existing_only)
-			var = une_variable_find(felix->is.context, name);
+			var = une_variable_find_by_name(felix->is.context, name);
 		else
-			var = une_variable_find_or_create(felix->is.context, name);
+			var = une_variable_find_by_name_or_create(felix->is.context, name);
 	}
 	if (var == NULL) {
 		felix->error = UNE_ERROR_SET(UNE_ET_SYMBOL_NOT_DEFINED, node->content.branch.a->pos);

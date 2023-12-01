@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2023-11-19
+Modified 2023-12-01
 */
 
 /* Header-specific includes. */
@@ -167,6 +167,19 @@ une_int une_result_leq_result(une_result left, une_result right)
 {
 	une_datatype dt_left = UNE_DATATYPE_FOR_RESULT(left);
 	return dt_left.is_less_or_equal ? dt_left.is_less_or_equal(left, right) : -1;
+}
+
+/*
+Check if two results are considered equal. Allow shallow comparison of non-datatype results.
+*/
+bool une_result_equals_result(une_result left, une_result right)
+{
+	if (UNE_RESULT_TYPE_IS_DATA_TYPE(left.type)) {
+		if (!UNE_RESULT_TYPE_IS_DATA_TYPE(right.type))
+			return false;
+		return une_result_equ_result(left, right);
+	}
+	return memcmp(&left, &right, sizeof(left)) == 0;
 }
 
 /*
