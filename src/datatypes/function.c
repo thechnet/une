@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2023-11-21
+Modified 2023-12-01
 */
 
 /* Header-specific includes. */
@@ -28,6 +28,17 @@ une_int une_datatype_function_is_true(une_result result)
 {
 	assert(result.type == UNE_RT_FUNCTION);
 	return 1;
+}
+
+/*
+Check if subject is equal to comparison.
+*/
+une_int une_datatype_function_is_equal(une_result subject, une_result comparison)
+{
+	assert(subject.type == UNE_RT_FUNCTION);
+	if (comparison.type != UNE_RT_FUNCTION)
+		return 0;
+	return subject.value._id == comparison.value._id;
 }
 
 /*

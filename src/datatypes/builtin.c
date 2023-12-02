@@ -1,6 +1,6 @@
 /*
 builtin.c - Une
-Modified 2023-11-19
+Modified 2023-12-01
 */
 
 /* Header-specific includes. */
@@ -26,6 +26,17 @@ une_int une_datatype_builtin_is_true(une_result result)
 {
 	assert(result.type == UNE_RT_BUILTIN);
 	return 1;
+}
+
+/*
+Check if subject is equal to comparison.
+*/
+une_int une_datatype_builtin_is_equal(une_result subject, une_result comparison)
+{
+	assert(subject.type == UNE_RT_BUILTIN);
+	if (comparison.type != UNE_RT_BUILTIN)
+		return 0;
+	return subject.value._int == comparison.value._int;
 }
 
 /*

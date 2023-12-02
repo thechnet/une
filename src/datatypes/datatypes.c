@@ -1,6 +1,6 @@
 /*
 datatypes.c - Une
-Modified 2023-11-17
+Modified 2023-12-01
 */
 
 /* Header-specific includes. */
@@ -123,12 +123,14 @@ une_datatype une_datatypes[] = {
 		.type = UNE_RT_FUNCTION,
 		.represent = &une_datatype_function_represent,
 		.is_true = &une_datatype_function_is_true,
+		.is_equal = &une_datatype_function_is_equal,
 		.call = &une_datatype_function_call,
 	},
 	{
 		.type = UNE_RT_BUILTIN,
 		.represent = &une_datatype_builtin_represent,
 		.is_true = &une_datatype_builtin_is_true,
+		.is_equal = &une_datatype_builtin_is_equal,
 		.call = &une_datatype_builtin_call,
 	},
 };

@@ -1,6 +1,6 @@
 /*
 function.h - Une
-Modified 2023-11-19
+Modified 2023-12-01
 */
 
 #ifndef UNE_DATATYPES_FUNCTION_H
@@ -17,6 +17,7 @@ Modified 2023-11-19
 void une_datatype_function_represent(FILE *file, une_result result);
 
 une_int une_datatype_function_is_true(une_result result);
+une_int une_datatype_function_is_equal(une_result subject, une_result comparison);
 
 une_result une_datatype_function_call(une_node *call, une_result function, une_result args, wchar_t *label);
 
