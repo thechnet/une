@@ -48,6 +48,10 @@ void une_traceback_print_trace(une_context *context)
 
 	/* Print extract. */
 
+	#if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"    Position: %zu-%zu" UNE_COLOR_RESET L"\n", position.start, position.end);
+	#endif
+
 	size_t index = une_wcs_find_start_of_current_line(module->source, position.start);
 	index = une_wcs_skip_whitespace(module->source, index);
 	
@@ -57,7 +61,12 @@ void une_traceback_print_trace(une_context *context)
 		fwprintf(UNE_ERROR_STREAM, UNE_COLOR_RESET UNE_TRACEBACK_EXTRACT_PREFIX L"%.*ls\n", length_of_line, module->source+index);
 		
 		size_t underline_offset = position.start > index ? position.start-index : 0;
-		size_t underline_length = (position.end < index+length_of_line ? position.end-index : length_of_line) - underline_offset;
+		size_t underline_length = (position.end < index + length_of_line ? position.end-index : length_of_line) - underline_offset;
+		if (
+			index + underline_offset + underline_length == position.end - 1 && /* Underline ends on this line. */
+			(module->source[position.end - 1] == L'\n' || module->source[position.end - 1] == L'\0') /* Position ends on a newline or the end of the source. */
+		)
+			underline_length++;
 		
 		fputws(UNE_COLOR_POSITION UNE_TRACEBACK_EXTRACT_PREFIX, UNE_ERROR_STREAM);
 		for (size_t i=0; i<underline_offset; i++)
