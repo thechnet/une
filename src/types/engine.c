@@ -17,7 +17,7 @@ Modified 2023-11-26
 Globals.
 */
 
-une_engine *felix = NULL; /* FIXME: This name is a placeholder to make search-and-replace easier. */
+une_engine *felix = NULL;
 
 /*
 Interface.
