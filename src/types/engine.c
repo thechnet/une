@@ -1,6 +1,6 @@
 /*
 engine.c - Une
-Modified 2023-11-21
+Modified 2023-11-26
 */
 
 /* Header-specific includes. */
@@ -66,7 +66,7 @@ une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 		if (!absolute_path || !une_file_exists(absolute_path))
 			felix->error = UNE_ERROR_SET(UNE_ET_FILE, (une_position){0});
 		else
-			source = une_file_read(absolute_path);
+			source = une_file_read(absolute_path, true, UNE_TAB_WIDTH);
 	} else {
 		source = wcsdup(wcs);
 	}

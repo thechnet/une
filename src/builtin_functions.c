@@ -1,6 +1,6 @@
 /*
-builtin.c - Une
-Modified 2023-11-21
+builtin_functions.c - Une
+Modified 2023-11-26
 */
 
 /* Header-specific includes. */
@@ -296,7 +296,7 @@ une_builtin_fn__(read)
 	
 	/* Read file. */
 	une_result str = une_result_create(UNE_RT_STR);
-	str.value._wcs = une_file_read(path);
+	str.value._wcs = une_file_read(path, true, 0);
 	assert(str.value._wcs != NULL);
 	free(path);
 	return str;

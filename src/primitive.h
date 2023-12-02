@@ -1,6 +1,6 @@
 /*
 primitive.h - Une
-Modified 2023-11-20
+Modified 2023-12-01
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -45,6 +45,7 @@ Modified 2023-11-20
 #define UNE_DEBUG_LOGINTERPRET_INDENT L"|   "
 #define UNE_DEBUG_LOGINTERPRET_OFFSET 10
 #define UNE_FLT_PRECISION (LDBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
+#define UNE_TAB_WIDTH 4
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 128000 /* (Debug) Representing. */

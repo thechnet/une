@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2023-11-17
+Modified 2023-12-01
 */
 
 #ifndef UNE_TOOLS_H
@@ -43,7 +43,7 @@ char *une_resolve_path(char *path);
 
 bool une_file_exists(char *path);
 bool une_file_or_folder_exists(char *path);
-wchar_t *une_file_read(char *path);
+wchar_t *une_file_read(char *path, bool normalize_line_endings, size_t convert_tabs_to_spaces);
 bool une_file_extension_matches(char *path, char *extension);
 
 wchar_t *une_get_working_directory(void);
@@ -64,8 +64,13 @@ une_int une_clamp(une_int num, une_int min, une_int max);
 une_range une_range_from_relative_index(une_result index, size_t scope);
 une_range une_range_from_relative_indices(une_result begin, une_result end, size_t scope);
 
+bool une_position_is_valid(une_position position);
 une_position une_position_between(une_position first, une_position last);
 une_position une_position_set_start(une_position subject, une_position begin);
+
+size_t une_wcs_find_start_of_current_line(wchar_t *wcs, size_t starting_index);
+size_t une_wcs_find_end_of_current_line(wchar_t *wcs, size_t starting_index);
+size_t une_wcs_skip_whitespace(wchar_t *wcs, size_t starting_index);
 
 #ifdef _WIN32
 void une_win_vt_proc(bool enable);

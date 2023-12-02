@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-11-17
+Modified 2023-12-01
 */
 
 /* Header-specific includes. */
@@ -181,38 +181,57 @@ bool une_file_or_folder_exists(char *path)
 /*
 Open a UTF-8 file at 'path' and return its text contents as wchar_t string.
 */
-wchar_t *une_file_read(char *path)
+wchar_t *une_file_read(char *path, bool normalize_line_endings, size_t convert_tabs_to_spaces)
 {
 	if (path == NULL)
 		return NULL;
-	FILE *f = fopen(path, UNE_FOPEN_RFLAGS);
-	if (f == NULL)
+	
+	FILE *stream = fopen(path, UNE_FOPEN_RFLAGS);
+	if (stream == NULL)
 		return NULL;
-	size_t text_size = UNE_SIZE_FILE_BUFFER;
-	wchar_t *text = malloc(text_size*sizeof(*text));
-	verify(text);
-	size_t cursor = 0;
-	wint_t c; /* DOC: Can represent any Unicode character + WEOF (!).
+	
+	size_t content_size = UNE_SIZE_FILE_BUFFER;
+	wchar_t *content = malloc(content_size * sizeof(*content));
+	verify(content);
+	
+	size_t index = 0;
+	wint_t current_character; /* DOC: Can represent any Unicode character + WEOF (!).
 							 This is important when using fgetwc(), as otherwise,
 							 WEOF will overflow and be indistinguishable from an
 							 actual character. */
+	
 	while (true) {
-		c = fgetwc(f);
-		if (c == L'\r')
+		current_character = fgetwc(stream);
+		
+		if (normalize_line_endings && current_character == L'\r')
 			continue;
-		if (cursor >= text_size-1) { /* NUL. */
-			text_size *= 2;
-			text = realloc(text, text_size *sizeof(*text));
-			verify(text);
+		
+		size_t insertion_length = 1;
+		if (convert_tabs_to_spaces > 0 && current_character == L'\t')
+			insertion_length = convert_tabs_to_spaces;
+
+		if (index + insertion_length > content_size) {
+			content_size *= 2;
+			content = realloc(content, content_size * sizeof(*content));
+			verify(content);
 		}
-		if (c == WEOF)
+		
+		if (convert_tabs_to_spaces > 0 && current_character == L'\t') {
+			for (size_t i=0; i<convert_tabs_to_spaces; i++)
+				content[index+i] = L' ';
+		} else if (current_character == WEOF) {
+			content[index] = L'\0';
 			break;
-		text[cursor] = (wchar_t)c;
-		cursor++;
+		} else {
+			content[index] = (wchar_t)current_character;
+		}
+		
+		index += insertion_length;
 	}
-	fclose(f);
-	text[cursor] = L'\0';
-	return text;
+
+	fclose(stream);
+	
+	return content;
 }
 
 /*
@@ -452,6 +471,14 @@ une_range une_range_from_relative_indices(une_result begin, une_result end, size
 }
 
 /*
+Check if a position is valid.
+*/
+bool une_position_is_valid(une_position position)
+{
+	return position.end - position.start > 0;
+}
+
+/*
 Merge a start and end une_position.
 */
 une_position une_position_between(une_position first, une_position last)
@@ -471,6 +498,48 @@ une_position une_position_set_start(une_position subject, une_position begin)
 	subject.start = begin.start;
 	subject.line = begin.line;
 	return subject;
+}
+
+/*
+Find start of current line.
+*/
+size_t une_wcs_find_start_of_current_line(wchar_t *wcs, size_t starting_index)
+{
+	assert(wcs);
+	assert(starting_index <= wcslen(wcs));
+
+	size_t index = starting_index;
+	while (index > 0 && wcs[index-1] != L'\n')
+		index--;
+	return index;
+}
+
+/*
+Find end of current line.
+*/
+size_t une_wcs_find_end_of_current_line(wchar_t *wcs, size_t starting_index)
+{
+	assert(wcs);
+	assert(starting_index <= wcslen(wcs));
+
+	size_t index = starting_index;
+	while (wcs[index] != L'\n' && wcs[index] != L'\0')
+		index++;
+	return index;
+}
+
+/*
+Find first non-whitespace character in string.
+*/
+size_t une_wcs_skip_whitespace(wchar_t *wcs, size_t starting_index)
+{
+	assert(wcs);
+	assert(starting_index <= wcslen(wcs));
+
+	size_t index = starting_index;
+	while (wcs[index] == L' ')
+		index++;
+	return index;
 }
 
 #ifdef _WIN32
