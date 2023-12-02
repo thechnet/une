@@ -82,7 +82,6 @@ une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 		une_lexer_state ls = une_lexer_state_create();
 		ls.tokens = malloc(UNE_SIZE_TOKEN_BUF*sizeof(*ls.tokens));
 		verify(ls.tokens);
-		ls.name = module->path;
 		ls.text = module->source;
 		ls.text_length = wcslen(ls.text);
 		#ifndef UNE_NO_LEX

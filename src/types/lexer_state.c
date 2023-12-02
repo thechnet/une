@@ -12,7 +12,6 @@ Initialize a une_lexer_state struct.
 une_lexer_state une_lexer_state_create(void)
 {
 	return (une_lexer_state){
-		.name = NULL,
 		.text = NULL,
 		.text_length = 0,
 		.text_index = 0,

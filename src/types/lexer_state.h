@@ -14,7 +14,6 @@ Modified 2023-11-17
 Holds the state of the lexer.
 */
 typedef struct une_lexer_state_ {
-	char *name;
 	wchar_t *text;
 	size_t text_length;
 	size_t text_index;

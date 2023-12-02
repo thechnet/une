@@ -391,7 +391,6 @@ une_lexer__(une_lex_keyword_or_name)
 	une_token tk;
 	if (!wcscmp(buffer, une_token_table[UNE_TT_FUNCTION-1])) {
 		tk.type = UNE_TT_FUNCTION;
-		tk.value._vp = (void*)ls->name;
 		goto keyword_or_name_defined;
 	}
 	for (une_token_type tt=UNE_R_BGN_KEYWORD_TOKENS; tt<=UNE_R_END_KEYWORD_TOKENS; tt++)
