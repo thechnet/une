@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2023-12-01
+Modified 2023-12-02
 */
 
 /* Header-specific includes. */
@@ -48,12 +48,12 @@ une_result une_datatype_function_call(une_node *call, une_result function, une_r
 {
 	/* Get function. */
 	assert(function.type == UNE_RT_FUNCTION);
-	une_callable *callee = une_callables_get_callable_by_id(felix->is.callables, function.value._id);
-	assert(callee);
+	une_callable *callable = une_callables_get_callable_by_id(felix->is.callables, function.value._id);
+	assert(callable);
 	
 	/* Ensure number of arguments matches number of required parameters. */
 	UNE_UNPACK_RESULT_LIST(args, args_p, args_count);
-	if (callee->parameters.count != args_count) {
+	if (callable->parameters.count != args_count) {
 		felix->error = UNE_ERROR_SET(UNE_ET_CALLABLE_ARG_COUNT, call->pos);
 		return une_result_create(UNE_RT_ERROR);
 	}
@@ -66,16 +66,16 @@ une_result une_datatype_function_call(une_node *call, une_result function, une_r
 	assert(parent_callable);
 	felix->is.context->creation_module_id = parent_callable->module_id;
 	felix->is.context->creation_position = call->pos;
-	felix->is.context->callable_id = callee->id;
+	felix->is.context->callable_id = callable->id;
 
 	/* Define parameters. */
-	for (size_t i=0; i<callee->parameters.count; i++) {
-		une_association *var = une_variable_create(felix->is.context, (callee->parameters.names)[i]);
+	for (size_t i=0; i<callable->parameters.count; i++) {
+		une_association *var = une_variable_create(felix->is.context, (callable->parameters.names)[i]);
 		var->content = une_result_copy(args_p[i+1]);
 	}
 
 	/* Interpret body. */
-	une_result result = une_interpret(callee->body);
+	une_result result = une_interpret(callable->body);
 	felix->is.should_return = false;
 
 	/* Return to parent context. */

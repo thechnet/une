@@ -51,22 +51,25 @@ void une_engine_prepare_for_next_module(void)
 une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 {
 	UNE_VERIFY_ENGINE;
-	bool is_file = path != NULL;
-	if (is_file) {
+	bool originates_from_file = path != NULL;
+	if (originates_from_file)
 		assert(!wcs);
-	} else {
-		assert(!path);
-		assert(wcs);
-	}
+	else
+		assert(!path && wcs);
 
-	char *absolute_path = NULL;
+	char *stored_path = NULL;
 	wchar_t *source = NULL;
-	if (is_file) {
-		absolute_path = une_resolve_path(path);
-		if (!absolute_path || !une_file_exists(absolute_path))
+	if (originates_from_file) {
+		#ifdef DEBUG_USE_ABSOLUTE_MODULE_PATHS
+		stored_path = une_resolve_path(path);
+		#else
+		stored_path = strdup(path);
+		verify(stored_path);
+		#endif
+		if (!stored_path || !une_file_exists(stored_path))
 			felix->error = UNE_ERROR_SET(UNE_ET_FILE, (une_position){0});
 		else
-			source = une_file_read(absolute_path, true, UNE_TAB_WIDTH);
+			source = une_file_read(stored_path, true, UNE_TAB_WIDTH);
 	} else {
 		source = wcsdup(wcs);
 	}
@@ -74,8 +77,8 @@ une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 	une_module *module = une_modules_add_module(&felix->is.modules);
 	assert(module);
 
-	module->is_file = is_file;
-	module->path = absolute_path;
+	module->originates_from_file = originates_from_file;
+	module->path = stored_path;
 	module->source = source;
 
 	if (source) {
@@ -130,7 +133,7 @@ une_callable *une_engine_parse_module(une_module *module)
 
 		callable->module_id = module->id;
 		callable->body = ast;
-		callable->is_module = true;
+		callable->borrows_body_strings = true;
 	}
 
 	return callable;

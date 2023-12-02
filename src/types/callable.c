@@ -1,6 +1,6 @@
 /*
 callable.c - Une
-Modified 2023-11-20
+Modified 2023-12-02
 */
 
 /* Header-specific includes. */
@@ -28,7 +28,7 @@ static void une_callable_clear(une_callable *callable)
 	}
 	
 	if (callable->body)
-		une_node_free(callable->body, !callable->is_module);
+		une_node_free(callable->body, !callable->borrows_body_strings);
 }
 
 une_callables une_callables_create(void)

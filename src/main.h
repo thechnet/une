@@ -8,6 +8,7 @@ Modified 2023-11-19
 
 /* Header-specific includes. */
 #include "types/engine.h"
+#include "signal.h"
 
 enum une_main_action {
 	SHOW_USAGE,

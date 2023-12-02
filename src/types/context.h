@@ -15,6 +15,7 @@ Holds information that changes depending on the execution context.
 */
 typedef struct une_context_ {
 	struct une_context_ *parent;
+	size_t callable_id;
 	bool is_transparent;
 	struct {
 		size_t size;

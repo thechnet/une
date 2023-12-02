@@ -7,7 +7,6 @@ Modified 2023-11-21
 #include "main.h"
 
 /* Implementation-specific includes. */
-#include <signal.h>
 #include "tools.h"
 #include "types/engine.h"
 #include "datatypes/datatypes.h"
