@@ -1,6 +1,12 @@
 # Changelog
 
-## [Unreleased] - 2023-11-15
+## [Unreleased] - 2023-12-02
+
+### Added
+- References to functions and built-in functions can now be compared for equality.
+
+### Changed
+- Overhauled large parts of the internal architecture to fix shortcomings and issues with the traceback.
 
 ### Fixed
 - Using `replace()` to remove a substring (i.e., the replacement is the empty string) results in a buffer overflow.
