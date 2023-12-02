@@ -15,16 +15,15 @@ Holds information that changes depending on the execution context.
 */
 typedef struct une_context_ {
 	struct une_context_ *parent;
+	size_t module_id;
 	size_t callable_id;
+	une_position exit_position;
 	bool is_transparent;
 	struct {
 		size_t size;
 		size_t count;
 		une_association **buffer;
 	} variables;
-	size_t creation_module_id;
-	une_position creation_position;
-	size_t callable_id;
 } une_context;
 
 /*

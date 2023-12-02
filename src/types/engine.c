@@ -139,26 +139,25 @@ une_callable *une_engine_parse_module(une_module *module)
 	return callable;
 }
 
-une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *wcs, une_position creation_position)
+une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *wcs, une_position current_context_exit_position)
 {
 	une_engine_prepare_for_next_module();
 
 	une_module *module = une_engine_new_module_from_file_or_wcs(path, wcs);
+	
+	une_context *parent = felix->is.context;
+	parent->exit_position = current_context_exit_position;
+	felix->is.context = une_context_create_transparent();
+	felix->is.context->parent = parent;
+	felix->is.context->module_id = module->id;
+
 	if (!module->tokens)
 		return une_result_create(UNE_RT_ERROR);
 
 	une_callable *callable = une_engine_parse_module(module);
 	if (!callable)
 		return une_result_create(UNE_RT_ERROR);
-
-	une_context *parent = felix->is.context;
-	felix->is.context = une_context_create_transparent();
-	felix->is.context->parent = parent;
-	une_callable *parent_callable = une_callables_get_callable_by_id(felix->is.callables, parent->callable_id);
-	if (parent_callable) { /* The root context, created as part of the engine, does not have a callable. */
-		felix->is.context->creation_module_id = parent_callable->module_id;
-		felix->is.context->creation_position = creation_position;
-	}
+	
 	felix->is.context->callable_id = callable->id;
 
 	une_result result = une_result_create(UNE_RT_VOID);

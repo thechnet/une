@@ -60,12 +60,11 @@ une_result une_datatype_function_call(une_node *call, une_result function, une_r
 	
 	/* Create function context. */
 	une_context *parent = felix->is.context;
+	parent->exit_position = call->pos;
 	felix->is.context = une_context_create();
 	felix->is.context->parent = parent;
-	une_callable *parent_callable = une_callables_get_callable_by_id(felix->is.callables, parent->callable_id);
-	assert(parent_callable);
-	felix->is.context->creation_module_id = parent_callable->module_id;
-	felix->is.context->creation_position = call->pos;
+	felix->is.context->module_id = callable->module_id;
+	
 	felix->is.context->callable_id = callable->id;
 
 	/* Define parameters. */
