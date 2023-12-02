@@ -25,7 +25,7 @@ Modified 2023-12-01
 *** Constants.
 */
 #define UNE_VERSION UNE_VERSION_MAJOR L"." UNE_VERSION_MINOR L"." UNE_VERSION_PATCH
-#define UNE_SOURCE_PLACEHOLDER "<string>"
+#define UNE_MODULE_NAME_PLACEHOLDER "<string>"
 #define UNE_SWITCH_SCRIPT "-s"
 #define UNE_SWITCH_INTERACTIVE "-i"
 #define UNE_INTERACTIVE_PREFIX L">>> "
@@ -46,6 +46,7 @@ Modified 2023-12-01
 #define UNE_DEBUG_LOGINTERPRET_OFFSET 10
 #define UNE_FLT_PRECISION (LDBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
 #define UNE_TAB_WIDTH 4
+#define UNE_TRACEBACK_EXTRACT_PREFIX L"  "
 
 /* Sizes. */
 #define UNE_SIZE_NODE_AS_WCS 128000 /* (Debug) Representing. */

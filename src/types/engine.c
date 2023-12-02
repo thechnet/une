@@ -11,6 +11,7 @@ Modified 2023-11-26
 #include "../lexer.h"
 #include "../parser.h"
 #include "../interpreter.h"
+#include "../traceback.h"
 
 /*
 Globals.
@@ -185,5 +186,12 @@ une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs)
 void une_engine_print_error(void)
 {
 	assert(felix->error.type != UNE_ET_none__);
-	wprintf(L"[91mError: %ls\n[0m", une_error_type_to_wcs(felix->error.type));
+
+	une_traceback_print();
+
+	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_FAIL L"Error: %ls" UNE_COLOR_RESET L"\n", une_error_type_to_wcs(felix->error.type));
+	
+	#if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Raised in \"%hs\" at line %d" UNE_COLOR_RESET L"\n", felix->error.meta_file, felix->error.meta_line);
+	#endif
 }
