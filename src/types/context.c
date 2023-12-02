@@ -113,6 +113,20 @@ void une_context_free(une_context *context)
 }
 
 /*
+Free all children and return the root context.
+*/
+une_context *une_context_stump(une_context *youngest_child)
+{
+	assert(youngest_child);
+	do {
+		une_context *parent = youngest_child->parent;
+		une_context_free(youngest_child);
+		youngest_child = parent;
+	} while (youngest_child->parent);
+	return youngest_child;
+}
+
+/*
 Trace a context's lineage, ending with the root. Return the number of elements in the list.
 */
 size_t une_context_get_lineage(une_context *subject, une_context ***out)

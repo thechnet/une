@@ -204,7 +204,10 @@ void interactive(void)
 		size_t len = wcslen(stmts);
 		stmts[--len] = L'\0'; /* Remove trailing newline. */
 		une_result result = une_engine_interpret_file_or_wcs(NULL, stmts);
-		if (result.type != UNE_RT_VOID && result.type != UNE_RT_ERROR) {
+		if (result.type == UNE_RT_ERROR) {
+			une_engine_print_error();
+			une_engine_return_to_root_context();
+		} else if (result.type != UNE_RT_VOID) {
 			if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
 				une_result_represent(stdout, result);
 			} else {

@@ -49,6 +49,11 @@ void une_engine_prepare_for_next_module(void)
 	felix->is.should_exit = false;
 }
 
+void une_engine_return_to_root_context(void)
+{
+	felix->is.context = une_context_stump(felix->is.context);
+}
+
 une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 {
 	UNE_VERIFY_ENGINE;

@@ -39,6 +39,7 @@ une_context *une_context_get_opaque_self_or_youngest_opaque_parent_or_null(une_c
 
 void une_context_free_children(une_context *parent, une_context *youngest_child);
 void une_context_free(une_context *context);
+une_context *une_context_stump(une_context *youngest_child);
 
 size_t une_context_get_lineage(une_context *subject, une_context ***out);
 
