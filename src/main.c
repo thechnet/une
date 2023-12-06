@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-11-21
+Modified 2023-12-06
 */
 
 /* Header-specific includes. */
@@ -178,23 +178,48 @@ void interactive(void)
 		
 		/* Directives. */
 		if (!wcscmp(stmts, L"#clear\n")) {
-			fputws(L"\033[H\033[J", stdout);
+			fputws(UNE_COLOR_RESET L"\033[H" UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n\033[J", stdout);
 			continue;
-		} else if (!wcscmp(stmts, L"#header\n")) {
-			fputws(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
-			continue;
-		} else if (!wcscmp(stmts, L"#symbols\n")) {
+		} else if (!wcscmp(stmts, L"#inspect\n")) {
+			/* Modules. */
+			fputws(L"--- modules ---\n", stdout);
+			for (size_t i=0; i<felix->is.modules.size; i++) {
+				une_module module = felix->is.modules.buffer[i];
+				if (module.id == 0)
+					continue;
+				fwprintf(stdout, L"m%zu ", module.id);
+				if (module.originates_from_file)
+					fwprintf(stdout, L"'%hs'", module.path);
+				else
+					fputws(UNE_MODULE_NAME_PLACEHOLDER L"", stdout);
+				size_t end_of_first_line = une_wcs_find_end_of_current_line(module.source, 0);
+				fwprintf(stdout, L" | %.*ls\n", end_of_first_line, module.source);
+			}
+
+			/* Callables. */
+			fputws(L"--- callables ---\n", stdout);
+			for (size_t i=0; i<felix->is.callables.size; i++) {
+				une_callable callable = felix->is.callables.buffer[i];
+				if (callable.id == 0)
+					continue;
+				fwprintf(stdout, L"c%zu in m%zu, %zu/%zu-%zu, with (", callable.id, callable.module_id, callable.position.line, callable.position.start, callable.position.end);
+				if (callable.parameters.count) {
+					fputws(callable.parameters.names[0], stdout);
+					for (size_t j=1; j<callable.parameters.count; j++) {
+						fwprintf(stdout, L", %ls", callable.parameters.names[j]);
+					}
+				}
+				fputws(L")\n", stdout);
+			}
+
+			/* Symbols. */
+			fputws(L"--- symbols ---\n", stdout);
 			for (size_t i=0; i<felix->is.context->variables.count; i++) {
 				fputws(felix->is.context->variables.buffer[i]->name, stdout);
 				if (felix->is.context->variables.buffer[i]->content.type == UNE_RT_FUNCTION) {
 					une_callable *callable = une_callables_get_callable_by_id(felix->is.callables, felix->is.context->variables.buffer[i]->content.value._id);
-					fputwc(L'(', stdout);
-					if (callable->parameters.count) {
-						fwprintf(stdout, L"%ls", callable->parameters.names[0]);
-						for (size_t j=1; j<callable->parameters.count; j++)
-							fwprintf(stdout, L", %ls", callable->parameters.names[j]);
-					}
-					fwprintf(stdout, L")", callable->id);
+					assert(callable);
+					fwprintf(stdout, L" -> c%zu", callable->id);
 				}
 				fputwc(L'\n', stdout);
 			}
