@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-12-06
+Modified 2023-12-07
 */
 
 /* Header-specific includes. */
@@ -178,7 +178,7 @@ void interactive(void)
 		
 		/* Directives. */
 		if (!wcscmp(stmts, L"#clear\n")) {
-			fputws(UNE_COLOR_RESET L"\033[H" UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n\033[J", stdout);
+			fputws(UNE_COLOR_RESET L"\033[H\033[J" UNE_HEADER L"\n" UNE_INTERACTIVE_INFO L"\n", stdout);
 			continue;
 		} else if (!wcscmp(stmts, L"#inspect\n")) {
 			/* Modules. */
