@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-12-07
+Modified 2023-12-10
 */
 
 /* Header-specific includes. */
@@ -8,8 +8,8 @@ Modified 2023-12-07
 
 /* Implementation-specific includes. */
 #include "tools.h"
-#include "types/engine.h"
-#include "datatypes/datatypes.h"
+#include "struct/engine.h"
+#include "types/types.h"
 
 /*
 Implementation.
@@ -26,14 +26,14 @@ int main(int argc, char *argv[])
 	
 	/* Display warnings. */
 	#ifdef UNE_DEBUG
-	#ifdef UNE_DEBUG_MEMDBG
-	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_MEMDBG enabled.\n" UNE_COLOR_RESET);
+	#ifdef UNE_DBG_MEMDBG
+	wprintf(UNE_COLOR_WARN L"UNE_DBG_MEMDBG enabled.\n" UNE_COLOR_RESET);
 	#endif
-	#ifdef UNE_DEBUG_SIZES
-	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_SIZES enabled.\n" UNE_COLOR_RESET);
+	#ifdef UNE_DBG_SIZES
+	wprintf(UNE_COLOR_WARN L"UNE_DBG_SIZES enabled.\n" UNE_COLOR_RESET);
 	#endif
-	#ifdef UNE_DEBUG_REPORT
-	wprintf(UNE_COLOR_WARN L"UNE_DEBUG_REPORT enabled.\n" UNE_COLOR_RESET);
+	#ifdef UNE_DBG_REPORT
+	wprintf(UNE_COLOR_WARN L"UNE_DBG_REPORT enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#ifdef UNE_NO_LEX
 	wprintf(UNE_COLOR_WARN L"UNE_NO_LEX enabled.\n" UNE_COLOR_RESET);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
 	if (action == SHOW_USAGE) {
 		result = (une_result){
-			.type = UNE_RT_ERROR,
+			.kind = UNE_RK_ERROR,
 			.value._int = EXIT_FAILURE
 		};
 		print_usage(argv[0]);
@@ -83,14 +83,14 @@ int main(int argc, char *argv[])
 		} else {
 			assert(action == ENTER_INTERACTIVE_MODE);
 			result = (une_result){
-				.type = UNE_RT_INT,
+				.kind = UNE_RK_INT,
 				.value._int = EXIT_SUCCESS
 			};
 			interactive();
 		}
 
-		if (result.type == UNE_RT_ERROR) {
-			result.value._int = (une_int)felix->error.type+(une_int)UNE_R_END_DATA_RESULT_TYPES;
+		if (result.kind == UNE_RK_ERROR) {
+			result.value._int = (une_int)felix->error.kind+(une_int)UNE_R_END_DATA_RESULT_KINDS;
 			une_engine_print_error();
 		}
 		
@@ -98,55 +98,55 @@ int main(int argc, char *argv[])
 	}
 
 	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
-	if (result.type != UNE_RT_ERROR) {
-		assert(UNE_RESULT_TYPE_IS_DATA_TYPE(result.type));
-		wprintf(UNE_COLOR_RESULT_TYPE L"%ls" UNE_COLOR_RESET ": ", une_result_type_to_wcs(result.type));
+	if (result.kind != UNE_RK_ERROR) {
+		assert(UNE_RESULT_KIND_IS_TYPE(result.kind));
+		wprintf(UNE_COLOR_RESULT_KIND L"%ls" UNE_COLOR_RESET ": ", une_result_kind_to_wcs(result.kind));
 		une_result_represent(stdout, result);
 		putwc(L'\n', stdout);
 	}
 	#endif
 	
-	#if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
-	FILE *report_return = fopen(UNE_DEBUG_REPORT_FILE_RETURN, UNE_FOPEN_WFLAGS);
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_REPORT)
+	FILE *report_return = fopen(UNE_DBG_REPORT_FILE_RETURN, UNE_FOPEN_WFLAGS);
 	assert(report_return != NULL);
-	if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type))
+	if (UNE_RESULT_KIND_IS_TYPE(result.kind))
 		une_result_represent(report_return, result);
-	else if (result.type == UNE_RT_ERROR)
+	else if (result.kind == UNE_RK_ERROR)
 		fwprintf(report_return, UNE_PRINTF_UNE_INT, result.value._int);
 	fclose(report_return);
-	#endif /* UNE_DEBUG_REPORT */
+	#endif /* UNE_DBG_REPORT */
 	
 	int final;
-	if (result.type == UNE_RT_INT)
+	if (result.kind == UNE_RK_INT)
 		final = (int)result.value._int;
-	else if (result.type == UNE_RT_ERROR)
+	else if (result.kind == UNE_RK_ERROR)
 		final = EXIT_FAILURE;
 	else
 		final = EXIT_SUCCESS;
 	une_result_free(result);
 	
-	#if defined(UNE_DEBUG) && defined(UNE_DEBUG_REPORT)
-	#ifdef UNE_DEBUG_MEMDBG
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_REPORT)
+	#ifdef UNE_DBG_MEMDBG
 	extern int64_t memdbg_allocations_count;
 	extern int64_t memdbg_alert_count;
-	#endif /* UNE_DEBUG_MEMDBG */
-	FILE *report_status = fopen(UNE_DEBUG_REPORT_FILE_STATUS, UNE_FOPEN_WFLAGS);
+	#endif /* UNE_DBG_MEMDBG */
+	FILE *report_status = fopen(UNE_DBG_REPORT_FILE_STATUS, UNE_FOPEN_WFLAGS);
 	assert(report_status != NULL);
 	fwprintf(
 		report_status,
-		L"result_type:%d\n"
-		#ifdef UNE_DEBUG_MEMDBG
+		L"result_kind:%d\n"
+		#ifdef UNE_DBG_MEMDBG
 		L"alloc_count:%d\n"
 		L"alert_count:%d\n"
-		#endif /* UNE_DEBUG_MEMDBG */
-		, (int)result.type
-		#ifdef UNE_DEBUG_MEMDBG
+		#endif /* UNE_DBG_MEMDBG */
+		, (int)result.kind
+		#ifdef UNE_DBG_MEMDBG
 		, memdbg_allocations_count-1 /* FILE *report_status */,
 		memdbg_alert_count
-		#endif /* UNE_DEBUG_MEMDBG */
+		#endif /* UNE_DBG_MEMDBG */
 	);
 	fclose(report_status);
-	#endif /* UNE_DEBUG_REPORT */
+	#endif /* UNE_DBG_REPORT */
 
 	/* Disable Virtual Terminal Processing for the Windows console. */
 	#ifdef _WIN32
@@ -216,7 +216,7 @@ void interactive(void)
 			fputws(L"--- symbols ---\n", stdout);
 			for (size_t i=0; i<felix->is.context->variables.count; i++) {
 				fputws(felix->is.context->variables.buffer[i]->name, stdout);
-				if (felix->is.context->variables.buffer[i]->content.type == UNE_RT_FUNCTION) {
+				if (felix->is.context->variables.buffer[i]->content.kind == UNE_RK_FUNCTION) {
 					une_callable *callable = une_callables_get_callable_by_id(felix->is.callables, felix->is.context->variables.buffer[i]->content.value._id);
 					assert(callable);
 					fwprintf(stdout, L" -> c%zu", callable->id);
@@ -229,15 +229,15 @@ void interactive(void)
 		size_t len = wcslen(stmts);
 		stmts[--len] = L'\0'; /* Remove trailing newline. */
 		une_result result = une_engine_interpret_file_or_wcs(NULL, stmts);
-		if (result.type == UNE_RT_ERROR) {
+		if (result.kind == UNE_RK_ERROR) {
 			une_engine_print_error();
 			une_engine_return_to_root_context();
-		} else if (result.type != UNE_RT_VOID) {
-			if (UNE_RESULT_TYPE_IS_DATA_TYPE(result.type)) {
+		} else if (result.kind != UNE_RK_VOID) {
+			if (UNE_RESULT_KIND_IS_TYPE(result.kind)) {
 				une_result_represent(stdout, result);
 			} else {
-				assert(UNE_DATATYPE_FOR_RESULT(result).represent != NULL);
-				UNE_DATATYPE_FOR_RESULT(result).represent(stdout, result);
+				assert(UNE_TYPE_FOR_RESULT(result).represent != NULL);
+				UNE_TYPE_FOR_RESULT(result).represent(stdout, result);
 			}
 			fputwc(L'\n', stdout);
 		}

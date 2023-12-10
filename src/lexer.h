@@ -1,16 +1,16 @@
 /*
 lexer.h - Une
-Modified 2023-11-20
+Modified 2023-12-10
 */
 
 #ifndef UNE_LEXER_H
 #define UNE_LEXER_H
 
 /* Header-specific includes. */
-#include "primitive.h"
-#include "types/error.h"
-#include "types/lexer_state.h"
-#include "types/token.h"
+#include "common.h"
+#include "struct/error.h"
+#include "struct/lexer_state.h"
+#include "struct/token.h"
 #include "tools.h"
 
 /*

@@ -1,17 +1,17 @@
 /*
 traceback.c - Une
-Modified 2023-12-01
+Modified 2023-12-10
 */
 
 /* Header-specific includes. */
 #include "traceback.h"
 
 /* Implementation-specific includes. */
-#include "types/context.h"
-#include "types/error.h"
-#include "types/engine.h"
+#include "struct/context.h"
+#include "struct/error.h"
+#include "struct/engine.h"
 #include "tools.h"
-#include "types/callable.h"
+#include "struct/callable.h"
 
 /*
 Print a trace.
@@ -37,7 +37,7 @@ void une_traceback_print_trace(une_context *context)
 		module_name = UNE_MODULE_NAME_PLACEHOLDER;
 	
 	une_association *variable = une_variable_find_by_content_global(context, (une_result){
-		.type = UNE_RT_FUNCTION,
+		.kind = UNE_RK_FUNCTION,
 		.value._id = context->callable_id
 	});
 
@@ -48,7 +48,7 @@ void une_traceback_print_trace(une_context *context)
 
 	/* Print extract. */
 
-	#if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_EXTENDED_ERROR)
 	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"    Position: %zu-%zu" UNE_COLOR_RESET L"\n", position.start, position.end);
 	#endif
 
@@ -89,7 +89,7 @@ void une_traceback_print(void)
 	for (size_t i=0; i<lineage_length; i++) {
 		une_context *context = lineage[lineage_length-1-i];
 
-		#if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+		#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_EXTENDED_ERROR)
 		fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"--- Generation: %zu" UNE_COLOR_RESET L"\n", i);
 		if (context->is_transparent)
 			fputws(UNE_COLOR_HINT L"    Transparent" UNE_COLOR_RESET L"\n", UNE_ERROR_STREAM);
@@ -97,7 +97,7 @@ void une_traceback_print(void)
 
 		if (context->module_id) /* The only context without a module is the root context. */
 			une_traceback_print_trace(context);
-		#if defined(UNE_DEBUG) && defined(UNE_DEBUG_DISPLAY_EXTENDED_ERROR)
+		#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_EXTENDED_ERROR)
 		else {
 			fputws(UNE_COLOR_HINT L"    Root context (no callable)" UNE_COLOR_RESET L"\n", UNE_ERROR_STREAM);
 		}

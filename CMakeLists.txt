@@ -18,22 +18,22 @@ endif()
 
 # Options.
 list(APPEND options "32BIT|Build for 32-bit machines|OFF")
-list(APPEND options "DEBUG_DISPLAY_EXTENDED_ERROR|Debug: Show extended error information|ON")
-list(APPEND options "DEBUG_SIZES|Debug: Default most sizes to 1|ON")
-list(APPEND options "DEBUG_REPORT|Debug: Enable communication with test.py|ON")
-list(APPEND options "DEBUG_MEMDBG|Debug: Use memdbg|ON")
-list(APPEND options "DISPLAY_TOKENS|Debug: Display processed tokens|ON")
-list(APPEND options "DISPLAY_NODES|Debug: Display processed nodes|ON")
-list(APPEND options "DISPLAY_RESULT|Debug: Display processed result|ON")
-list(APPEND options "DEBUG_LOG_PARSE|Debug: Log parse calls|OFF")
-list(APPEND options "DEBUG_LOG_INTERPRET|Debug: Log interpretation calls|OFF")
-list(APPEND options "NO_LEX|Debug: Skip lexing|OFF")
-list(APPEND options "NO_PARSE|Debug: Skip parsing|OFF")
-list(APPEND options "NO_INTERPRET|Debug: Skip interpretation|OFF")
-list(APPEND options "DEBUG_FSANITIZE|Debug: Use -fsanitize flags|OFF")
-list(APPEND options "DEBUG_COVERAGE|Debug: Enable instrumentation|OFF")
-list(APPEND options "DEBUG_USE_ABSOLUTE_MODULE_PATHS|Debug: Use absolute module paths|OFF")
 list(APPEND options "USES_UCRT|Enable when using UCRT on Windows|OFF")
+list(APPEND options "DBG_DISPLAY_EXTENDED_ERROR|Show extended error information|ON")
+list(APPEND options "DBG_SIZES|Default most sizes to 1|ON")
+list(APPEND options "DBG_REPORT|Enable communication with test.py|ON")
+list(APPEND options "DBG_MEMDBG|Use memdbg|ON")
+list(APPEND options "DBG_DISPLAY_TOKENS|Display processed tokens|ON")
+list(APPEND options "DBG_DISPLAY_NODES|Display processed nodes|ON")
+list(APPEND options "DBG_DISPLAY_RESULT|Display processed result|ON")
+list(APPEND options "DBG_LOG_PARSE|Log parse calls|OFF")
+list(APPEND options "DBG_LOG_INTERPRET|Log interpretation calls|OFF")
+list(APPEND options "DBG_NO_LEX|Skip lexing|OFF")
+list(APPEND options "DBG_NO_PARSE|Skip parsing|OFF")
+list(APPEND options "DBG_NO_INTERPRET|Skip interpretation|OFF")
+list(APPEND options "DBG_FSANITIZE|Use -fsanitize flags|OFF")
+list(APPEND options "DBG_COVERAGE|Enable instrumentation|OFF")
+list(APPEND options "DBG_USE_ABSOLUTE_MODULE_PATHS|Use absolute module paths|OFF")
 foreach(option IN LISTS options)
 	string(REPLACE "|" ";" option_list ${option})
 	list(GET option_list 0 id)
@@ -44,37 +44,35 @@ endforeach()
 
 # Source.
 add_executable(une
-	# Backend.
-	src/traceback.c
+	src/deprecated/stream.c
+	src/struct/association.c
+	src/struct/callable.c
+	src/struct/context.c
+	src/struct/engine.c
+	src/struct/error.c
+	src/struct/interpreter_state.c
+	src/struct/lexer_state.c
+	src/struct/module.c
+	src/struct/node.c
+	src/struct/parser_state.c
+	src/struct/result.c
+	src/struct/token.c
+	src/types/flt.c
+	src/types/function.c
+	src/types/int.c
+	src/types/list.c
+	src/types/native.c
+	src/types/object.c
+	src/types/str.c
+	src/types/types.c
+	src/types/void.c
 	src/interpreter.c
-	src/parser.c
 	src/lexer.c
-	src/types/context.c
-	src/types/association.c
-	src/types/error.c
-	src/types/result.c
-	src/types/node.c
-	src/types/token.c
-	src/types/interpreter_state.c
-	src/types/parser_state.c
-	src/types/lexer_state.c
-	src/types/callable.c
-	src/types/modules.c
-	src/types/engine.c
-	src/datatypes/datatypes.c
-	src/datatypes/int.c
-	src/datatypes/flt.c
-	src/datatypes/str.c
-	src/datatypes/list.c
-	src/datatypes/object.c
-	src/datatypes/void.c
-	src/datatypes/function.c
-	src/datatypes/builtin.c
-	src/tools.c
-	src/stream.c
-	src/builtin_functions.c
-	# Frontend.
 	src/main.c
+	src/natives.c
+	src/parser.c
+	src/tools.c
+	src/traceback.c
 )
 
 # Libraries.
@@ -117,14 +115,14 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 	target_compile_options(une PRIVATE
 		-g3 -O0 -Wno-switch -Wno-switch-enum
 	)
-	if(UNE_DEBUG_MEMDBG)
+	if(UNE_DBG_MEMDBG)
 		add_definitions(-DMEMDBG_ENABLE)
-		target_sources(une PRIVATE "src/util/memdbg.c")
+		target_sources(une PRIVATE "src/deprecated/memdbg.c")
 		target_compile_options(une PRIVATE
 			-Wno-unused-macros
 		)
 	endif()
-	if(UNE_DEBUG_FSANITIZE)
+	if(UNE_DBG_FSANITIZE)
 		target_compile_options(une PRIVATE
 			-fsanitize=address,signed-integer-overflow -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope -fno-omit-frame-pointer -O1 -fno-optimize-sibling-calls 
 		)
@@ -132,7 +130,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 			-fsanitize=address,signed-integer-overflow
 		)
 	endif()
-	if(UNE_DEBUG_COVERAGE)
+	if(UNE_DBG_COVERAGE)
 		target_compile_options(une PRIVATE
 			-fprofile-arcs -ftest-coverage
 		)

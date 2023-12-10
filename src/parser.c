@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-11-21
+Modified 2023-12-10
 */
 
 /* Header-specific includes. */
@@ -8,16 +8,16 @@ Modified 2023-11-21
 
 /* Implementation-specific includes. */
 #include "tools.h"
-#include "stream.h"
-#include "builtin_functions.h"
+#include "deprecated/stream.h"
+#include "natives.h"
 
 /*
 Public parser interface.
 */
 
-UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token, une_token_create(UNE_TT_none__), false)
-UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token, une_token_create(UNE_TT_none__), false)
-UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token, une_token_create(UNE_TT_none__), false)
+UNE_ISTREAM_ARRAY_PULLER_VAL(pull, une_token, une_token, une_token_create(UNE_TK_none__), false)
+UNE_ISTREAM_ARRAY_PEEKER_VAL(peek, une_token, une_token, une_token_create(UNE_TK_none__), false)
+UNE_ISTREAM_ARRAY_ACCESS_VAL(now, une_token, une_token, une_token_create(UNE_TK_none__), false)
 
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 {
@@ -27,7 +27,7 @@ une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens)
 
 	LOGPARSE(L"", now(&ps->in));
 	
-	return une_parse_sequence(error, ps, UNE_NT_STMTS, UNE_TT_none__, UNE_TT_NEW, UNE_TT_EOF, &une_parse_stmt);
+	return une_parse_sequence(error, ps, UNE_NK_STMTS, UNE_TK_none__, UNE_TK_NEW, UNE_TK_EOF, &une_parse_stmt);
 }
 
 une_parser__(une_parse_stmt)
@@ -35,28 +35,28 @@ une_parser__(une_parse_stmt)
 	LOGPARSE(L"", now(&ps->in));
 	
 	/* Skip NEW before/between statements. */
-	if (now(&ps->in).type == UNE_TT_NEW)
+	if (now(&ps->in).kind == UNE_TK_NEW)
 		pull(&ps->in);
-	assert(now(&ps->in).type != UNE_TT_NEW);
+	assert(now(&ps->in).kind != UNE_TK_NEW);
 	
-	switch (now(&ps->in).type) {
-		case UNE_TT_LBRC:
+	switch (now(&ps->in).kind) {
+		case UNE_TK_LBRC:
 			return une_parse_block(error, ps);
-		case UNE_TT_FOR:
+		case UNE_TK_FOR:
 			return une_parse_for(error, ps);
-		case UNE_TT_WHILE:
+		case UNE_TK_WHILE:
 			return une_parse_while(error, ps);
-		case UNE_TT_IF:
+		case UNE_TK_IF:
 			return une_parse_if(error, ps);
-		case UNE_TT_ASSERT:
+		case UNE_TK_ASSERT:
 			return une_parse_assert(error, ps);
-		case UNE_TT_CONTINUE:
+		case UNE_TK_CONTINUE:
 			return une_parse_continue(error, ps);
-		case UNE_TT_BREAK:
+		case UNE_TK_BREAK:
 			return une_parse_break(error, ps);
-		case UNE_TT_RETURN:
+		case UNE_TK_RETURN:
 			return une_parse_return(error, ps);
-		case UNE_TT_EXIT:
+		case UNE_TK_EXIT:
 			return une_parse_exit(error, ps);
 		default:
 			break;
@@ -69,12 +69,12 @@ une_parser__(une_parse_name)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	if (now(&ps->in).type != UNE_TT_NAME) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+	if (now(&ps->in).kind != UNE_TK_NAME) {
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 		return NULL;
 	}
 
-	une_node *name = une_node_create(UNE_NT_NAME);
+	une_node *name = une_node_create(UNE_NK_NAME);
 	name->pos = now(&ps->in).pos;
 	name->content.value._wcs = now(&ps->in).value._wcs;
 	pull(&ps->in);
@@ -84,7 +84,7 @@ une_parser__(une_parse_name)
 
 une_parser__(une_parse_block)
 {
-	return une_parse_sequence(error, ps, UNE_NT_STMTS, UNE_TT_LBRC, UNE_TT_NEW, UNE_TT_RBRC, &une_parse_stmt);
+	return une_parse_sequence(error, ps, UNE_NK_STMTS, UNE_TK_LBRC, UNE_TK_NEW, UNE_TK_RBRC, &une_parse_stmt);
 }
 
 une_parser__(une_parse_expression)
@@ -93,7 +93,7 @@ une_parser__(une_parse_expression)
 	
 	/* Condition. */
 	une_node *cond = une_parse_and_or(error, ps);
-	if (!cond || now(&ps->in).type != UNE_TT_QMARK)
+	if (!cond || now(&ps->in).kind != UNE_TK_QMARK)
 		return cond;
 
 	/* ?. */
@@ -107,8 +107,8 @@ une_parser__(une_parse_expression)
 	}
 	
 	/* :. */
-	if (now(&ps->in).type != UNE_TT_COLON) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+	if (now(&ps->in).kind != UNE_TK_COLON) {
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 		une_node_free(cond, false);
 		une_node_free(exp_true, false);
 		return NULL;
@@ -123,7 +123,7 @@ une_parser__(une_parse_expression)
 		return NULL;
 	}
 	
-	une_node *cop = une_node_create(UNE_NT_COP);
+	une_node *cop = une_node_create(UNE_NK_COP);
 	cop->pos = une_position_between(cond->pos, exp_false->pos);
 	cop->content.branch.a = cond;
 	cop->content.branch.b = exp_true;
@@ -161,10 +161,10 @@ une_parser__(une_parse_any_all)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	if (now(&ps->in).type == UNE_TT_ANY)
-		return une_parse_unary_operation(error, ps, UNE_NT_ANY, &une_parse_cover);
-	if (now(&ps->in).type == UNE_TT_ALL)
-		return une_parse_unary_operation(error, ps, UNE_NT_ALL, &une_parse_cover);
+	if (now(&ps->in).kind == UNE_TK_ANY)
+		return une_parse_unary_operation(error, ps, UNE_NK_ANY, &une_parse_cover);
+	if (now(&ps->in).kind == UNE_TK_ALL)
+		return une_parse_unary_operation(error, ps, UNE_NK_ALL, &une_parse_cover);
 	return une_parse_cover(error, ps);
 }
 
@@ -173,9 +173,9 @@ une_parser__(une_parse_cover)
 	LOGPARSE(L"", now(&ps->in));
 	
 	return une_parse_binary_operation(error, ps,
-		UNE_TT_COVER,
-		UNE_NT_COVER,
-		UNE_TT_COVER,
+		UNE_TK_COVER,
+		UNE_NK_COVER,
+		UNE_TK_COVER,
 		&une_parse_add_sub,
 		&une_parse_add_sub
 	);
@@ -211,8 +211,8 @@ une_parser__(une_parse_negation)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	if (now(&ps->in).type == UNE_TT_NOT)
-		return une_parse_unary_operation(error, ps, UNE_NT_NOT, &une_parse_negation);
+	if (now(&ps->in).kind == UNE_TK_NOT)
+		return une_parse_unary_operation(error, ps, UNE_NK_NOT, &une_parse_negation);
 	return une_parse_minus(error, ps);
 }
 
@@ -220,8 +220,8 @@ une_parser__(une_parse_minus)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	if (now(&ps->in).type == UNE_TT_SUB)
-		return une_parse_unary_operation(error, ps, UNE_NT_NEG, &une_parse_minus);
+	if (now(&ps->in).kind == UNE_TK_SUB)
+		return une_parse_unary_operation(error, ps, UNE_NK_NEG, &une_parse_minus);
 	return une_parse_power(error, ps);
 }
 
@@ -230,9 +230,9 @@ une_parser__(une_parse_power)
 	LOGPARSE(L"", now(&ps->in));
 	
 	return une_parse_binary_operation(error, ps,
-		UNE_TT_POW,
-		UNE_NT_POW,
-		UNE_TT_POW,
+		UNE_TK_POW,
+		UNE_NK_POW,
+		UNE_TK_POW,
 		&une_parse_accessor,
 		&une_parse_power /* DOC: We parse power and not accessor because powers are evaluated right to left. */
 	);
@@ -248,18 +248,18 @@ une_parser__(une_parse_accessor)
 	
 	while (true) {
 		une_node *accessor;
-		if (now(&ps->in).type == UNE_TT_LSQB) {
+		if (now(&ps->in).kind == UNE_TK_LSQB) {
 			accessor = une_parse_index(error, ps);
 			if (accessor)
-				accessor->type = UNE_NT_IDX_SEEK;
-		} else if (now(&ps->in).type == UNE_TT_LPAR) {
+				accessor->kind = UNE_NK_IDX_SEEK;
+		} else if (now(&ps->in).kind == UNE_TK_LPAR) {
 			accessor = une_parse_call(error, ps);
 			if (accessor)
-				accessor->type = UNE_NT_CALL;
-		} else if (now(&ps->in).type == UNE_TT_DOT) {
+				accessor->kind = UNE_NK_CALL;
+		} else if (now(&ps->in).kind == UNE_TK_DOT) {
 			accessor = une_parse_member(error, ps);
 			if (accessor)
-				accessor->type = UNE_NT_MEMBER_SEEK;
+				accessor->kind = UNE_NK_MEMBER_SEEK;
 		} else {
 			break;
 		}
@@ -279,58 +279,58 @@ une_parser__(une_parse_atom)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	switch (now(&ps->in).type) {
+	switch (now(&ps->in).kind) {
 		
-		case UNE_TT_VOID:
+		case UNE_TK_VOID:
 			return une_parse_void(error, ps);
 		
-		case UNE_TT_INT:
+		case UNE_TK_INT:
 			return une_parse_int(error, ps);
 		
-		case UNE_TT_FLT:
+		case UNE_TK_FLT:
 			return une_parse_flt(error, ps);
 		
-		case UNE_TT_STR:
+		case UNE_TK_STR:
 			return une_parse_str(error, ps);
 		
-		case UNE_TT_TRUE:
+		case UNE_TK_TRUE:
 			return une_parse_true(error, ps);
 		
-		case UNE_TT_FALSE:
+		case UNE_TK_FALSE:
 			return une_parse_false(error, ps);
 		
-		case UNE_TT_THIS:
+		case UNE_TK_THIS:
 			return une_parse_this(error, ps);
 		
-		case UNE_TT_BUILTIN:
-			return une_parse_builtin(error, ps);
+		case UNE_TK_NATIVE:
+			return une_parse_native(error, ps);
 		
-		case UNE_TT_NAME:
+		case UNE_TK_NAME:
 			return une_parse_seek(error, ps, true);
 		
-		case UNE_TT_LSQB:
+		case UNE_TK_LSQB:
 			return une_parse_list(error, ps);
 		
-		case UNE_TT_LBRC:
+		case UNE_TK_LBRC:
 			return une_parse_object(error, ps);
 
-		case UNE_TT_FUNCTION:
+		case UNE_TK_FUNCTION:
 			return une_parse_function(error, ps);
 		
-		case UNE_TT_LPAR: {
+		case UNE_TK_LPAR: {
 			LOGPARSE(L"expression", now(&ps->in));
 			une_position pos_first = now(&ps->in).pos;
 			pull(&ps->in);
-			while (now(&ps->in).type == UNE_TT_NEW)
+			while (now(&ps->in).kind == UNE_TK_NEW)
 				pull(&ps->in);
 			une_node *expression = une_parse_expression(error, ps);
 			if (expression == NULL)
 				return NULL;
-			while (now(&ps->in).type == UNE_TT_NEW)
+			while (now(&ps->in).kind == UNE_TK_NEW)
 				pull(&ps->in);
-			if (now(&ps->in).type != UNE_TT_RPAR) {
+			if (now(&ps->in).kind != UNE_TK_RPAR) {
 				une_node_free(expression, false);
-				*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+				*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 				return NULL;
 			}
 			expression->pos = une_position_between(pos_first, now(&ps->in).pos);
@@ -343,14 +343,14 @@ une_parser__(une_parse_atom)
 	
 	}
 	
-	*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+	*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 	return NULL;
 }
 
 une_parser__(une_parse_void)
 {
 	LOGPARSE(L"", now(&ps->in));
-	une_node *void_ = une_node_create(UNE_NT_VOID);
+	une_node *void_ = une_node_create(UNE_NK_VOID);
 	void_->pos = now(&ps->in).pos;
 	void_->content.value._int = 0;
 	pull(&ps->in);
@@ -360,7 +360,7 @@ une_parser__(une_parse_void)
 une_parser__(une_parse_int)
 {
 	LOGPARSE(L"", now(&ps->in));
-	une_node *num = une_node_create(UNE_NT_INT);
+	une_node *num = une_node_create(UNE_NK_INT);
 	num->pos = now(&ps->in).pos;
 	num->content.value._int = now(&ps->in).value._int;
 	pull(&ps->in);
@@ -370,7 +370,7 @@ une_parser__(une_parse_int)
 une_parser__(une_parse_flt)
 {
 	LOGPARSE(L"", now(&ps->in));
-	une_node *num = une_node_create(UNE_NT_FLT);
+	une_node *num = une_node_create(UNE_NK_FLT);
 	num->pos = now(&ps->in).pos;
 	num->content.value._flt = now(&ps->in).value._flt;
 	pull(&ps->in);
@@ -380,12 +380,12 @@ une_parser__(une_parse_flt)
 une_parser__(une_parse_str)
 {
 	/* Guaranteed first string. */
-	une_node *left = une_node_create(UNE_NT_STR);
+	une_node *left = une_node_create(UNE_NK_STR);
 	left->pos = now(&ps->in).pos;
 	left->content.value._wcs = now(&ps->in).value._wcs;
 	pull(&ps->in);
 	
-	while (now(&ps->in).type == UNE_TT_STR_EXPRESSION_BEGIN) {
+	while (now(&ps->in).kind == UNE_TK_STR_EXPRESSION_BEGIN) {
 		/* '{'. */
 		pull(&ps->in);
 		
@@ -397,8 +397,8 @@ une_parser__(une_parse_str)
 		}
 		
 		/* '}'. */
-		if (now(&ps->in).type != UNE_TT_STR_EXPRESSION_END) {
-			*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+		if (now(&ps->in).kind != UNE_TK_STR_EXPRESSION_END) {
+			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 			une_node_free(left, false);
 			une_node_free(expression, false);
 			return NULL;
@@ -406,20 +406,20 @@ une_parser__(une_parse_str)
 		pull(&ps->in);
 		
 		/* Next string. */
-		assert(now(&ps->in).type == UNE_TT_STR);
-		une_node *post_expression_string = une_node_create(UNE_NT_STR);
+		assert(now(&ps->in).kind == UNE_TK_STR);
+		une_node *post_expression_string = une_node_create(UNE_NK_STR);
 		post_expression_string->pos = now(&ps->in).pos;
 		post_expression_string->content.value._wcs = now(&ps->in).value._wcs;
 		pull(&ps->in);
 		
 		/* Combine nodes. */
-		une_node *string_with_expression = une_node_create(UNE_NT_CONCATENATE);
+		une_node *string_with_expression = une_node_create(UNE_NK_CONCATENATE);
 		string_with_expression->pos = une_position_between(expression->pos, post_expression_string->pos);
 		string_with_expression->pos = une_position_between(expression->pos, post_expression_string->pos);
 		string_with_expression->content.branch.a = expression;
 		string_with_expression->content.branch.b = post_expression_string;
 		
-		une_node *new_left = une_node_create(UNE_NT_CONCATENATE);
+		une_node *new_left = une_node_create(UNE_NK_CONCATENATE);
 		new_left->content.branch.a = left;
 		new_left->content.branch.b = string_with_expression;
 		left = new_left;
@@ -431,7 +431,7 @@ une_parser__(une_parse_str)
 une_parser__(une_parse_true)
 {
 	LOGPARSE(L"", now(&ps->in));
-	une_node *num = une_node_create(UNE_NT_INT);
+	une_node *num = une_node_create(UNE_NK_INT);
 	num->pos = now(&ps->in).pos;
 	num->content.value._int = 1;
 	pull(&ps->in);
@@ -441,7 +441,7 @@ une_parser__(une_parse_true)
 une_parser__(une_parse_false)
 {
 	LOGPARSE(L"", now(&ps->in));
-	une_node *num = une_node_create(UNE_NT_INT);
+	une_node *num = une_node_create(UNE_NK_INT);
 	num->pos = now(&ps->in).pos;
 	num->content.value._int = 0;
 	pull(&ps->in);
@@ -451,7 +451,7 @@ une_parser__(une_parse_false)
 une_parser__(une_parse_this)
 {
 	LOGPARSE(L"", now(&ps->in));
-	une_node *num = une_node_create(UNE_NT_THIS);
+	une_node *num = une_node_create(UNE_NK_THIS);
 	num->pos = now(&ps->in).pos;
 	pull(&ps->in);
 	return num;
@@ -465,7 +465,7 @@ une_parser__(une_parse_seek, bool global)
 		*error = une_error_create(); /* une_parse_name normally returns an error, but here we want to ignore it. */
 		return NULL;
 	}
-	une_node *seek = une_node_create(UNE_NT_SEEK);
+	une_node *seek = une_node_create(UNE_NK_SEEK);
 	seek->pos = name->pos;
 	seek->content.branch.a = name;
 	seek->content.branch.b = (une_node*)global;
@@ -475,28 +475,28 @@ une_parser__(une_parse_seek, bool global)
 une_parser__(une_parse_seek_or_this, bool global)
 {
 	LOGPARSE(L"", now(&ps->in));
-	if (now(&ps->in).type == UNE_TT_THIS)
+	if (now(&ps->in).kind == UNE_TK_THIS)
 		return une_parse_this(error, ps);
 	return une_parse_seek(error, ps, global);
 }
 
-une_parser__(une_parse_builtin)
+une_parser__(une_parse_native)
 {
 	LOGPARSE(L"", now(&ps->in));
-	if (!UNE_BUILTIN_FUNCTION_IS_VALID(now(&ps->in).value._int))
+	if (!UNE_NATIVE_IS_VALID(now(&ps->in).value._int))
 		return NULL;
-	une_node *builtin = une_node_create(UNE_NT_BUILTIN);
-	builtin->pos = now(&ps->in).pos;
-	builtin->content.value._int = now(&ps->in).value._int;
+	une_node *native = une_node_create(UNE_NK_NATIVE);
+	native->pos = now(&ps->in).pos;
+	native->content.value._int = now(&ps->in).value._int;
 	pull(&ps->in);
-	return builtin;
+	return native;
 }
 
 une_parser__(une_parse_list)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	return une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LSQB, UNE_TT_SEP, UNE_TT_RSQB, &une_parse_expression);
+	return une_parse_sequence(error, ps, UNE_NK_LIST, UNE_TK_LSQB, UNE_TK_SEP, UNE_TK_RSQB, &une_parse_expression);
 }
 
 une_parser__(une_parse_function)
@@ -508,7 +508,7 @@ une_parser__(une_parse_function)
 	pull(&ps->in);
 	
 	/* Parameters. */
-	une_node *params = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_name);
+	une_node *params = une_parse_sequence(error, ps, UNE_NK_LIST, UNE_TK_LPAR, UNE_TK_SEP, UNE_TK_RPAR, &une_parse_name);
 	if (params == NULL)
 		return NULL;
 	
@@ -519,10 +519,10 @@ une_parser__(une_parse_function)
 		return NULL;
 	}
 	
-	une_node *module_id = une_node_create(UNE_NT_ID);
+	une_node *module_id = une_node_create(UNE_NK_ID);
 	module_id->content.value._id = ps->module_id;
 	
-	une_node *function = une_node_create(UNE_NT_FUNCTION);
+	une_node *function = une_node_create(UNE_NK_FUNCTION);
 	function->pos = une_position_between(pos_first, body->pos);
 	function->content.branch.a = params;
 	function->content.branch.b = body;
@@ -547,12 +547,12 @@ une_parser__(une_parse_for)
 	
 	/* Realm. */
 	une_node *loop = NULL;
-	if (now(&ps->in).type == UNE_TT_FROM)
+	if (now(&ps->in).kind == UNE_TK_FROM)
 		loop = une_parse_for_range(error, ps);
-	else if (now(&ps->in).type == UNE_TT_IN)
+	else if (now(&ps->in).kind == UNE_TK_IN)
 		loop = une_parse_for_element(error, ps);
 	else
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 	if (!loop) {
 		une_node_free(counter, false);
 		return NULL;
@@ -570,7 +570,7 @@ une_parser__(une_parse_for)
 	
 	loop->pos = une_position_between(pos_first, peek(&ps->in, -1).pos);
 	loop->content.branch.a = counter;
-	if (loop->type == UNE_NT_FOR_RANGE)
+	if (loop->kind == UNE_NK_FOR_RANGE)
 		loop->content.branch.d = body;
 	else
 		loop->content.branch.c = body;
@@ -582,7 +582,7 @@ une_parser__(une_parse_for_range)
 	LOGPARSE(L"", now(&ps->in));
 	
 	/* From. */
-	assert(now(&ps->in).type == UNE_TT_FROM);
+	assert(now(&ps->in).kind == UNE_TK_FROM);
 	pull(&ps->in);
 	
 	/* Expression. */
@@ -591,8 +591,8 @@ une_parser__(une_parse_for_range)
 		return NULL;
 	
 	/* Till. */
-	if (now(&ps->in).type != UNE_TT_TILL) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+	if (now(&ps->in).kind != UNE_TK_TILL) {
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 		une_node_free(from, false);
 		return NULL;
 	}
@@ -605,7 +605,7 @@ une_parser__(une_parse_for_range)
 		return NULL;
 	}
 	
-	une_node *loop = une_node_create(UNE_NT_FOR_RANGE);
+	une_node *loop = une_node_create(UNE_NK_FOR_RANGE);
 	loop->content.branch.b = from;
 	loop->content.branch.c = till;
 	return loop;
@@ -616,7 +616,7 @@ une_parser__(une_parse_for_element)
 	LOGPARSE(L"", now(&ps->in));
 	
 	/* In. */
-	assert(now(&ps->in).type == UNE_TT_IN);
+	assert(now(&ps->in).kind == UNE_TK_IN);
 	pull(&ps->in);
 	
 	/* Expression. */
@@ -624,7 +624,7 @@ une_parser__(une_parse_for_element)
 	if (elements == NULL)
 		return NULL;
 	
-	une_node *loop = une_node_create(UNE_NT_FOR_ELEMENT);
+	une_node *loop = une_node_create(UNE_NK_FOR_ELEMENT);
 	loop->content.branch.b = elements;
 	return loop;
 }
@@ -652,7 +652,7 @@ une_parser__(une_parse_while)
 		return NULL;
 	}
 	
-	une_node *node = une_node_create(UNE_NT_WHILE);
+	une_node *node = une_node_create(UNE_NK_WHILE);
 	node->pos = une_position_between(pos_first, body->pos);
 	node->content.branch.a = condition;
 	node->content.branch.b = body;
@@ -693,16 +693,16 @@ une_parser__(une_parse_if)
 																				 return back to this index in case there
 																				 is no clause following the if clause.
 																				 */
-	if (now(&ps->in).type == UNE_TT_NEW)
+	if (now(&ps->in).kind == UNE_TK_NEW)
 		pull(&ps->in);
 
-	une_node *ifstmt = une_node_create(UNE_NT_IF);
+	une_node *ifstmt = une_node_create(UNE_NK_IF);
 	ifstmt->pos = une_position_set_start(ifstmt->pos, pos_first);
 	ifstmt->content.branch.a = predicate;
 	ifstmt->content.branch.b = consequent;
 
 	/* Only If Body. */
-	if (now(&ps->in).type != UNE_TT_ELSE && now(&ps->in).type != UNE_TT_ELIF) {
+	if (now(&ps->in).kind != UNE_TK_ELSE && now(&ps->in).kind != UNE_TK_ELIF) {
 		ps->in.index = _token_index;
 		ifstmt->pos.end = consequent->pos.end;
 		return ifstmt;
@@ -710,7 +710,7 @@ une_parser__(une_parse_if)
 	
 	/* Elif Body || Else Body. */
 	une_node *alternate;
-	if (now(&ps->in).type == UNE_TT_ELIF)
+	if (now(&ps->in).kind == UNE_TK_ELIF)
 		alternate = une_parse_if(error, ps);
 	else {
 		pull(&ps->in);
@@ -739,7 +739,7 @@ une_parser__(une_parse_assert)
 	if (assertion == NULL)
 		return NULL;
 
-	une_node *assert_ = une_node_create(UNE_NT_ASSERT);
+	une_node *assert_ = une_node_create(UNE_NK_ASSERT);
 	assert_->pos = une_position_set_start(assert_->pos, pos_first);
 	assert_->pos.end = assertion->pos.end;
 	assert_->content.branch.a = assertion;
@@ -749,10 +749,10 @@ une_parser__(une_parse_assert)
 une_parser__(une_parse_continue)
 {
 	if (ps->loop_level == 0) {
-		*error = UNE_ERROR_SET(UNE_ET_CONTINUE_OUTSIDE_LOOP, now(&ps->in).pos);
+		*error = UNE_ERROR_SET(UNE_EK_CONTINUE_OUTSIDE_LOOP, now(&ps->in).pos);
 		return NULL;
 	}
-	une_node *continue_ = une_node_create(UNE_NT_CONTINUE);
+	une_node *continue_ = une_node_create(UNE_NK_CONTINUE);
 	continue_->pos = now(&ps->in).pos;
 	pull(&ps->in);
 	return continue_;
@@ -761,10 +761,10 @@ une_parser__(une_parse_continue)
 une_parser__(une_parse_break)
 {
 	if (ps->loop_level == 0) {
-		*error = UNE_ERROR_SET(UNE_ET_BREAK_OUTSIDE_LOOP, now(&ps->in).pos);
+		*error = UNE_ERROR_SET(UNE_EK_BREAK_OUTSIDE_LOOP, now(&ps->in).pos);
 		return NULL;
 	}
-	une_node *break_ = une_node_create(UNE_NT_BREAK);
+	une_node *break_ = une_node_create(UNE_NK_BREAK);
 	break_->pos = now(&ps->in).pos;
 	pull(&ps->in);
 	return break_;
@@ -783,14 +783,14 @@ une_parser__(une_parse_return)
 	une_node *value = NULL; /* DOC: NULL here means no return value was specified.
 														 This tells the interpreter that there is no return
 														 value. */
-	if (now(&ps->in).type != UNE_TT_NEW && now(&ps->in).type != UNE_TT_EOF && now(&ps->in).type != UNE_TT_RBRC) {
+	if (now(&ps->in).kind != UNE_TK_NEW && now(&ps->in).kind != UNE_TK_EOF && now(&ps->in).kind != UNE_TK_RBRC) {
 		value = une_parse_expression(error, ps);
 		if (value == NULL) /* DOC: NULL here means an error. */
 			return NULL;
 		pos.end = value->pos.end;
 	}
 
-	une_node *return_ = une_node_create(UNE_NT_RETURN);
+	une_node *return_ = une_node_create(UNE_NK_RETURN);
 	return_->pos = pos;
 	return_->content.branch.a = value;
 	return return_;
@@ -809,14 +809,14 @@ une_parser__(une_parse_exit)
 	une_node *value = NULL; /* DOC: NULL here means no exit code was specified.
 														 This tells the interpreter that there is no exit
 														 code. */
-	if (now(&ps->in).type != UNE_TT_NEW && now(&ps->in).type != UNE_TT_EOF && now(&ps->in).type != UNE_TT_RBRC) {
+	if (now(&ps->in).kind != UNE_TK_NEW && now(&ps->in).kind != UNE_TK_EOF && now(&ps->in).kind != UNE_TK_RBRC) {
 		value = une_parse_expression(error, ps);
 		if (value == NULL) /* DOC: NULL here means an error. */
 			return NULL;
 		pos.end = value->pos.end;
 	}
 
-	une_node *exit = une_node_create(UNE_NT_EXIT);
+	une_node *exit = une_node_create(UNE_NK_EXIT);
 	exit->pos = pos;
 	exit->content.branch.a = value;
 	return exit;
@@ -829,13 +829,13 @@ une_parser__(une_parse_assignment_or_expr_stmt)
 	/* Check for variable assignment. */
 	ptrdiff_t token_index_before = ps->in.index; /* Needed to backstep in case this is not a variable assignment. */
 	une_node *assignee = une_parse_assignee(error, ps);
-	une_node_type assignment_operation = UNE_NT_none__;
+	une_node_kind assignment_operation = UNE_NK_none__;
 	if (
 		assignee &&
-		now(&ps->in).type >= UNE_R_BGN_ASSIGNMENT_TOKENS &&
-		now(&ps->in).type <= UNE_R_END_ASSIGNMENT_TOKENS
+		now(&ps->in).kind >= UNE_R_BGN_ASSIGNMENT_TOKENS &&
+		now(&ps->in).kind <= UNE_R_END_ASSIGNMENT_TOKENS
 	) {
-		assignment_operation = UNE_R_BGN_ASSIGNMENT_NODES + (now(&ps->in).type - UNE_R_BGN_ASSIGNMENT_TOKENS);
+		assignment_operation = UNE_R_BGN_ASSIGNMENT_NODES + (now(&ps->in).kind - UNE_R_BGN_ASSIGNMENT_TOKENS);
 		pull(&ps->in);
 	} else {
 		ps->in.index = token_index_before;
@@ -850,7 +850,7 @@ une_parser__(une_parse_assignment_or_expr_stmt)
 		return NULL;
 	}
 	
-	/* Resolve final node type. */
+	/* Resolve final node kind. */
 	une_node *assignment_or_expression_statement;
 	if (assignment_operation) {
 		assignment_or_expression_statement = une_node_create(assignment_operation);
@@ -870,7 +870,7 @@ une_parser__(une_parse_assignee)
 	LOGPARSE(L"", now(&ps->in));
 	
 	bool global = false;
-	if (now(&ps->in).type == UNE_TT_GLOBAL) {
+	if (now(&ps->in).kind == UNE_TK_GLOBAL) {
 		pull(&ps->in);
 		global = true;
 	}
@@ -881,14 +881,14 @@ une_parser__(une_parse_assignee)
 	
 	while (true) {
 		une_node *accessor;
-		if (now(&ps->in).type == UNE_TT_LSQB) {
+		if (now(&ps->in).kind == UNE_TK_LSQB) {
 			accessor = une_parse_index(error, ps);
 			if (accessor)
-				accessor->type = UNE_NT_IDX_SEEK;
-		} else if (now(&ps->in).type == UNE_TT_DOT) {
+				accessor->kind = UNE_NK_IDX_SEEK;
+		} else if (now(&ps->in).kind == UNE_TK_DOT) {
 			accessor = une_parse_member(error, ps);
 			if (accessor)
-				accessor->type = UNE_NT_MEMBER_SEEK;
+				accessor->kind = UNE_NK_MEMBER_SEEK;
 		} else {
 			break;
 		}
@@ -909,13 +909,13 @@ une_parser__(une_parse_index)
 	LOGPARSE(L"", now(&ps->in));
 	
 	/* '['. */
-	assert(now(&ps->in).type == UNE_TT_LSQB);
+	assert(now(&ps->in).kind == UNE_TK_LSQB);
 	pull(&ps->in);
 	
 	/* Begin? */
 	une_node *begin = NULL;
-	if (now(&ps->in).type == UNE_TT_DOTDOT) {
-		begin = une_parse_phony(error, ps, UNE_NT_INT);
+	if (now(&ps->in).kind == UNE_TK_DOTDOT) {
+		begin = une_parse_phony(error, ps, UNE_NK_INT);
 		begin->content.value._int = 0;
 	} else {
 		begin = une_parse_expression(error, ps);
@@ -925,11 +925,11 @@ une_parser__(une_parse_index)
 	
 	/* Range? */
 	une_node *end = NULL;
-	if (now(&ps->in).type == UNE_TT_DOTDOT) {
+	if (now(&ps->in).kind == UNE_TK_DOTDOT) {
 		pull(&ps->in); /* '..'. */
 		/* End? */
-		if (now(&ps->in).type == UNE_TT_RSQB)
-			end = une_parse_phony(error, ps, UNE_NT_VOID);
+		if (now(&ps->in).kind == UNE_TK_RSQB)
+			end = une_parse_phony(error, ps, UNE_NK_VOID);
 		else
 			end = une_parse_expression(error, ps);
 		if (!end) {
@@ -939,15 +939,15 @@ une_parser__(une_parse_index)
 	}
 	
 	/* ']'. */
-	if (now(&ps->in).type != UNE_TT_RSQB) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+	if (now(&ps->in).kind != UNE_TK_RSQB) {
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 		une_node_free(begin, false);
 		une_node_free(end, false);
 		return NULL;
 	}
 	pull(&ps->in);
 	
-	une_node *index = une_node_create(UNE_NT_none__); /* The caller is required to provide the node type. */
+	une_node *index = une_node_create(UNE_NK_none__); /* The caller is required to provide the node kind. */
 	index->pos.end = peek(&ps->in, -1).pos.end; /* The caller is required to provide the start position. */
 	index->content.branch.b = begin; /* The caller is required to provide branch A. */
 	index->content.branch.c = end;
@@ -959,11 +959,11 @@ une_parser__(une_parse_call)
 	LOGPARSE(L"", now(&ps->in));
 	
 	/* Arguments. */
-	une_node *arguments = une_parse_sequence(error, ps, UNE_NT_LIST, UNE_TT_LPAR, UNE_TT_SEP, UNE_TT_RPAR, &une_parse_expression);
+	une_node *arguments = une_parse_sequence(error, ps, UNE_NK_LIST, UNE_TK_LPAR, UNE_TK_SEP, UNE_TK_RPAR, &une_parse_expression);
 	if (!arguments)
 		return NULL;
 	
-	une_node *call = une_node_create(UNE_NT_none__); /* The caller is required to provide the node type. */
+	une_node *call = une_node_create(UNE_NK_none__); /* The caller is required to provide the node kind. */
 	call->pos.end = arguments->pos.end; /* The caller is required to provide the start position. */
 	call->content.branch.b = arguments; /* The caller is required to provide branch A. */
 	return call;
@@ -974,7 +974,7 @@ une_parser__(une_parse_member)
 	LOGPARSE(L"", now(&ps->in));
 	
 	/* '.'. */
-	assert(now(&ps->in).type == UNE_TT_DOT);
+	assert(now(&ps->in).kind == UNE_TK_DOT);
 	pull(&ps->in);
 	
 	/* Identifier. */
@@ -982,7 +982,7 @@ une_parser__(une_parse_member)
 	if (!name)
 		return NULL;
 	
-	une_node *member = une_node_create(UNE_NT_none__); /* The caller is required to provide the node type. */
+	une_node *member = une_node_create(UNE_NK_none__); /* The caller is required to provide the node kind. */
 	member->pos.end = name->pos.end; /* The caller is required to provide the start position. */
 	member->content.branch.b = name; /* The caller is required to provide branch A. */
 	return member;
@@ -998,8 +998,8 @@ une_parser__(une_parse_object_association)
 		return NULL;
 	
 	/* ':'. */
-	if (now(&ps->in).type != UNE_TT_COLON) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+	if (now(&ps->in).kind != UNE_TK_COLON) {
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 		une_node_free(name, false);
 		return NULL;
 	}
@@ -1008,12 +1008,12 @@ une_parser__(une_parse_object_association)
 	/* Expression. */
 	une_node *expression = une_parse_expression(error, ps);
 	if (!expression) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 		une_node_free(name, false);
 		return NULL;
 	}
 	
-	une_node *object_association = une_node_create(UNE_NT_OBJECT_ASSOCIATION);
+	une_node *object_association = une_node_create(UNE_NK_OBJECT_ASSOCIATION);
 	object_association->pos = une_position_between(name->pos, expression->pos);
 	object_association->content.branch.a = name;
 	object_association->content.branch.b = expression;
@@ -1024,10 +1024,10 @@ une_parser__(une_parse_object)
 {
 	LOGPARSE(L"", now(&ps->in));
 	
-	return une_parse_sequence(error, ps, UNE_NT_OBJECT, UNE_TT_LBRC, UNE_TT_SEP, UNE_TT_RBRC, &une_parse_object_association);
+	return une_parse_sequence(error, ps, UNE_NK_OBJECT, UNE_TK_LBRC, UNE_TK_SEP, UNE_TK_RBRC, &une_parse_object_association);
 }
 
-une_parser__(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)(une_error*, une_parser_state*)
+une_parser__(une_parse_unary_operation, une_node_kind node_t, une_node *(*parse)(une_error*, une_parser_state*)
 )
 {
 	LOGPARSE(L"", now(&ps->in));
@@ -1047,9 +1047,9 @@ une_parser__(une_parse_unary_operation, une_node_type node_t, une_node *(*parse)
 }
 
 une_parser__(une_parse_binary_operation,
-	une_token_type range_begin_tt,
-	une_node_type range_begin_nt,
-	une_token_type range_end_tt,
+	une_token_kind range_begin,
+	une_node_kind range_begin_nt,
+	une_token_kind range_end,
 	une_node *(*parse_left)(une_error*, une_parser_state*),
 	une_node *(*parse_right)(une_error*, une_parser_state*)
 )
@@ -1060,9 +1060,9 @@ une_parser__(une_parse_binary_operation,
 	if (left == NULL)
 		return NULL;
 
-	while (now(&ps->in).type >= range_begin_tt && now(&ps->in).type <= range_end_tt)
+	while (now(&ps->in).kind >= range_begin && now(&ps->in).kind <= range_end)
 	{
-		une_node_type type = range_begin_nt+(une_node_type)(now(&ps->in).type-range_begin_tt);
+		une_node_kind kind = range_begin_nt+(une_node_kind)(now(&ps->in).kind-range_begin);
 
 		pull(&ps->in);
 
@@ -1072,7 +1072,7 @@ une_parser__(une_parse_binary_operation,
 			return NULL;
 		}
 
-		une_node *new_left = une_node_create(type);
+		une_node *new_left = une_node_create(kind);
 		new_left->pos = une_position_between(left->pos, right->pos);
 		new_left->content.branch.a = left;
 		new_left->content.branch.b = right;
@@ -1083,8 +1083,8 @@ une_parser__(une_parse_binary_operation,
 }
 
 une_parser__(une_parse_sequence,
-	une_node_type node_type,
-	une_token_type tt_begin, une_token_type tt_end_of_item, une_token_type tt_end,
+	une_node_kind node_kind,
+	une_token_kind begin, une_token_kind end_of_item, une_token_kind end,
 	une_node *(*parser)(une_error*, une_parser_state*)
 )
 {
@@ -1092,9 +1092,9 @@ une_parser__(une_parse_sequence,
 	
 	/* Begin Sequence. */
 	une_position pos_first = now(&ps->in).pos;
-	if (tt_begin != UNE_TT_none__) {
-		if (now(&ps->in).type != tt_begin) {
-			*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+	if (begin != UNE_TK_none__) {
+		if (now(&ps->in).kind != begin) {
+			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 			return NULL;
 		}
 		pull(&ps->in);
@@ -1114,21 +1114,21 @@ une_parser__(une_parse_sequence,
 		}
 		
 		/* ADDITIONAL WHITESPACE. */
-		while (now(&ps->in).type == tt_end_of_item || now(&ps->in).type == UNE_TT_NEW)
+		while (now(&ps->in).kind == end_of_item || now(&ps->in).kind == UNE_TK_NEW)
 			pull(&ps->in);
 
 		/* EXPECTED END OF SEQUENCE. */
-		if (now(&ps->in).type == tt_end)
+		if (now(&ps->in).kind == end)
 			break;
 
 		/* UNEXPECTED END OF SEQUENCE. */
-		if (now(&ps->in).type == UNE_TT_EOF) {
+		if (now(&ps->in).kind == UNE_TK_EOF) {
 			/* This can happen if a block, list, list of parameters, or list of
 			arguments is opened at the end of the file without being closed. */
 			for (size_t i=1; i<sequence_index; i++)
 				une_node_free(sequence[i], false);
 			free(sequence);
-			*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 			return NULL;
 		}
 
@@ -1143,41 +1143,41 @@ une_parser__(une_parse_sequence,
 		sequence_index++;
 		
 		/* ADDITIONAL WHITESPACE. */
-		if (tt_end_of_item != UNE_TT_NEW)
-			while (now(&ps->in).type == UNE_TT_NEW)
+		if (end_of_item != UNE_TK_NEW)
+			while (now(&ps->in).kind == UNE_TK_NEW)
 				pull(&ps->in);
 		
 		/* ITEM DELIMITER. */
-		if (now(&ps->in).type == tt_end || now(&ps->in).type == tt_end_of_item)
+		if (now(&ps->in).kind == end || now(&ps->in).kind == end_of_item)
 			continue;
 		for (size_t i=1; i<sequence_index; i++)
 			une_node_free(sequence[i], false);
 		free(sequence);
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, now(&ps->in).pos);
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, now(&ps->in).pos);
 		return NULL;
 	}
 
 	/* CREATE NODE. */
-	une_node *counter = une_node_create(UNE_NT_SIZE);
+	une_node *counter = une_node_create(UNE_NK_SIZE);
 	counter->content.value._int = (une_int)sequence_index-1;
 	sequence[0] = counter;
-	une_node *node = une_node_create(node_type);
+	une_node *node = une_node_create(node_kind);
 	node->pos = une_position_between(pos_first, now(&ps->in).pos);
 	node->content.value._vpp = (void**)sequence;
 	
 	/* End Sequence. */
 	/* We don't skip EOF because it may still be needed by other functions up
 	the call chain. */
-	if (tt_end != UNE_TT_EOF)
+	if (end != UNE_TK_EOF)
 		pull(&ps->in);
 	return node;
 }
 
 une_parser__(une_parse_phony,
-	une_node_type node_type
+	une_node_kind node_kind
 )
 {
-	une_node *phony = une_node_create(node_type);
+	une_node *phony = une_node_create(node_kind);
 	phony->pos = une_position_set_start(phony->pos, now(&ps->in).pos);
 	phony->pos.end = phony->pos.start;
 	return phony;

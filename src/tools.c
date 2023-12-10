@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-12-01
+Modified 2023-12-10
 */
 
 /* Header-specific includes. */
@@ -18,7 +18,7 @@ Modified 2023-12-01
 #else
 #include <sys/stat.h>
 #include <unistd.h>
-#include <ctype.h>
+#include <ckind.h>
 #endif
 #include "lexer.h"
 
@@ -33,7 +33,7 @@ bool une_wcs_to_une_int(wchar_t *wcs, une_int *dest)
 	ls.text_length = wcslen(ls.text);
 	une_error error = une_error_create();
 	une_token token = une_lex_number(&error, &ls, true);
-	if (token.type != UNE_TT_INT)
+	if (token.kind != UNE_TK_INT)
 		return false;
 	*dest = token.value._int;
 	return true;
@@ -50,9 +50,9 @@ bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest)
 	ls.text_length = wcslen(ls.text);
 	une_error error = une_error_create();
 	une_token token = une_lex_number(&error, &ls, true);
-	if (token.type == UNE_TT_FLT)
+	if (token.kind == UNE_TK_FLT)
 		*dest = token.value._flt;
-	else if (token.type == UNE_TT_INT)
+	else if (token.kind == UNE_TK_INT)
 		*dest = (une_flt)token.value._int;
 	else
 		return false;
@@ -402,7 +402,7 @@ Get absolute index from relative one.
 */
 une_range une_range_from_relative_index(une_result index, size_t scope)
 {
-	assert(index.type == UNE_RT_INT);
+	assert(index.kind == UNE_RK_INT);
 	
 	/* Unpack index. */
 	une_int relative_index = index.value._int;
@@ -430,12 +430,12 @@ Get range from relative indices.
 */
 une_range une_range_from_relative_indices(une_result begin, une_result end, size_t scope)
 {
-	assert(begin.type == UNE_RT_INT);
-	assert(end.type == UNE_RT_INT || end.type == UNE_RT_VOID);
+	assert(begin.kind == UNE_RK_INT);
+	assert(end.kind == UNE_RK_INT || end.kind == UNE_RK_VOID);
 	
 	/* Unpack results. */
 	une_int begin_index = begin.value._int;
-	une_int end_index = end.type == UNE_RT_INT ? end.value._int : (une_int)scope;
+	une_int end_index = end.kind == UNE_RK_INT ? end.value._int : (une_int)scope;
 	
 	/* Map relative indices to absolute ones. */
 	une_int absolute_begin = begin_index >= 0 ? begin_index : (une_int)scope + begin_index;

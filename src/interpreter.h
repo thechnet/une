@@ -1,20 +1,20 @@
 /*
 interpreter.h - Une
-Modified 2023-11-20
+Modified 2023-12-10
 */
 
 #ifndef UNE_INTERPRETER_H
 #define UNE_INTERPRETER_H
 
 /* Header-specific includes. */
-#include "primitive.h"
-#include "types/interpreter_state.h"
-#include "types/error.h"
-#include "types/node.h"
-#include "types/result.h"
-#include "types/association.h"
-#include "builtin_functions.h"
-#include "types/engine.h"
+#include "common.h"
+#include "struct/interpreter_state.h"
+#include "struct/error.h"
+#include "struct/node.h"
+#include "struct/result.h"
+#include "struct/association.h"
+#include "natives.h"
+#include "struct/engine.h"
 
 /*
 Interpreter function template.
@@ -39,7 +39,7 @@ une_interpreter__(une_interpret_str);
 une_interpreter__(une_interpret_list);
 une_interpreter__(une_interpret_object);
 une_interpreter__(une_interpret_function);
-une_interpreter__(une_interpret_builtin);
+une_interpreter__(une_interpret_native);
 une_interpreter__(une_interpret_stmts);
 une_interpreter__(une_interpret_cop);
 une_interpreter__(une_interpret_not);
@@ -91,7 +91,7 @@ une_interpreter__(une_interpret_this);
 *** Helpers.
 */
 
-une_interpreter__(une_interpret_as, une_result_type type);
+une_interpreter__(une_interpret_as, une_result_kind kind);
 une_interpreter__(une_interpret_seek_or_create, bool existing_only);
 une_interpreter__(une_interpret_idx_seek_index);
 une_interpreter__(une_interpret_idx_seek_range);

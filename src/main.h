@@ -1,13 +1,13 @@
 /*
 main.h - Une
-Modified 2023-11-19
+Modified 2023-12-10
 */
 
 #ifndef UNE_MAIN_H
 #define UNE_MAIN_H
 
 /* Header-specific includes. */
-#include "types/engine.h"
+#include "struct/engine.h"
 #include "signal.h"
 
 enum une_main_action {

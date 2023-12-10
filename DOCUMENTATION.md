@@ -57,7 +57,7 @@ keyword
 }
 ```
 
-## 2. Data Types
+## 2. Types
 
 There are eight types of data.
 
@@ -121,13 +121,13 @@ function(parameter1, parameter2)
 }(argument1, argument2)
 ```
 
-### 2.5 Built-in Functions
+### 2.5 Native Functions
 
 For example `print`.
 
-These values are simply references to the underlying built-in functions, to allow passing them around.
+These values are simply references to the underlying native functions, to allow passing them around.
 
-To call a built-in function, use the same syntax as for user-defined functions:
+To call a native function, use the same syntax as for user-defined functions:
 
 ```
 print(argument)
@@ -220,7 +220,7 @@ a[2..4] = [23, 46] # 'a' is now '[1, 2, 23, 46, 5]'.
 
 A conditional expression always evaluates to either `0`, being *false*, or `1`, being *true*.
 
-Attributes required for each data type to be considered *true* are:
+Attributes required for each type to be considered *true* are:
 
 - Integers: not being of value `0`.
 - Floating-point numbers: not being of value `0.0`.
@@ -228,10 +228,10 @@ Attributes required for each data type to be considered *true* are:
 - Lists: containing at least one element.
 - Objects: having at least one member.
 - Functions: **always** *true*.
-- Built-in functions: **always** *true*.
+- Native functions: **always** *true*.
 - Void: **never** *true*.
 
-Attributes required for each data type to be considered *false* are the opposites of the ones required for it to be *true*.
+Attributes required for each type to be considered *false* are the opposites of the ones required for it to be *true*.
 
 ### 3.2 Negation
 
@@ -247,7 +247,7 @@ The following binary operators can be used between two values to compare them.
 
 #### 3.3.1 Equality and Inequality
 
-Integers, floating-point numbers, strings, lists, objects, and Void can be compared for equality using `==`. Each comparison evaluates to *true* if the data type and the value are the same.
+Types can be compared for equality using `==`. Each comparison evaluates to *true* if the type and the value are the same.
 
 Exceptions are comparisons between integers and floating-point numbers with the same numerical value:
 
@@ -255,7 +255,7 @@ Exceptions are comparisons between integers and floating-point numbers with the 
 46.0==46 # Evaluates to 'true'.
 ```
 
-The same data types can be compared for *in*equality using `!=`. Each comparison evaluates to *true* if the requirements for equality are not (exactly) met.
+The same types can be compared for *in*equality using `!=`. Each comparison evaluates to *true* if the requirements for equality are not (exactly) met.
 
 #### 3.3.2 Size
 
@@ -518,7 +518,7 @@ assert 2 > 1 # Passes.
 assert 1 > 2 # Fails.
 ```
 
-## 7. Built-in Functions
+## 7. Native Functions
 
 - `put(value)` – Prints `value` to the standard output pipe:
 		```

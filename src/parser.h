@@ -1,17 +1,17 @@
 /*
 parser.h - Une
-Modified 2023-11-20
+Modified 2023-12-10
 */
 
 #ifndef UNE_PARSER_H
 #define UNE_PARSER_H
 
 /* Header-specific includes. */
-#include "primitive.h"
-#include "types/error.h"
-#include "types/token.h"
-#include "types/node.h"
-#include "types/parser_state.h"
+#include "common.h"
+#include "struct/error.h"
+#include "struct/token.h"
+#include "struct/node.h"
+#include "struct/parser_state.h"
 
 /*
 *** Interface.
@@ -48,7 +48,7 @@ une_parser__(une_parse_true);
 une_parser__(une_parse_false);
 une_parser__(une_parse_this);
 une_parser__(une_parse_seek, bool global);
-une_parser__(une_parse_builtin);
+une_parser__(une_parse_native);
 une_parser__(une_parse_list);
 une_parser__(une_parse_function);
 une_parser__(une_parse_for);
@@ -70,28 +70,28 @@ une_parser__(une_parse_object_association);
 une_parser__(une_parse_object);
 
 une_parser__(une_parse_unary_operation,
-	une_node_type node_t,
+	une_node_kind node_t,
 	une_node *(*parse)(une_error*, une_parser_state*)
 );
 
 une_parser__(une_parse_binary_operation,
-	une_token_type range_begin_tt,
-	une_node_type range_begin_nt,
-	une_token_type range_end_tt,
+	une_token_kind range_begin,
+	une_node_kind range_begin_nt,
+	une_token_kind range_end,
 	une_node *(*parse_left)(une_error*, une_parser_state*),
 	une_node *(*parse_right)(une_error*, une_parser_state*)
 );
 
 une_parser__(une_parse_sequence,
-	une_node_type node_type,
-	une_token_type tt_begin,
-	une_token_type tt_end_of_item,
-	une_token_type tt_end,
+	une_node_kind node_kind,
+	une_token_kind begin,
+	une_token_kind end_of_item,
+	une_token_kind end,
 	une_node *(*parser)(une_error*, une_parser_state*)
 );
 
 une_parser__(une_parse_phony,
-	une_node_type node_type
+	une_node_kind node_kind
 );
 
 #endif /* !UNE_PARSER_H */

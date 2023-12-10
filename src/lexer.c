@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-11-20
+Modified 2023-12-10
 */
 
 /* Header-specific includes. */
@@ -9,7 +9,7 @@ Modified 2023-11-20
 /* Implementation-specific includes. */
 #include <string.h>
 #include "tools.h"
-#include "builtin_functions.h"
+#include "natives.h"
 
 /*
 Public lexer interface.
@@ -21,8 +21,8 @@ void une_lex(une_error *error, une_lexer_state *ls)
 	
 	while (true) {
 		/* Check for error. */
-		if (error->type != UNE_ET_none__) {
-			for (size_t i=0; i<ls->tokens_count - 1 /* Don't free UNE_TT_none__. */ ; i++)
+		if (error->kind != UNE_EK_none__) {
+			for (size_t i=0; i<ls->tokens_count - 1 /* Don't free UNE_TK_none__. */ ; i++)
 				une_token_free(ls->tokens[i]);
 			free(ls->tokens);
 			ls->tokens = NULL;
@@ -34,7 +34,7 @@ void une_lex(une_error *error, une_lexer_state *ls)
 			ls->begin_str_expression = false;
 			ls->in_str_expression = true;
 			une_lexer_commit(ls, (une_token){
-				.type = UNE_TT_STR_EXPRESSION_BEGIN,
+				.kind = UNE_TK_STR_EXPRESSION_BEGIN,
 				.pos = (une_position){
 					.start = ls->text_index-1,
 					.end = ls->text_index,
@@ -46,9 +46,9 @@ void une_lex(une_error *error, une_lexer_state *ls)
 		
 		/* Expected end of file. */
 		if (une_lexer_now(ls) == L'\0') {
-			if (ls->tokens_count > 0 && ls->tokens[ls->tokens_count-1].type != UNE_TT_NEW)
+			if (ls->tokens_count > 0 && ls->tokens[ls->tokens_count-1].kind != UNE_TK_NEW)
 				une_lexer_commit(ls, (une_token){
-					.type = UNE_TT_NEW,
+					.kind = UNE_TK_NEW,
 					.pos = (une_position){
 						.start = ls->text_index,
 						.end = ls->text_index+1,
@@ -57,7 +57,7 @@ void une_lex(une_error *error, une_lexer_state *ls)
 					.value._vp = NULL
 				});
 			une_lexer_commit(ls, (une_token){
-				.type = UNE_TT_EOF,
+				.kind = UNE_TK_EOF,
 				.pos = (une_position){
 					.start = ls->text_index,
 					.end = ls->text_index+1,
@@ -88,7 +88,7 @@ void une_lex(une_error *error, une_lexer_state *ls)
 		}
 		if (ls->in_str_expression && une_lexer_now(ls) == L'}') {
 			une_lexer_commit(ls, (une_token){
-				.type = UNE_TT_STR_EXPRESSION_END,
+				.kind = UNE_TK_STR_EXPRESSION_END,
 				.pos = (une_position){
 					.start = ls->text_index,
 					.end = ls->text_index+1,
@@ -103,7 +103,7 @@ void une_lex(une_error *error, une_lexer_state *ls)
 		
 		/* Operator. */
 		une_token tk = une_lex_operator(error, ls);
-		if (tk.type != UNE_TT_none__) {
+		if (tk.kind != UNE_TK_none__) {
 			une_lexer_commit(ls, tk);
 			continue;
 		}
@@ -123,9 +123,9 @@ void une_lex(une_error *error, une_lexer_state *ls)
 					lines++;
 				une_lexer_advance(ls);
 			}
-			if (ls->tokens_count > 0 && ls->tokens[ls->tokens_count-1].type != UNE_TT_NEW)
+			if (ls->tokens_count > 0 && ls->tokens[ls->tokens_count-1].kind != UNE_TK_NEW)
 				une_lexer_commit(ls, (une_token){
-					.type = UNE_TT_NEW,
+					.kind = UNE_TK_NEW,
 					.pos = (une_position){
 						.start = idx_left,
 						.end = ls->text_index,
@@ -146,12 +146,12 @@ void une_lex(une_error *error, une_lexer_state *ls)
 		}
 		
 		/* Unexpected character. */
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 			.start = ls->text_index,
 			.end = ls->text_index+1,
 			.line = ls->line
 		}));
-		une_lexer_commit(ls, une_token_create(UNE_TT_none__));
+		une_lexer_commit(ls, une_token_create(UNE_TK_none__));
 		continue;
 	}
 }
@@ -162,15 +162,15 @@ Lexers.
 
 une_lexer__(une_lex_operator)
 {
-	for (une_token_type tt=UNE_R_BGN_OPERATOR_TOKENS; tt<=UNE_R_END_OPERATOR_TOKENS; tt++) {
+	for (une_token_kind kind=UNE_R_BGN_OPERATOR_TOKENS; kind<=UNE_R_END_OPERATOR_TOKENS; kind++) {
 		ptrdiff_t i=0;
-		while (une_lexer_peek(ls, i) == une_token_table[tt-1][i]) {
-			if (une_token_table[tt-1][++i] == L'\0') {
+		while (une_lexer_peek(ls, i) == une_token_table[kind-1][i]) {
+			if (une_token_table[kind-1][++i] == L'\0') {
 				ptrdiff_t starting_index = (ptrdiff_t)ls->text_index;
 				for (; i>0; i--)
 					une_lexer_advance(ls);
 				return (une_token){
-					.type = tt,
+					.kind = kind,
 					.pos = (une_position){
 						.start = (size_t)starting_index,
 						.end = ls->text_index,
@@ -180,7 +180,7 @@ une_lexer__(une_lex_operator)
 			}
 		}
 	}
-	return une_token_create(UNE_TT_none__);
+	return une_token_create(UNE_TK_none__);
 }
 
 une_lexer__(une_lex_number, bool allow_signed)
@@ -189,22 +189,22 @@ une_lexer__(une_lex_number, bool allow_signed)
 	
 	int base = 0;
 	if (!une_lex_number_base(error, ls, &base))
-		return une_token_create(UNE_TT_none__);
+		return une_token_create(UNE_TK_none__);
 	
 	une_int integer = 0;
 	if (!une_lex_number_integer(error, ls, base, &integer, allow_signed, true, 0))
-		return une_token_create(UNE_TT_none__);
+		return une_token_create(UNE_TK_none__);
 	
 	une_flt floating = (une_flt)integer;
 	bool is_floating = une_lexer_now(ls) == L'.' && une_lexer_peek(ls, 1) != L'.'; /* Not '..'. */
 	if (is_floating && !une_lex_number_fractional_part(error, ls, base, &floating))
-		return une_token_create(UNE_TT_none__);
+		return une_token_create(UNE_TK_none__);
 	
 	une_int exponent = 0;
 	bool has_exponent = base == 10 && (une_lexer_now(ls) == L'e' || une_lexer_now(ls) == L'E');
 	if (has_exponent) {
 		if (!une_lex_number_exponent(error, ls, &exponent))
-			return une_token_create(UNE_TT_none__);
+			return une_token_create(UNE_TK_none__);
 		if (!is_floating) {
 			is_floating = true;
 			floating = (une_flt)integer;
@@ -213,7 +213,7 @@ une_lexer__(une_lex_number, bool allow_signed)
 	}
 	
 	une_token number = {
-		.type = is_floating ? UNE_TT_FLT : UNE_TT_INT,
+		.kind = is_floating ? UNE_TK_FLT : UNE_TK_INT,
 		.pos = (une_position){
 			.start = start_index,
 			.end = ls->text_index,
@@ -258,13 +258,13 @@ une_lexer__(une_lex_string)
 		
 		/* Premature end of string. */
 		if (une_lexer_now(ls) == L'\0') {
-			*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 				.start = ls->text_index,
 				.end = ls->text_index+1,
 				.line = ls->line
 			}));
 			free(buffer);
-			return une_token_create(UNE_TT_none__);
+			return une_token_create(UNE_TK_none__);
 		}
 		
 		/* Escaped characters. */
@@ -313,13 +313,13 @@ une_lexer__(une_lex_string)
 					continue;
 				}
 			}
-			*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 				.start = ls->text_index,
 				.end = ls->text_index+1,
 				.line = ls->line
 			}));
 			free(buffer);
-			return une_token_create(UNE_TT_none__);
+			return une_token_create(UNE_TK_none__);
 		}
 		
 		/* Schedule escaped character. */
@@ -337,13 +337,13 @@ une_lexer__(une_lex_string)
 		/* Beginning of string expression (end of this string). */
 		if (une_lexer_now(ls) == L'{') {
 			if (ls->in_str_expression) {
-				*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+				*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 					.start = ls->text_index,
 					.end = ls->text_index+1,
 					.line = ls->line
 				}));
 				free(buffer);
-				return une_token_create(UNE_TT_none__);
+				return une_token_create(UNE_TK_none__);
 			}
 			une_lexer_advance(ls);
 			ls->begin_str_expression = true;
@@ -356,7 +356,7 @@ une_lexer__(une_lex_string)
 	
 	buffer[buffer_index] = L'\0';
 	return (une_token){
-		.type = UNE_TT_STR,
+		.kind = UNE_TK_STR,
 		.pos = (une_position){
 			.start = idx_start,
 			.end = ls->text_index,
@@ -387,29 +387,29 @@ une_lexer__(une_lex_keyword_or_name)
 	}
 	buffer[buffer_index] = L'\0';
 	
-	/* Determine token type. */
+	/* Determine token kind. */
 	une_token tk;
-	if (!wcscmp(buffer, une_token_table[UNE_TT_FUNCTION-1])) {
-		tk.type = UNE_TT_FUNCTION;
+	if (!wcscmp(buffer, une_token_table[UNE_TK_FUNCTION-1])) {
+		tk.kind = UNE_TK_FUNCTION;
 		goto keyword_or_name_defined;
 	}
-	for (une_token_type tt=UNE_R_BGN_KEYWORD_TOKENS; tt<=UNE_R_END_KEYWORD_TOKENS; tt++)
-		if (!wcscmp(buffer, une_token_table[tt-1])) {
-			tk.type = tt;
+	for (une_token_kind kind=UNE_R_BGN_KEYWORD_TOKENS; kind<=UNE_R_END_KEYWORD_TOKENS; kind++)
+		if (!wcscmp(buffer, une_token_table[kind-1])) {
+			tk.kind = kind;
 			goto keyword_or_name_defined;
 		}
-	une_builtin_function builtin = une_builtin_wcs_to_function(buffer);
-	if (builtin != UNE_BUILTIN_none__) {
-		tk.type = UNE_TT_BUILTIN;
-		tk.value._int = (une_int)builtin;
+	une_native native = une_native_wcs_to_function(buffer);
+	if (native != UNE_NATIVE_none__) {
+		tk.kind = UNE_TK_NATIVE;
+		tk.value._int = (une_int)native;
 		goto keyword_or_name_defined;
 	}
-	tk.type = UNE_TT_NAME;
+	tk.kind = UNE_TK_NAME;
 	tk.value._wcs = buffer;
 	
 	/* Finalize token. */
 	keyword_or_name_defined:
-	if (tk.type != UNE_TT_NAME)
+	if (tk.kind != UNE_TK_NAME)
 		free(buffer);
 	tk.pos = (une_position){
 		.start = idx_start,
@@ -429,7 +429,7 @@ bool une_lex_number_base(une_error *error, une_lexer_state *ls, int *base)
 			case L'o': *base = 8; break;
 			case L'x': *base = 16; break;
 			default:
-				*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+				*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 					.start = ls->text_index,
 					.end = ls->text_index+1,
 					.line = ls->line
@@ -463,7 +463,7 @@ bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une
 		)
 			break;
 		if (digit_in_decimal >= base) {
-			*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 				.start = ls->text_index,
 				.end = ls->text_index+1,
 				.line = ls->line
@@ -476,7 +476,7 @@ bool une_lex_number_integer(une_error *error, une_lexer_state *ls, int base, une
 	}
 	
 	if (ls->text_index == index_start) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 			.start = ls->text_index,
 			.end = ls->text_index+1,
 			.line = ls->line
@@ -502,7 +502,7 @@ bool une_lex_number_fractional_part(une_error *error, une_lexer_state *ls, int b
 		)
 			break;
 		if (digit_in_decimal >= base) {
-			*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 				.start = ls->text_index,
 				.end = ls->text_index+1,
 				.line = ls->line
@@ -516,7 +516,7 @@ bool une_lex_number_fractional_part(une_error *error, une_lexer_state *ls, int b
 	
 	/* Missing fraction. */
 	if (floating_divisor <= 1) {
-		*error = UNE_ERROR_SET(UNE_ET_SYNTAX, ((une_position){
+		*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 			.start = ls->text_index,
 			.end = ls->text_index+1,
 			.line = ls->line

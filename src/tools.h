@@ -1,14 +1,14 @@
 /*
 tools.h - Une
-Modified 2023-12-01
+Modified 2023-12-10
 */
 
 #ifndef UNE_TOOLS_H
 #define UNE_TOOLS_H
 
 /* Header-specific includes. */
-#include "primitive.h"
-#include "types/result.h"
+#include "common.h"
+#include "struct/result.h"
 #include <math.h>
 
 /*
