@@ -1,6 +1,6 @@
 /*
 engine.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -66,7 +66,7 @@ une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 	char *stored_path = NULL;
 	wchar_t *source = NULL;
 	if (originates_from_file) {
-		#ifdef DEBUG_USE_ABSOLUTE_MODULE_PATHS
+		#if defined(UNE_DEBUG) && defined(UNE_DBG_USE_ABSOLUTE_MODULE_PATHS)
 		stored_path = une_resolve_path(path);
 		#else
 		stored_path = strdup(path);
@@ -93,7 +93,7 @@ une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 		verify(ls.tokens);
 		ls.text = module->source;
 		ls.text_length = wcslen(ls.text);
-		#ifndef UNE_NO_LEX
+		#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_LEX)
 		une_lex(&felix->error, &ls);
 		#endif
 		module->tokens = ls.tokens;
@@ -118,11 +118,11 @@ une_callable *une_engine_parse_module(une_module *module)
 	une_parser_state ps = une_parser_state_create();
 	ps.module_id = module->id;
 	une_node *ast = NULL;
-	#ifndef UNE_NO_PARSE
+	#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_PARSE)
 	ast = une_parse(&felix->error, &ps, module->tokens);
 	#endif
-	#ifdef UNE_DBG_LOG_PARSE
-	success("parse done.");
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_LOG_PARSE)
+	wprintf(L"parse done.\n");
 	#endif
 
 	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
@@ -159,19 +159,37 @@ une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *w
 
 	if (!module->tokens)
 		return une_result_create(UNE_RK_ERROR);
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_TOKENS)
+	une_tokens_display(module->tokens);
+	wprintf(L"\n\n");
+	#endif
 
 	une_callable *callable = une_engine_parse_module(module);
 	if (!callable)
 		return une_result_create(UNE_RK_ERROR);
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_NODES)
+	wchar_t *node_as_wcs = une_node_to_wcs(callable->body);
+	wprintf(node_as_wcs);
+	free(node_as_wcs);
+	wprintf(L"\n\n"); /* node_as_wcs does not add a newline. */
+	#endif
 	
 	felix->is.context->callable_id = callable->id;
 
 	une_result result = une_result_create(UNE_RK_VOID);
-	#ifndef UNE_NO_INTERPRET
+	#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_INTERPRET)
 	result = une_interpret(callable->body);
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_RESULT)
+	if (result.kind != UNE_RK_ERROR) {
+		assert(UNE_RESULT_KIND_IS_TYPE(result.kind));
+		wprintf(UNE_COLOR_RESULT_KIND L"%ls" UNE_COLOR_RESET ": ", une_result_kind_to_wcs(result.kind));
+		une_result_represent(stdout, result);
+		putwc(L'\n', stdout);
+	}
+	#endif
 	felix->is.should_return = false;
 	#endif
-	#ifdef UNE_DBG_LOG_INTERPRET
+	#if defined(UNE_DEBUG) && defined(UNE_DBG_LOG_INTERPRET)
 	success("interpret done.");
 	#endif
 	if (result.kind == UNE_RK_ERROR)

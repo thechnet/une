@@ -1,6 +1,6 @@
 /*
 common.h - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -53,7 +53,7 @@ Modified 2023-12-10
 #define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_native_fn_input. */
 #define UNE_SIZE_NUMBER_AS_STRING (48+UNE_FLT_PRECISION) /* une_int and une_flt as strings. */
-#if !defined(UNE_DBG_SIZES)
+#if !defined(UNE_DEBUG) || !defined(UNE_DBG_SIZES)
 #define UNE_SIZE_NUM_LEN 32 /* Lexing. */
 #define UNE_SIZE_STR_LEN 4096 /* Lexing. */
 #define UNE_SIZE_NAME_LEN 32 /* Lexing. */
@@ -122,7 +122,7 @@ typedef union une_value_ {
 /*
 *** Portability.
 */
-#if defined(__TINYC__)
+#ifdef __TINYC__
 #define swprintf(dest, size, format, ...) swprintf((dest), (format), ##__VA_ARGS__)
 #endif
 

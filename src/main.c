@@ -35,14 +35,14 @@ int main(int argc, char *argv[])
 	#ifdef UNE_DBG_REPORT
 	wprintf(UNE_COLOR_WARN L"UNE_DBG_REPORT enabled.\n" UNE_COLOR_RESET);
 	#endif
-	#ifdef UNE_NO_LEX
-	wprintf(UNE_COLOR_WARN L"UNE_NO_LEX enabled.\n" UNE_COLOR_RESET);
+	#ifdef UNE_DBG_NO_LEX
+	wprintf(UNE_COLOR_WARN L"UNE_DBG_NO_LEX enabled.\n" UNE_COLOR_RESET);
 	#endif
-	#ifdef UNE_NO_PARSE
-	wprintf(UNE_COLOR_WARN L"UNE_NO_PARSE enabled.\n" UNE_COLOR_RESET);
+	#ifdef UNE_DBG_NO_PARSE
+	wprintf(UNE_COLOR_WARN L"UNE_DBG_NO_PARSE enabled.\n" UNE_COLOR_RESET);
 	#endif
-	#ifdef UNE_NO_INTERPRET
-	wprintf(UNE_COLOR_WARN L"UNE_NO_INTERPRET enabled.\n" UNE_COLOR_RESET);
+	#ifdef UNE_DBG_NO_INTERPRET
+	wprintf(UNE_COLOR_WARN L"UNE_DBG_NO_INTERPRET enabled.\n" UNE_COLOR_RESET);
 	#endif
 	#endif
 
@@ -89,10 +89,12 @@ int main(int argc, char *argv[])
 			interactive();
 		}
 
+		#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_INTERPRET)
 		if (result.kind == UNE_RK_ERROR) {
 			result.value._int = (une_int)felix->error.kind+(une_int)UNE_R_END_DATA_RESULT_KINDS;
 			une_engine_print_error();
 		}
+		#endif
 		
 		une_engine_free();
 	}
