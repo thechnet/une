@@ -1,6 +1,6 @@
 /*
 memdbg.h - Une
-Modified 2023-11-17
+Modified 2023-12-16
 */
 
 #ifndef MEMDBG_H
@@ -31,7 +31,7 @@ implementation from mapping to themselves.
 #define fclose(fp) memdbg_fclose__(__FILE__, __LINE__, fp)
 
 #undef memset
-#define memset(str, c, n) memdbg_memset__(__FILE__, __LINE__, str, c, n);
+#define memset(str, c, n) memdbg_memset__(__FILE__, __LINE__, str, c, n)
 
 #else /* MEMDBG_ENABLE */
 

@@ -103,7 +103,7 @@ endif()
 target_compile_options(une PRIVATE
 	-pedantic
 	-Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused
-	-Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations
+	-Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations -Wno-keyword-macro
 )
 if(UNE_USES_UCRT)
 	add_definitions(-D__USE_MINGW_ANSI_STDIO=1) # See https://github.com/mstorsjo/llvm-mingw/issues/373.

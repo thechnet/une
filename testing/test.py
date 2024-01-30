@@ -28,7 +28,7 @@ DIR = '.'
 UNE = '..\\\\debug\\\\une.exe' if is_win() else '../debug/une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
-UNE_R_END_XYBORG_RESULT_KINDS = 9
+UNE_R_END_TYPE_RESULT_KINDS = 9
 
 # UNCOMMENT THESE LINES WHEN USING GCOV:
 # DIR = '..\\private\\gcov' if is_win() else '../private/gcov'
@@ -44,43 +44,43 @@ ATTR_NO_SECOND_ESCAPE = 5
 ATTR_STDIN = 6
 
 # Result kinds
-UNE_RT_ERROR = 1
-UNE_RT_VOID = 2
-UNE_RT_INT = 3
-UNE_RT_FLT = 4
-UNE_RT_STR = 5
-UNE_RT_LIST = 6
-UNE_RT_OBJECT = 7
-UNE_RT_FUNCTION = 8
-UNE_RT_NATIVE = 9
+UNE_RK_ERROR = 1
+UNE_RK_VOID = 2
+UNE_RK_INT = 3
+UNE_RK_FLT = 4
+UNE_RK_STR = 5
+UNE_RK_LIST = 6
+UNE_RK_OBJECT = 7
+UNE_RK_FUNCTION = 8
+UNE_RK_NATIVE = 9
 result_kinds = {
-	UNE_RT_ERROR: 'UNE_RT_ERROR',
-	UNE_RT_VOID: 'UNE_RT_VOID',
-	UNE_RT_INT: 'UNE_RT_INT',
-	UNE_RT_FLT: 'UNE_RT_FLT',
-	UNE_RT_STR: 'UNE_RT_STR',
-	UNE_RT_LIST: 'UNE_RT_LIST',
-	UNE_RT_OBJECT: 'UNE_RT_OBJECT',
-	UNE_RT_FUNCTION: 'UNE_RT_FUNCTION',
-	UNE_RT_NATIVE: 'UNE_RT_NATIVE',
+	UNE_RK_ERROR: 'UNE_RK_ERROR',
+	UNE_RK_VOID: 'UNE_RK_VOID',
+	UNE_RK_INT: 'UNE_RK_INT',
+	UNE_RK_FLT: 'UNE_RK_FLT',
+	UNE_RK_STR: 'UNE_RK_STR',
+	UNE_RK_LIST: 'UNE_RK_LIST',
+	UNE_RK_OBJECT: 'UNE_RK_OBJECT',
+	UNE_RK_FUNCTION: 'UNE_RK_FUNCTION',
+	UNE_RK_NATIVE: 'UNE_RK_NATIVE',
 }
 
 # Error kinds
 UNE_ERROR_INPUT = 1
-UNE_EK_SYNTAX = UNE_R_END_XYBORG_RESULT_KINDS+1
-UNE_EK_BREAK_OUTSIDE_LOOP = UNE_R_END_XYBORG_RESULT_KINDS+2
-UNE_EK_CONTINUE_OUTSIDE_LOOP = UNE_R_END_XYBORG_RESULT_KINDS+3
-UNE_EK_SYMBOL_NOT_DEFINED = UNE_R_END_XYBORG_RESULT_KINDS+4
-UNE_EK_INDEX = UNE_R_END_XYBORG_RESULT_KINDS+5
-UNE_EK_ZERO_DIVISION = UNE_R_END_XYBORG_RESULT_KINDS+6
-UNE_EK_UNREAL_NUMBER = UNE_R_END_XYBORG_RESULT_KINDS+7
-UNE_EK_CALLABLE_ARG_COUNT = UNE_R_END_XYBORG_RESULT_KINDS+8
-UNE_EK_FILE = UNE_R_END_XYBORG_RESULT_KINDS+9
-UNE_EK_ENCODING = UNE_R_END_XYBORG_RESULT_KINDS+10
-UNE_EK_TYPE = UNE_R_END_XYBORG_RESULT_KINDS+11
-UNE_EK_ASSERTION_NOT_MET = UNE_R_END_XYBORG_RESULT_KINDS+12
-UNE_EK_MISPLACED_ANY_OR_ALL = UNE_R_END_XYBORG_RESULT_KINDS+13
-UNE_EK_SYSTEM = UNE_R_END_XYBORG_RESULT_KINDS+14
+UNE_EK_SYNTAX = UNE_R_END_TYPE_RESULT_KINDS+1
+UNE_EK_BREAK_OUTSIDE_LOOP = UNE_R_END_TYPE_RESULT_KINDS+2
+UNE_EK_CONTINUE_OUTSIDE_LOOP = UNE_R_END_TYPE_RESULT_KINDS+3
+UNE_EK_SYMBOL_NOT_DEFINED = UNE_R_END_TYPE_RESULT_KINDS+4
+UNE_EK_INDEX = UNE_R_END_TYPE_RESULT_KINDS+5
+UNE_EK_ZERO_DIVISION = UNE_R_END_TYPE_RESULT_KINDS+6
+UNE_EK_UNREAL_NUMBER = UNE_R_END_TYPE_RESULT_KINDS+7
+UNE_EK_CALLABLE_ARG_COUNT = UNE_R_END_TYPE_RESULT_KINDS+8
+UNE_EK_FILE = UNE_R_END_TYPE_RESULT_KINDS+9
+UNE_EK_ENCODING = UNE_R_END_TYPE_RESULT_KINDS+10
+UNE_EK_TYPE = UNE_R_END_TYPE_RESULT_KINDS+11
+UNE_EK_ASSERTION_NOT_MET = UNE_R_END_TYPE_RESULT_KINDS+12
+UNE_EK_MISPLACED_ANY_OR_ALL = UNE_R_END_TYPE_RESULT_KINDS+13
+UNE_EK_SYSTEM = UNE_R_END_TYPE_RESULT_KINDS+14
 error_kinds = {
 	UNE_ERROR_INPUT: 'UNE_ERROR_INPUT',
 	UNE_EK_SYNTAX: 'UNE_EK_SYNTAX',
@@ -104,526 +104,526 @@ error_kinds = {
 cases = [
 	
 	# NEW NUMBER LEXER
-	Case('0', UNE_RT_INT, '0', []),
-	Case('00.00', UNE_RT_FLT, '0.0', []),
-	Case('0.', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('.0', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('0b10', UNE_RT_INT, '2', []),
-	Case('0o10', UNE_RT_INT, '8', []),
-	Case('0xf', UNE_RT_INT, '15', []),
-	Case('0x.8', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('2e2', UNE_RT_FLT, '200.0', []),
-	Case('2e-2', UNE_RT_FLT, '0.02', []),
-	Case('0b1e1', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
+	Case('0', UNE_RK_INT, '0', []),
+	Case('00.00', UNE_RK_FLT, '0.0', []),
+	Case('0.', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('.0', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('0b10', UNE_RK_INT, '2', []),
+	Case('0o10', UNE_RK_INT, '8', []),
+	Case('0xf', UNE_RK_INT, '15', []),
+	Case('0x.8', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('2e2', UNE_RK_FLT, '200.0', []),
+	Case('2e-2', UNE_RK_FLT, '0.02', []),
+	Case('0b1e1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	
 	# OCTAL AND HEXADECIMAL CHARACTER CONSTANTS IN STRINGS
-	Case('"\\o43"', UNE_RT_STR, '#', [ATTR_NO_SECOND_ESCAPE]),
-	Case('"\\o431"', UNE_RT_STR, '#1', [ATTR_NO_SECOND_ESCAPE]),
-	Case('"\\x23"', UNE_RT_STR, '#', [ATTR_NO_SECOND_ESCAPE]),
-	Case('"\\x231"', UNE_RT_STR, '#1', [ATTR_NO_SECOND_ESCAPE]),
+	Case('"\\o43"', UNE_RK_STR, '#', [ATTR_NO_SECOND_ESCAPE]),
+	Case('"\\o431"', UNE_RK_STR, '#1', [ATTR_NO_SECOND_ESCAPE]),
+	Case('"\\x23"', UNE_RK_STR, '#', [ATTR_NO_SECOND_ESCAPE]),
+	Case('"\\x231"', UNE_RK_STR, '#1', [ATTR_NO_SECOND_ESCAPE]),
 	
 	# Natives
 	
-	Case('input("Write \'test\' and press enter: ")', UNE_RT_STR, 'test', [ATTR_STDIN]),
-	Case('input(1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('input()', UNE_RT_ERROR, UNE_EK_CALLABLE_ARG_COUNT, []),
+	Case('input("Write \'test\' and press enter: ")', UNE_RK_STR, 'test', [ATTR_STDIN]),
+	Case('input(1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('input()', UNE_RK_ERROR, UNE_EK_CALLABLE_ARG_COUNT, []),
 	
-	Case('print(100.9)', UNE_RT_VOID, 'Void', []),
-	Case('print("str")', UNE_RT_VOID, 'Void', []),
-	Case('print([1])', UNE_RT_VOID, 'Void', []),
-	Case('print([1, "str"])', UNE_RT_VOID, 'Void', []),
+	Case('print(100.9)', UNE_RK_VOID, 'Void', []),
+	Case('print("str")', UNE_RK_VOID, 'Void', []),
+	Case('print([1])', UNE_RK_VOID, 'Void', []),
+	Case('print([1, "str"])', UNE_RK_VOID, 'Void', []),
 	
-	Case('put(1)', UNE_RT_VOID, 'Void', []),
+	Case('put(1)', UNE_RK_VOID, 'Void', []),
 	
-	Case('int(100)', UNE_RT_INT, '100', []),
-	Case('int(100.9)', UNE_RT_INT, '100', []),
-	Case('int("100")', UNE_RT_INT, '100', []),
-	Case('int([1])', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('int("100x")', UNE_RT_ERROR, UNE_EK_ENCODING, []),
-	Case('int("")', UNE_RT_ERROR, UNE_EK_ENCODING, []),
+	Case('int(100)', UNE_RK_INT, '100', []),
+	Case('int(100.9)', UNE_RK_INT, '100', []),
+	Case('int("100")', UNE_RK_INT, '100', []),
+	Case('int([1])', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('int("100x")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
+	Case('int("")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	
-	Case('flt(100)', UNE_RT_FLT, '100.0', []),
-	Case('flt(100.9)', UNE_RT_FLT, '100.9', []),
-	Case('flt("100.9")', UNE_RT_FLT, '100.9', []),
-	Case('flt([1])', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('flt("100.9x")', UNE_RT_ERROR, UNE_EK_ENCODING, []),
-	Case('flt("")', UNE_RT_ERROR, UNE_EK_ENCODING, []),
+	Case('flt(100)', UNE_RK_FLT, '100.0', []),
+	Case('flt(100.9)', UNE_RK_FLT, '100.9', []),
+	Case('flt("100.9")', UNE_RK_FLT, '100.9', []),
+	Case('flt([1])', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('flt("100.9x")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
+	Case('flt("")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	
-	Case('str(1)', UNE_RT_STR, '1', []),
-	Case('str(1.1)', UNE_RT_STR, '1.1', []),
-	Case('str("str")', UNE_RT_STR, 'str', []),
-	Case('str([1])', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('str(1)', UNE_RK_STR, '1', []),
+	Case('str(1.1)', UNE_RK_STR, '1.1', []),
+	Case('str("str")', UNE_RK_STR, 'str', []),
+	Case('str([1])', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
-	Case('len("str")', UNE_RT_INT, '3', []),
-	Case('len([1, 2, 3])', UNE_RT_INT, '3', []),
-	Case('len(1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('len("str")', UNE_RK_INT, '3', []),
+	Case('len([1, 2, 3])', UNE_RK_INT, '3', []),
+	Case('len(1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
-	Case('sleep(1)', UNE_RT_VOID, 'Void', []),
-	Case('sleep(1.1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('sleep(1)', UNE_RK_VOID, 'Void', []),
+	Case('sleep(1.1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
-	Case('chr(65)', UNE_RT_STR, 'A', []),
-	Case('chr(1.1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('chr(999999999999)', UNE_RT_ERROR, UNE_EK_ENCODING, []),
+	Case('chr(65)', UNE_RK_STR, 'A', []),
+	Case('chr(1.1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('chr(999999999999)', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	
-	Case('ord("A")', UNE_RT_INT, '65', []),
-	Case('ord(1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('ord("A")', UNE_RK_INT, '65', []),
+	Case('ord(1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
-	Case('write("script.une", "return 46")', UNE_RT_VOID, 'Void', []),
-	Case('write(1, "test")', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('write("test", 1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('write("/", "test")', UNE_RT_ERROR, UNE_EK_FILE, []),
+	Case('write("script.une", "return 46")', UNE_RK_VOID, 'Void', []),
+	Case('write(1, "test")', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('write("test", 1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('write("/", "test")', UNE_RK_ERROR, UNE_EK_FILE, []),
 	
-	Case('read("script.une")', UNE_RT_STR, 'return 46', []),
-	Case('read(1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('read("1lkj23")', UNE_RT_ERROR, UNE_EK_FILE, []),
+	Case('read("script.une")', UNE_RK_STR, 'return 46', []),
+	Case('read(1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('read("1lkj23")', UNE_RK_ERROR, UNE_EK_FILE, []),
 	
-	Case('script("script.une")', UNE_RT_INT, '46', []),
-	Case('script(1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('script("/")', UNE_RT_ERROR, UNE_EK_FILE, []),
-	Case('write("script.une", "msg=128");script("script.une");return msg', UNE_RT_INT, '128', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('script("script.une")', UNE_RK_INT, '46', []),
+	Case('script(1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('script("/")', UNE_RK_ERROR, UNE_EK_FILE, []),
+	Case('write("script.une", "msg=128");script("script.une");return msg', UNE_RK_INT, '128', [ATTR_NO_IMPLICIT_RETURN]),
 	
-	Case('write("script.une", "4");append("script.une", "\n6");return read("script.une")', UNE_RT_STR, '4\n6', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('write("script.une", "4");append("script.une", "\n6");return read("script.une")', UNE_RK_STR, '4\n6', [ATTR_NO_IMPLICIT_RETURN]),
 	
-	Case('exist("script.une")', UNE_RT_INT, '1', []),
-	Case('exist(1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('exist("script.une")', UNE_RK_INT, '1', []),
+	Case('exist(1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
-	Case('split("1.2.3", ["."])', UNE_RT_LIST, '["1", "2", "3"]', []),
-	Case('split(1, ["."])', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('split("1.2.3", 1)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('split("1.2.3", [1])', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('split("1.2.3", ["."])', UNE_RK_LIST, '["1", "2", "3"]', []),
+	Case('split(1, ["."])', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('split("1.2.3", 1)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('split("1.2.3", [1])', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
-	Case('join(["1","2","3"], ".")', UNE_RT_STR, "1.2.3", []),
-	Case('join(["1","2",3], ".")', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('join(["1","2","3"], 0)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('join(["1"], ".")', UNE_RT_STR, "1", []),
-	Case('join([], ".")', UNE_RT_STR, "", []),
+	Case('join(["1","2","3"], ".")', UNE_RK_STR, "1.2.3", []),
+	Case('join(["1","2",3], ".")', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('join(["1","2","3"], 0)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('join(["1"], ".")', UNE_RK_STR, "1", []),
+	Case('join([], ".")', UNE_RK_STR, "", []),
 	
-	Case('eval(0)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('eval("23*2")', UNE_RT_INT, '46', []),
+	Case('eval(0)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('eval("23*2")', UNE_RK_INT, '46', []),
 	
-	Case('replace("a","b","xax")', UNE_RT_STR, 'xbx', []),
-	Case('replace("a","","xax");return replace("a","","xax")', UNE_RT_STR, 'xx', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('replace("","","")', UNE_RT_ERROR, UNE_EK_ENCODING, []),
+	Case('replace("a","b","xax")', UNE_RK_STR, 'xbx', []),
+	Case('replace("a","","xax");return replace("a","","xax")', UNE_RK_STR, 'xx', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('replace("","","")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	
 	# main
-	Case('unknown', UNE_RT_ERROR, UNE_EK_FILE, [ATTR_DIRECT_ARG]),
-	Case('', UNE_RT_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),
-	Case('-s', UNE_RT_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),
+	Case('unknown', UNE_RK_ERROR, UNE_EK_FILE, [ATTR_DIRECT_ARG]),
+	Case('', UNE_RK_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),
+	Case('-s', UNE_RK_ERROR, UNE_ERROR_INPUT, [ATTR_DIRECT_ARG]),
 	
 	# Syntax
-	Case('\r# comment', UNE_RT_VOID, 'Void', []),
-	Case('"\\\\\\"\\n\\\n"', UNE_RT_STR, '\\"\n', [ATTR_FILE_ONLY]),
-	Case('\r1 $', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('1.', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('"ab', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('"\\q"', UNE_RT_ERROR, UNE_EK_SYNTAX, [ATTR_NO_SECOND_ESCAPE]),
-	Case('1 ? +', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('1 ? 1,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('1 ? 1 : +', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('[1', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('a(', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('(1', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case(',', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i 1', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i from ,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i from 0 ,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i from 0 till', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i from 0 till 1 ,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i in ,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i in "a" ,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('while 1 {+}', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('if 1 )', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('if 1 1 else', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('continue', UNE_RT_ERROR, UNE_EK_CONTINUE_OUTSIDE_LOOP, []),
-	Case('break', UNE_RT_ERROR, UNE_EK_BREAK_OUTSIDE_LOOP, []),
-	Case('a[', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('a=a[1,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('a[1,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('a=*', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('1+)', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('[1,', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('[1, +]', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('[1 1]', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('for i from 1.1', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('a=function(a, 1){return a}', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
-	Case('function()', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
+	Case('\r# comment', UNE_RK_VOID, 'Void', []),
+	Case('"\\\\\\"\\n\\\n"', UNE_RK_STR, '\\"\n', [ATTR_FILE_ONLY]),
+	Case('\r1 $', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('1.', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('"ab', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('"\\q"', UNE_RK_ERROR, UNE_EK_SYNTAX, [ATTR_NO_SECOND_ESCAPE]),
+	Case('1 ? +', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('1 ? 1,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('1 ? 1 : +', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('[1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('a(', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('(1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case(',', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i 1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i from ,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i from 0 ,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i from 0 till', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i from 0 till 1 ,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i in ,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i in "a" ,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('while 1 {+}', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('if 1 )', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('if 1 1 else', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('continue', UNE_RK_ERROR, UNE_EK_CONTINUE_OUTSIDE_LOOP, []),
+	Case('break', UNE_RK_ERROR, UNE_EK_BREAK_OUTSIDE_LOOP, []),
+	Case('a[', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('a=a[1,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('a[1,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('a=*', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('1+)', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('[1,', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('[1, +]', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('[1 1]', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('for i from 1.1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('a=function(a, 1){return a}', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('function()', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	
 	# Data
-	Case('Void', UNE_RT_VOID, 'Void', []),
-	Case('100', UNE_RT_INT, '100', []),
-	Case('100.9', UNE_RT_FLT, '100.9', []),
-	Case('[]', UNE_RT_LIST, '[]', []),
-	Case('[1]', UNE_RT_LIST, '[1]', []),
-	Case('[1, 2]', UNE_RT_LIST, '[1, 2]', []),
-	Case('[int([])]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('"str"', UNE_RT_STR, 'str', []),
-	Case('"s{1+2}t"', UNE_RT_STR, 's3t', []),
-	Case('({a:1,b:{c:2}})', UNE_RT_OBJECT, '{a: 1, b: {c: 2}}', []),
-	Case('({a:b})', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('({a:46,b:function() return this.a,c:function(n){this.a=n;return this}}).c(128).b()', UNE_RT_INT, '128', []),
-	Case('a={b:0,c:function() return this.b,d:function(n) this.b=n};a.d(46);return a.c()', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('main={attr:0,with_set_attr:function(value){this.attr=value;return this}};return main.with_set_attr(({value:23,double:function()return this.value*2}).double()).attr;', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('c=[{o:{a:0,s:function(n) this.a=n}}];c[0].o.s(46);return c[0].o.a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('o={a:0,m:function(v){this.a=v;return this}};o.m(1).m(2);return o.a', UNE_RT_INT, '2', [ATTR_NO_IMPLICIT_RETURN]), # Method chaining
-	Case('a=function()return{b:function()return a()};a()', UNE_RT_OBJECT, '{b: <function>}', [ATTR_NO_IMPLICIT_RETURN]), # Ensure member_seek receives object references
-	Case('this', UNE_RT_VOID, 'Void', []),
+	Case('Void', UNE_RK_VOID, 'Void', []),
+	Case('100', UNE_RK_INT, '100', []),
+	Case('100.9', UNE_RK_FLT, '100.9', []),
+	Case('[]', UNE_RK_LIST, '[]', []),
+	Case('[1]', UNE_RK_LIST, '[1]', []),
+	Case('[1, 2]', UNE_RK_LIST, '[1, 2]', []),
+	Case('[int([])]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('"str"', UNE_RK_STR, 'str', []),
+	Case('"s{1+2}t"', UNE_RK_STR, 's3t', []),
+	Case('({a:1,b:{c:2}})', UNE_RK_OBJECT, '{a: 1, b: {c: 2}}', []),
+	Case('({a:b})', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('({a:46,b:function() return this.a,c:function(n){this.a=n;return this}}).c(128).b()', UNE_RK_INT, '128', []),
+	Case('a={b:0,c:function() return this.b,d:function(n) this.b=n};a.d(46);return a.c()', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('main={attr:0,with_set_attr:function(value){this.attr=value;return this}};return main.with_set_attr(({value:23,double:function()return this.value*2}).double()).attr;', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('c=[{o:{a:0,s:function(n) this.a=n}}];c[0].o.s(46);return c[0].o.a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('o={a:0,m:function(v){this.a=v;return this}};o.m(1).m(2);return o.a', UNE_RK_INT, '2', [ATTR_NO_IMPLICIT_RETURN]), # Method chaining
+	Case('a=function()return{b:function()return a()};a()', UNE_RK_OBJECT, '{b: <function>}', [ATTR_NO_IMPLICIT_RETURN]), # Ensure member_seek receives object references
+	Case('this', UNE_RK_VOID, 'Void', []),
 	
 	# COP
-	Case('1 ? 2 : 3', UNE_RT_INT, '2', []),
-	Case('0.0 ? 1 : 2', UNE_RT_INT, '2', []),
-	Case('"str" ? 1 : 2', UNE_RT_INT, '1', []),
-	Case('[] ? 1 : 2', UNE_RT_INT, '2', []),
-	Case('unknown ? 1 : 0', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1 ? 2 : 3', UNE_RK_INT, '2', []),
+	Case('0.0 ? 1 : 2', UNE_RK_INT, '2', []),
+	Case('"str" ? 1 : 2', UNE_RK_INT, '1', []),
+	Case('[] ? 1 : 2', UNE_RK_INT, '2', []),
+	Case('unknown ? 1 : 0', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	
 	# NOT
-	Case('!0', UNE_RT_INT, '1', []),
-	Case('1==!0', UNE_RT_INT, '1', []),
-	Case('!unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('!0', UNE_RK_INT, '1', []),
+	Case('1==!0', UNE_RK_INT, '1', []),
+	Case('!unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	
 	# AND
-	Case('1&&1', UNE_RT_INT, '1', []),
-	Case('1&&0', UNE_RT_INT, '0', []),
-	Case('0&&1', UNE_RT_INT, '0', []),
-	Case('unknown&&1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1&&1', UNE_RK_INT, '1', []),
+	Case('1&&0', UNE_RK_INT, '0', []),
+	Case('0&&1', UNE_RK_INT, '0', []),
+	Case('unknown&&1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	
 	# OR
-	Case('0||0', UNE_RT_INT, '0', []),
-	Case('1||0', UNE_RT_INT, '1', []),
-	Case('0||1', UNE_RT_INT, '1', []),
-	Case('unknown||1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('0||0', UNE_RK_INT, '0', []),
+	Case('1||0', UNE_RK_INT, '1', []),
+	Case('0||1', UNE_RK_INT, '1', []),
+	Case('unknown||1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	
 	# EQU
-	Case('1==1', UNE_RT_INT, '1', []),
-	Case('1==1.0', UNE_RT_INT, '1', []),
-	Case('1.0==1', UNE_RT_INT, '1', []),
-	Case('1.0==1.0', UNE_RT_INT, '1', []),
-	Case('"str"=="str"', UNE_RT_INT, '1', []),
-	Case('[1]==[1]', UNE_RT_INT, '1', []),
-	Case('unknown==1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1==unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1 == any [1, 2, 3]', UNE_RT_INT, '1', []),
-	Case('1 == all [1, 2, 3]', UNE_RT_INT, '0', []),
-	Case('"a" == any "abc"', UNE_RT_INT, '1', []),
-	Case('any 1 == 1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('any 1', UNE_RT_ERROR, UNE_EK_MISPLACED_ANY_OR_ALL, []),
+	Case('1==1', UNE_RK_INT, '1', []),
+	Case('1==1.0', UNE_RK_INT, '1', []),
+	Case('1.0==1', UNE_RK_INT, '1', []),
+	Case('1.0==1.0', UNE_RK_INT, '1', []),
+	Case('"str"=="str"', UNE_RK_INT, '1', []),
+	Case('[1]==[1]', UNE_RK_INT, '1', []),
+	Case('unknown==1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1==unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1 == any [1, 2, 3]', UNE_RK_INT, '1', []),
+	Case('1 == all [1, 2, 3]', UNE_RK_INT, '0', []),
+	Case('"a" == any "abc"', UNE_RK_INT, '1', []),
+	Case('any 1 == 1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('any 1', UNE_RK_ERROR, UNE_EK_MISPLACED_ANY_OR_ALL, []),
 	
 	# NEQ
-	Case('1!=1', UNE_RT_INT, '0', []),
-	Case('unknown!=1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1 != any [1, 2, 3]', UNE_RT_INT, '1', []),
-	Case('1 != all [1, 2, 3]', UNE_RT_INT, '0', []),
+	Case('1!=1', UNE_RK_INT, '0', []),
+	Case('unknown!=1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1 != any [1, 2, 3]', UNE_RK_INT, '1', []),
+	Case('1 != all [1, 2, 3]', UNE_RK_INT, '0', []),
 	
 	# GTR
-	Case('2>1', UNE_RT_INT, '1', []),
-	Case('2>1.0', UNE_RT_INT, '1', []),
-	Case('2.0>1', UNE_RT_INT, '1', []),
-	Case('2.0>1.0', UNE_RT_INT, '1', []),
-	Case('"string">"str"', UNE_RT_INT, '1', []),
-	Case('[1,2,3]>[1,2]', UNE_RT_INT, '1', []),
-	Case('unknown>1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1>unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('[1]>1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('Void>0', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1 > any [0, 1, 2]', UNE_RT_INT, '1', []),
-	Case('1 > all [0, 1, 2]', UNE_RT_INT, '0', []),
+	Case('2>1', UNE_RK_INT, '1', []),
+	Case('2>1.0', UNE_RK_INT, '1', []),
+	Case('2.0>1', UNE_RK_INT, '1', []),
+	Case('2.0>1.0', UNE_RK_INT, '1', []),
+	Case('"string">"str"', UNE_RK_INT, '1', []),
+	Case('[1,2,3]>[1,2]', UNE_RK_INT, '1', []),
+	Case('unknown>1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1>unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('[1]>1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('Void>0', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1 > any [0, 1, 2]', UNE_RK_INT, '1', []),
+	Case('1 > all [0, 1, 2]', UNE_RK_INT, '0', []),
 	
 	# GEQ
-	Case('1>=1', UNE_RT_INT, '1', []),
-	Case('1>=1.0', UNE_RT_INT, '1', []),
-	Case('1.0>=1', UNE_RT_INT, '1', []),
-	Case('1.0>=1.0', UNE_RT_INT, '1', []),
-	Case('"str">="str"', UNE_RT_INT, '1', []),
-	Case('[1,2]>=[1,2]', UNE_RT_INT, '1', []),
-	Case('unknown>=1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1>=unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('[1]>=1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('Void>=0', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1 >= any [0, 1, 2]', UNE_RT_INT, '1', []),
-	Case('1 >= all [0, 1, 2]', UNE_RT_INT, '0', []),
+	Case('1>=1', UNE_RK_INT, '1', []),
+	Case('1>=1.0', UNE_RK_INT, '1', []),
+	Case('1.0>=1', UNE_RK_INT, '1', []),
+	Case('1.0>=1.0', UNE_RK_INT, '1', []),
+	Case('"str">="str"', UNE_RK_INT, '1', []),
+	Case('[1,2]>=[1,2]', UNE_RK_INT, '1', []),
+	Case('unknown>=1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1>=unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('[1]>=1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('Void>=0', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1 >= any [0, 1, 2]', UNE_RK_INT, '1', []),
+	Case('1 >= all [0, 1, 2]', UNE_RK_INT, '0', []),
 	
 	# LSS
-	Case('2<1', UNE_RT_INT, '0', []),
-	Case('2<1.0', UNE_RT_INT, '0', []),
-	Case('2.0<1', UNE_RT_INT, '0', []),
-	Case('2.0<1.0', UNE_RT_INT, '0', []),
-	Case('"string"<"str"', UNE_RT_INT, '0', []),
-	Case('[1,2,3]<[1,2]', UNE_RT_INT, '0', []),
-	Case('unknown<1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1<unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('[1]<1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('Void<0', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1 < any [0, 1, 2]', UNE_RT_INT, '1', []),
-	Case('1 < all [0, 1, 2]', UNE_RT_INT, '0', []),
+	Case('2<1', UNE_RK_INT, '0', []),
+	Case('2<1.0', UNE_RK_INT, '0', []),
+	Case('2.0<1', UNE_RK_INT, '0', []),
+	Case('2.0<1.0', UNE_RK_INT, '0', []),
+	Case('"string"<"str"', UNE_RK_INT, '0', []),
+	Case('[1,2,3]<[1,2]', UNE_RK_INT, '0', []),
+	Case('unknown<1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1<unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('[1]<1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('Void<0', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1 < any [0, 1, 2]', UNE_RK_INT, '1', []),
+	Case('1 < all [0, 1, 2]', UNE_RK_INT, '0', []),
 	
 	# LEQ
-	Case('1<=1', UNE_RT_INT, '1', []),
-	Case('1<=1.0', UNE_RT_INT, '1', []),
-	Case('1.0<=1', UNE_RT_INT, '1', []),
-	Case('1.0<=1.0', UNE_RT_INT, '1', []),
-	Case('"str"<="str"', UNE_RT_INT, '1', []),
-	Case('[1,2]<=[1,2]', UNE_RT_INT, '1', []),
-	Case('unknown<=1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1<=unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('[1]<=1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('Void<=0', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1 <= any [0, 1, 2]', UNE_RT_INT, '1', []),
-	Case('1 <= all [0, 1, 2]', UNE_RT_INT, '0', []),
+	Case('1<=1', UNE_RK_INT, '1', []),
+	Case('1<=1.0', UNE_RK_INT, '1', []),
+	Case('1.0<=1', UNE_RK_INT, '1', []),
+	Case('1.0<=1.0', UNE_RK_INT, '1', []),
+	Case('"str"<="str"', UNE_RK_INT, '1', []),
+	Case('[1,2]<=[1,2]', UNE_RK_INT, '1', []),
+	Case('unknown<=1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1<=unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('[1]<=1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('Void<=0', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1 <= any [0, 1, 2]', UNE_RK_INT, '1', []),
+	Case('1 <= all [0, 1, 2]', UNE_RK_INT, '0', []),
 	
 	# COVER
-	Case('1/0 cover 46', UNE_RT_INT, '46', []),
-	Case('1/0 cover 2/0 cover 96', UNE_RT_INT, '96', []),
+	Case('1/0 cover 46', UNE_RK_INT, '46', []),
+	Case('1/0 cover 2/0 cover 96', UNE_RK_INT, '96', []),
 	
 	# ADD
-	Case('1+1', UNE_RT_INT, '2', []),
-	Case('1+1.0', UNE_RT_FLT, '2.0', []),
-	Case('1.0+1', UNE_RT_FLT, '2.0', []),
-	Case('1.0+1.0', UNE_RT_FLT, '2.0', []),
-	Case('"str"+"str"', UNE_RT_STR, 'strstr', []),
-	Case('[1]+[2]', UNE_RT_LIST, '[1, 2]', []),
-	Case('unknown+1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1+unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1+[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1.0+"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('[1]+1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('"str"+1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('"str"*"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('1+1', UNE_RK_INT, '2', []),
+	Case('1+1.0', UNE_RK_FLT, '2.0', []),
+	Case('1.0+1', UNE_RK_FLT, '2.0', []),
+	Case('1.0+1.0', UNE_RK_FLT, '2.0', []),
+	Case('"str"+"str"', UNE_RK_STR, 'strstr', []),
+	Case('[1]+[2]', UNE_RK_LIST, '[1, 2]', []),
+	Case('unknown+1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1+unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1+[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1.0+"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('[1]+1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('"str"+1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('"str"*"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# SUB
-	Case('1-1', UNE_RT_INT, '0', []),
-	Case('1-1.0', UNE_RT_FLT, '0.0', []),
-	Case('1.0-1', UNE_RT_FLT, '0.0', []),
-	Case('1.0-1.0', UNE_RT_FLT, '0.0', []),
-	Case('unknown-1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1-unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1-[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1.0-"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('1-1', UNE_RK_INT, '0', []),
+	Case('1-1.0', UNE_RK_FLT, '0.0', []),
+	Case('1.0-1', UNE_RK_FLT, '0.0', []),
+	Case('1.0-1.0', UNE_RK_FLT, '0.0', []),
+	Case('unknown-1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1-unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1-[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1.0-"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# MUL
-	Case('2*2', UNE_RT_INT, '4', []),
-	Case('2*2.5', UNE_RT_FLT, '5.0', []),
-	Case('2.5*2', UNE_RT_FLT, '5.0', []),
-	Case('2.5*2.0', UNE_RT_FLT, '5.0', []),
-	Case('3*"str"', UNE_RT_STR, 'strstrstr', []),
-	Case('"string"*3', UNE_RT_STR, 'stringstringstring', []),
-	Case('"string"*-1', UNE_RT_STR, '', []),
-	Case('3*[1]', UNE_RT_LIST, '[1, 1, 1]', []),
-	Case('[2]*3', UNE_RT_LIST, '[2, 2, 2]', []),
-	Case('[2]*-1', UNE_RT_LIST, '[]', []),
-	Case('unknown*1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1*unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('[1]*[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1.0*"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1*int', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('2*2', UNE_RK_INT, '4', []),
+	Case('2*2.5', UNE_RK_FLT, '5.0', []),
+	Case('2.5*2', UNE_RK_FLT, '5.0', []),
+	Case('2.5*2.0', UNE_RK_FLT, '5.0', []),
+	Case('3*"str"', UNE_RK_STR, 'strstrstr', []),
+	Case('"string"*3', UNE_RK_STR, 'stringstringstring', []),
+	Case('"string"*-1', UNE_RK_STR, '', []),
+	Case('3*[1]', UNE_RK_LIST, '[1, 1, 1]', []),
+	Case('[2]*3', UNE_RK_LIST, '[2, 2, 2]', []),
+	Case('[2]*-1', UNE_RK_LIST, '[]', []),
+	Case('unknown*1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1*unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('[1]*[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1.0*"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1*int', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# DIV
-	Case('6/2', UNE_RT_INT, '3', []),
-	Case('1/2', UNE_RT_FLT, '0.5', []),
-	Case('1/4.0', UNE_RT_FLT, '0.25', []),
-	Case('4.0/1', UNE_RT_FLT, '4.0', []),
-	Case('1.0/3.0', UNE_RT_FLT, '0.3333333333333', []),
-	Case('unknown/1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1/unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1/[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1/0', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('1/0.0', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('1.0/"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('6/2', UNE_RK_INT, '3', []),
+	Case('1/2', UNE_RK_FLT, '0.5', []),
+	Case('1/4.0', UNE_RK_FLT, '0.25', []),
+	Case('4.0/1', UNE_RK_FLT, '4.0', []),
+	Case('1.0/3.0', UNE_RK_FLT, '0.3333333333333', []),
+	Case('unknown/1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1/unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1/[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1/0', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('1/0.0', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('1.0/"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# FDIV
-	Case('1//3', UNE_RT_INT, '0', []),
-	Case('5//2.0', UNE_RT_INT, '2', []),
-	Case('0.1//1', UNE_RT_INT, '0', []),
-	Case('6.0//4.0', UNE_RT_INT, '1', []),
-	Case('unknown//1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1//unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1//[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1//0', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('1//0.0', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('1.0//"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1.0/0', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('1.0/0.0', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('1//3', UNE_RK_INT, '0', []),
+	Case('5//2.0', UNE_RK_INT, '2', []),
+	Case('0.1//1', UNE_RK_INT, '0', []),
+	Case('6.0//4.0', UNE_RK_INT, '1', []),
+	Case('unknown//1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1//unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1//[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1//0', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('1//0.0', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('1.0//"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1.0/0', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('1.0/0.0', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
 	
 	# MOD
-	Case('3%2', UNE_RT_INT, '1', []),
-	Case('5.5%2', UNE_RT_FLT, '1.5', []),
-	Case('5%3.5', UNE_RT_FLT, '1.5', []),
-	Case('5.5%3.5', UNE_RT_FLT, '2.0', []),
-	Case('unknown%1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1%unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1%[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1.0%"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('3%2', UNE_RK_INT, '1', []),
+	Case('5.5%2', UNE_RK_FLT, '1.5', []),
+	Case('5%3.5', UNE_RK_FLT, '1.5', []),
+	Case('5.5%3.5', UNE_RK_FLT, '2.0', []),
+	Case('unknown%1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1%unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1%[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1.0%"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# POW
-	Case('3**3', UNE_RT_INT, '27', []),
-	Case('4**0.5', UNE_RT_FLT, '2.0', []),
-	Case('0.8**3', UNE_RT_FLT, '0.512', []),
-	Case('4.0**2.0', UNE_RT_FLT, '16.0', []),
-	Case('unknown**1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1**unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('1**[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('(-1)**1.1', UNE_RT_ERROR, UNE_EK_UNREAL_NUMBER, []),
-	Case('1.0**"str"', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('3**3', UNE_RK_INT, '27', []),
+	Case('4**0.5', UNE_RK_FLT, '2.0', []),
+	Case('0.8**3', UNE_RK_FLT, '0.512', []),
+	Case('4.0**2.0', UNE_RK_FLT, '16.0', []),
+	Case('unknown**1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1**unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('1**[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('(-1)**1.1', UNE_RK_ERROR, UNE_EK_UNREAL_NUMBER, []),
+	Case('1.0**"str"', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# NEG
-	Case('--100', UNE_RT_INT, '100', []),
-	Case('--100.9', UNE_RT_FLT, '100.9', []),
-	Case('-unknown', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('-[1]', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('--100', UNE_RK_INT, '100', []),
+	Case('--100.9', UNE_RK_FLT, '100.9', []),
+	Case('-unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('-[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# SET
-	Case('a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('global a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=function(){global b=46};a();return b', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=[1]**2', UNE_RT_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=a', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=46;return a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('global a=46;return a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=function(){global b=46};a();return b', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[1]**2', UNE_RK_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=a', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# SET_IDX
-	Case('a=[0];a[0]=1;return a', UNE_RT_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=[0];global a[0]=1;return a', UNE_RT_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=[[0]];a[0][0]=46;a', UNE_RT_LIST, "[[46]]", [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=[0];a[0]=[1]**2', UNE_RT_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a[0]=1', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=1;a[0]=1', UNE_RT_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=[0];a[[1]]=1', UNE_RT_ERROR, UNE_EK_INDEX, [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=[0];a[1]=1', UNE_RT_ERROR, UNE_EK_INDEX, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[0];a[0]=1;return a', UNE_RK_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[0];global a[0]=1;return a', UNE_RK_LIST, '[1]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[[0]];a[0][0]=46;a', UNE_RK_LIST, "[[46]]", [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[0];a[0]=[1]**2', UNE_RK_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a[0]=1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=1;a[0]=1', UNE_RK_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[0];a[[1]]=1', UNE_RK_ERROR, UNE_EK_INDEX, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[0];a[1]=1', UNE_RK_ERROR, UNE_EK_INDEX, [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# Assignment operations.
-	Case('a=23;a+=23;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=23;a-=23;return a', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=4;a**=2;return a', UNE_RT_INT, '16', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=4;a*=2;return a', UNE_RT_INT, '8', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=5;a//=2;return a', UNE_RT_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=5;a/=2;return a', UNE_RT_FLT, '2.5', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=5;a%=2;return a', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=23;a+=23;return a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=23;a-=23;return a', UNE_RK_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=4;a**=2;return a', UNE_RK_INT, '16', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=4;a*=2;return a', UNE_RK_INT, '8', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=5;a//=2;return a', UNE_RK_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=5;a/=2;return a', UNE_RK_FLT, '2.5', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=5;a%=2;return a', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# GET
-	Case('a=46;return a', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('a=46;return a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	
 	# GET_IDX
-	Case('[46][0]', UNE_RT_INT, '46', []),
-	Case('"str"[0]', UNE_RT_STR, 's', []),
-	Case('a[0]', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('a="str";a[1/0]', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('([1]**2)[0]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('[0][[0]]', UNE_RT_ERROR, UNE_EK_INDEX, []),
-	Case('1[0]', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('[0][1]', UNE_RT_ERROR, UNE_EK_INDEX, []),
-	Case('"a"[1]', UNE_RT_ERROR, UNE_EK_INDEX, []),
+	Case('[46][0]', UNE_RK_INT, '46', []),
+	Case('"str"[0]', UNE_RK_STR, 's', []),
+	Case('a[0]', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('a="str";a[1/0]', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('([1]**2)[0]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('[0][[0]]', UNE_RK_ERROR, UNE_EK_INDEX, []),
+	Case('1[0]', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('[0][1]', UNE_RK_ERROR, UNE_EK_INDEX, []),
+	Case('"a"[1]', UNE_RK_ERROR, UNE_EK_INDEX, []),
 	
 	# Get member.
-	Case('({a:{b:46}}).a.b', UNE_RT_INT, '46', []),
-	Case('({a:46}).b', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('({a:{b:46}}).a.b', UNE_RK_INT, '46', []),
+	Case('({a:46}).b', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	
 	# Set member.
-	Case('a={b:0};a.b=46;return a.b', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a={b:0};a.b=46;return a.b', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# FOR
-	Case('a=0;for i from 0 till 3 a=a+i;return a', UNE_RT_INT, '3', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=0;for i from 3 till 0{if i==2 continue;a=a+i};return a', UNE_RT_INT, '4', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=0;for i from 0 till 0 a=1;return a', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=0;for i from 0 till 1{break;a=1};return a', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('for i from [1]**2 till 3 print(i)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('for i from [1] till 3 print(i)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('for i from 0 till [1]**2 print(i)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('for i from 0 till 3 print([i]**2)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('for i in 0 print(i)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('a=0;for i in [1,2,3] a=a+i;return a', UNE_RT_INT, '6', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=0;for i from 0 till 3 a=a+i;return a', UNE_RK_INT, '3', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=0;for i from 3 till 0{if i==2 continue;a=a+i};return a', UNE_RK_INT, '4', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=0;for i from 0 till 0 a=1;return a', UNE_RK_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=0;for i from 0 till 1{break;a=1};return a', UNE_RK_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('for i from [1]**2 till 3 print(i)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('for i from [1] till 3 print(i)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('for i from 0 till [1]**2 print(i)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('for i from 0 till 3 print([i]**2)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('for i in 0 print(i)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('a=0;for i in [1,2,3] a=a+i;return a', UNE_RK_INT, '6', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# WHILE
-	Case('i=3;while i>0 i=i-1;return i', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('i=0;while i>0{i=-1;break};return i', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('i=3;while [i]**2 i=i-1', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('i=3;while i>0{[i]**2;i=i-1}', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('i=3;while i>0 i=i-1;return i', UNE_RK_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('i=0;while i>0{i=-1;break};return i', UNE_RK_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('i=3;while [i]**2 i=i-1', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('i=3;while i>0{[i]**2;i=i-1}', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# IF
-	Case('if 1 return 1', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('if 0 return 0;return -1', UNE_RT_INT, '-1', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('if 1 return 1 elif 0 return 0 else return 0', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('if 0 return 0 elif 2 return 2 else return 0', UNE_RT_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('if 0 return 0 elif 0 return 0 else return 3', UNE_RT_INT, '3', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('if 0 return 0 elif 0 return 0;return', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('if [1]**2 1', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('if 1 return 1', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('if 0 return 0;return -1', UNE_RK_INT, '-1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('if 1 return 1 elif 0 return 0 else return 0', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('if 0 return 0 elif 2 return 2 else return 0', UNE_RK_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('if 0 return 0 elif 0 return 0 else return 3', UNE_RK_INT, '3', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('if 0 return 0 elif 0 return 0;return', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('if [1]**2 1', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# CALLABLES
-	Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=function(){return};a=function(){return}', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('int=function(){return}', UNE_RT_ERROR, UNE_EK_SYNTAX, []),
+	Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=function(){return};a=function(){return}', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('int=function(){return}', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	
 	# CALL
-	Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]};return fn(2)', UNE_RT_LIST, '[2.2, "str"]', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a()', UNE_RT_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('a=function(b)return b;c=function(d)return a();c(1)', UNE_RT_ERROR, UNE_EK_CALLABLE_ARG_COUNT, []),
-	Case('a=function(b, c){return b};a(1, [1]**2)', UNE_RT_ERROR, UNE_EK_TYPE, []),
-	Case('1()', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]};return fn(2)', UNE_RK_LIST, '[2.2, "str"]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a()', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
+	Case('a=function(b)return b;c=function(d)return a();c(1)', UNE_RK_ERROR, UNE_EK_CALLABLE_ARG_COUNT, []),
+	Case('a=function(b, c){return b};a(1, [1]**2)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('1()', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# TYPES
-	Case('print(int)', UNE_RT_VOID, 'Void', []),
-	Case('if int{return 1}else{return 0}', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('print(function(){})', UNE_RT_VOID, 'Void', []),
-	Case('if function(){}{return 1}else{return 0}', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('if print(1){return 1}else{return 0}', UNE_RT_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('print(int)', UNE_RK_VOID, 'Void', []),
+	Case('if int{return 1}else{return 0}', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('print(function(){})', UNE_RK_VOID, 'Void', []),
+	Case('if function(){}{return 1}else{return 0}', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('if print(1){return 1}else{return 0}', UNE_RK_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# ERROR DISPLAY
-	Case('1\n2\n3/0\n4', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, [ATTR_FILE_ONLY]),
+	Case('1\n2\n3/0\n4', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, [ATTR_FILE_ONLY]),
 	
 	# ORDER OF OPERATIONS
-	Case('-2**2', UNE_RT_INT, '-4', []),
-	Case('a=[2];return -a[0]**2', UNE_RT_INT, '-4', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=function()return 2;return -a()**2', UNE_RT_INT, '-4', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('-2**2', UNE_RK_INT, '-4', []),
+	Case('a=[2];return -a[0]**2', UNE_RK_INT, '-4', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=function()return 2;return -a()**2', UNE_RK_INT, '-4', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# COPYING FUNCTION NODE
-	Case('function(){function(){}}', UNE_RT_FUNCTION, '<function>', []),
+	Case('function(){function(){}}', UNE_RK_FUNCTION, '<function>', []),
 	
 	# REPEATED GET_IDX OR CALL OPERATIONS
-	Case('function(){return function(){return [[function(){return 46}]]}}()()[0][0]()', UNE_RT_INT, '46', []),
+	Case('function(){return function(){return [[function(){return 46}]]}}()()[0][0]()', UNE_RK_INT, '46', []),
 	
 	# STALE POINTER IN FOR LOOP IMPLEMENTATION
-	Case('a=0;for i from 1 till 3 for j from 4 till 6 a=a+i*j;return a', UNE_RT_INT, '27', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=0;for i from 1 till 3 for j from 4 till 6 a=a+i*j;return a', UNE_RK_INT, '27', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# LAST RESULT ALWAYS RETURNED
-	Case('46', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('46', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# RETURN WITHOUT RETURN VALUE
-	Case('return;return 46', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('return;return 46', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# EXIT
-	Case('exit;return 0', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('exit 46;return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('exit "string"', UNE_RT_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
-	Case('function(){exit(46)}();return 0', UNE_RT_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('exit;return 0', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('exit 46;return 0', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('exit "string"', UNE_RK_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('function(){exit(46)}();return 0', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# Slices
-	Case('a="";a="b"+"c"', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('[1, 2, 3, 4, 5][1..-1][1..Void]', UNE_RT_LIST, '[3, 4]', []),
-	Case('a=[1, 2, 3, 4, 5];return a[1..-1][1..Void]', UNE_RT_LIST, '[3, 4]', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=[1, 2, 3, 4, 5];a[1..-1][1..Void]=[23, 46];return a', UNE_RT_LIST, '[1, 2, 23, 46, 5]', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('"string"[1..-1][1..Void]', UNE_RT_STR, 'rin', []),
-	Case('a="string";return a[1..-1][1..Void]', UNE_RT_STR, 'rin', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a="string";a[1..-1][1..Void]="4t6";return a', UNE_RT_STR, 'st4t6g', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('"string"[100..]', UNE_RT_STR, '', []),
-	Case('[1, 2, 3][100..]', UNE_RT_LIST, '[]', []),
+	Case('a="";a="b"+"c"', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('[1, 2, 3, 4, 5][1..-1][1..Void]', UNE_RK_LIST, '[3, 4]', []),
+	Case('a=[1, 2, 3, 4, 5];return a[1..-1][1..Void]', UNE_RK_LIST, '[3, 4]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=[1, 2, 3, 4, 5];a[1..-1][1..Void]=[23, 46];return a', UNE_RK_LIST, '[1, 2, 23, 46, 5]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('"string"[1..-1][1..Void]', UNE_RK_STR, 'rin', []),
+	Case('a="string";return a[1..-1][1..Void]', UNE_RK_STR, 'rin', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a="string";a[1..-1][1..Void]="4t6";return a', UNE_RK_STR, 'st4t6g', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('"string"[100..]', UNE_RK_STR, '', []),
+	Case('[1, 2, 3][100..]', UNE_RK_LIST, '[]', []),
 	
 	# Dereference 'this' before registering new one for method call
-	Case('({m:function(o){return o}}).m(this)', UNE_RT_VOID, 'Void', []),
+	Case('({m:function(o){return o}}).m(this)', UNE_RK_VOID, 'Void', []),
 	
 	# Assertions
-	Case('assert True', UNE_RT_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('assert False', UNE_RT_ERROR, UNE_EK_ASSERTION_NOT_MET, [ATTR_NO_IMPLICIT_RETURN]),
+	Case('assert True', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('assert False', UNE_RK_ERROR, UNE_EK_ASSERTION_NOT_MET, [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# Don't propagate 'return' out of eval() and script().
-	Case('eval("return");return 1', UNE_RT_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('eval("return");return 1', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# sort
-	Case('sort([2,1,3],function(a,b) return a-b)', UNE_RT_LIST, '[1, 2, 3]', []),
-	Case('sort([2,1,3],function(a,b) return b-a)', UNE_RT_LIST, '[3, 2, 1]', []),
-	Case('sort([2,1,3],function(a,b) return 1/0)', UNE_RT_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('sort([2,1,3],function(a,b) return 1.0)', UNE_RT_ERROR, UNE_EK_TYPE, []),
+	Case('sort([2,1,3],function(a,b) return a-b)', UNE_RK_LIST, '[1, 2, 3]', []),
+	Case('sort([2,1,3],function(a,b) return b-a)', UNE_RK_LIST, '[3, 2, 1]', []),
+	Case('sort([2,1,3],function(a,b) return 1/0)', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('sort([2,1,3],function(a,b) return 1.0)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# getwd
-	Case('split(getwd(),["/","\\\\"])[-2..]', UNE_RT_LIST, '["une", "testing"]', []),
+	Case('split(getwd(),["/","\\\\"])[-2..]', UNE_RK_LIST, '["une", "testing"]', []),
 	
 	# setwd
-	Case('setwd("..");s=split(getwd(),["/","\\\\"])[-1..];setwd("testing");return s', UNE_RT_LIST, '["une"]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('setwd("..");s=split(getwd(),["/","\\\\"])[-1..];setwd("testing");return s', UNE_RK_LIST, '["une"]', [ATTR_NO_IMPLICIT_RETURN]),
 ]
 CASES_LEN = len(cases)
 
@@ -678,7 +678,7 @@ def check_report(interface, case: Case, i):
 	with open(FILE_RETURN, mode='r', encoding='utf-8-sig') as report_return:
 		return_value = report_return.read()
 		if return_value != str(case.result_value):
-			if result_kind == UNE_RT_ERROR:
+			if result_kind == UNE_RK_ERROR:
 				return_value_want = dict_get(error_kinds, case.result_value)
 				return_value_have = dict_get(error_kinds, int(return_value))
 			else:
@@ -732,7 +732,7 @@ for i, case in enumerate(cases):
 				sanitized = sanitized.replace('\\', '\\\\')
 			sanitized = sanitized.replace('"', '\\"')
 			sanitized = sanitized.replace('\n', '\\n')
-			if case.result_kind != UNE_RT_ERROR and not ATTR_NO_IMPLICIT_RETURN in case.attributes:
+			if case.result_kind != UNE_RK_ERROR and not ATTR_NO_IMPLICIT_RETURN in case.attributes:
 				sanitized = f'return {sanitized}'
 			command = f'{une} -s "{sanitized}"'
 			if ATTR_STDIN in case.attributes:
@@ -742,10 +742,10 @@ for i, case in enumerate(cases):
 				passed = False
 				print(f'\33[31m{command}\33[0m')
 		if passed or not STOP_AT_FAIL:
-			if SHOW_ERRORS and case.result_kind == UNE_RT_ERROR:
+			if SHOW_ERRORS and case.result_kind == UNE_RK_ERROR:
 				une = une_with_output
 			script = case.input
-			if case.result_kind != UNE_RT_ERROR and not ATTR_NO_IMPLICIT_RETURN in case.attributes:
+			if case.result_kind != UNE_RK_ERROR and not ATTR_NO_IMPLICIT_RETURN in case.attributes:
 				script = f'return {script}'
 			status = open(FILE_SCRIPT, 'w')
 			status.write(script)
