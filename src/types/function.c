@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -66,6 +66,10 @@ une_result une_type_function_call(une_node *call, une_result function, une_resul
 	felix->is.context->module_id = callable->module_id;
 	
 	felix->is.context->callable_id = callable->id;
+	if (label) {
+		felix->is.context->label = wcsdup(label);
+		verify(felix->is.context->label);
+	}
 
 	/* Define parameters. */
 	for (size_t i=0; i<callable->parameters.count; i++) {

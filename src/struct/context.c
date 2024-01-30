@@ -1,6 +1,6 @@
 /*
 context.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -101,6 +101,10 @@ Frees a une_context and its owned members.
 */
 void une_context_free(une_context *context)
 {
+	/* Free label. */
+	if (context->label)
+		free(context->label);
+
 	/* Free une_association buffer. */
 	if (!context->is_transparent) {
 		assert(context->variables.buffer);

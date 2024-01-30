@@ -1,6 +1,6 @@
 /*
 context.h - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 #ifndef UNE_CONTEXT_H
@@ -15,6 +15,7 @@ Holds information that changes depending on the execution context.
 */
 typedef struct une_context_ {
 	struct une_context_ *parent;
+	wchar_t *label;
 	size_t module_id;
 	size_t callable_id;
 	une_position exit_position;

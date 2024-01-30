@@ -1,6 +1,6 @@
 /*
 traceback.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -35,15 +35,10 @@ void une_traceback_print_trace(une_context *context)
 	char *module_name = module->path;
 	if (!module_name)
 		module_name = UNE_MODULE_NAME_PLACEHOLDER;
-	
-	une_association *variable = une_variable_find_by_content_global(context, (une_result){
-		.kind = UNE_RK_FUNCTION,
-		.value._id = context->callable_id
-	});
 
 	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_TRACEBACK_LOCATION L"File \"%hs\", line %zu", module_name, position.line);
-	if (variable)
-		fwprintf(UNE_ERROR_STREAM, L", in %ls", variable->name);
+	if (context->label)
+		fwprintf(UNE_ERROR_STREAM, L", in %ls", context->label);
 	fwprintf(UNE_ERROR_STREAM, ":\n" UNE_COLOR_RESET);
 
 	/* Print extract. */

@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -1064,9 +1064,6 @@ une_interpreter__(une_interpret_call)
 		return args;
 	
 	/* Get callable. */
-	wchar_t *label = NULL;
-	if (node->content.branch.a->kind == UNE_NK_SEEK && node->content.branch.a->content.branch.a->kind == UNE_NK_NAME)
-		label = node->content.branch.a->content.branch.a->content.value._wcs;
 	une_result callable = une_result_dereference(une_interpret(node->content.branch.a));
 	if (callable.kind == UNE_RK_ERROR) {
 		une_result_free(args);
@@ -1092,6 +1089,20 @@ une_interpreter__(une_interpret_call)
 		une_result_free(args);
 		une_result_free(callable);
 		return une_result_create(UNE_RK_ERROR);
+	}
+
+	/* Determine label. */
+	wchar_t *label = NULL;
+	if (node->content.branch.a->kind == UNE_NK_SEEK) {
+		une_node *seek = node->content.branch.a;
+		une_node *name = seek->content.branch.a;
+		assert(name && name->kind == UNE_NK_NAME);
+		label = name->content.value._wcs;
+	} else if (node->content.branch.a->kind == UNE_NK_MEMBER_SEEK) {
+		une_node *member_seek = node->content.branch.a;
+		une_node *name = member_seek->content.branch.b;
+		assert(name && name->kind == UNE_NK_NAME);
+		label = name->content.value._wcs;
 	}
 
 	/* Execute function. */
