@@ -1,14 +1,8 @@
 # Scrolling Text
 
-move = function(string)
-{
-	return string[1..] + string[0]
-}
+move = string -> string[1..] + string[0]
 
-cursor = function(show)
-{
-	print("\e[?25{show ? "h" : "l"}")
-}
+cursor = enable -> print("\e[?25{enable ? "h" : "l"}")
 
 text = "scrolling text! --- "
 revolutions = 3

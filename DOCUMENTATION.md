@@ -104,18 +104,18 @@ For information on how to access or modify the characters making up a string, se
 For example:
 
 ```
-function(parameter1, parameter2)
-{
+(parameter1, parameter2) -> {
 	statement1
 	statement2
 }
 ````
 
+> If your function only accepts one parameter, you may also omit the parenthesis around it
+
 Functions are called by appending the arguments in parentheses (`(`, `)`) after their value:
 
 ```
-function(parameter1, parameter2)
-{
+(parameter1, parameter2) -> {
 	statement1
 	statement2
 }(argument1, argument2)
@@ -142,7 +142,7 @@ print(argument)
 Lists can hold any number of any kind of data, including other lists. The items are separated using commas (`,`):
 
 ```
-[46, 4.6, "string", function(){return}, print, [46]]
+[46, 4.6, "string", () -> return, print, [46]]
 ```
 
 For information on how to access or modify the elements making up a list, see 2.9.
@@ -168,8 +168,7 @@ person.surname = "Wallace"
 When a function is stored in an object member, that function becomes a *method* of the object. During a method call, the enclosing object is available via the `this` keyword.
 
 ```
-person.set_age = function(new_age)
-{
+person.set_age = (new_age) -> {
 	this.age = new_age
 }
 person.set_age(24)
@@ -354,9 +353,9 @@ variable_name = value
 
 > This is also how you define functions — as variables:
 > ```
-> add = function(left, right) {
->    return left+right
->  }
+> add = (left, right) -> {
+> 	return left + right
+> }
 > add(40, 6) # Evaluates to '46'
 > ```
 
@@ -400,8 +399,7 @@ third
 Any execution context can be concluded early using the `return` keyword, optionally followed by a return value. If the return value is omitted, `Void` is returned (see 2.6). Return statements work inside functions, where they conclude the currently running function, or in the main script, where they conclude the entire execution:
 
 ```
-function()
-{
+() -> {
 	statement1
 	return some_value
 	statement2 # Not executed.
@@ -410,13 +408,15 @@ function()
 return # The return value can be omitted.
 ```
 
+If there is no `return` to conclude a function, it will simply return the last evaluated result.
+
 ### 6.3 Exit Statement
 
 A script can be aborted early using the `exit` keyword, optionally followed by an integer-only exit code to be returned to the operating system. If the exit code is omitted, it defaults to 0.
 
 ```
-return function() {
-	return function() {
+return () -> {
+	return () -> {
 		exit 46 # Immediately ends the execution with exit code 46.
 		return 1 # Does not get returned.
 	}()
@@ -614,7 +614,7 @@ assert 1 > 2 # Fails.
 		```
 - `sort(subject, comparator)` – Return a sorted copy of the list `subject`, using the `comparator` function to compare elements:
 		```
-		sort([3, 1, 2], function(a, b) return a-b) == [1, 2, 3]
+		sort([3, 1, 2], (a, b) -> return a-b) == [1, 2, 3]
 		```
 - `setwd()` – Set the working directory.
 		```

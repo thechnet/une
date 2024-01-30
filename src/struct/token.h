@@ -1,6 +1,6 @@
 /*
 token.h - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 #ifndef UNE_TOKEN_H
@@ -22,7 +22,6 @@ typedef enum une_token_kind_ {
 	UNE_TK_NAME,
 	UNE_TK_NATIVE,
 	UNE_TK_EOF,
-	UNE_TK_FUNCTION, /* Exception, see lexer implementation. */
 	#define UNE_R_BGN_KEYWORD_TOKENS UNE_TK_TRUE
 	UNE_TK_TRUE,
 	UNE_TK_FALSE,
@@ -79,6 +78,7 @@ typedef enum une_token_kind_ {
 	UNE_TK_SLASHEQUAL,
 	UNE_TK_PERCENTEQUAL,
 	#define UNE_R_END_ASSIGNMENT_TOKENS UNE_TK_PERCENTEQUAL
+	UNE_TK_RIGHTARROW,
 	#define UNE_R_BGN_ADD_SUB_TOKENS UNE_TK_ADD
 	UNE_TK_ADD,
 	UNE_TK_SUB,

@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -22,7 +22,6 @@ const wchar_t *une_token_table[] = {
 	L"name",
 	L"native",
 	L"EOF",
-	L"function",
 	/* Begin keyword tokens. */
 	L"True",
 	L"False",
@@ -72,6 +71,7 @@ const wchar_t *une_token_table[] = {
 	L"//=",
 	L"/=",
 	L"%=",
+	L"->",
 	L"+",
 	L"-",
 	L"**",

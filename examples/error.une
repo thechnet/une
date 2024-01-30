@@ -1,8 +1,5 @@
 # Error Example
 
-divide = function(dividend, divisor)
-{
-	return dividend/divisor
-}
+divide = (dividend, divisor) -> dividend / divisor
 
 return divide(1, 0)

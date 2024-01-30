@@ -2,7 +2,7 @@
 
 # Helpers.
 
-pop = function(list, index)
+pop = (list, index) ->
 {
 	new = []
 	for i from 0 till len(list)
@@ -11,7 +11,7 @@ pop = function(list, index)
 	return new
 }
 
-find = function(list, value)
+find = (list, value) ->
 {
 	for i from 0 till len(list)
 		if list[i] == value
@@ -19,7 +19,7 @@ find = function(list, value)
 	return Void
 }
 
-widest = function(list)
+widest = (list) ->
 {
 	max = 0
 	for element in list {
@@ -30,7 +30,7 @@ widest = function(list)
 	return max
 }
 
-sum = function(expression)
+sum = (expression) ->
 {
 	replacements = [[" ", "+"], [",", "+"], [";", "+"], ["x", "*"]]
 	for replacement in replacements
@@ -38,7 +38,7 @@ sum = function(expression)
 	return (eval(expression) ?? 0) cover Void
 }
 
-reevaluate_turn = function()
+reevaluate_turn = () ->
 {
 	players = len(names)
 	next = 0
@@ -55,7 +55,7 @@ reevaluate_turn = function()
 commands = [
 	[
 		"stake", "<amount>", "Set starting stake",
-		function(amount) {
+		amount -> {
 			new = sum(amount)
 			if new != Void
 				global stake = new
@@ -63,7 +63,7 @@ commands = [
 	],
 	[
 		"add", "<name>", "Add player",
-		function(name) {
+		name -> {
 			global names += [name]
 			global scores += [stake]
 			global plays += [""]
@@ -71,7 +71,7 @@ commands = [
 	],
 	[
 		"kick", "<name>", "Remove player",
-		function(name) {
+		name -> {
 			index = find(names, name)
 			global names = pop(names, index)
 			global scores = pop(scores, index)
@@ -80,7 +80,7 @@ commands = [
 	],
 		[
 		"fix", "<score> [<name>]", "Fix score",
-		function(score_and_name) {
+		score_and_name -> {
 			separation = Void
 			for i from 0 till len(score_and_name)
 				if score_and_name[i] == " "
@@ -102,7 +102,7 @@ commands = [
 	],
 	[
 		"reset", "", "Reset all scores",
-		function(_) {
+		_ -> {
 			for i from 0 till len(scores) {
 				global scores[i] = stake
 				global plays[i] = ""
@@ -111,7 +111,7 @@ commands = [
 	],
 	[
 		"?", "", "Toggle this board",
-		function(_) {
+		_ -> {
 			global show_help = !show_help
 		}
 	]

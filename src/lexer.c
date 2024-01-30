@@ -389,10 +389,6 @@ une_lexer__(une_lex_keyword_or_name)
 	
 	/* Determine token kind. */
 	une_token tk;
-	if (!wcscmp(buffer, une_token_table[UNE_TK_FUNCTION-1])) {
-		tk.kind = UNE_TK_FUNCTION;
-		goto keyword_or_name_defined;
-	}
 	for (une_token_kind kind=UNE_R_BGN_KEYWORD_TOKENS; kind<=UNE_R_END_KEYWORD_TOKENS; kind++)
 		if (!wcscmp(buffer, une_token_table[kind-1])) {
 			tk.kind = kind;

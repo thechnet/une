@@ -2,21 +2,21 @@
 
 CASE_DIFFERENCE = ord("a") - ord("A")
 
-char_upper = function(char)
+char_upper = (char) ->
 {
 	if ord(char) >= ord("a") && ord(char) <= ord("z")
 		return chr(ord(char) - CASE_DIFFERENCE)
 	return char
 }
 
-char_lower = function(char)
+char_lower = (char) ->
 {
 	if ord(char) >= ord("A") && ord(char) <= ord("Z")
 		return chr(ord(char) + CASE_DIFFERENCE)
 	return char
 }
 
-upper = function(string)
+upper = (string) ->
 {
 	out = ""
 	for char in string
@@ -24,7 +24,7 @@ upper = function(string)
 	return out
 }
 
-lower = function(string)
+lower = (string) ->
 {
 	out = ""
 	for char in string
@@ -32,14 +32,11 @@ lower = function(string)
 	return out
 }
 
-vary = function(string)
+vary = (string) ->
 {
 	out = ""
 	for i from 0 till len(string)
-		if i % 2
-			out += char_upper(string[i])
-		else
-			out += char_lower(string[i])
+		out += (i % 2 ? char_upper : char_lower)(string[i])
 	return out
 }
 

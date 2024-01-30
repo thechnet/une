@@ -1,15 +1,21 @@
 # Changelog
 
-## [Unreleased] - 2023-12-02
+## [Unreleased] - 2024-01-30
 
 ### Added
 - References to functions and built-in functions can now be compared for equality.
 
 ### Changed
+- Function literal syntax: `(a, b) -> return a + b` and `n -> return n**2`.
 - Overhauled large parts of the internal architecture to fix shortcomings and issues with the traceback.
+- Negative exponents no longer require parenthesis.
 
 ### Fixed
 - Using `replace()` to remove a substring (i.e., the replacement is the empty string) results in a buffer overflow.
+- Interactive mode crashes when evaluating a variable containing an object reference.
+
+### Removed
+- E notation with lowercase `e` – Use uppercase `E` instead.
 
 ## [0.15.0] - 2023-10-21
 

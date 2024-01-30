@@ -1,15 +1,11 @@
 # Classes
 
-# 'Person' class.
-Person = function(name) return {
-	# Attributes.
+# Person "class".
+Person = (name) ->
+({
 	name: name,
-	# Methods.
-	introduce: function()
-	{
-		print("Hello, my name is {this.name}!")
-	}
-}
+	introduce: () -> print("Hello, my name is {this.name}!")
+})
 
 # Construct a Person instance.
 bob = Person("Bob")

@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2023-12-10
+Modified 2024-01-31
 */
 
 #ifndef UNE_PARSER_H
@@ -29,6 +29,7 @@ une_parser__(une_parse_stmt);
 une_parser__(une_parse_name);
 une_parser__(une_parse_block);
 une_parser__(une_parse_expression);
+une_parser__(une_parse_conditional);
 une_parser__(une_parse_and_or);
 une_parser__(une_parse_condition);
 une_parser__(une_parse_any_all);
@@ -50,7 +51,8 @@ une_parser__(une_parse_this);
 une_parser__(une_parse_seek, bool global);
 une_parser__(une_parse_native);
 une_parser__(une_parse_list);
-une_parser__(une_parse_function);
+une_parser__(une_parse_signature);
+une_parser__(une_parse_function, une_node *parameters);
 une_parser__(une_parse_for);
 une_parser__(une_parse_for_range);
 une_parser__(une_parse_for_element);
@@ -90,8 +92,18 @@ une_parser__(une_parse_sequence,
 	une_node *(*parser)(une_error*, une_parser_state*)
 );
 
+une_parser__(une_parse_as_sequence,
+	une_node_kind node_kind,
+	une_node *(*parser)(une_error*, une_parser_state*)
+);
+
 une_parser__(une_parse_phony,
 	une_node_kind node_kind
 );
+
+ptrdiff_t une_parser_checkpoint(une_parser_state *ps);
+void une_parser_return_to_checkpoint(une_error *error, une_parser_state *ps, ptrdiff_t checkpoint);
+
+void une_parser_skip_whitespace(une_parser_state *ps);
 
 #endif /* !UNE_PARSER_H */

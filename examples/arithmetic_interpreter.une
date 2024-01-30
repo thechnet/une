@@ -9,14 +9,14 @@ LPAR = 5; RPAR = 6
 NEG = 7
 END = 8
 
-is_digit = function(character)
+is_digit = (character) ->
 {
 	if ord(character) >= ord("0") && ord(character) <= ord("9")
 		return 1
 	return 0
 }
 
-tokenize = function(string)
+tokenize = (string) ->
 {
 	tokens = []
 	i = 0
@@ -49,7 +49,7 @@ tokenize = function(string)
 	return tokens
 }
 
-parse_atom = function()
+parse_atom = () ->
 {
 	if tokens[tokens_idx][0] == SUB {
 		global tokens_idx = tokens_idx+1
@@ -78,7 +78,7 @@ parse_atom = function()
 	return ERR
 }
 
-parse_term = function()
+parse_term = () ->
 {
 	left = parse_atom()
 	if left == ERR
@@ -94,7 +94,7 @@ parse_term = function()
 	return left
 }
 
-parse_exp = function()
+parse_exp = () ->
 {
 	left = parse_term()
 	if left == ERR
@@ -110,7 +110,7 @@ parse_exp = function()
 	return left
 }
 
-interpret = function(node)
+interpret = (node) ->
 {
 	if node[0] == NUM
 		return node[1]
@@ -126,7 +126,7 @@ interpret = function(node)
 		return -interpret(node[1])
 }
 
-run = function(expression)
+run = (expression) ->
 {
 	tokens = tokenize(expression)
 	if tokens == ERR

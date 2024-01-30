@@ -245,8 +245,8 @@ cases = [
 	Case('[1, +]', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	Case('[1 1]', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	Case('for i from 1.1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
-	Case('a=function(a, 1){return a}', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
-	Case('function()', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('a=(a, 1)->{return a}', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('()->', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	
 	# Data
 	Case('Void', UNE_RK_VOID, 'Void', []),
@@ -260,12 +260,12 @@ cases = [
 	Case('"s{1+2}t"', UNE_RK_STR, 's3t', []),
 	Case('({a:1,b:{c:2}})', UNE_RK_OBJECT, '{a: 1, b: {c: 2}}', []),
 	Case('({a:b})', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('({a:46,b:function() return this.a,c:function(n){this.a=n;return this}}).c(128).b()', UNE_RK_INT, '128', []),
-	Case('a={b:0,c:function() return this.b,d:function(n) this.b=n};a.d(46);return a.c()', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('main={attr:0,with_set_attr:function(value){this.attr=value;return this}};return main.with_set_attr(({value:23,double:function()return this.value*2}).double()).attr;', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('c=[{o:{a:0,s:function(n) this.a=n}}];c[0].o.s(46);return c[0].o.a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('o={a:0,m:function(v){this.a=v;return this}};o.m(1).m(2);return o.a', UNE_RK_INT, '2', [ATTR_NO_IMPLICIT_RETURN]), # Method chaining
-	Case('a=function()return{b:function()return a()};a()', UNE_RK_OBJECT, '{b: <function>}', [ATTR_NO_IMPLICIT_RETURN]), # Ensure member_seek receives object references
+	Case('({a:46,b:()->return this.a,c:n->{this.a=n;return this}}).c(128).b()', UNE_RK_INT, '128', []),
+	Case('a={b:0,c:()->return this.b,d:n->this.b=n};a.d(46);return a.c()', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('main={attr:0,with_set_attr:value->{this.attr=value;return this}};return main.with_set_attr(({value:23,double:()->return this.value*2}).double()).attr;', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('c=[{o:{a:0,s:n->this.a=n}}];c[0].o.s(46);return c[0].o.a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('o={a:0,m:v->{this.a=v;return this}};o.m(1).m(2);return o.a', UNE_RK_INT, '2', [ATTR_NO_IMPLICIT_RETURN]), # Method chaining
+	Case('a=()->return{b:()->return a()};a()', UNE_RK_OBJECT, '{b: <function>}', [ATTR_NO_IMPLICIT_RETURN]), # Ensure member_seek receives object references
 	Case('this', UNE_RK_VOID, 'Void', []),
 	
 	# COP
@@ -473,7 +473,7 @@ cases = [
 	# SET
 	Case('a=46;return a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('global a=46;return a', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=function(){global b=46};a();return b', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=()->{global b=46};a();return b', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('a=[1]**2', UNE_RK_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
 	Case('a=a', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, [ATTR_NO_IMPLICIT_RETURN]),
 	
@@ -546,22 +546,22 @@ cases = [
 	Case('if [1]**2 1', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# CALLABLES
-	Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=function(){return};a=function(){return}', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('int=function(){return}', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('fn=arg->{a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]}', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=()->{return};a=()->{return}', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('int=()->{return}', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	
 	# CALL
-	Case('fn=function(arg){a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]};return fn(2)', UNE_RK_LIST, '[2.2, "str"]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('fn=arg->{a=[0];a[0]=1;for i from 0 till 2{if i==0 continue;break};return [arg*1*1.1, "str"]};return fn(2)', UNE_RK_LIST, '[2.2, "str"]', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('a()', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
-	Case('a=function(b)return b;c=function(d)return a();c(1)', UNE_RK_ERROR, UNE_EK_CALLABLE_ARG_COUNT, []),
-	Case('a=function(b, c){return b};a(1, [1]**2)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('a=b->return b;c=d->return a();c(1)', UNE_RK_ERROR, UNE_EK_CALLABLE_ARG_COUNT, []),
+	Case('a=(b,c)->{return b};a(1, [1]**2)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	Case('1()', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# TYPES
 	Case('print(int)', UNE_RK_VOID, 'Void', []),
 	Case('if int{return 1}else{return 0}', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('print(function(){})', UNE_RK_VOID, 'Void', []),
-	Case('if function(){}{return 1}else{return 0}', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('print(()->{})', UNE_RK_VOID, 'Void', []),
+	Case('if ()->{}{return 1}else{return 0}', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('if print(1){return 1}else{return 0}', UNE_RK_INT, '0', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# ERROR DISPLAY
@@ -570,13 +570,13 @@ cases = [
 	# ORDER OF OPERATIONS
 	Case('-2**2', UNE_RK_INT, '-4', []),
 	Case('a=[2];return -a[0]**2', UNE_RK_INT, '-4', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=function()return 2;return -a()**2', UNE_RK_INT, '-4', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=()->return 2;return -a()**2', UNE_RK_INT, '-4', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# COPYING FUNCTION NODE
-	Case('function(){function(){}}', UNE_RK_FUNCTION, '<function>', []),
+	Case('()->{()->{}}', UNE_RK_FUNCTION, '<function>', []),
 	
 	# REPEATED GET_IDX OR CALL OPERATIONS
-	Case('function(){return function(){return [[function(){return 46}]]}}()()[0][0]()', UNE_RK_INT, '46', []),
+	Case('()->{return ()->{return [[()->{return 46}]]}}()()[0][0]()', UNE_RK_INT, '46', []),
 	
 	# STALE POINTER IN FOR LOOP IMPLEMENTATION
 	Case('a=0;for i from 1 till 3 for j from 4 till 6 a=a+i*j;return a', UNE_RK_INT, '27', [ATTR_NO_IMPLICIT_RETURN]),
@@ -591,7 +591,7 @@ cases = [
 	Case('exit;return 0', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('exit 46;return 0', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('exit "string"', UNE_RK_ERROR, UNE_EK_TYPE, [ATTR_NO_IMPLICIT_RETURN]),
-	Case('function(){exit(46)}();return 0', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('()->{exit(46)}();return 0', UNE_RK_INT, '46', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# Slices
 	Case('a="";a="b"+"c"', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
@@ -605,7 +605,7 @@ cases = [
 	Case('[1, 2, 3][100..]', UNE_RK_LIST, '[]', []),
 	
 	# Dereference 'this' before registering new one for method call
-	Case('({m:function(o){return o}}).m(this)', UNE_RK_VOID, 'Void', []),
+	Case('({m:o->{return o}}).m(this)', UNE_RK_VOID, 'Void', []),
 	
 	# Assertions
 	Case('assert True', UNE_RK_VOID, 'Void', [ATTR_NO_IMPLICIT_RETURN]),
@@ -615,10 +615,10 @@ cases = [
 	Case('eval("return");return 1', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# sort
-	Case('sort([2,1,3],function(a,b) return a-b)', UNE_RK_LIST, '[1, 2, 3]', []),
-	Case('sort([2,1,3],function(a,b) return b-a)', UNE_RK_LIST, '[3, 2, 1]', []),
-	Case('sort([2,1,3],function(a,b) return 1/0)', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
-	Case('sort([2,1,3],function(a,b) return 1.0)', UNE_RK_ERROR, UNE_EK_TYPE, []),
+	Case('sort([2,1,3],(a,b)->return a-b)', UNE_RK_LIST, '[1, 2, 3]', []),
+	Case('sort([2,1,3],(a,b)->return b-a)', UNE_RK_LIST, '[3, 2, 1]', []),
+	Case('sort([2,1,3],(a,b)->return 1/0)', UNE_RK_ERROR, UNE_EK_ZERO_DIVISION, []),
+	Case('sort([2,1,3],(a,b)->return 1.0)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# getwd
 	Case('split(getwd(),["/","\\\\"])[-2..]', UNE_RK_LIST, '["une", "testing"]', []),
