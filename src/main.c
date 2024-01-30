@@ -1,6 +1,6 @@
 /*
 main.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -237,7 +237,7 @@ void interactive(void)
 				une_result_represent(stdout, result);
 			} else {
 				assert(UNE_TYPE_FOR_RESULT(result).represent != NULL);
-				UNE_TYPE_FOR_RESULT(result).represent(stdout, result);
+				UNE_TYPE_FOR_RESULT(result).represent(stdout, une_result_dereference(result));
 			}
 			fputwc(L'\n', stdout);
 		}
