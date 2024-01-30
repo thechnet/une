@@ -1,6 +1,6 @@
 /*
 parser.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -234,7 +234,7 @@ une_parser__(une_parse_power)
 		UNE_NK_POW,
 		UNE_TK_POW,
 		&une_parse_accessor,
-		&une_parse_power /* DOC: We parse power and not accessor because powers are evaluated right to left. */
+		&une_parse_minus /* We parse a lower precedence here because powers are evaluated right to left. */
 	);
 }
 

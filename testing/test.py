@@ -457,6 +457,7 @@ cases = [
 	Case('4**0.5', UNE_RK_FLT, '2.0', []),
 	Case('0.8**3', UNE_RK_FLT, '0.512', []),
 	Case('4.0**2.0', UNE_RK_FLT, '16.0', []),
+	Case('2**-2', UNE_RK_FLT, '0.25', []),
 	Case('unknown**1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1**unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1**[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),

@@ -1,6 +1,6 @@
 /*
 int.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -278,11 +278,17 @@ une_result une_type_int_pow(une_result left, une_result right)
 	assert(left.kind == UNE_RK_INT);
 	
 	/* Returns NaN on unreal number. */
-	if (right.kind == UNE_RK_INT)
+	if (right.kind == UNE_RK_INT) {
+		if (right.value._int < 0)
+			return (une_result){
+				.kind = UNE_RK_FLT,
+				.value._flt = powl((une_flt)left.value._int, (une_flt)right.value._int)
+			};
 		return (une_result){
 			.kind = UNE_RK_INT,
 			.value._int = (une_int)(powl((une_flt)left.value._int, (une_flt)right.value._int))
 		};
+	}
 	if (right.kind == UNE_RK_FLT)
 		return (une_result){
 			.kind = UNE_RK_FLT,
