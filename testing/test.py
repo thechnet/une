@@ -112,9 +112,9 @@ cases = [
 	Case('0o10', UNE_RK_INT, '8', []),
 	Case('0xf', UNE_RK_INT, '15', []),
 	Case('0x.8', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
-	Case('2e2', UNE_RK_FLT, '200.0', []),
-	Case('2e-2', UNE_RK_FLT, '0.02', []),
-	Case('0b1e1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
+	Case('2E2', UNE_RK_FLT, '200.0', []),
+	Case('2E-2', UNE_RK_FLT, '0.02', []),
+	Case('0b1E1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	
 	# OCTAL AND HEXADECIMAL CHARACTER CONSTANTS IN STRINGS
 	Case('"\\o43"', UNE_RK_STR, '#', [ATTR_NO_SECOND_ESCAPE]),

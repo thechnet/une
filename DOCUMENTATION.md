@@ -69,7 +69,7 @@ For verbose booleans, use `True` and `False`. They are identical to `1` and `0`.
 
 ### 2.2 Floating-point numbers
 
-For example `-4.6`, `0.0`, `3.46`.
+For example `-4.6`, `0.0`, `3.46E2` (= `346.0`).
 
 ### 2.3 Strings
 

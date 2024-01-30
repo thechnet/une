@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2023-12-10
+Modified 2024-01-30
 */
 
 /* Header-specific includes. */
@@ -201,7 +201,7 @@ une_lexer__(une_lex_number, bool allow_signed)
 		return une_token_create(UNE_TK_none__);
 	
 	une_int exponent = 0;
-	bool has_exponent = base == 10 && (une_lexer_now(ls) == L'e' || une_lexer_now(ls) == L'E');
+	bool has_exponent = base == 10 && une_lexer_now(ls) == L'E';
 	if (has_exponent) {
 		if (!une_lex_number_exponent(error, ls, &exponent))
 			return une_token_create(UNE_TK_none__);
