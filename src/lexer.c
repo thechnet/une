@@ -1,6 +1,6 @@
 /*
 lexer.c - Une
-Modified 2024-01-30
+Modified 2024-11-09
 */
 
 /* Header-specific includes. */
@@ -312,6 +312,9 @@ une_lexer__(une_lex_string)
 					buffer[buffer_index++] = (wchar_t)integer;
 					continue;
 				}
+				/* Invalid escape sequence. */
+				default:
+					break;
 			}
 			*error = UNE_ERROR_SET(UNE_EK_SYNTAX, ((une_position){
 				.start = ls->text_index,

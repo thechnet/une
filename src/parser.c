@@ -1145,7 +1145,7 @@ une_parser__(une_parse_sequence,
 	while (true) {
 		if (sequence_index >= sequence_size) {
 			sequence_size *= 2;
-			sequence = realloc(sequence, sequence_size*sizeof(sequence));
+			sequence = realloc(sequence, sequence_size*sizeof(*sequence));
 			verify(sequence);
 		}
 		

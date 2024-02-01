@@ -1,10 +1,15 @@
 /*
 common.h - Une
-Modified 2024-01-30
+Modified 2024-11-09
 */
 
 #ifndef UNE_PRIMITIVE_H
 #define UNE_PRIMITIVE_H
+
+/* Ensure UNE_USES_UCRT is defined if we're using the UCRT. */
+#if defined(_UCRT) && !defined(UNE_USES_UCRT)
+#error Enable UNE_USES_UCRT when using the UCRT.
+#endif
 
 /* Universal includes. */
 #include "cmake.h"
@@ -142,7 +147,7 @@ typedef union une_value_ {
 	wprintf(L"\33[%dG", UNE_DBG_LOGINTERPRET_OFFSET); \
 	for (int i=0; i<indent; i++) \
 		wprintf(UNE_DBG_LOGINTERPRET_INDENT); \
-	wprintf(L"X\n", une_node_kind_to_wcs(node->kind))
+	wprintf(L"/\n", une_node_kind_to_wcs(node->kind))
 #else
 #define LOGINTERPRET_BEGIN(...)
 #define LOGINTERPRET_END(...)

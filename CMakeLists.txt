@@ -42,38 +42,9 @@ foreach(option IN LISTS options)
 	option(UNE_${id} "${desc}." ${val})
 endforeach()
 
-# Source.
-add_executable(une
-	src/deprecated/stream.c
-	src/struct/association.c
-	src/struct/callable.c
-	src/struct/context.c
-	src/struct/engine.c
-	src/struct/error.c
-	src/struct/interpreter_state.c
-	src/struct/lexer_state.c
-	src/struct/module.c
-	src/struct/node.c
-	src/struct/parser_state.c
-	src/struct/result.c
-	src/struct/token.c
-	src/types/flt.c
-	src/types/function.c
-	src/types/int.c
-	src/types/list.c
-	src/types/native.c
-	src/types/object.c
-	src/types/str.c
-	src/types/types.c
-	src/types/void.c
-	src/interpreter.c
-	src/lexer.c
-	src/main.c
-	src/natives.c
-	src/parser.c
-	src/tools.c
-	src/traceback.c
-)
+# Executable.
+file(GLOB_RECURSE une_source "src/*.c")
+add_executable(une ${une_source})
 
 # Libraries.
 target_link_libraries(une m)
@@ -82,9 +53,7 @@ if(WIN32)
 endif()
 
 # Include directories.
-target_include_directories(une PUBLIC
-	"${PROJECT_BINARY_DIR}"
-)
+target_include_directories(une PUBLIC "${PROJECT_BINARY_DIR}")
 
 # 32-bit
 if(UNE_32BIT)
@@ -103,7 +72,7 @@ endif()
 target_compile_options(une PRIVATE
 	-pedantic
 	-Wno-unused-parameter -Wno-gnu-zero-variadic-macro-arguments -Wno-declaration-after-statement -Wno-used-but-marked-unused
-	-Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations -Wno-keyword-macro
+	-Wno-padded -Wno-disabled-macro-expansion -Wno-missing-prototypes -Wno-missing-variable-declarations -Wno-unused-macros
 )
 if(UNE_USES_UCRT)
 	add_definitions(-D__USE_MINGW_ANSI_STDIO=1) # See https://github.com/mstorsjo/llvm-mingw/issues/373.

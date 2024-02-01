@@ -54,18 +54,18 @@ reevaluate_turn = () ->
 
 commands = [
 	[
-		"stake", "<amount>", "Set starting stake",
+		"type", "<amount>", "Set game type",
 		amount -> {
 			new = sum(amount)
 			if new != Void
-				global stake = new
+				global type = new
 		}
 	],
 	[
 		"add", "<name>", "Add player",
 		name -> {
 			global names += [name]
-			global scores += [stake]
+			global scores += [type]
 			global plays += [""]
 		}
 	],
@@ -104,7 +104,7 @@ commands = [
 		"reset", "", "Reset all scores",
 		_ -> {
 			for i from 0 till len(scores) {
-				global scores[i] = stake
+				global scores[i] = type
 				global plays[i] = ""
 			}
 		}
@@ -127,7 +127,7 @@ colors = [
 	[15, ["ff", "ff", "ff"]], # Score.
 	[13, ["00", "e6", "41"]], # Prompt.
 	[05, ["8a", "7f", "7c"]], # Prompt, recent.
-	[08, ["5f", "57", "54"]], # Stake.
+	[08, ["5f", "57", "54"]], # Type.
 	[04, ["12", "10", "10"]], # Commands board background.
 	[12, ["5e", "55", "52"]], # Commands board text.
 ]
@@ -146,7 +146,7 @@ widest_command_name = widest(command_names)
 widest_command_parameters = widest(command_parameters)
 widest_command_description = widest(command_descriptions)
 
-stake = 301
+type = 301
 names = []
 scores = []
 plays = []
@@ -155,7 +155,7 @@ show_help = True
 
 while True {
 	buffer = "\e[H\e[?12l\e[40m\e[K\n"
-	buffer += "\e[K  \e[90mDARTS {stake}\n\e[K\n"
+	buffer += "\e[K  \e[90mDARTS {type}\n\e[K\n"
 	stop_1 = 3 + widest(names) + 3
 	stop_2 = stop_1 + widest(scores) + 3
 	if !len(names)

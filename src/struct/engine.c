@@ -1,6 +1,6 @@
 /*
 engine.c - Une
-Modified 2024-01-30
+Modified 2024-11-09
 */
 
 /* Header-specific includes. */
@@ -188,9 +188,6 @@ une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *w
 	}
 	#endif
 	felix->is.should_return = false;
-	#endif
-	#if defined(UNE_DEBUG) && defined(UNE_DBG_LOG_INTERPRET)
-	success("interpret done.");
 	#endif
 	if (result.kind == UNE_RK_ERROR)
 		return une_result_create(UNE_RK_ERROR);

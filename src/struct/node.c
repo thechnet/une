@@ -1,6 +1,6 @@
 /*
 node.c - Une
-Modified 2023-12-10
+Modified 2024-11-09
 */
 
 /* Header-specific includes. */
@@ -474,6 +474,9 @@ wchar_t *une_node_to_wcs(une_node *node)
 			free(branch4);
 			break;
 		}
+
+		default:
+			assert(false);
 	
 	}
 	

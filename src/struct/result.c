@@ -1,6 +1,6 @@
 /*
 result.c - Une
-Modified 2023-12-10
+Modified 2024-11-09
 */
 
 /* Header-specific includes. */
@@ -216,6 +216,8 @@ une_result une_result_dereference(une_result result)
 				.value._vp = (void*)list
 			};
 		}
+		default:
+			break;
 	}
 	assert(result.reference.kind == UNE_FK_SINGLE);
 	une_result *referenced = (une_result*)result.reference.root;

@@ -621,10 +621,10 @@ cases = [
 	Case('sort([2,1,3],(a,b)->return 1.0)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# getwd
-	Case('split(getwd(),["/","\\\\"])[-2..]', UNE_RK_LIST, '["une", "testing"]', []),
+	Case('split(getwd(),["/","\\\\"])[-1..]', UNE_RK_LIST, '["testing"]', []),
 	
 	# setwd
-	Case('setwd("..");s=split(getwd(),["/","\\\\"])[-1..];setwd("testing");return s', UNE_RK_LIST, '["une"]', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=getwd();setwd("..");b=getwd();setwd(a);return a!=b', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
 ]
 CASES_LEN = len(cases)
 

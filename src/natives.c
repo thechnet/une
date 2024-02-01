@@ -1,6 +1,6 @@
 /*
 natives.c - Une
-Modified 2023-12-10
+Modified 2024-01-31
 */
 
 /* Header-specific includes. */
@@ -553,7 +553,7 @@ une_native_fn__(replace)
 	size_t new_size = subject_len * (replace_len || 1) + 1;
 	
 	/* Allocate memory for new string. */
-	wchar_t *new = malloc(new_size*sizeof(wchar_t));
+	wchar_t *new = malloc(new_size*sizeof(*new));
 	
 	/* Create new string. */
 	size_t new_idx = 0, subject_idx = 0;

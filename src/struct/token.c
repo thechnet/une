@@ -1,6 +1,6 @@
 /*
 token.c - Une
-Modified 2024-01-30
+Modified 2024-11-09
 */
 
 /* Header-specific includes. */
@@ -196,6 +196,9 @@ une_static__ wchar_t *une_token_to_wcs(une_token token)
 			str_len += swprintf(str+wcslen(str), UNE_SIZE_TOKEN_AS_WCS, L":" UNE_COLOR_TOKEN_VALUE L"%ls" UNE_COLOR_RESET, une_native_to_wcs((une_native)token.value._int));
 			break;
 		
+		/* No token value. */
+		default:
+			break;
 	}
 	
 	assert(str_len < UNE_SIZE_TOKEN_AS_WCS);
