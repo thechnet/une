@@ -1,6 +1,4 @@
-# Une Documentation
-
-Une's syntax is a combination of *C*, *JavaScript*, and *Python*. Any programmer, but especially one with previous experience in the above-mentioned languages, should find their way into the language quickly and easily.
+# The Une Programming Language
 
 ## 1. General Concepts
 
@@ -520,114 +518,113 @@ assert 1 > 2 # Fails.
 
 ## 7. Native Functions
 
-- `put(value)` – Prints `value` to the standard output pipe:
-		```
-		> une -s "put(\"Hello, World!\")"
-		Hello, World!> 
-		```
+- `put(value)` – Prints `value` to the standard output pipe:  
+  ```
+  > une -s "put(\"Hello, World!\")"
+  Hello, World!> 
+  ```
 - `print(value)` – Same as `put`, but automatically appends a newline to the output:
-		```
-		> une -s "put(\"Hello, World!\")"
-		Hello, World!
-		> 
-		```
+  ```
+  > une -s "put(\"Hello, World!\")"
+  Hello, World!
+  > 
+  ```
 - `int(value)` – Returns `value` as an integer:
-		```
-		int("46") == 46
-		```
+  ```
+  int("46") == 46
+  ```
 - `flt(value)` – Returns `value` as a floating-point number:
-		```
-		flt(46) == 46.0
-		```
+  ```
+  flt(46) == 46.0
+  ```
 - `str(value)` – Returns `value` as a string:
-		```
-		str(46) == "46"
-		```
+  ```
+  str(46) == "46"
+  ```
 - `len(value)` – Returns the number of characters or items in `value`:
-		```
-		len("Une") == 3
-		len([1, 2, 3]) == 3
-		```
+  ```
+  len("Une") == 3
+  len([1, 2, 3]) == 3
+  ```
 - `sleep(time)` – Halts execution for `time` milliseconds:
-		```
-		[16:20:46] > une -s "sleep(10000); print(\"Done.\")"
-		[16:20:56] Done.
-		```
+  ```
+  [16:20:46] > une -s "sleep(10000); print(\"Done.\")"
+  [16:20:56] Done.
+  ```
 - `ord(character)` – Returns the ordinal character code of `character`:
-		```
-		ord("A") == 65
-		```
+  ```
+  ord("A") == 65
+  ```
 - `chr(code)` – Returns the character represented by the ordinal character code `code`:
-		```
-		chr(65) == "A"
-		```
+  ```
+  chr(65) == "A"
+  ```
 - `write(path, text)` – Writes the text `text` to a file at `path`:
-		```
-		> une -s "write(\"test.txt\", \"return 40\")"
-		```
-		test.txt:
-		```
-		return 40
-		```
+  ```
+  > une -s "write(\"test.txt\", \"return 40\")"
+  ```
+  test.txt:
+  ```
+  return 40
+  ```
 - `append(path, text)` – Same as `write`, but does not overwrite existing content:
-		```
-		> une -s "append(\"test.txt\", \"+6\")"
-		```
-		test.txt:
-		```
-		return 40+6
-		```
+  ```
+  > une -s "append(\"test.txt\", \"+6\")"
+  ```
+  test.txt:
+  ```
+  return 40+6
+  ```
 - `read(path)` – Returns the text contents of a file at `path`:
-		```
-		read("test.txt") == "return 40+6"
-		```
+  ```
+  read("test.txt") == "return 40+6"
+  ```
 - `script(path)` – Calls a script at `path` into the host context:
-		```
-		script("test.txt") == 46
-		```
+  ```
+  script("test.txt") == 46
+  ```
 - `eval(string)` – Same as `script()`, but accepts a string instead:
-		```
-		eval("23*2") == 46
-		```
+  ```
+  eval("23*2") == 46
+  ```
 - `input(prompt)` – Prints `prompt` and requests input from the user, returning the entered string:
-		```
-		> une -s "print(\"You wrote '\" + input(\"Write something: \") + \"'\")"
-		Write something: test
-		You wrote 'test'
-		> 
-		```
+  ```
+  > une -s "print(\"You wrote '\" + input(\"Write something: \") + \"'\")"
+  Write something: test
+  You wrote 'test'
+  ```
 - `exist(path)` – Returns `1` if a file `path` exists, otherwise `0`:
-		```
-		exist("test.txt") == 1
-		```
+  ```
+  exist("test.txt") == 1
+  ```
 - `split(text, delimiters)` – Returns a list of slices created by separating the string `text` at every delimiter contained in the list `delimiters`:
-		```
-		split("1,2;3", [",", ";"]) == ["1", "2", "3"]
-		```
+  ```
+  split("1,2;3", [",", ";"]) == ["1", "2", "3"]
+  ```
 - `join(list, seperator)` – Joins the strings in `list` into a single string, seperated by `seperator`:
-	```
-	join(["1", "2", "3"], ";") == "1;2;3"
-	```
+  ```
+  join(["1", "2", "3"], ";") == "1;2;3"
+  ```
 - `replace(search, replace, subject)` – Replace string `search` with string `replace` in string `subject`:
-		```
-		replace("+", "*", "2+23") == "2*23"
-		```
+  ```
+  replace("+", "*", "2+23") == "2*23"
+  ```
 - `sort(subject, comparator)` – Return a sorted copy of the list `subject`, using the `comparator` function to compare elements:
-		```
-		sort([3, 1, 2], (a, b) -> return a-b) == [1, 2, 3]
-		```
+  ```
+  sort([3, 1, 2], (a, b) -> return a-b) == [1, 2, 3]
+  ```
 - `setwd()` – Set the working directory.
-		```
-		setwd("C:\Directory")
-		```
+  ```
+  setwd("C:\Directory")
+  ```
 - `getwd()` – Get the current working directory.
-		```
-		getwd() == "C:\Directory"
-		```
+  ```
+  getwd() == "C:\Directory"
+  ```
 - `playwav()` – Play a WAV file. (Windows only)
-		```
-		playwav("sound.wav")
-		```
+  ```
+  playwav("sound.wav")
+  ```
 
 ---
 

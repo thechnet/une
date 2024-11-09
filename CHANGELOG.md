@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] - 2024-01-30
+## [Unreleased] - 2024-11-09
 
 ### Added
 - References to functions and built-in functions can now be compared for equality.
@@ -13,6 +13,8 @@
 ### Fixed
 - Using `replace()` to remove a substring (i.e., the replacement is the empty string) results in a buffer overflow.
 - Interactive mode crashes when evaluating a variable containing an object reference.
+- Objects passed into a function may become inaccessible if they are returned from the same function unchanged.
+- Enhanced *for* loops over string, list, or object literals don't clean up properly when an error occurs during the loop.
 
 ### Removed
 - E notation with lowercase `e` – Use uppercase `E` instead.
