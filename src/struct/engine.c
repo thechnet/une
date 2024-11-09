@@ -121,9 +121,6 @@ une_callable *une_engine_parse_module(une_module *module)
 	#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_PARSE)
 	ast = une_parse(&felix->error, &ps, module->tokens);
 	#endif
-	#if defined(UNE_DEBUG) && defined(UNE_DBG_LOG_PARSE)
-	wprintf(L"parse done.\n");
-	#endif
 
 	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
 	wchar_t *node_as_wcs = une_node_to_wcs(ast);

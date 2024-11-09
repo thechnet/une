@@ -49,6 +49,8 @@ Modified 2024-11-09
 #define UNE_ERROR_STREAM stderr
 #define UNE_DBG_LOGINTERPRET_INDENT L"|   "
 #define UNE_DBG_LOGINTERPRET_OFFSET 10
+#define UNE_DBG_LOGPARSE_INDENT L"| "
+#define UNE_DBG_LOGPARSE_OFFSET 15
 #define UNE_FLT_PRECISION (LDBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
 #define UNE_TAB_WIDTH 4
 #define UNE_TRACEBACK_EXTRACT_PREFIX L"  "
@@ -153,9 +155,41 @@ typedef union une_value_ {
 #define LOGINTERPRET_END(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DBG_LOG_PARSE)
-#define LOGPARSE(object_, node_) wprintf(L"P %hs %ls\n", __func__+10, object_, node_.kind)
+#define LOGPARSE_BEGIN() \
+	do { \
+		wchar_t *tk_ = une_token_to_wcs(now(&ps->in)); \
+		wprintf(L"%ls\33[%dG", tk_, UNE_DBG_LOGPARSE_OFFSET); \
+		free(tk_); \
+		for (int i=0; i<une_logparse_indent; i++) \
+			wprintf(UNE_DBG_LOGPARSE_INDENT); \
+		une_logparse_indent++; \
+		wprintf(L"%hs\n", __func__ + 10); \
+	} while (0)
+#define LOGPARSE_END(call) \
+	do { \
+		une_node *result__ = call; \
+		wchar_t *tk_ = une_token_to_wcs(now(&ps->in)); \
+		wprintf(L"%ls\33[%dG\33[%dm", tk_, UNE_DBG_LOGPARSE_OFFSET, result__ ? 90 : 31); \
+		free(tk_); \
+		une_logparse_indent--; \
+		for (int i=0; i<une_logparse_indent; i++) \
+			wprintf(UNE_DBG_LOGPARSE_INDENT); \
+		wprintf(L"\33[9m%hs\33[0m\n", __func__ + 10); \
+		return result__; \
+	} while (0)
+#define LOGPARSE_COMMENT(comment) \
+	do { \
+		wchar_t *tk_ = une_token_to_wcs(now(&ps->in)); \
+		wprintf(L"%ls\33[%dG", tk_, UNE_DBG_LOGPARSE_OFFSET); \
+		free(tk_); \
+		for (int i=0; i<une_logparse_indent; i++) \
+			wprintf(UNE_DBG_LOGPARSE_INDENT); \
+		wprintf(L"(%ls)\n", comment); \
+	} while (0)
 #else
-#define LOGPARSE(...)
+#define LOGPARSE_BEGIN()
+#define LOGPARSE_END(call) return call
+#define LOGPARSE_COMMENT(...)
 #endif
 
 /*

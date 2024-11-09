@@ -1,6 +1,6 @@
 /*
 parser.h - Une
-Modified 2024-01-31
+Modified 2024-11-09
 */
 
 #ifndef UNE_PARSER_H
@@ -25,7 +25,8 @@ Parser function template.
 
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens);
 
-une_parser__(une_parse_stmt);
+une_parser__(une_parse_body);
+une_parser__(une_parse_directive_or_block);
 une_parser__(une_parse_name);
 une_parser__(une_parse_block);
 une_parser__(une_parse_expression);
@@ -87,17 +88,12 @@ une_parser__(une_parse_binary_operation,
 une_parser__(une_parse_sequence,
 	une_node_kind node_kind,
 	une_token_kind begin,
-	une_token_kind end_of_item,
+	une_token_kind delimiter,
 	une_token_kind end,
 	une_node *(*parser)(une_error*, une_parser_state*)
 );
 
-une_parser__(une_parse_as_sequence,
-	une_node_kind node_kind,
-	une_node *(*parser)(une_error*, une_parser_state*)
-);
-
-une_parser__(une_parse_phony,
+une_parser__(une_parse_imaginary,
 	une_node_kind node_kind
 );
 
