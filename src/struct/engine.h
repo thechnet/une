@@ -1,6 +1,6 @@
 /*
 engine.h - Une
-Modified 2023-12-10
+Modified 2024-11-09
 */
 
 #ifndef UNE_ENGINE_H
@@ -48,5 +48,8 @@ une_callable *une_engine_parse_module(une_module *module);
 une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *wcs, une_position current_context_exit_position);
 une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs);
 void une_engine_print_error(void);
+une_context *une_engine_push_context(bool transparent, une_position position_in_current_module, size_t child_module_id);
+void une_engine_pop_context(une_context *context_before_push);
+void une_engine_set_context_callable(une_callable *callable, wchar_t *optional_label);
 
 #endif /* !UNE_ENGINE_H */

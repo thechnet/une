@@ -1,6 +1,6 @@
 /*
 function.c - Une
-Modified 2024-01-30
+Modified 2024-11-09
 */
 
 /* Header-specific includes. */
@@ -58,18 +58,9 @@ une_result une_type_function_call(une_node *call, une_result function, une_resul
 		return une_result_create(UNE_RK_ERROR);
 	}
 	
-	/* Create function context. */
-	une_context *parent = felix->is.context;
-	parent->exit_position = call->pos;
-	felix->is.context = une_context_create();
-	felix->is.context->parent = parent;
-	felix->is.context->module_id = callable->module_id;
-	
-	felix->is.context->callable_id = callable->id;
-	if (label) {
-		felix->is.context->label = wcsdup(label);
-		verify(felix->is.context->label);
-	}
+	/* Push function context. */
+	une_context *parent = une_engine_push_context(false, call->pos, callable->module_id);
+	une_engine_set_context_callable(callable, label);
 
 	/* Define parameters. */
 	for (size_t i=0; i<callable->parameters.count; i++) {
@@ -83,8 +74,7 @@ une_result une_type_function_call(une_node *call, une_result function, une_resul
 
 	/* Return to parent context. */
 	if (result.kind != UNE_RK_ERROR) {
-		une_context_free_children(parent, felix->is.context);
-		felix->is.context = parent;
+		une_engine_pop_context(parent);
 	}
 	return result;
 }

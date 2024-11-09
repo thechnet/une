@@ -148,11 +148,7 @@ une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *w
 
 	une_module *module = une_engine_new_module_from_file_or_wcs(path, wcs);
 	
-	une_context *parent = felix->is.context;
-	parent->exit_position = current_context_exit_position;
-	felix->is.context = une_context_create_transparent();
-	felix->is.context->parent = parent;
-	felix->is.context->module_id = module->id;
+	une_context *parent = une_engine_push_context(true, current_context_exit_position, module->id);
 
 	if (!module->tokens)
 		return une_result_create(UNE_RK_ERROR);
@@ -171,7 +167,7 @@ une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *w
 	wprintf(L"\n\n"); /* node_as_wcs does not add a newline. */
 	#endif
 	
-	felix->is.context->callable_id = callable->id;
+	une_engine_set_context_callable(callable, NULL);
 
 	une_result result = une_result_create(UNE_RK_VOID);
 	#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_INTERPRET)
@@ -189,8 +185,7 @@ une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *w
 	if (result.kind == UNE_RK_ERROR)
 		return une_result_create(UNE_RK_ERROR);
 
-	une_context_free_children(parent, felix->is.context);
-	felix->is.context = parent;
+	une_engine_pop_context(parent);
 	
 	return result;
 }
@@ -211,4 +206,30 @@ void une_engine_print_error(void)
 	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_EXTENDED_ERROR)
 	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Raised in \"%hs\" at line %d" UNE_COLOR_RESET L"\n", felix->error.meta_file, felix->error.meta_line);
 	#endif
+}
+
+une_context *une_engine_push_context(bool transparent, une_position position_in_current_module, size_t child_module_id)
+{
+	une_context *parent = felix->is.context;
+	parent->exit_position = position_in_current_module;
+	felix->is.context = transparent ? une_context_create_transparent() : une_context_create();
+	felix->is.context->parent = parent;
+	felix->is.context->module_id = child_module_id;
+	return parent;
+}
+
+void une_engine_pop_context(une_context *context_before_push)
+{
+	une_context_free_children(context_before_push, felix->is.context);
+	felix->is.context = context_before_push;
+	context_before_push->exit_position = (une_position){ 0 };
+}
+
+void une_engine_set_context_callable(une_callable *callable, wchar_t *optional_label)
+{
+	felix->is.context->callable_id = callable->id;
+	if (optional_label) {
+		felix->is.context->label = wcsdup(optional_label);
+		verify(felix->is.context->label);
+	}
 }
