@@ -1,6 +1,6 @@
 /*
 interpreter.c - Une
-Modified 2024-01-30
+Modified 2024-11-09
 */
 
 /* Header-specific includes. */
@@ -1189,24 +1189,29 @@ une_interpreter__(une_interpret_for_element)
 	/* Prepare internal index. */
 	une_result index = une_result_create(UNE_RK_INT);
 	index.value._int = 0;
+
+	/* Prepare result. */
+	une_result result = une_result_create(UNE_RK_VOID);
 	
 	/* Loop. */
 	for (; index.value._int<length; index.value._int++) {
 		var = une_variable_find_by_name(felix->is.context, name); /* Avoid stale pointer if variable buffer grows. */
 		une_result_free(var->content);
 		var->content = une_result_dereference(elements_type.refer_to_index(elements, index));
-		une_result result = une_result_dereference(une_interpret(node->content.branch.c));
-		if (result.kind == UNE_RK_ERROR || felix->is.should_return || felix->is.should_exit)
-			return result;
-		if (result.kind == UNE_RK_BREAK) {
-			une_result_free(result);
+		une_result result_ = une_result_dereference(une_interpret(node->content.branch.c));
+		if (result_.kind == UNE_RK_ERROR || felix->is.should_return || felix->is.should_exit) {
+			result = result_;
 			break;
 		}
-		une_result_free(result);
+		if (result_.kind == UNE_RK_BREAK) {
+			une_result_free(result_);
+			break;
+		}
+		une_result_free(result_);
 	}
 	
 	une_result_free(elements);
-	return une_result_create(UNE_RK_VOID);
+	return result;
 }
 
 une_interpreter__(une_interpret_while)

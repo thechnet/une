@@ -476,7 +476,7 @@ wchar_t *une_node_to_wcs(une_node *node)
 		}
 
 		default:
-			assert(false);
+			break;
 	
 	}
 	
