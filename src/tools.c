@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2023-12-10
+Modified 2025-05-26
 */
 
 /* Header-specific includes. */
@@ -18,7 +18,7 @@ Modified 2023-12-10
 #else
 #include <sys/stat.h>
 #include <unistd.h>
-#include <ckind.h>
+#include <ctype.h>
 #endif
 #include "lexer.h"
 

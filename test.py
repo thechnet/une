@@ -20,19 +20,15 @@ class Case:
 SKIP_UNTIL = int(argv[1]) if len(argv) > 1 and argv[1] != "enumerate_cases" else 0 # 0, 2
 HIDE_OUTPUT = True
 SHOW_ERRORS = False
-CLEAR = True
+CLEAR = False
 STOP_AT_FAIL = True
 ENUMERATE_CASES = True if len(argv) > 1 and argv[1] == "enumerate_cases" else False
 FILE_SCRIPT = 'test.py.une'
-DIR = '.'
-UNE = '..\\\\debug\\\\une.exe' if is_win() else '../debug/une'
+DIR = 'debug'
+UNE = '.\\\\une.exe' if is_win() else './une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
 UNE_R_END_TYPE_RESULT_KINDS = 9
-
-# UNCOMMENT THESE LINES WHEN USING GCOV:
-# DIR = '..\\private\\gcov' if is_win() else '../private/gcov'
-# UNE = 'une' if is_win() else './une'
 
 ##### CONSTANTS
 
@@ -621,7 +617,7 @@ cases = [
 	Case('sort([2,1,3],(a,b)->return 1.0)', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
 	# getwd
-	Case('split(getwd(),["/","\\\\"])[-1..]', UNE_RK_LIST, '["testing"]', []),
+	Case('split(getwd(),["/","\\\\"])[-1..]', UNE_RK_LIST, '["debug"]', []),
 	
 	# setwd
 	Case('a=getwd();setwd("..");b=getwd();setwd(a);return a!=b', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
