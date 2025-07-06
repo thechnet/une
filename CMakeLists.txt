@@ -66,7 +66,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
 	target_compile_options(une PRIVATE -Weverything)
 	if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0)
-		target_compile_options(une PRIVATE -Wno-unsafe-buffer-usage)
+		target_compile_options(une PRIVATE -Wno-unsafe-buffer-usage -Wno-poison-system-directories)
 	endif()
 endif()
 target_compile_options(une PRIVATE
