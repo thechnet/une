@@ -1,0 +1,92 @@
+name: Package (macOS)
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      llvm_major:
+        type: string
+        required: true
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        runner: # See https://github.com/actions/runner-images.
+          - macos-15 # arm64.
+          - macos-13 # x64.
+      fail-fast: false
+    runs-on: ${{matrix.runner}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Define strings
+        id: strings
+        shell: bash
+        run: |
+          TARGET_ARCH="arm64"
+          if [[ "${{matrix.runner}}" == "macos-13" ]]; then
+            TARGET_ARCH="x64"
+          fi
+
+          echo "label=une_${{inputs.version}}-macos+$TARGET_ARCH" >> "$GITHUB_OUTPUT"
+
+      - name: Install LLVM ${{inputs.llvm_major}}
+        id: toolchain
+        shell: bash
+        run: |
+          HOMEBREW="/opt/homebrew"
+          if [[ "${{matrix.runner}}" == "macos-13" ]]; then
+            HOMEBREW="/usr/local"
+          fi
+
+          brew update
+          brew install llvm@${{inputs.llvm_major}}
+
+          echo "cc=$HOMEBREW/opt/llvm@${{inputs.llvm_major}}/bin/clang" >> "$GITHUB_OUTPUT"
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          OPTIONS='-DCMAKE_C_FLAGS="-Werror"'
+
+          cmake -B debug \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER="${{steps.toolchain.outputs.cc}}" \
+            $OPTIONS
+
+          cmake -B release \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER="${{steps.toolchain.outputs.cc}}" \
+            $OPTIONS
+
+      - name: Build and test une-dbg
+        shell: bash
+        run: |
+          cmake --build debug
+          python3 test.py
+
+      - name: Build une
+        shell: bash
+        run: |
+          cmake --build release
+
+          mv debug/une release/une-dbg
+
+      - name: Package binaries
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path release/une,release/une-dbg `
+            -DestinationPath "${{steps.strings.outputs.label}}.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{steps.strings.outputs.label}}
+          path: ${{steps.strings.outputs.label}}.zip

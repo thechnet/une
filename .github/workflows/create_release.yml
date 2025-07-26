@@ -1,0 +1,37 @@
+name: Create release
+
+on:
+  workflow_call:
+    inputs:
+      iteration:
+        type: string
+        required: true
+      preview:
+        type: string
+        required: true
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: .
+          pattern: une_${{inputs.iteration}}-*
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{inputs.iteration}}${{inputs.preview!='' && format(' (Preview {0})', inputs.preview) || ''}}
+          prerelease: ${{inputs.preview!='' && 'true' || 'false'}}
+          artifacts: une_${{inputs.iteration}}-*.zip
+          body: |
+            See [the changelog](https://github.com/thechnet/une/blob/main/CHANGELOG.md) for more details.
+
+            Each package contains a release build `une` and a debug build `une-dbg`.

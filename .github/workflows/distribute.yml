@@ -1,0 +1,41 @@
+name: Distribute
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  parse_tag:
+    runs-on: ubuntu-latest
+    outputs:
+      iteration: ${{steps.parse_tag.outputs.iteration}}
+      preview: ${{steps.parse_tag.outputs.release-preview}}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse tag
+        id: parse_tag
+        shell: bash
+        run: |
+          python3 .github/scripts/parse_tag.py "$GITHUB_REF_NAME" | tee -a "$GITHUB_OUTPUT"
+
+  package:
+    needs: parse_tag
+    uses: ./.github/workflows/package.yml
+    permissions:
+      contents: write
+    with:
+      iteration: ${{needs.parse_tag.outputs.iteration}}
+      preview: ${{needs.parse_tag.outputs.preview}}
+
+  create_release:
+    needs:
+      - parse_tag # See 'with'.
+      - package
+    uses: ./.github/workflows/create_release.yml
+    permissions:
+      contents: write
+    with:
+      iteration: ${{needs.parse_tag.outputs.iteration}}
+      preview: ${{needs.parse_tag.outputs.preview}}

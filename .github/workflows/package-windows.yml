@@ -1,0 +1,103 @@
+name: Package (Windows)
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      llvm_mingw_date:
+        type: string
+        required: true
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        runner: [windows-11-arm] # See https://github.com/actions/partner-runner-images.
+        target_arch: [x86, x64, arm64] # Supports x86, x64, arm64.
+        target_runtime: [ucrt] # msvcrt requires an x86/64 runner. Use windows-latest, adjust $LABEL, and exclude arm64 (incompatible -> can't test).
+      fail-fast: false
+    runs-on: ${{matrix.runner}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Define strings
+        id: strings
+        shell: bash
+        run: |
+          echo "label=une_${{inputs.version}}-windows+${{matrix.target_runtime}}-${{matrix.target_arch}}" >> "$GITHUB_OUTPUT"
+
+      - name: Install llvm-mingw @ ${{inputs.llvm_mingw_date}}
+        id: toolchain
+        shell: bash
+        run: |
+          LABEL="llvm-mingw-${{inputs.llvm_mingw_date}}-${{matrix.target_runtime}}-aarch64"
+          URL="https://github.com/mstorsjo/llvm-mingw/releases/download/${{inputs.llvm_mingw_date}}/$LABEL.zip"
+
+          case "${{matrix.target_arch}}" in
+            x64)    TARGET_ARCH="x86_64"  ;;
+            x86)    TARGET_ARCH="i686"    ;;
+            arm)    TARGET_ARCH="armv7"   ;;
+            arm64)  TARGET_ARCH="aarch64" ;;
+          esac
+
+          curl -sSLO $URL
+          unzip -q $LABEL.zip
+
+          echo "cc=${{github.workspace}}/$LABEL/bin/$TARGET_ARCH-w64-mingw32-clang.exe" >> "$GITHUB_OUTPUT"
+
+      - name: Install Make
+        shell: bash
+        run: |
+          choco install make
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          OPTIONS='-DCMAKE_C_FLAGS="-Werror"'
+          if [[ "${{matrix.target_runtime}}" == "ucrt" ]]; then
+            OPTIONS+=" -DUNE_USES_UCRT=ON"
+          fi
+          if [[ "${{matrix.target_arch}}" == "x86" || "${{matrix.target_arch}}" == "arm" ]]; then
+            OPTIONS+=" -DUNE_32BIT=ON"
+          fi
+
+          cmake -B debug \
+            -G "Unix Makefiles" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER="${{steps.toolchain.outputs.cc}}" \
+            $OPTIONS
+
+          cmake -B release \
+            -G "Unix Makefiles" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER="${{steps.toolchain.outputs.cc}}" \
+            $OPTIONS
+
+      - name: Build and test une-dbg
+        shell: bash
+        run: |
+          cmake --build debug
+          python3 test.py
+
+      - name: Build une
+        shell: bash
+        run: |
+          cmake --build release
+
+          mv debug/une.exe release/une-dbg.exe
+
+      - name: Package binaries
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path release/une.exe,release/une-dbg.exe `
+            -DestinationPath "${{steps.strings.outputs.label}}.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{steps.strings.outputs.label}}
+          path: ${{steps.strings.outputs.label}}.zip

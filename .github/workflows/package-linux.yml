@@ -1,0 +1,86 @@
+name: Package (Linux)
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      llvm_major:
+        type: string
+        required: true
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        runner: [ubuntu-22.04, ubuntu-22.04-arm] # See https://github.com/actions/runner-images, https://github.com/actions/partner-runner-images.
+      fail-fast: false
+    runs-on: ${{matrix.runner}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Define strings
+        id: strings
+        shell: bash
+        run: |
+          TARGET_ARCH="x64"
+          if [[ "${{matrix.runner}}" == *-arm ]]; then
+            TARGET_ARCH="arm64"
+          fi
+
+          echo "label=une_${{inputs.version}}-linux+$TARGET_ARCH" >> "$GITHUB_OUTPUT"
+
+      - name: Install LLVM ${{inputs.llvm_major}}
+        id: toolchain
+        shell: bash
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh ${{inputs.llvm_major}}
+
+          echo "cc=clang-${{inputs.llvm_major}}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          OPTIONS='-DCMAKE_C_FLAGS="-Werror"'
+
+          cmake -B debug \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER="${{steps.toolchain.outputs.cc}}" \
+            $OPTIONS
+
+          cmake -B release \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER="${{steps.toolchain.outputs.cc}}" \
+            $OPTIONS
+
+      - name: Build and test une-dbg
+        shell: bash
+        run: |
+          cmake --build debug
+          python3 test.py
+
+      - name: Build une
+        shell: bash
+        run: |
+          cmake --build release
+
+          mv debug/une release/une-dbg
+
+      - name: Package binaries
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path release/une,release/une-dbg `
+            -DestinationPath "${{steps.strings.outputs.label}}.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{steps.strings.outputs.label}}
+          path: ${{steps.strings.outputs.label}}.zip

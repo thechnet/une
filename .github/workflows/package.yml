@@ -1,0 +1,57 @@
+name: Package
+
+on:
+  workflow_call:
+    inputs:
+      iteration:
+        type: string
+        required: true
+      preview:
+        type: string
+        required: true
+      llvm_mingw_date:
+        type: string
+        required: false
+        default: 20250709
+      llvm_major:
+        type: string
+        required: false
+        default: 20
+  workflow_dispatch:
+    inputs:
+      iteration:
+        description: 'Version iteration'
+        type: string
+        required: true
+      preview:
+        description: 'Version preview (or empty)'
+        type: string
+      llvm_mingw_date:
+        description: 'llvm-mingw date (Windows)'
+        type: string
+        required: true
+        default: 20250709
+      llvm_major:
+        description: 'LLVM major (macOS, Linux)'
+        type: string
+        required: true
+        default: 20
+
+jobs:
+  windows:
+    uses: ./.github/workflows/package-windows.yml
+    with:
+      version: ${{inputs.iteration}}
+      llvm_mingw_date: ${{inputs.llvm_mingw_date}}
+
+  macos:
+    uses: ./.github/workflows/package-macos.yml
+    with:
+      version: ${{inputs.iteration}}
+      llvm_major: ${{inputs.llvm_major}}
+
+  linux:
+    uses: ./.github/workflows/package-linux.yml
+    with:
+      version: ${{inputs.iteration}}
+      llvm_major: ${{inputs.llvm_major}}
