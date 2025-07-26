@@ -1,6 +1,6 @@
 /*
 result.h - Une
-Modified 2023-12-10
+Modified 2025-07-26
 */
 
 #ifndef UNE_RESULT_H
@@ -25,7 +25,7 @@ typedef enum une_result_kind_ {
 	UNE_RK_OBJECT,
 	UNE_RK_FUNCTION,
 	UNE_RK_NATIVE,
-	#define UNE_R_END_DATA_RESULT_KINDS UNE_RK_NATIVE
+	#define UNE_R_END_DATA_RESULT_KINDS UNE_RK_NATIVE /* See test.py! */
 	UNE_RK_CONTINUE,
 	UNE_RK_BREAK,
 	UNE_RK_SIZE,

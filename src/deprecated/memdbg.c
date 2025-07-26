@@ -1,6 +1,6 @@
 /*
 memdbg.c - Une
-Modified 2023-11-17
+Modified 2025-07-26
 */
 
 /* Header-specific includes. */
@@ -175,7 +175,7 @@ static void memdbg_init(void)
 {
 	srand((unsigned int)memdbg_current_second());
 	for (int i=0; i<MEMDBG_PADDING_SIZE; i++)
-		memdbg_padding[i] = rand() % CHAR_MAX;
+		memdbg_padding[i] = (char)(rand() % CHAR_MAX);
 	assert(memdbg_allocations == NULL);
 	memdbg_allocations_size = MEMDBG_ALLOCATIONS_SIZE;
 	memdbg_allocations_count = 0;

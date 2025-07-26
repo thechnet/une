@@ -2,6 +2,7 @@
 import os
 from os import system as cmd
 from sys import platform, argv
+from typing import Any, Union
 
 def is_win():
 	return platform=='win32' or platform=='cygwin' or platform=='msys'
@@ -10,7 +11,7 @@ def is_cmd_exe():
 	return platform=='win32'
 
 class Case:
-	def __init__(self, input, result_kind, result_value, attributes):
+	def __init__(self, input: str, result_kind: int, result_value: Union[int, str], attributes: list[int]):
 		self.input = input
 		self.result_kind = result_kind
 		self.result_value = result_value
@@ -28,7 +29,7 @@ DIR = 'debug'
 UNE = '.\\\\une.exe' if is_win() else './une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
-UNE_R_END_TYPE_RESULT_KINDS = 9
+UNE_R_END_DATA_RESULT_KINDS = 9
 
 ##### CONSTANTS
 
@@ -63,20 +64,20 @@ result_kinds = {
 
 # Error kinds
 UNE_ERROR_INPUT = 1
-UNE_EK_SYNTAX = UNE_R_END_TYPE_RESULT_KINDS+1
-UNE_EK_BREAK_OUTSIDE_LOOP = UNE_R_END_TYPE_RESULT_KINDS+2
-UNE_EK_CONTINUE_OUTSIDE_LOOP = UNE_R_END_TYPE_RESULT_KINDS+3
-UNE_EK_SYMBOL_NOT_DEFINED = UNE_R_END_TYPE_RESULT_KINDS+4
-UNE_EK_INDEX = UNE_R_END_TYPE_RESULT_KINDS+5
-UNE_EK_ZERO_DIVISION = UNE_R_END_TYPE_RESULT_KINDS+6
-UNE_EK_UNREAL_NUMBER = UNE_R_END_TYPE_RESULT_KINDS+7
-UNE_EK_CALLABLE_ARG_COUNT = UNE_R_END_TYPE_RESULT_KINDS+8
-UNE_EK_FILE = UNE_R_END_TYPE_RESULT_KINDS+9
-UNE_EK_ENCODING = UNE_R_END_TYPE_RESULT_KINDS+10
-UNE_EK_TYPE = UNE_R_END_TYPE_RESULT_KINDS+11
-UNE_EK_ASSERTION_NOT_MET = UNE_R_END_TYPE_RESULT_KINDS+12
-UNE_EK_MISPLACED_ANY_OR_ALL = UNE_R_END_TYPE_RESULT_KINDS+13
-UNE_EK_SYSTEM = UNE_R_END_TYPE_RESULT_KINDS+14
+UNE_EK_SYNTAX = UNE_R_END_DATA_RESULT_KINDS+1
+UNE_EK_BREAK_OUTSIDE_LOOP = UNE_R_END_DATA_RESULT_KINDS+2
+UNE_EK_CONTINUE_OUTSIDE_LOOP = UNE_R_END_DATA_RESULT_KINDS+3
+UNE_EK_SYMBOL_NOT_DEFINED = UNE_R_END_DATA_RESULT_KINDS+4
+UNE_EK_INDEX = UNE_R_END_DATA_RESULT_KINDS+5
+UNE_EK_ZERO_DIVISION = UNE_R_END_DATA_RESULT_KINDS+6
+UNE_EK_UNREAL_NUMBER = UNE_R_END_DATA_RESULT_KINDS+7
+UNE_EK_CALLABLE_ARG_COUNT = UNE_R_END_DATA_RESULT_KINDS+8
+UNE_EK_FILE = UNE_R_END_DATA_RESULT_KINDS+9
+UNE_EK_ENCODING = UNE_R_END_DATA_RESULT_KINDS+10
+UNE_EK_TYPE = UNE_R_END_DATA_RESULT_KINDS+11
+UNE_EK_ASSERTION_NOT_MET = UNE_R_END_DATA_RESULT_KINDS+12
+UNE_EK_MISPLACED_ANY_OR_ALL = UNE_R_END_DATA_RESULT_KINDS+13
+UNE_EK_SYSTEM = UNE_R_END_DATA_RESULT_KINDS+14
 error_kinds = {
 	UNE_ERROR_INPUT: 'UNE_ERROR_INPUT',
 	UNE_EK_SYNTAX: 'UNE_EK_SYNTAX',
@@ -626,16 +627,17 @@ CASES_LEN = len(cases)
 
 ##### PROGRAM
 
-def dict_get(dictionary, value):
+def dict_get(dictionary: dict[Any, Any], value: Any):
 	if not value in dictionary:
 		return value
 	return dictionary.get(value)
 
-def check_report(interface, case: Case, i):
+def check_report(interface: str, case: Case, i: int):
 	passed = True
 	result_kind_checked = False
 	alloc_count_checked = False
 	alert_count_checked = False
+	result_kind = None
 	with open(FILE_STATUS, mode='r', encoding='utf-8-sig') as report_status:
 		for line in report_status:
 			if line.startswith('result_kind:'):
