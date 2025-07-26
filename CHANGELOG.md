@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] - 2025-07-26
+## [0.16.1] - 2025-07-26
 
 ### Fixed
 
@@ -700,9 +700,10 @@
   The lexer keeps track of what type of token it is currently lexing. It decides what to do with the character based on the current token type and the type of the character. It handles one character per loop.
 
 <!-- Unreleased -->
-[Unreleased]: https://github.com/thechnet/une/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/thechnet/une/compare/v0.16.1...HEAD
 
 <!-- Releases -->
+[0.16.1]: https://github.com/thechnet/une/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/thechnet/une/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/thechnet/une/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/thechnet/une/compare/v0.13.0...v0.14.0
