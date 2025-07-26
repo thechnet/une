@@ -10,6 +10,10 @@ def is_win():
 def is_cmd_exe():
 	return platform=='win32'
 
+def flt(s: str):
+	[i, f] = s.split('.')
+	return f'{i}.{f[:UNE_FLT_PRECISION]}'
+
 class Case:
 	def __init__(self, input: str, result_kind: int, result_value: Union[int, str], attributes: list[int]):
 		self.input = input
@@ -30,6 +34,7 @@ UNE = '.\\\\une.exe' if is_win() else './une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
 UNE_R_END_DATA_RESULT_KINDS = 9
+UNE_FLT_PRECISION = 10
 
 ##### CONSTANTS
 
@@ -102,15 +107,15 @@ cases = [
 	
 	# NEW NUMBER LEXER
 	Case('0', UNE_RK_INT, '0', []),
-	Case('00.00', UNE_RK_FLT, '0.0', []),
+	Case('00.00', UNE_RK_FLT, flt('0.0'), []),
 	Case('0.', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	Case('.0', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	Case('0b10', UNE_RK_INT, '2', []),
 	Case('0o10', UNE_RK_INT, '8', []),
 	Case('0xf', UNE_RK_INT, '15', []),
 	Case('0x.8', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
-	Case('2E2', UNE_RK_FLT, '200.0', []),
-	Case('2E-2', UNE_RK_FLT, '0.02', []),
+	Case('2E2', UNE_RK_FLT, flt('200.0'), []),
+	Case('2E-2', UNE_RK_FLT, flt('0.02'), []),
 	Case('0b1E1', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
 	
 	# OCTAL AND HEXADECIMAL CHARACTER CONSTANTS IN STRINGS
@@ -139,15 +144,15 @@ cases = [
 	Case('int("100x")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	Case('int("")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	
-	Case('flt(100)', UNE_RK_FLT, '100.0', []),
-	Case('flt(100.9)', UNE_RK_FLT, '100.9', []),
-	Case('flt("100.9")', UNE_RK_FLT, '100.9', []),
+	Case('flt(100)', UNE_RK_FLT, flt('100.0'), []),
+	Case('flt(100.9)', UNE_RK_FLT, flt('100.9'), []),
+	Case('flt("100.9")', UNE_RK_FLT, flt('100.9'), []),
 	Case('flt([1])', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	Case('flt("100.9x")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	Case('flt("")', UNE_RK_ERROR, UNE_EK_ENCODING, []),
 	
 	Case('str(1)', UNE_RK_STR, '1', []),
-	Case('str(1.1)', UNE_RK_STR, '1.1', []),
+	Case('str(1.1)', UNE_RK_STR, flt('1.1'), []),
 	Case('str("str")', UNE_RK_STR, 'str', []),
 	Case('str([1])', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
@@ -248,7 +253,7 @@ cases = [
 	# Data
 	Case('Void', UNE_RK_VOID, 'Void', []),
 	Case('100', UNE_RK_INT, '100', []),
-	Case('100.9', UNE_RK_FLT, '100.9', []),
+	Case('100.9', UNE_RK_FLT, flt('100.9'), []),
 	Case('[]', UNE_RK_LIST, '[]', []),
 	Case('[1]', UNE_RK_LIST, '[1]', []),
 	Case('[1, 2]', UNE_RK_LIST, '[1, 2]', []),
@@ -372,9 +377,9 @@ cases = [
 	
 	# ADD
 	Case('1+1', UNE_RK_INT, '2', []),
-	Case('1+1.0', UNE_RK_FLT, '2.0', []),
-	Case('1.0+1', UNE_RK_FLT, '2.0', []),
-	Case('1.0+1.0', UNE_RK_FLT, '2.0', []),
+	Case('1+1.0', UNE_RK_FLT, flt('2.0'), []),
+	Case('1.0+1', UNE_RK_FLT, flt('2.0'), []),
+	Case('1.0+1.0', UNE_RK_FLT, flt('2.0'), []),
 	Case('"str"+"str"', UNE_RK_STR, 'strstr', []),
 	Case('[1]+[2]', UNE_RK_LIST, '[1, 2]', []),
 	Case('unknown+1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
@@ -387,9 +392,9 @@ cases = [
 	
 	# SUB
 	Case('1-1', UNE_RK_INT, '0', []),
-	Case('1-1.0', UNE_RK_FLT, '0.0', []),
-	Case('1.0-1', UNE_RK_FLT, '0.0', []),
-	Case('1.0-1.0', UNE_RK_FLT, '0.0', []),
+	Case('1-1.0', UNE_RK_FLT, flt('0.0'), []),
+	Case('1.0-1', UNE_RK_FLT, flt('0.0'), []),
+	Case('1.0-1.0', UNE_RK_FLT, flt('0.0'), []),
 	Case('unknown-1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1-unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1-[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
@@ -397,9 +402,9 @@ cases = [
 	
 	# MUL
 	Case('2*2', UNE_RK_INT, '4', []),
-	Case('2*2.5', UNE_RK_FLT, '5.0', []),
-	Case('2.5*2', UNE_RK_FLT, '5.0', []),
-	Case('2.5*2.0', UNE_RK_FLT, '5.0', []),
+	Case('2*2.5', UNE_RK_FLT, flt('5.0'), []),
+	Case('2.5*2', UNE_RK_FLT, flt('5.0'), []),
+	Case('2.5*2.0', UNE_RK_FLT, flt('5.0'), []),
 	Case('3*"str"', UNE_RK_STR, 'strstrstr', []),
 	Case('"string"*3', UNE_RK_STR, 'stringstringstring', []),
 	Case('"string"*-1', UNE_RK_STR, '', []),
@@ -414,10 +419,10 @@ cases = [
 	
 	# DIV
 	Case('6/2', UNE_RK_INT, '3', []),
-	Case('1/2', UNE_RK_FLT, '0.5', []),
-	Case('1/4.0', UNE_RK_FLT, '0.25', []),
-	Case('4.0/1', UNE_RK_FLT, '4.0', []),
-	Case('1.0/3.0', UNE_RK_FLT, '0.3333333333333', []),
+	Case('1/2', UNE_RK_FLT, flt('0.5'), []),
+	Case('1/4.0', UNE_RK_FLT, flt('0.25'), []),
+	Case('4.0/1', UNE_RK_FLT, flt('4.0'), []),
+	Case('1.0/3.0', UNE_RK_FLT, flt('0.3333333333333'), []),
 	Case('unknown/1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1/unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1/[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
@@ -441,9 +446,9 @@ cases = [
 	
 	# MOD
 	Case('3%2', UNE_RK_INT, '1', []),
-	Case('5.5%2', UNE_RK_FLT, '1.5', []),
-	Case('5%3.5', UNE_RK_FLT, '1.5', []),
-	Case('5.5%3.5', UNE_RK_FLT, '2.0', []),
+	Case('5.5%2', UNE_RK_FLT, flt('1.5'), []),
+	Case('5%3.5', UNE_RK_FLT, flt('1.5'), []),
+	Case('5.5%3.5', UNE_RK_FLT, flt('2.0'), []),
 	Case('unknown%1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1%unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1%[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
@@ -451,10 +456,10 @@ cases = [
 	
 	# POW
 	Case('3**3', UNE_RK_INT, '27', []),
-	Case('4**0.5', UNE_RK_FLT, '2.0', []),
-	Case('0.8**3', UNE_RK_FLT, '0.512', []),
-	Case('4.0**2.0', UNE_RK_FLT, '16.0', []),
-	Case('2**-2', UNE_RK_FLT, '0.25', []),
+	Case('4**0.5', UNE_RK_FLT, flt('2.0'), []),
+	Case('0.8**3', UNE_RK_FLT, flt('0.512'), []),
+	Case('4.0**2.0', UNE_RK_FLT, flt('16.0'), []),
+	Case('2**-2', UNE_RK_FLT, flt('0.25'), []),
 	Case('unknown**1', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1**unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('1**[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
@@ -463,7 +468,7 @@ cases = [
 	
 	# NEG
 	Case('--100', UNE_RK_INT, '100', []),
-	Case('--100.9', UNE_RK_FLT, '100.9', []),
+	Case('--100.9', UNE_RK_FLT, flt('100.9'), []),
 	Case('-unknown', UNE_RK_ERROR, UNE_EK_SYMBOL_NOT_DEFINED, []),
 	Case('-[1]', UNE_RK_ERROR, UNE_EK_TYPE, []),
 	
@@ -490,7 +495,7 @@ cases = [
 	Case('a=4;a**=2;return a', UNE_RK_INT, '16', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('a=4;a*=2;return a', UNE_RK_INT, '8', [ATTR_NO_IMPLICIT_RETURN]),
 	Case('a=5;a//=2;return a', UNE_RK_INT, '2', [ATTR_NO_IMPLICIT_RETURN]),
-	Case('a=5;a/=2;return a', UNE_RK_FLT, '2.5', [ATTR_NO_IMPLICIT_RETURN]),
+	Case('a=5;a/=2;return a', UNE_RK_FLT, flt('2.5'), [ATTR_NO_IMPLICIT_RETURN]),
 	Case('a=5;a%=2;return a', UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
 	
 	# GET

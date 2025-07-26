@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] - 2025-07-26
+
+### Fixed
+
+- The number of decimal digits shown in string representations of floating-point numbers is architecture-dependent.
+
 ## [0.16.0] - 2025-05-26
 
 ### Added

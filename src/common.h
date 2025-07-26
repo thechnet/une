@@ -1,6 +1,6 @@
 /*
 common.h - Une
-Modified 2024-11-09
+Modified 2025-07-26
 */
 
 #ifndef UNE_PRIMITIVE_H
@@ -51,7 +51,7 @@ Modified 2024-11-09
 #define UNE_DBG_LOGINTERPRET_OFFSET 10
 #define UNE_DBG_LOGPARSE_INDENT L"| "
 #define UNE_DBG_LOGPARSE_OFFSET 15
-#define UNE_FLT_PRECISION (LDBL_DIG-5) /* This is some aggressive rounding, but I think it's still precise enough. */
+#define UNE_FLT_PRECISION 10 /* See https://www.gnu.org/software/libc/manual/html_node/Floating-Point-Parameters.html#index-DBL_005fDIG. Also, test.py! */
 #define UNE_TAB_WIDTH 4
 #define UNE_TRACEBACK_EXTRACT_PREFIX L"  "
 
