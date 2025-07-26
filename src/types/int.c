@@ -1,6 +1,6 @@
 /*
 int.c - Une
-Modified 2024-01-30
+Modified 2025-07-26
 */
 
 /* Header-specific includes. */
@@ -232,7 +232,7 @@ une_result une_type_int_fdiv(une_result left, une_result right)
 	assert(left.kind == UNE_RK_INT);
 	
 	/* Return INFINITY on zero division. */
-	if ((right.kind == UNE_RK_INT && right.value._int == 0) || (right.kind == UNE_RK_FLT && une_flts_equal(right.value._flt, 0.0L)))
+	if ((right.kind == UNE_RK_INT && right.value._int == 0) || (right.kind == UNE_RK_FLT && une_flts_equal(right.value._flt, UNE_NEW_FLT(0.0))))
 		return (une_result){
 			.kind = UNE_RK_FLT,
 			.value._flt = UNE_INFINITY
@@ -246,7 +246,7 @@ une_result une_type_int_fdiv(une_result left, une_result right)
 	if (right.kind == UNE_RK_FLT)
 		return (une_result){
 			.kind = UNE_RK_INT,
-			.value._int = (une_int)(floorl((une_flt)left.value._int / right.value._flt))
+			.value._int = (une_int)(une_flt_floor((une_flt)left.value._int / right.value._flt))
 		};
 	return une_result_create(UNE_RK_ERROR);
 }
@@ -265,7 +265,7 @@ une_result une_type_int_mod(une_result left, une_result right)
 	if (right.kind == UNE_RK_FLT)
 		return (une_result){
 			.kind = UNE_RK_FLT,
-			.value._flt = fmodl((une_flt)left.value._int, right.value._flt)
+			.value._flt = une_flt_mod((une_flt)left.value._int, right.value._flt)
 		};
 	return une_result_create(UNE_RK_ERROR);
 }
@@ -282,17 +282,17 @@ une_result une_type_int_pow(une_result left, une_result right)
 		if (right.value._int < 0)
 			return (une_result){
 				.kind = UNE_RK_FLT,
-				.value._flt = powl((une_flt)left.value._int, (une_flt)right.value._int)
+				.value._flt = une_flt_pow((une_flt)left.value._int, (une_flt)right.value._int)
 			};
 		return (une_result){
 			.kind = UNE_RK_INT,
-			.value._int = (une_int)(powl((une_flt)left.value._int, (une_flt)right.value._int))
+			.value._int = (une_int)(une_flt_pow((une_flt)left.value._int, (une_flt)right.value._int))
 		};
 	}
 	if (right.kind == UNE_RK_FLT)
 		return (une_result){
 			.kind = UNE_RK_FLT,
-			.value._flt = powl((une_flt)left.value._int, right.value._flt)
+			.value._flt = une_flt_pow((une_flt)left.value._int, right.value._flt)
 		};
 	return une_result_create(UNE_RK_ERROR);
 }

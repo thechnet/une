@@ -42,7 +42,7 @@ Modified 2025-07-26
 #define UNE_DBG_SIZES_SIZE 1
 #define UNE_DBG_REPORT_FILE_RETURN "une_report_return.txt"
 #define UNE_DBG_REPORT_FILE_STATUS "une_report_status.txt"
-#define UNE_PRINTF_UNE_FLT L"%.*Lf"
+#define UNE_PRINTF_UNE_FLT L"%.*lf"
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
 #define UNE_ERROR_USAGE L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
@@ -109,7 +109,7 @@ Modified 2025-07-26
 */
 typedef int64_t une_int;
 typedef uint64_t une_uint;
-typedef long double une_flt;
+typedef double une_flt;
 
 typedef struct une_position_ {
 	size_t start;

@@ -1,6 +1,6 @@
 /*
 tools.c - Une
-Modified 2025-05-26
+Modified 2025-07-26
 */
 
 /* Header-specific includes. */
@@ -21,6 +21,15 @@ Modified 2025-05-26
 #include <ctype.h>
 #endif
 #include "lexer.h"
+
+/*
+une_flt helpers.
+*/
+une_flt (*une_flt_nextafter)(une_flt, une_flt) = nextafter;
+une_flt (*une_flt_pow)(une_flt, une_flt) = pow;
+une_flt (*une_flt_abs)(une_flt) = fabs;
+une_flt (*une_flt_floor)(une_flt) = floor;
+une_flt (*une_flt_mod)(une_flt, une_flt) = fmod;
 
 /*
 Convert a wchar_t string into a une_int integer.
@@ -361,8 +370,8 @@ Compares two une_flt for equality.
 */
 bool une_flts_equal(une_flt a, une_flt b)
 {
-	une_flt epsilon = nextafterl(0, 1);
-	return fabsl(a - b) < epsilon;
+	une_flt epsilon = une_flt_nextafter(UNE_NEW_FLT(0.0), UNE_NEW_FLT(1.0));
+	return une_flt_abs(a - b) < epsilon;
 }
 
 /*

@@ -1,6 +1,6 @@
 /*
 tools.h - Une
-Modified 2023-12-10
+Modified 2025-07-26
 */
 
 #ifndef UNE_TOOLS_H
@@ -30,6 +30,17 @@ Verify an allocation.
 */
 #define verify(memory) \
 	((void)((memory) != NULL || une_out_of_memory()))
+
+/*
+une_flt literal wrapper.
+*/
+#define UNE_NEW_FLT(flt_) flt_ /* flt_##L if une_flt is a long double. */
+
+extern une_flt (*une_flt_nextafter)(une_flt, une_flt);
+extern une_flt (*une_flt_pow)(une_flt, une_flt);
+extern une_flt (*une_flt_abs)(une_flt);
+extern une_flt (*une_flt_floor)(une_flt);
+extern une_flt (*une_flt_mod)(une_flt, une_flt);
 
 bool une_wcs_to_une_int(wchar_t *wcs, une_int *dest);
 bool une_wcs_to_une_flt(wchar_t *wcs, une_flt *dest);

@@ -1,6 +1,6 @@
 /*
 flt.c - Une
-Modified 2023-12-10
+Modified 2025-07-26
 */
 
 /* Header-specific includes. */
@@ -60,7 +60,7 @@ Check for truth.
 une_int une_type_flt_is_true(une_result result)
 {
 	assert(result.kind == UNE_RK_FLT);
-	return une_flts_equal(result.value._flt, 0.0L) ? 0 : 1;
+	return une_flts_equal(result.value._flt, UNE_NEW_FLT(0.0)) ? 0 : 1;
 }
 
 /*
@@ -215,7 +215,7 @@ une_result une_type_flt_fdiv(une_result left, une_result right)
 	assert(left.kind == UNE_RK_FLT);
 	
 	/* Return INFINITY on zero division. */
-	if ((right.kind == UNE_RK_INT && right.value._int == 0) || (right.kind == UNE_RK_FLT && une_flts_equal(right.value._flt, 0.0L)))
+	if ((right.kind == UNE_RK_INT && right.value._int == 0) || (right.kind == UNE_RK_FLT && une_flts_equal(right.value._flt, UNE_NEW_FLT(0.0))))
 		return (une_result){
 			.kind = UNE_RK_FLT,
 			.value._flt = UNE_INFINITY
@@ -224,12 +224,12 @@ une_result une_type_flt_fdiv(une_result left, une_result right)
 	if (right.kind == UNE_RK_INT)
 		return (une_result){
 			.kind = UNE_RK_INT,
-			.value._int = (une_int)(floorl(left.value._flt / (une_flt)right.value._int))
+			.value._int = (une_int)(une_flt_floor(left.value._flt / (une_flt)right.value._int))
 		};
 	if (right.kind == UNE_RK_FLT)
 		return (une_result){
 			.kind = UNE_RK_INT,
-			.value._int = (une_int)(floorl(left.value._flt / right.value._flt))
+			.value._int = (une_int)(une_flt_floor(left.value._flt / right.value._flt))
 		};
 	return une_result_create(UNE_RK_ERROR);
 }
@@ -243,12 +243,12 @@ une_result une_type_flt_mod(une_result left, une_result right)
 	if (right.kind == UNE_RK_INT)
 		return (une_result){
 			.kind = UNE_RK_FLT,
-			.value._flt = fmodl(left.value._flt, (une_flt)right.value._int)
+			.value._flt = une_flt_mod(left.value._flt, (une_flt)right.value._int)
 		};
 	if (right.kind == UNE_RK_FLT)
 		return (une_result){
 			.kind = UNE_RK_FLT,
-			.value._flt = fmodl(left.value._flt, right.value._flt)
+			.value._flt = une_flt_mod(left.value._flt, right.value._flt)
 		};
 	return une_result_create(UNE_RK_ERROR);
 }
@@ -264,12 +264,12 @@ une_result une_type_flt_pow(une_result left, une_result right)
 	if (right.kind == UNE_RK_INT)
 		return (une_result){
 			.kind = UNE_RK_FLT,
-			.value._flt = powl(left.value._flt, (une_flt)right.value._int)
+			.value._flt = une_flt_pow(left.value._flt, (une_flt)right.value._int)
 		};
 	if (right.kind == UNE_RK_FLT)
 		return (une_result){
 			.kind = UNE_RK_FLT,
-			.value._flt = powl(left.value._flt, right.value._flt)
+			.value._flt = une_flt_pow(left.value._flt, right.value._flt)
 		};
 	return une_result_create(UNE_RK_ERROR);
 }

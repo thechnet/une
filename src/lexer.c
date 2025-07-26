@@ -209,7 +209,7 @@ une_lexer__(une_lex_number, bool allow_signed)
 			is_floating = true;
 			floating = (une_flt)integer;
 		}
-		floating *= powl(10.0L, (une_flt)exponent);
+		floating *= une_flt_pow(UNE_NEW_FLT(10.0), (une_flt)exponent);
 	}
 	
 	une_token number = {

@@ -5,6 +5,7 @@
 ### Fixed
 
 - The number of decimal digits shown in string representations of floating-point numbers is architecture-dependent.
+- `0.0` is considered truthy on some platforms (e.g. x64 executable under Windows on Arm).
 
 ## [0.16.0] - 2025-05-26
 
