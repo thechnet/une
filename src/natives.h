@@ -1,6 +1,5 @@
 /*
 natives.h - Une
-Modified 2023-12-10
 */
 
 #ifndef UNE_NATIVE_H

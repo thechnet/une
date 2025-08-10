@@ -1,6 +1,5 @@
 /*
 parser.h - Une
-Modified 2024-11-09
 */
 
 #ifndef UNE_PARSER_H

@@ -1,6 +1,5 @@
 /*
 callable.c - Une
-Modified 2023-12-02
 */
 
 /* Header-specific includes. */

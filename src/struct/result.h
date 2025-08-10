@@ -1,6 +1,5 @@
 /*
 result.h - Une
-Modified 2025-07-26
 */
 
 #ifndef UNE_RESULT_H

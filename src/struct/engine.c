@@ -1,6 +1,5 @@
 /*
 engine.c - Une
-Modified 2024-11-09
 */
 
 /* Header-specific includes. */

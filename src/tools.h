@@ -1,6 +1,5 @@
 /*
 tools.h - Une
-Modified 2025-07-26
 */
 
 #ifndef UNE_TOOLS_H

@@ -1,6 +1,5 @@
 /*
 error.c - Une
-Modified 2023-12-10
 */
 
 /* Header-specific includes. */

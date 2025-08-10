@@ -1,6 +1,5 @@
 /*
 token.h - Une
-Modified 2024-01-30
 */
 
 #ifndef UNE_TOKEN_H

@@ -1,6 +1,5 @@
 /*
 interpreter_state.h - Une
-Modified 2023-12-10
 */
 
 #ifndef UNE_INTERPRETER_STATE_H

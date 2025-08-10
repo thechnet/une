@@ -1,6 +1,5 @@
 /*
 tools.c - Une
-Modified 2025-07-26
 */
 
 /* Header-specific includes. */

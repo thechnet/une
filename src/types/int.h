@@ -1,6 +1,5 @@
 /*
 int.h - Une
-Modified 2023-12-10
 */
 
 #ifndef UNE_TYPES_INT_H

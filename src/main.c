@@ -1,6 +1,5 @@
 /*
 main.c - Une
-Modified 2024-01-30
 */
 
 /* Header-specific includes. */

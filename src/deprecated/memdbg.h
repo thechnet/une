@@ -1,6 +1,5 @@
 /*
 memdbg.h - Une
-Modified 2023-12-16
 */
 
 #ifndef MEMDBG_H

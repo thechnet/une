@@ -1,6 +1,5 @@
 /*
 natives.c - Une
-Modified 2024-01-31
 */
 
 /* Header-specific includes. */

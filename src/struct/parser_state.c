@@ -1,6 +1,5 @@
 /*
 parser_state.c - Une
-Modified 2023-11-17
 */
 
 /* Header-specific includes. */
