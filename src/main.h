@@ -9,14 +9,6 @@ main.h - Une
 #include "signal.h"
 #include "struct/engine.h"
 
-enum une_main_action
-{
-    SHOW_USAGE,
-    RUN_SCRIPT_FILE,
-    RUN_SCRIPT_STRING,
-    ENTER_INTERACTIVE_MODE
-};
-
 extern volatile sig_atomic_t sigint_fired;
 
 int main(int argc, char *argv[]);

@@ -701,6 +701,10 @@ cases = [
     # setwd
     Case('a=getwd();setwd("..");b=getwd();setwd(a);return a!=b',
          UNE_RK_INT, '1', [ATTR_NO_IMPLICIT_RETURN]),
+
+    # Command line shared engine.
+    Case('-s "a=()->return 46" -s "exit a()"',
+         UNE_RK_INT, '46', [ATTR_DIRECT_ARG])
 ]
 CASES_LEN = len(cases)
 

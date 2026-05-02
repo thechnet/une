@@ -18,13 +18,13 @@ volatile sig_atomic_t sigint_fired = 0;
 
 int main(int argc, char *argv[])
 {
-/* Enable Virtual Terminal Processing for the Windows console. */
 #ifdef _WIN32
+    /* Enable Virtual Terminal Processing for the Windows console. */
     une_win_vt_proc(true);
 #endif
 
-/* Display warnings. */
 #ifdef UNE_DEBUG
+    /* Display warnings. */
 #ifdef UNE_DBG_MEMDBG
     wprintf(UNE_COLOR_WARN L"UNE_DBG_MEMDBG enabled.\n" UNE_COLOR_RESET);
 #endif
@@ -45,52 +45,51 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-    /* Check command line. */
-    wchar_t *script_string = NULL;
-    enum une_main_action action = SHOW_USAGE;
-    if (argc == 2 && !strcmp(argv[1], UNE_SWITCH_INTERACTIVE)) {
-        action = ENTER_INTERACTIVE_MODE;
-    } else if (argc >= 2 && !strcmp(argv[1], UNE_SWITCH_SCRIPT)) {
-        script_string = argc == 3 ? une_str_to_wcs(argv[2]) : NULL;
-        if (script_string)
-            action = RUN_SCRIPT_STRING;
-        else
-            action = SHOW_USAGE;
-    } else if (argc == 2) {
-        action = RUN_SCRIPT_FILE;
-    }
-
-    /* Perform action. */
-
+    /* Create engine. */
+    une_engine engine = une_engine_create_engine();
+    une_engine_select_engine(&engine);
     une_result result;
 
-    if (action == SHOW_USAGE) {
+    /* Process command line. */
+    bool show_usage = argc <= 1;
+    int arg = 1;
+    while (arg < argc) {
+        if (!strcmp(argv[arg], UNE_SWITCH_INTERACTIVE)) {
+            ++arg;
+            interactive();
+            result = (une_result){.kind = UNE_RK_INT, .value._int = EXIT_SUCCESS};
+        } else {
+            if (!strcmp(argv[arg], UNE_SWITCH_SCRIPT)) {
+                ++arg;
+                if (argc <= arg) {
+                    show_usage = true;
+                    break;
+                }
+                wchar_t *script_string = une_str_to_wcs(argv[arg]);
+                ++arg;
+                result = une_engine_interpret_file_or_wcs(NULL, script_string);
+                free(script_string);
+            } else {
+                result = une_engine_interpret_file_or_wcs(argv[arg], NULL);
+                ++arg;
+            }
+#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_INTERPRET)
+            if (result.kind == UNE_RK_ERROR) {
+                result.value._int =
+                    (une_int)felix->error.kind + (une_int)UNE_R_END_DATA_RESULT_KINDS;
+                une_engine_print_error();
+                break;
+            }
+#endif
+        }
+    }
+    if (show_usage) {
         result = (une_result){.kind = UNE_RK_ERROR, .value._int = EXIT_FAILURE};
         print_usage(argv[0]);
-    } else {
-        une_engine engine = une_engine_create_engine();
-        une_engine_select_engine(&engine);
-
-        if (action == RUN_SCRIPT_FILE) {
-            result = une_engine_interpret_file_or_wcs(argv[1], NULL);
-        } else if (action == RUN_SCRIPT_STRING) {
-            result = une_engine_interpret_file_or_wcs(NULL, script_string);
-            free(script_string);
-        } else {
-            assert(action == ENTER_INTERACTIVE_MODE);
-            result = (une_result){.kind = UNE_RK_INT, .value._int = EXIT_SUCCESS};
-            interactive();
-        }
-
-#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_INTERPRET)
-        if (result.kind == UNE_RK_ERROR) {
-            result.value._int = (une_int)felix->error.kind + (une_int)UNE_R_END_DATA_RESULT_KINDS;
-            une_engine_print_error();
-        }
-#endif
-
-        une_engine_free();
     }
+
+    /* Free engine. */
+    une_engine_free();
 
 #if defined(UNE_DEBUG) && defined(UNE_DISPLAY_RESULT)
     if (result.kind != UNE_RK_ERROR) {
@@ -145,8 +144,8 @@ int main(int argc, char *argv[])
     fclose(report_status);
 #endif /* UNE_DBG_REPORT */
 
-/* Disable Virtual Terminal Processing for the Windows console. */
 #ifdef _WIN32
+    /* Disable Virtual Terminal Processing for the Windows console. */
     une_win_vt_proc(false);
 #endif
 
