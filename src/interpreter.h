@@ -7,19 +7,19 @@ interpreter.h - Une
 
 /* Header-specific includes. */
 #include "common.h"
-#include "struct/interpreter_state.h"
+#include "natives.h"
+#include "struct/association.h"
+#include "struct/engine.h"
 #include "struct/error.h"
+#include "struct/interpreter_state.h"
 #include "struct/node.h"
 #include "struct/result.h"
-#include "struct/association.h"
-#include "natives.h"
-#include "struct/engine.h"
 
 /*
 Interpreter function template.
 */
-#define une_interpreter__(name__, ...)\
-	une_static__ une_result (name__)(une_node *node, ##__VA_ARGS__)
+#define une_interpreter__(name__, ...)                                                             \
+    une_static__ une_result(name__)(une_node * node, ##__VA_ARGS__)
 
 /*
 *** Interface.

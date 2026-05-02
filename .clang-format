@@ -1,0 +1,37 @@
+TabWidth: 4
+IndentWidth: 4
+UseTab: Never
+
+ColumnLimit: 100
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterStruct: true
+  AfterEnum: true
+  AfterUnion: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterExternBlock: true
+  SplitEmptyFunction: true
+  SplitEmptyNamespace: true
+  AfterControlStatement: false
+  BeforeElse: false
+  BeforeCatch: false
+  BeforeLambdaBody: false
+
+PointerAlignment: Right
+
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+
+BinPackArguments: false
+BinPackParameters: false
+
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+
+AlignTrailingComments: false

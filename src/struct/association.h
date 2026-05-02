@@ -7,15 +7,16 @@ association.h - Une
 
 /* Header-specific includes. */
 #include "../common.h"
-#include "result.h"
 #include "node.h"
+#include "result.h"
 
 /*
 Associate a result with a given name.
 */
-typedef struct une_association_ {
-	wchar_t *name;
-	une_result content;
+typedef struct une_association_
+{
+    wchar_t *name;
+    une_result content;
 } une_association;
 
 /*

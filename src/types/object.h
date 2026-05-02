@@ -7,9 +7,9 @@ object.h - Une
 
 /* Header-specific includes. */
 #include "../common.h"
-#include "../struct/result.h"
 #include "../struct/association.h"
 #include "../struct/context.h"
+#include "../struct/result.h"
 
 void une_type_object_represent(FILE *file, une_result result);
 
@@ -28,13 +28,14 @@ void une_type_object_free_members(une_result result);
 Object.
 */
 
-#define UNE_FOR_OBJECT_MEMBER(iterator_, object_ptr_) \
-	for (size_t iterator_=0; iterator_<object_ptr_->members_length; iterator_++)
+#define UNE_FOR_OBJECT_MEMBER(iterator_, object_ptr_)                                              \
+    for (size_t iterator_ = 0; iterator_ < object_ptr_->members_length; iterator_++)
 
-typedef struct une_object_ {
-	une_association **members;
-	size_t members_length;
-	une_context *owner;
+typedef struct une_object_
+{
+    une_association **members;
+    size_t members_length;
+    une_context *owner;
 } une_object;
 
 #endif /* UNE_TYPES_OBJECT_H */

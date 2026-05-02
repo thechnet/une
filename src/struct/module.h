@@ -7,27 +7,29 @@ module.h - Une
 
 /* Header-specific includes. */
 #include "../common.h"
-#include "token.h"
 #include "node.h"
+#include "token.h"
 
 /*
 A module.
 */
-typedef struct une_module_ {
-	size_t id;
-	bool originates_from_file;
-	char *path;
-	wchar_t *source;
-	une_token *tokens;
+typedef struct une_module_
+{
+    size_t id;
+    bool originates_from_file;
+    char *path;
+    wchar_t *source;
+    une_token *tokens;
 } une_module;
 
 /*
 A module buffer.
 */
-typedef struct une_modules_ {
-	size_t size;
-	une_module *buffer;
-	size_t next_unused_id;
+typedef struct une_modules_
+{
+    size_t size;
+    une_module *buffer;
+    size_t next_unused_id;
 } une_modules;
 
 /*

@@ -8,9 +8,9 @@ parser.h - Une
 /* Header-specific includes. */
 #include "common.h"
 #include "struct/error.h"
-#include "struct/token.h"
 #include "struct/node.h"
 #include "struct/parser_state.h"
+#include "struct/token.h"
 
 /*
 *** Interface.
@@ -19,8 +19,8 @@ parser.h - Une
 /*
 Parser function template.
 */
-#define une_parser__(name__, ...)\
-	une_static__ une_node *(name__)(une_error *error, une_parser_state *ps, ##__VA_ARGS__)
+#define une_parser__(name__, ...)                                                                  \
+    une_static__ une_node *(name__)(une_error * error, une_parser_state * ps, ##__VA_ARGS__)
 
 une_node *une_parse(une_error *error, une_parser_state *ps, une_token *tokens);
 
@@ -72,29 +72,24 @@ une_parser__(une_parse_object_association);
 une_parser__(une_parse_object);
 
 une_parser__(une_parse_unary_operation,
-	une_node_kind node_t,
-	une_node *(*parse)(une_error*, une_parser_state*)
-);
+             une_node_kind node_t,
+             une_node *(*parse)(une_error *, une_parser_state *));
 
 une_parser__(une_parse_binary_operation,
-	une_token_kind range_begin,
-	une_node_kind range_begin_nt,
-	une_token_kind range_end,
-	une_node *(*parse_left)(une_error*, une_parser_state*),
-	une_node *(*parse_right)(une_error*, une_parser_state*)
-);
+             une_token_kind range_begin,
+             une_node_kind range_begin_nt,
+             une_token_kind range_end,
+             une_node *(*parse_left)(une_error *, une_parser_state *),
+             une_node *(*parse_right)(une_error *, une_parser_state *));
 
 une_parser__(une_parse_sequence,
-	une_node_kind node_kind,
-	une_token_kind begin,
-	une_token_kind delimiter,
-	une_token_kind end,
-	une_node *(*parser)(une_error*, une_parser_state*)
-);
+             une_node_kind node_kind,
+             une_token_kind begin,
+             une_token_kind delimiter,
+             une_token_kind end,
+             une_node *(*parser)(une_error *, une_parser_state *));
 
-une_parser__(une_parse_imaginary,
-	une_node_kind node_kind
-);
+une_parser__(une_parse_imaginary, une_node_kind node_kind);
 
 ptrdiff_t une_parser_checkpoint(une_parser_state *ps);
 void une_parser_return_to_checkpoint(une_error *error, une_parser_state *ps, ptrdiff_t checkpoint);

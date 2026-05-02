@@ -13,11 +13,12 @@ tools.h - Une
 /*
 A range, produced by une_range_from_relative_indices.
 */
-typedef struct une_range_ {
-	bool valid;
-	size_t first;
-	size_t guard;
-	size_t length;
+typedef struct une_range_
+{
+    bool valid;
+    size_t first;
+    size_t guard;
+    size_t length;
 } une_range;
 
 /*
@@ -27,8 +28,7 @@ typedef struct une_range_ {
 /*
 Verify an allocation.
 */
-#define verify(memory) \
-	((void)((memory) != NULL || une_out_of_memory()))
+#define verify(memory) ((void)((memory) != NULL || une_out_of_memory()))
 
 /*
 une_flt literal wrapper.

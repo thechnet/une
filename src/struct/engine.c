@@ -6,10 +6,10 @@ engine.c - Une
 #include "engine.h"
 
 /* Implementation-specific includes. */
-#include "../tools.h"
+#include "../interpreter.h"
 #include "../lexer.h"
 #include "../parser.h"
-#include "../interpreter.h"
+#include "../tools.h"
 #include "../traceback.h"
 
 /*
@@ -24,211 +24,217 @@ Interface.
 
 une_engine une_engine_create_engine(void)
 {
-	return (une_engine){
-		.error = une_error_create(),
-		.is = une_interpreter_state_create(NULL)
-	};
+    return (une_engine){.error = une_error_create(), .is = une_interpreter_state_create(NULL)};
 }
 
 void une_engine_select_engine(une_engine *engine)
 {
-	felix = engine;
+    felix = engine;
 }
 
 void une_engine_free(void)
 {
-	une_interpreter_state_free(&felix->is);
-	felix = NULL;
+    une_interpreter_state_free(&felix->is);
+    felix = NULL;
 }
 
 void une_engine_prepare_for_next_module(void)
 {
-	felix->error.kind = UNE_EK_none__;
-	felix->is.should_return = false;
-	felix->is.should_exit = false;
+    felix->error.kind = UNE_EK_none__;
+    felix->is.should_return = false;
+    felix->is.should_exit = false;
 }
 
 void une_engine_return_to_root_context(void)
 {
-	felix->is.context = une_context_stump(felix->is.context);
+    felix->is.context = une_context_stump(felix->is.context);
 }
 
 une_module *une_engine_new_module_from_file_or_wcs(char *path, wchar_t *wcs)
 {
-	UNE_VERIFY_ENGINE;
-	bool originates_from_file = path != NULL;
-	if (originates_from_file)
-		assert(!wcs);
-	else
-		assert(!path && wcs);
+    UNE_VERIFY_ENGINE;
+    bool originates_from_file = path != NULL;
+    if (originates_from_file)
+        assert(!wcs);
+    else
+        assert(!path && wcs);
 
-	char *stored_path = NULL;
-	wchar_t *source = NULL;
-	if (originates_from_file) {
-		#if defined(UNE_DEBUG) && defined(UNE_DBG_USE_ABSOLUTE_MODULE_PATHS)
-		stored_path = une_resolve_path(path);
-		#else
-		stored_path = strdup(path);
-		verify(stored_path);
-		#endif
-		if (!stored_path || !une_file_exists(stored_path))
-			felix->error = UNE_ERROR_SET(UNE_EK_FILE, (une_position){0});
-		else
-			source = une_file_read(stored_path, true, UNE_TAB_WIDTH);
-	} else {
-		source = wcsdup(wcs);
-	}
+    char *stored_path = NULL;
+    wchar_t *source = NULL;
+    if (originates_from_file) {
+#if defined(UNE_DEBUG) && defined(UNE_DBG_USE_ABSOLUTE_MODULE_PATHS)
+        stored_path = une_resolve_path(path);
+#else
+        stored_path = strdup(path);
+        verify(stored_path);
+#endif
+        if (!stored_path || !une_file_exists(stored_path))
+            felix->error = UNE_ERROR_SET(UNE_EK_FILE, (une_position){0});
+        else
+            source = une_file_read(stored_path, true, UNE_TAB_WIDTH);
+    } else {
+        source = wcsdup(wcs);
+    }
 
-	une_module *module = une_modules_add_module(&felix->is.modules);
-	assert(module);
+    une_module *module = une_modules_add_module(&felix->is.modules);
+    assert(module);
 
-	module->originates_from_file = originates_from_file;
-	module->path = stored_path;
-	module->source = source;
+    module->originates_from_file = originates_from_file;
+    module->path = stored_path;
+    module->source = source;
 
-	if (source) {
-		une_lexer_state ls = une_lexer_state_create();
-		ls.tokens = malloc(UNE_SIZE_TOKEN_BUF*sizeof(*ls.tokens));
-		verify(ls.tokens);
-		ls.text = module->source;
-		ls.text_length = wcslen(ls.text);
-		#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_LEX)
-		une_lex(&felix->error, &ls);
-		#endif
-		module->tokens = ls.tokens;
-	}
+    if (source) {
+        une_lexer_state ls = une_lexer_state_create();
+        ls.tokens = malloc(UNE_SIZE_TOKEN_BUF * sizeof(*ls.tokens));
+        verify(ls.tokens);
+        ls.text = module->source;
+        ls.text_length = wcslen(ls.text);
+#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_LEX)
+        une_lex(&felix->error, &ls);
+#endif
+        module->tokens = ls.tokens;
+    }
 
-	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
-	wprintf(L"\n");
-	une_tokens_display(module->tokens);
-	wprintf(L"\n\n");
-	#endif
+#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_TOKENS)
+    wprintf(L"\n");
+    une_tokens_display(module->tokens);
+    wprintf(L"\n\n");
+#endif
 
-	return module;
+    return module;
 }
 
 une_callable *une_engine_parse_module(une_module *module)
 {
-	UNE_VERIFY_ENGINE;
-	assert(module);
+    UNE_VERIFY_ENGINE;
+    assert(module);
 
-	assert(module->tokens);
+    assert(module->tokens);
 
-	une_parser_state ps = une_parser_state_create();
-	ps.module_id = module->id;
-	une_node *ast = NULL;
-	#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_PARSE)
-	ast = une_parse(&felix->error, &ps, module->tokens);
-	#endif
+    une_parser_state ps = une_parser_state_create();
+    ps.module_id = module->id;
+    une_node *ast = NULL;
+#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_PARSE)
+    ast = une_parse(&felix->error, &ps, module->tokens);
+#endif
 
-	#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
-	wchar_t *node_as_wcs = une_node_to_wcs(ast);
-	wprintf(node_as_wcs);
-	free(node_as_wcs);
-	wprintf(L"\n\n"); /* node_as_wcs does not add a newline. */
-	#endif
+#if defined(UNE_DEBUG) && defined(UNE_DISPLAY_NODES)
+    wchar_t *node_as_wcs = une_node_to_wcs(ast);
+    wprintf(node_as_wcs);
+    free(node_as_wcs);
+    wprintf(L"\n\n"); /* node_as_wcs does not add a newline. */
+#endif
 
-	une_callable *callable = NULL;
-	if (ast) {
-		callable = une_callables_add_callable(&felix->is.callables);
-		assert(callable);
+    une_callable *callable = NULL;
+    if (ast) {
+        callable = une_callables_add_callable(&felix->is.callables);
+        assert(callable);
 
-		callable->module_id = module->id;
-		callable->body = ast;
-		callable->borrows_body_strings = true;
-	}
+        callable->module_id = module->id;
+        callable->body = ast;
+        callable->borrows_body_strings = true;
+    }
 
-	return callable;
+    return callable;
 }
 
-une_result une_engine_interpret_file_or_wcs_with_position(char *path, wchar_t *wcs, une_position current_context_exit_position)
+une_result une_engine_interpret_file_or_wcs_with_position(
+    char *path, wchar_t *wcs, une_position current_context_exit_position)
 {
-	une_engine_prepare_for_next_module();
+    une_engine_prepare_for_next_module();
 
-	une_module *module = une_engine_new_module_from_file_or_wcs(path, wcs);
-	
-	une_context *parent = une_engine_push_context(true, current_context_exit_position, module->id);
+    une_module *module = une_engine_new_module_from_file_or_wcs(path, wcs);
 
-	if (!module->tokens)
-		return une_result_create(UNE_RK_ERROR);
-	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_TOKENS)
-	une_tokens_display(module->tokens);
-	wprintf(L"\n\n");
-	#endif
+    une_context *parent = une_engine_push_context(true, current_context_exit_position, module->id);
 
-	une_callable *callable = une_engine_parse_module(module);
-	if (!callable)
-		return une_result_create(UNE_RK_ERROR);
-	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_NODES)
-	wchar_t *node_as_wcs = une_node_to_wcs(callable->body);
-	wprintf(node_as_wcs);
-	free(node_as_wcs);
-	wprintf(L"\n\n"); /* node_as_wcs does not add a newline. */
-	#endif
-	
-	une_engine_set_context_callable(callable, NULL);
+    if (!module->tokens)
+        return une_result_create(UNE_RK_ERROR);
+#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_TOKENS)
+    une_tokens_display(module->tokens);
+    wprintf(L"\n\n");
+#endif
 
-	une_result result = une_result_create(UNE_RK_VOID);
-	#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_INTERPRET)
-	result = une_interpret(callable->body);
-	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_RESULT)
-	if (result.kind != UNE_RK_ERROR) {
-		assert(UNE_RESULT_KIND_IS_TYPE(result.kind));
-		wprintf(UNE_COLOR_RESULT_KIND L"%ls" UNE_COLOR_RESET ": ", une_result_kind_to_wcs(result.kind));
-		une_result_represent(stdout, result);
-		putwc(L'\n', stdout);
-	}
-	#endif
-	felix->is.should_return = false;
-	#endif
-	if (result.kind == UNE_RK_ERROR)
-		return une_result_create(UNE_RK_ERROR);
+    une_callable *callable = une_engine_parse_module(module);
+    if (!callable)
+        return une_result_create(UNE_RK_ERROR);
+#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_NODES)
+    wchar_t *node_as_wcs = une_node_to_wcs(callable->body);
+    wprintf(node_as_wcs);
+    free(node_as_wcs);
+    wprintf(L"\n\n"); /* node_as_wcs does not add a newline. */
+#endif
 
-	une_engine_pop_context(parent);
-	
-	return result;
+    une_engine_set_context_callable(callable, NULL);
+
+    une_result result = une_result_create(UNE_RK_VOID);
+#if !defined(UNE_DEBUG) || !defined(UNE_DBG_NO_INTERPRET)
+    result = une_interpret(callable->body);
+#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_RESULT)
+    if (result.kind != UNE_RK_ERROR) {
+        assert(UNE_RESULT_KIND_IS_TYPE(result.kind));
+        wprintf(UNE_COLOR_RESULT_KIND L"%ls" UNE_COLOR_RESET ": ",
+                une_result_kind_to_wcs(result.kind));
+        une_result_represent(stdout, result);
+        putwc(L'\n', stdout);
+    }
+#endif
+    felix->is.should_return = false;
+#endif
+    if (result.kind == UNE_RK_ERROR)
+        return une_result_create(UNE_RK_ERROR);
+
+    une_engine_pop_context(parent);
+
+    return result;
 }
 
 une_result une_engine_interpret_file_or_wcs(char *path, wchar_t *wcs)
 {
-	return une_engine_interpret_file_or_wcs_with_position(path, wcs, (une_position){0});
+    return une_engine_interpret_file_or_wcs_with_position(path, wcs, (une_position){0});
 }
 
 void une_engine_print_error(void)
 {
-	assert(felix->error.kind != UNE_EK_none__);
+    assert(felix->error.kind != UNE_EK_none__);
 
-	une_traceback_print();
+    une_traceback_print();
 
-	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_FAIL L"Error: %ls" UNE_COLOR_RESET L"\n", une_error_kind_to_wcs(felix->error.kind));
-	
-	#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_EXTENDED_ERROR)
-	fwprintf(UNE_ERROR_STREAM, UNE_COLOR_HINT L"Raised in \"%hs\" at line %d" UNE_COLOR_RESET L"\n", felix->error.meta_file, felix->error.meta_line);
-	#endif
+    fwprintf(UNE_ERROR_STREAM,
+             UNE_COLOR_FAIL L"Error: %ls" UNE_COLOR_RESET L"\n",
+             une_error_kind_to_wcs(felix->error.kind));
+
+#if defined(UNE_DEBUG) && defined(UNE_DBG_DISPLAY_EXTENDED_ERROR)
+    fwprintf(UNE_ERROR_STREAM,
+             UNE_COLOR_HINT L"Raised in \"%hs\" at line %d" UNE_COLOR_RESET L"\n",
+             felix->error.meta_file,
+             felix->error.meta_line);
+#endif
 }
 
-une_context *une_engine_push_context(bool transparent, une_position position_in_current_module, size_t child_module_id)
+une_context *une_engine_push_context(bool transparent,
+                                     une_position position_in_current_module,
+                                     size_t child_module_id)
 {
-	une_context *parent = felix->is.context;
-	parent->exit_position = position_in_current_module;
-	felix->is.context = transparent ? une_context_create_transparent() : une_context_create();
-	felix->is.context->parent = parent;
-	felix->is.context->module_id = child_module_id;
-	return parent;
+    une_context *parent = felix->is.context;
+    parent->exit_position = position_in_current_module;
+    felix->is.context = transparent ? une_context_create_transparent() : une_context_create();
+    felix->is.context->parent = parent;
+    felix->is.context->module_id = child_module_id;
+    return parent;
 }
 
 void une_engine_pop_context(une_context *context_before_push)
 {
-	une_context_free_children(context_before_push, felix->is.context);
-	felix->is.context = context_before_push;
-	context_before_push->exit_position = (une_position){ 0 };
+    une_context_free_children(context_before_push, felix->is.context);
+    felix->is.context = context_before_push;
+    context_before_push->exit_position = (une_position){0};
 }
 
 void une_engine_set_context_callable(une_callable *callable, wchar_t *optional_label)
 {
-	felix->is.context->callable_id = callable->id;
-	if (optional_label) {
-		felix->is.context->label = wcsdup(optional_label);
-		verify(felix->is.context->label);
-	}
+    felix->is.context->callable_id = callable->id;
+    if (optional_label) {
+        felix->is.context->label = wcsdup(optional_label);
+        verify(felix->is.context->label);
+    }
 }

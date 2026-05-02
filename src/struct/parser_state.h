@@ -8,19 +8,20 @@ parser_state.h - Une
 /* Header-specific includes. */
 #include "../common.h"
 #include "../deprecated/stream.h"
-#include "token.h"
 #include "node.h"
+#include "token.h"
 
 /*
 Holds the state of the parser.
 */
-typedef struct une_parser_state_ {
-	size_t module_id;
-	size_t loop_level;
-	une_istream in;
-	une_node (*pull)(une_istream*);
-	une_node (*peek)(une_istream*, ptrdiff_t);
-	une_node (*now)(une_istream*);
+typedef struct une_parser_state_
+{
+    size_t module_id;
+    size_t loop_level;
+    une_istream in;
+    une_node (*pull)(une_istream *);
+    une_node (*peek)(une_istream *, ptrdiff_t);
+    une_node (*now)(une_istream *);
 } une_parser_state;
 
 /*

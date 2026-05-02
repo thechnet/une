@@ -7,8 +7,8 @@ traceback.h - Une
 
 /* Header-specific includes. */
 #include "common.h"
-#include "struct/module.h"
 #include "struct/context.h"
+#include "struct/module.h"
 
 void une_traceback_print_trace(une_context *context);
 void une_traceback_print(void);

@@ -6,11 +6,11 @@ memdbg_internal.h - Une
 #define MEMDBG_INTERNAL_H
 
 /* Header-specific includes. */
+#include <signal.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include <stdbool.h>
-#include <signal.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -22,12 +22,13 @@ memdbg_internal.h - Une
 /*
 Holds information for an allocation.
 */
-typedef struct memdbg_allocation_ {
-	char *file;
-	int line;
-	char *memory;
-	size_t size;
-	bool check_padding;
+typedef struct memdbg_allocation_
+{
+    char *file;
+    int line;
+    char *memory;
+    size_t size;
+    bool check_padding;
 } memdbg_allocation;
 
 /*
@@ -40,7 +41,8 @@ void *memdbg_realloc(char *file, int line, void *memory, size_t size);
 void memdbg_free(char *file, int line, void *memory);
 
 void memdbg_allocations_padding_check__(char *file, int line);
-void *memdbg_array_check__(char *file, int line, char *array, size_t array_size, size_t item_size, int index);
+void *memdbg_array_check__(
+    char *file, int line, char *array, size_t array_size, size_t item_size, int index);
 void memdbg_conclude__(void);
 void memdbg_signal_handler__(int signum);
 

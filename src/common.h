@@ -13,15 +13,15 @@ common.h - Une
 /* Universal includes. */
 #include "cmake.h"
 
+#include <assert.h>
+#include <float.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <stddef.h>
-#include <float.h>
 
 #include "deprecated/memdbg.h"
 
@@ -44,13 +44,17 @@ common.h - Une
 #define UNE_PRINTF_UNE_FLT L"%.*lf"
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
-#define UNE_ERROR_USAGE L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
+#define UNE_ERROR_USAGE                                                                            \
+    L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
 #define UNE_ERROR_STREAM stderr
 #define UNE_DBG_LOGINTERPRET_INDENT L"|   "
 #define UNE_DBG_LOGINTERPRET_OFFSET 10
 #define UNE_DBG_LOGPARSE_INDENT L"| "
 #define UNE_DBG_LOGPARSE_OFFSET 15
-#define UNE_FLT_PRECISION 10 /* See https://www.gnu.org/software/libc/manual/html_node/Floating-Point-Parameters.html#index-DBL_005fDIG. Also, test.py! */
+#define UNE_FLT_PRECISION                                                                                      \
+    10 /* See                                                                                                  \
+          https://www.gnu.org/software/libc/manual/html_node/Floating-Point-Parameters.html#index-DBL_005fDIG. \
+          Also, test.py! */
 #define UNE_TAB_WIDTH 4
 #define UNE_TRACEBACK_EXTRACT_PREFIX L"  "
 
@@ -58,7 +62,7 @@ common.h - Une
 #define UNE_SIZE_NODE_AS_WCS 128000 /* (Debug) Representing. */
 #define UNE_SIZE_TOKEN_AS_WCS 4096 /* (Debug) Representing. */
 #define UNE_SIZE_FGETWS_BUFFER 32767 /* une_native_fn_input. */
-#define UNE_SIZE_NUMBER_AS_STRING (48+UNE_FLT_PRECISION) /* une_int and une_flt as strings. */
+#define UNE_SIZE_NUMBER_AS_STRING (48 + UNE_FLT_PRECISION) /* une_int and une_flt as strings. */
 #if !defined(UNE_DEBUG) || !defined(UNE_DBG_SIZES)
 #define UNE_SIZE_NUM_LEN 32 /* Lexing. */
 #define UNE_SIZE_STR_LEN 4096 /* Lexing. */
@@ -110,19 +114,21 @@ typedef int64_t une_int;
 typedef uint64_t une_uint;
 typedef double une_flt;
 
-typedef struct une_position_ {
-	size_t start;
-	size_t end;
-	size_t line;
+typedef struct une_position_
+{
+    size_t start;
+    size_t end;
+    size_t line;
 } une_position;
 
-typedef union une_value_ {
-	size_t _id;
-	une_int _int;
-	une_flt _flt;
-	wchar_t *_wcs;
-	void *_vp;
-	void **_vpp;
+typedef union une_value_
+{
+    size_t _id;
+    une_int _int;
+    une_flt _flt;
+    wchar_t *_wcs;
+    void *_vp;
+    void **_vpp;
 } une_value;
 
 /*
@@ -136,55 +142,55 @@ typedef union une_value_ {
 *** Logging.
 */
 #if defined(UNE_DEBUG) && defined(UNE_DBG_LOG_INTERPRET)
-#define LOGINTERPRET_BEGIN(node) \
-	static int indent = 0; \
-	wprintf(L"%d-%d\33[%dG", node->pos.start, node->pos.end, UNE_DBG_LOGINTERPRET_OFFSET); \
-	for (int i=0; i<indent; i++) \
-		wprintf(UNE_DBG_LOGINTERPRET_INDENT); \
-	wprintf(L"%ls\n", une_node_kind_to_wcs(node->kind)); \
-	indent++
-#define LOGINTERPRET_END(node) \
-	indent--; \
-	wprintf(L"\33[%dG", UNE_DBG_LOGINTERPRET_OFFSET); \
-	for (int i=0; i<indent; i++) \
-		wprintf(UNE_DBG_LOGINTERPRET_INDENT); \
-	wprintf(L"/\n", une_node_kind_to_wcs(node->kind))
+#define LOGINTERPRET_BEGIN(node)                                                                   \
+    static int indent = 0;                                                                         \
+    wprintf(L"%d-%d\33[%dG", node->pos.start, node->pos.end, UNE_DBG_LOGINTERPRET_OFFSET);         \
+    for (int i = 0; i < indent; i++)                                                               \
+        wprintf(UNE_DBG_LOGINTERPRET_INDENT);                                                      \
+    wprintf(L"%ls\n", une_node_kind_to_wcs(node->kind));                                           \
+    indent++
+#define LOGINTERPRET_END(node)                                                                     \
+    indent--;                                                                                      \
+    wprintf(L"\33[%dG", UNE_DBG_LOGINTERPRET_OFFSET);                                              \
+    for (int i = 0; i < indent; i++)                                                               \
+        wprintf(UNE_DBG_LOGINTERPRET_INDENT);                                                      \
+    wprintf(L"/\n", une_node_kind_to_wcs(node->kind))
 #else
 #define LOGINTERPRET_BEGIN(...)
 #define LOGINTERPRET_END(...)
 #endif
 #if defined(UNE_DEBUG) && defined(UNE_DBG_LOG_PARSE)
-#define LOGPARSE_BEGIN() \
-	do { \
-		wchar_t *tk_ = une_token_to_wcs(now(&ps->in)); \
-		wprintf(L"%ls\33[%dG", tk_, UNE_DBG_LOGPARSE_OFFSET); \
-		free(tk_); \
-		for (int i=0; i<une_logparse_indent; i++) \
-			wprintf(UNE_DBG_LOGPARSE_INDENT); \
-		une_logparse_indent++; \
-		wprintf(L"%hs\n", __func__ + 10); \
-	} while (0)
-#define LOGPARSE_END(call) \
-	do { \
-		une_node *result__ = call; \
-		wchar_t *tk_ = une_token_to_wcs(now(&ps->in)); \
-		wprintf(L"%ls\33[%dG\33[%dm", tk_, UNE_DBG_LOGPARSE_OFFSET, result__ ? 90 : 31); \
-		free(tk_); \
-		une_logparse_indent--; \
-		for (int i=0; i<une_logparse_indent; i++) \
-			wprintf(UNE_DBG_LOGPARSE_INDENT); \
-		wprintf(L"\33[9m%hs\33[0m\n", __func__ + 10); \
-		return result__; \
-	} while (0)
-#define LOGPARSE_COMMENT(comment) \
-	do { \
-		wchar_t *tk_ = une_token_to_wcs(now(&ps->in)); \
-		wprintf(L"%ls\33[%dG", tk_, UNE_DBG_LOGPARSE_OFFSET); \
-		free(tk_); \
-		for (int i=0; i<une_logparse_indent; i++) \
-			wprintf(UNE_DBG_LOGPARSE_INDENT); \
-		wprintf(L"(%ls)\n", comment); \
-	} while (0)
+#define LOGPARSE_BEGIN()                                                                           \
+    do {                                                                                           \
+        wchar_t *tk_ = une_token_to_wcs(now(&ps->in));                                             \
+        wprintf(L"%ls\33[%dG", tk_, UNE_DBG_LOGPARSE_OFFSET);                                      \
+        free(tk_);                                                                                 \
+        for (int i = 0; i < une_logparse_indent; i++)                                              \
+            wprintf(UNE_DBG_LOGPARSE_INDENT);                                                      \
+        une_logparse_indent++;                                                                     \
+        wprintf(L"%hs\n", __func__ + 10);                                                          \
+    } while (0)
+#define LOGPARSE_END(call)                                                                         \
+    do {                                                                                           \
+        une_node *result__ = call;                                                                 \
+        wchar_t *tk_ = une_token_to_wcs(now(&ps->in));                                             \
+        wprintf(L"%ls\33[%dG\33[%dm", tk_, UNE_DBG_LOGPARSE_OFFSET, result__ ? 90 : 31);           \
+        free(tk_);                                                                                 \
+        une_logparse_indent--;                                                                     \
+        for (int i = 0; i < une_logparse_indent; i++)                                              \
+            wprintf(UNE_DBG_LOGPARSE_INDENT);                                                      \
+        wprintf(L"\33[9m%hs\33[0m\n", __func__ + 10);                                              \
+        return result__;                                                                           \
+    } while (0)
+#define LOGPARSE_COMMENT(comment)                                                                  \
+    do {                                                                                           \
+        wchar_t *tk_ = une_token_to_wcs(now(&ps->in));                                             \
+        wprintf(L"%ls\33[%dG", tk_, UNE_DBG_LOGPARSE_OFFSET);                                      \
+        free(tk_);                                                                                 \
+        for (int i = 0; i < une_logparse_indent; i++)                                              \
+            wprintf(UNE_DBG_LOGPARSE_INDENT);                                                      \
+        wprintf(L"(%ls)\n", comment);                                                              \
+    } while (0)
 #else
 #define LOGPARSE_BEGIN()
 #define LOGPARSE_END(call) return call

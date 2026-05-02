@@ -7,31 +7,33 @@ interpreter_state.h - Une
 
 /* Header-specific includes. */
 #include "../common.h"
-#include "context.h"
 #include "callable.h"
+#include "context.h"
 #include "module.h"
 
 /*
 A temporary result buffer.
 */
-typedef struct une_holding_ {
-	une_result *buffer;
-	size_t size;
-	size_t count;
+typedef struct une_holding_
+{
+    une_result *buffer;
+    size_t size;
+    size_t count;
 } une_holding;
 
 /*
 Holds the state of the interpreter.
 */
-typedef struct une_interpreter_state_ {
-	une_context *context;
-	une_callables callables;
-	une_modules modules;
-	bool should_return;
-	bool should_exit;
-	une_result this_contestant;
-	une_result this;
-	une_holding holding;
+typedef struct une_interpreter_state_
+{
+    une_context *context;
+    une_callables callables;
+    une_modules modules;
+    bool should_return;
+    bool should_exit;
+    une_result this_contestant;
+    une_result this;
+    une_holding holding;
 } une_interpreter_state;
 
 /*

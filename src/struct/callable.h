@@ -12,25 +12,28 @@ callable.h - Une
 /*
 A callable.
 */
-typedef struct une_callable_ {
-	size_t id;
-	size_t module_id;
-	une_position position;
-	struct {
-		size_t count;
-		wchar_t **names;
-	} parameters;
-	une_node *body;
-	bool borrows_body_strings;
+typedef struct une_callable_
+{
+    size_t id;
+    size_t module_id;
+    une_position position;
+    struct
+    {
+        size_t count;
+        wchar_t **names;
+    } parameters;
+    une_node *body;
+    bool borrows_body_strings;
 } une_callable;
 
 /*
 A buffer of callables.
 */
-typedef struct une_callables {
-	une_callable *buffer;
-	size_t size;
-	size_t next_unused_id;
+typedef struct une_callables
+{
+    une_callable *buffer;
+    size_t size;
+    size_t next_unused_id;
 } une_callables;
 
 /*

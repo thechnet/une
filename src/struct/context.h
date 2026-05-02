@@ -12,18 +12,20 @@ context.h - Une
 /*
 Holds information that changes depending on the execution context.
 */
-typedef struct une_context_ {
-	struct une_context_ *parent;
-	wchar_t *label;
-	size_t module_id;
-	size_t callable_id;
-	une_position exit_position;
-	bool is_transparent;
-	struct {
-		size_t size;
-		size_t count;
-		une_association **buffer;
-	} variables;
+typedef struct une_context_
+{
+    struct une_context_ *parent;
+    wchar_t *label;
+    size_t module_id;
+    size_t callable_id;
+    une_position exit_position;
+    bool is_transparent;
+    struct
+    {
+        size_t size;
+        size_t count;
+        une_association **buffer;
+    } variables;
 } une_context;
 
 /*
