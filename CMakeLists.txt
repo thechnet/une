@@ -37,9 +37,12 @@ list(APPEND options "DBG_USE_ABSOLUTE_MODULE_PATHS|Use absolute module paths|OFF
 foreach(option IN LISTS options)
 	string(REPLACE "|" ";" option_list ${option})
 	list(GET option_list 0 id)
-	list(GET option_list 1 desc)
+	list(GET option_list 1 description)
 	list(GET option_list 2 val)
-	option(UNE_${id} "${desc}." ${val})
+	if(DEFINED ENV{UNE_${id}})
+		set(val "$ENV{UNE_${id}}")
+	endif()
+	option(UNE_${id} "${description}." ${val})
 endforeach()
 
 # Executable.
