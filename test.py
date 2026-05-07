@@ -1,5 +1,4 @@
 #!python3
-import os
 from os import system as cmd
 from sys import platform, argv
 from typing import Any, Union
@@ -36,7 +35,6 @@ STOP_AT_FAIL = True
 ENUMERATE_CASES = True if len(
     argv) > 1 and argv[1] == "enumerate_cases" else False
 FILE_SCRIPT = 'test.py.une'
-DIR = 'debug'
 UNE = '.\\\\une.exe' if is_win() else './une'
 FILE_RETURN = 'une_report_return.txt'
 FILE_STATUS = 'une_report_status.txt'
@@ -790,8 +788,6 @@ if ENUMERATE_CASES:
         print(i+1, j.input)
     exit()
 
-cd = os.getcwd()
-os.chdir(DIR)
 print("\33[33m\33[1mEnsure UNE_DEBUG_MEMDBG is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_SIZES is enabled.\33[0m")
 print("\33[33m\33[1mEnsure UNE_DEBUG_REPORT is enabled.\33[0m")

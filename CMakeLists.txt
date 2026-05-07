@@ -102,6 +102,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 	if(UNE_DBG_COVERAGE)
 		target_compile_options(une PRIVATE
 			-fprofile-arcs -ftest-coverage
+			"-fdebug-prefix-map=${CMAKE_SOURCE_DIR}=."
 		)
 		target_link_options(une PRIVATE
 			-fprofile-arcs -ftest-coverage
