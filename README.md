@@ -8,28 +8,30 @@ Pre-built binaries can be found under [releases](https://github.com/thechnet/une
 
 ## Building
 
-- Install [Clang](https://clang.llvm.org), [CMake](https://cmake.org), and a build system of your choice (for example, *make*).
-- For the release version:
-  - Create a "release" directory in the repository.
-  - Inside this directory, run `cmake .. -G <gen>` (where `<gen>` is the generator for your build system).
-- For the debug version:
-  - Create a "debug" directory in the repository.
-  - Inside this directory, run the same command as above but append `-DCMAKE_BUILD_TYPE=Debug`.
-- In the created directory, compile the binary using your build system.
+- Install [Clang](https://clang.llvm.org), [CMake](https://cmake.org), and a build system of your choice (for example *make*).
+- Create a build directory somewhere on your system and enter it.
+- Run `cmake <root> -G <gen>`, where
+  - `<root>` points to the root of this repository, and
+  - `<gen>` is the generator for your build system.
+
+  (To build the debug version, append `-DCMAKE_BUILD_TYPE=Debug` to the above command.)
+- Compile the binary using your build system.
 
 To run the test suite:
 
 - Install [Python 3](https://www.python.org).
 - Build the debug version.
-- Run `test.py` from within the "testing" directory.
+- Run `test.py` from within your build directory.
 
 ## Getting Started
 
-Run Une without any arguments to get its usage:
+Run Une without any arguments to get its usage.
 
 - Run a script by passing a filename.
 - Provide a script as a string using `-s`.
 - Enter the interactive console using `-i`.
+
+(Repeating any of the above commands runs them all in the same context.)
 
 From there, check out some of the [examples](https://github.com/thechnet/une/tree/main/examples) or refer to the [documentation](DOCUMENTATION.md).
 
