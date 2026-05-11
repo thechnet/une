@@ -1,5 +1,5 @@
 #!python3
-from os import system as cmd
+import os
 from sys import platform, argv
 from typing import Any, Union
 
@@ -694,7 +694,7 @@ cases = [
 
     # getwd
     Case('split(getwd(),["/","\\\\"])[-1..]',
-         UNE_RK_LIST, '["debug"]', []),
+         UNE_RK_LIST, f'["{os.path.basename(os.getcwd())}"]', []),
 
     # setwd
     Case('a=getwd();setwd("..");b=getwd();setwd(a);return a!=b',
@@ -781,7 +781,7 @@ def check_report(interface: str, case: Case, i: int):
 
 
 if CLEAR:
-    cmd('cls' if is_cmd_exe() else 'clear')
+    os.system('cls' if is_cmd_exe() else 'clear')
 
 if ENUMERATE_CASES:
     for i, j in enumerate(cases):
@@ -808,7 +808,7 @@ for i, case in enumerate(cases):
         command = f'{une} {case.input}'
         if ATTR_STDIN in case.attributes:
             command = 'echo test|' + command
-        cmd(command)
+        os.system(command)
         if not check_report('main', case, i):
             passed = False
     else:
@@ -823,7 +823,7 @@ for i, case in enumerate(cases):
             command = f'{une} -s "{sanitized}"'
             if ATTR_STDIN in case.attributes:
                 command = 'echo test|' + command
-            cmd(command)
+            os.system(command)
             if not check_report('cmdl', case, i):
                 passed = False
                 print(f'\33[31m{command}\33[0m')
@@ -839,7 +839,7 @@ for i, case in enumerate(cases):
             command = f'{une} "{FILE_SCRIPT}"'
             if ATTR_STDIN in case.attributes:
                 command = 'echo test|' + command
-            cmd(command)
+            os.system(command)
             if not check_report('file', case, i):
                 passed = False
                 print(f'\33[31m{script}\33[0m')
