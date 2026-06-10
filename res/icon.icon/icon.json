@@ -1,0 +1,125 @@
+{
+  "features" : [
+    "refractivity",
+    "specular-location"
+  ],
+  "fill" : {
+    "solid" : "srgb:0.46275,0.39608,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "blur-material" : null,
+      "hidden" : false,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-gray:1.00000,0.80000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-gray:1.00000,0.70000"
+              }
+            }
+          ],
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "logo.png",
+          "name" : "logo",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.26,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "fg",
+      "opacity" : 1,
+      "refractivity" : {
+        "depth" : 1,
+        "enabled" : true,
+        "strength" : -0.3
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 2.4
+      },
+      "specular" : "outside",
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.00000,0.00000,0.00000,0.00000",
+              "srgb:0.00000,0.00000,0.00000,1.00000"
+            ]
+          },
+          "hidden" : false,
+          "image-name" : "blank.svg",
+          "name" : "shadow",
+          "opacity" : 0.3
+        },
+        {
+          "glass" : true,
+          "hidden" : true,
+          "image-name" : "lagoon.png",
+          "name" : "lagoon",
+          "position" : {
+            "scale" : 0.26,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass" : true,
+          "hidden" : true,
+          "image-name" : "gradient.png",
+          "name" : "gradient",
+          "position" : {
+            "scale" : 0.26,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "name" : "bg",
+      "refractivity" : {
+        "depth" : 0.655,
+        "enabled" : false,
+        "strength" : 0.63
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 4
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.2
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}
