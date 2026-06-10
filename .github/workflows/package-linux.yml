@@ -14,11 +14,11 @@ jobs:
   package:
     strategy:
       matrix:
-        runner: [ubuntu-22.04, ubuntu-22.04-arm] # See https://github.com/actions/runner-images, https://github.com/actions/partner-runner-images.
+        runner: [ubuntu-latest, ubuntu-24.04-arm] # See https://github.com/actions/runner-images, https://github.com/actions/partner-runner-images.
       fail-fast: false
     runs-on: ${{matrix.runner}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -64,7 +64,8 @@ jobs:
         shell: bash
         run: |
           cmake --build debug
-          python3 test.py
+          cd debug
+          python3 ../test.py
 
       - name: Build une
         shell: bash
@@ -80,7 +81,7 @@ jobs:
             -Path release/une,release/une-dbg `
             -DestinationPath "${{steps.strings.outputs.label}}.zip"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{steps.strings.outputs.label}}
           path: ${{steps.strings.outputs.label}}.zip

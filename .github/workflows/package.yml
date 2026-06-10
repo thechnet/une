@@ -30,12 +30,12 @@ on:
         description: 'llvm-mingw date (Windows)'
         type: string
         required: true
-        default: 20250709
+        default: 20260602
       llvm_major:
         description: 'LLVM major (macOS, Linux)'
         type: string
         required: true
-        default: 20
+        default: 22
 
 jobs:
   windows:

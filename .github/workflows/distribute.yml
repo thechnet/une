@@ -12,7 +12,7 @@ jobs:
       iteration: ${{steps.parse_tag.outputs.iteration}}
       preview: ${{steps.parse_tag.outputs.release-preview}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Parse tag
         id: parse_tag

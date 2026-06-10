@@ -15,12 +15,12 @@ jobs:
     strategy:
       matrix:
         runner: # See https://github.com/actions/runner-images.
-          - macos-15 # arm64.
-          - macos-13 # x64.
+          - macos-latest # arm64.
+          - macos-26-intel # x64.
       fail-fast: false
     runs-on: ${{matrix.runner}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -29,7 +29,7 @@ jobs:
         shell: bash
         run: |
           TARGET_ARCH="arm64"
-          if [[ "${{matrix.runner}}" == "macos-13" ]]; then
+          if [[ "${{matrix.runner}}" != "macos-latest" ]]; then
             TARGET_ARCH="x64"
           fi
 
@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           HOMEBREW="/opt/homebrew"
-          if [[ "${{matrix.runner}}" == "macos-13" ]]; then
+          if [[ "${{matrix.runner}}" != "macos-latest" ]]; then
             HOMEBREW="/usr/local"
           fi
 
@@ -70,7 +70,8 @@ jobs:
         shell: bash
         run: |
           cmake --build debug
-          python3 test.py
+          cd debug
+          python3 ../test.py
 
       - name: Build une
         shell: bash
@@ -86,7 +87,7 @@ jobs:
             -Path release/une,release/une-dbg `
             -DestinationPath "${{steps.strings.outputs.label}}.zip"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{steps.strings.outputs.label}}
           path: ${{steps.strings.outputs.label}}.zip
