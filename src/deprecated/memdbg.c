@@ -294,7 +294,7 @@ Handle signals.
 void __attribute__((noreturn)) memdbg_signal_handler__(int signum)
 {
 #ifndef _WIN32
-    char *msg;
+    char *msg = NULL;
     switch (signum) {
     case SIGFPE:
         msg = LOGGING_STYLE_FAIL__ LOGGING_ID__ MEMDBG_MSG_SIGFPE RESET "\n";
