@@ -1,6 +1,6 @@
 #!python3
 import os
-from sys import platform, argv
+from sys import argv, platform
 from typing import Any, Union
 
 
@@ -118,6 +118,7 @@ cases = [
     Case('0b10', UNE_RK_INT, '2', []),
     Case('0o10', UNE_RK_INT, '8', []),
     Case('0xf', UNE_RK_INT, '15', []),
+    Case('0xF', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
     Case('0x.8', UNE_RK_ERROR, UNE_EK_SYNTAX, []),
     Case('2E2', UNE_RK_FLT, flt('200.0'), []),
     Case('2E-2', UNE_RK_FLT, flt('0.02'), []),

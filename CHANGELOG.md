@@ -6,6 +6,10 @@
 
 - The command line now supports arbitrarily many occurrences of all options. All code runs in the same engine, meaning results from one invocation are available in all subsequent ones.
 
+### Changed
+
+- Uppercase letters are no longer digits.
+
 ## [0.16.1] - 2025-07-26
 
 ### Fixed

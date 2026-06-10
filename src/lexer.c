@@ -552,8 +552,6 @@ bool une_lexer_digit_to_decimal(wchar_t digit, int *digit_in_decimal)
         *digit_in_decimal = (int)(digit - L'0');
     else if (UNE_LEXER_WC_IS_LOWERCASE_LETTER(digit))
         *digit_in_decimal = (int)(10 + digit - L'a');
-    else if (UNE_LEXER_WC_IS_UPPERCASE_LETTER(digit))
-        *digit_in_decimal = (int)(10 + digit - L'A');
     else
         return false;
     return true;
