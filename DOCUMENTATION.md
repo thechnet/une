@@ -61,7 +61,7 @@ There are eight types of data.
 
 ### 2.1 Integers
 
-For example `-46`, `0`, `346`.
+For example `0`, `-46`, `0o56`, `0x2e`, `0b101110`.
 
 For verbose booleans, use `True` and `False`. They are identical to `1` and `0`.
 
@@ -157,11 +157,7 @@ person = {
 print(person.name) # Prints 'Mia'.
 ```
 
-To add new members to objects, just assign them a value:
-
-```
-person.surname = "Wallace"
-```
+Adding new members to existing objects is not allowed.
 
 When a function is stored in an object member, that function becomes a *method* of the object. During a method call, the enclosing object is available via the `this` keyword.
 
