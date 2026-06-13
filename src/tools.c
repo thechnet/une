@@ -327,6 +327,26 @@ bool une_set_working_directory(wchar_t *path)
 }
 
 /*
+Get file label from path.
+*/
+char *une_path_get_label(char *path)
+{
+    char *slash = strrchr(path, '/');
+    char *backslash = strrchr(path, '\\');
+    char *start = max(path, max(slash, backslash) + 1);
+
+    char *end = strrchr(path, '.');
+    int count = strlen(start) - (end ? strlen(end) : 0);
+
+    size_t capacity = PATH_MAX;
+    char *label = calloc(capacity, sizeof(*label));
+    verify(label);
+    strncpy_s(label, capacity * sizeof(*label), start, count);
+
+    return label;
+}
+
+/*
 Halt execution for the specified number of miliseconds.
 */
 void une_sleep_ms(int ms)

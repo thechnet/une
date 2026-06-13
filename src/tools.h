@@ -59,6 +59,8 @@ bool une_file_extension_matches(char *path, char *extension);
 wchar_t *une_get_working_directory(void);
 bool une_set_working_directory(wchar_t *path);
 
+char *une_path_get_label(char *path);
+
 void une_sleep_ms(int ms);
 
 bool une_play_wav(wchar_t *path);

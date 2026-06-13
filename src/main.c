@@ -254,5 +254,7 @@ void interactive(void)
 
 void print_usage(char *executable_path)
 {
-    wprintf(UNE_COLOR_RESET UNE_HEADER L"\n" UNE_ERROR_USAGE L"\n", executable_path);
+    char *label = une_path_get_label(executable_path);
+    wprintf(UNE_COLOR_RESET UNE_HEADER L"\n\n" UNE_ERROR_USAGE L"\n", label);
+    free(label);
 }

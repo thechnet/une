@@ -45,7 +45,12 @@ common.h - Une
 #define UNE_PRINTF_UNE_INT L"%lld"
 #define UNE_ERROR_OUT_OF_MEMORY L"Out of memory."
 #define UNE_ERROR_USAGE                                                                            \
-    L"Usage: %hs {<script>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"}"
+    L"Usage: %hs [[<path>|" UNE_SWITCH_SCRIPT L" <string>|" UNE_SWITCH_INTERACTIVE L"]]\n"         \
+    L"\n"                                                                                          \
+    L"\t<path>       Execute the file at <path>.\n"                                                \
+    L"\t-s <string>  Evaluate <string>.\n"                                                         \
+    L"\t-i           Enter interactive mode."
+
 #define UNE_ERROR_STREAM stderr
 #define UNE_DBG_LOGINTERPRET_INDENT L"|   "
 #define UNE_DBG_LOGINTERPRET_OFFSET 10
