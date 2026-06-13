@@ -1,4 +1,8 @@
-# Une
+<div align="center">
+  <img src="res/icon.png" width=10%>
+  <h1>The Une Programming Language</h1>
+</div>
+<br>
 
 Une (as in *une*-iverse) is a simple interpreted programming language inspired by C, JavaScript, and Python.
 
@@ -25,20 +29,10 @@ To run the test suite:
 
 ## Getting Started
 
-Run Une without any arguments to get its usage.
-
-- Run a script by passing a filename.
-- Provide a script as a string using `-s`.
-- Enter the interactive console using `-i`.
-
-(Repeating any of the above commands runs them all in the same context.)
+Run Une without any arguments to display its usage.
 
 From there, check out some of the [examples](https://github.com/thechnet/une/tree/main/examples) or refer to the [documentation](DOCUMENTATION.md).
 
 ## Language Support
 
-Visual Studio Code provides basic language support, including syntax highlighting, via the [Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une).
-
-<br/>
-
-<img src="res/icon.png" width=5%>
+[The Une extension](https://marketplace.visualstudio.com/items?itemName=chnet.une) provides basic language support for Visual Studio Code.
